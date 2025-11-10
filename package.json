@@ -1,0 +1,24 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "@tailwindcss/forms": "^0.5.10",
+        "@tailwindcss/typography": "^0.5.16",
+        "autoprefixer": "^10.4.21",
+        "axios": "^1.6.4",
+        "laravel-vite-plugin": "^1.0",
+        "postcss": "^8.5.6",
+        "tailwindcss": "^3.4.17",
+        "vite": "^5.0"
+    },
+    "dependencies": {
+        "@fortawesome/fontawesome-free": "^7.0.0",
+        "@melloware/coloris": "^0.25.0",
+        "date-fns": "^4.1.0",
+        "nested-sort": "^5.2.0"
+    }
+}
