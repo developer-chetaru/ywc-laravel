@@ -16,6 +16,7 @@ use App\Livewire\Certificate\CertificateTypeIndex;
 use App\Http\Controllers\CertificateTypeController;
 use App\Livewire\Certificate\CertificateIssuerIndex;
 
+use App\Livewire\Marketplace\ItineraryIndex;
 use App\Livewire\Marketplace\MarketplaceIndex;
 use App\Livewire\WorkLog\WorkLogIndex;
 use App\Livewire\IndustryReview\IndustryReviewIndex;
@@ -160,6 +161,8 @@ Route::middleware([
   	Route::get('/training-resources', TrainingResources::class)->name('training.resources');
 
 	Route::get('/roles', RoleIndex::class)->name('roles.index');
+
+  Route::get('/itinerary', ItineraryIndex::class)->name('itinerary.index');
 	Route::get('/marketplace', MarketplaceIndex::class)->name('marketplace.index');
     Route::get('/work-log', WorkLogIndex::class)->name('worklog.index');
     Route::get('/industry-review', IndustryReviewIndex::class)->name('industryreview.index');

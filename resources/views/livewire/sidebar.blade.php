@@ -249,10 +249,12 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             <li>
-                <div class="flex items-center space-x-3 px-4 py-3 rounded-lg transition opacity-50 cursor-not-allowed">
+                <a href="{{ route('itinerary.index') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                            {{ request()->is('itinerary*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
                     <img src="/images/itinerarySystemWhite.svg" alt="Itinerary System" class="w-5 h-5">
                     <span x-show="isOpen" class="text-base font-medium">Itinerary System</span>
-                </div>
+</a>
             </li>
             @endhasanyrole
 
