@@ -8,6 +8,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ForgetPasswordController;
 use App\Http\Controllers\ChangePasswordController;
 use App\Http\Controllers\VerificationController;
+use App\Http\Controllers\ItineraryController;
+
+Route::apiResource('itineraries', ItineraryController::class);
+Route::put('/itineraries/{itinerary}/status', [ItineraryController::class, 'updateStatus']);
 
 
 Route::get('/roles', [AuthController::class, 'getRoles']);
@@ -25,6 +29,7 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 require base_path('vendor/riari/laravel-forum/routes/api.php');
 
 Route::middleware('auth:api')->group(function () {
+
 
 
 	Route::get('/profile', [ProfileController::class, 'profile']);

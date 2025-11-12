@@ -4,7 +4,7 @@ use Spatie\Permission\Models\Role;
 $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArray();
 @endphp
 
-<div 
+<div
     x-data="{ isOpen: true, isMobile: window.innerWidth < 768 }"
     x-init="
         window.addEventListener('resize', () => isMobile = window.innerWidth < 768);
@@ -18,10 +18,9 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
         'translate-x-0 w-72': isMobile && isOpen,
         '-translate-x-full': isMobile && !isOpen
     }"
-    style="will-change: transform, width;"
->
+    style="will-change: transform, width;">
     <!-- Header -->
-<div class="flex items-center justify-between p-4 py-5 border-b border-blue-300 flex-shrink-0">
+    <div class="flex items-center justify-between p-4 py-5 border-b border-blue-300 flex-shrink-0">
         <div x-show="isOpen && !isMobile" x-transition class="flex items-center space-x-2">
             <img src="/images/ywc-logo-white.svg" alt="Logo" class="w-8 h-8">
             <span class="text-white font-semibold text-[10px] uppercase tracking-wide mt-2">
@@ -248,14 +247,23 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             @endhasanyrole
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
-            <li>
-                <a href="{{ route('itinerary.index') }}"
-                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+            <a href="{{ route('itinerary.index') }}"
+                class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
                             {{ request()->is('itinerary*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-                    <img src="/images/itinerarySystemWhite.svg" alt="Itinerary System" class="w-5 h-5">
-                    <span x-show="isOpen" class="text-base font-medium">Itinerary System</span>
-</a>
+
+                <img
+                    src="{{ request()->is('itinerary*') ? '/images/itinerarySystemWhite.svg' : '/images/itinerarySystemWhite.svg' }}"
+                    alt="Itinerary"
+                    class="w-5 h-5">
+
+                <span x-show="isOpen"
+                    class="text-base font-medium {{ request()->is('itinerary*') ? 'text-black' : 'text-white' }}">
+                    Itinerary System
+                </span>
+            </a>
             </li>
+
+
             @endhasanyrole
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
