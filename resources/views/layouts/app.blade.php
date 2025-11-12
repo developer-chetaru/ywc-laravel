@@ -32,6 +32,7 @@
         }
     </style>
     <!-- Styles -->
+    @stack('styles')
     @livewireStyles
 
     <!-- Vite -->
@@ -119,6 +120,7 @@
 
     @stack('modals')
     @livewireScripts
+    @stack('scripts')
 </body>
 
 </html>

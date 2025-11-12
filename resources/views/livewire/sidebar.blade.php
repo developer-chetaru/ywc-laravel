@@ -247,23 +247,58 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             @endhasanyrole
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
-            <a href="{{ route('itinerary.index') }}"
-                class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                            {{ request()->is('itinerary*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+            <li>
+                <a href="{{ route('itinerary.index') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                                {{ request()->is('itinerary') && !request()->is('itinerary/routes*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
 
-                <img
-                    src="{{ request()->is('itinerary*') ? '/images/itinerarySystemWhite.svg' : '/images/itinerarySystemWhite.svg' }}"
-                    alt="Itinerary"
-                    class="w-5 h-5">
+                    <img
+                        src="{{ request()->is('itinerary') && !request()->is('itinerary/routes*') ? '/images/itinerarySystemWhite.svg' : '/images/itinerarySystemWhite.svg' }}"
+                        alt="Itinerary"
+                        class="w-5 h-5">
 
-                <span x-show="isOpen"
-                    class="text-base font-medium {{ request()->is('itinerary*') ? 'text-black' : 'text-white' }}">
-                    Itinerary System
-                </span>
-            </a>
+                    <span x-show="isOpen"
+                        class="text-base font-medium {{ request()->is('itinerary') && !request()->is('itinerary/routes*') ? 'text-black' : 'text-white' }}">
+                        Itinerary System
+                    </span>
+                </a>
             </li>
+            
+            {{-- ROUTE LIBRARY --}}
+            <li>
+                <a href="{{ route('itinerary.routes.index') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                                {{ request()->routeIs('itinerary.routes.index') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
 
+                    <img
+                        src="{{ request()->routeIs('itinerary.routes.index') ? '/images/itinerarySystemWhite.svg' : '/images/itinerarySystemWhite.svg' }}"
+                        alt="Route Library"
+                        class="w-5 h-5">
 
+                    <span x-show="isOpen"
+                        class="text-base font-medium {{ request()->routeIs('itinerary.routes.index') ? 'text-black' : 'text-white' }}">
+                        Route Library
+                    </span>
+                </a>
+            </li>
+            
+            {{-- ROUTE PLANNER --}}
+            <li>
+                <a href="{{ route('itinerary.routes.planner') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                                {{ request()->routeIs('itinerary.routes.planner') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+
+                    <img
+                        src="{{ request()->routeIs('itinerary.routes.planner') ? '/images/itinerarySystemWhite.svg' : '/images/itinerarySystemWhite.svg' }}"
+                        alt="Route Planner"
+                        class="w-5 h-5">
+
+                    <span x-show="isOpen"
+                        class="text-base font-medium {{ request()->routeIs('itinerary.routes.planner') ? 'text-black' : 'text-white' }}">
+                        Route Planner
+                    </span>
+                </a>
+            </li>
             @endhasanyrole
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))

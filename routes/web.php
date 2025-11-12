@@ -11,6 +11,9 @@ use App\Livewire\UpdatePasswordForm;
 use App\Livewire\PurchaseHistory;
 use App\Livewire\UserList;
 use App\Livewire\ItinerarySystem;
+use App\Livewire\Itinerary\RoutePlanner;
+use App\Livewire\Itinerary\RouteLibrary;
+use App\Models\ItineraryRoute;
 use App\Livewire\LegalSupport;
 use App\Livewire\Certificate\CertificateTypeIndex;
 use App\Http\Controllers\CertificateTypeController;
@@ -164,6 +167,88 @@ Route::middleware([
 
   Route::get('/itinerary', ItineraryIndex::class)->name('itinerary.index');
 	Route::get('/marketplace', MarketplaceIndex::class)->name('marketplace.index');
+	
+	// Itinerary Routes - Web views (Livewire components)
+	Route::get('/itinerary/routes', \App\Livewire\Itinerary\RouteLibrary::class)->name('itinerary.routes.index');
+	Route::get('/itinerary/routes/planner', \App\Livewire\Itinerary\RoutePlanner::class)->name('itinerary.routes.planner');
+	
+	// Route show - works for both web (view) and API (JSON) requests
+	Route::get('/itinerary/routes/{route}', function (\Illuminate\Http\Request $request, \App\Models\ItineraryRoute $route) {
+	    // Check authorization
+	    \Illuminate\Support\Facades\Gate::authorize('view', $route);
+	    
+	    // Load route data with all relationships (same as API endpoint)
+	    $route->loadMissing([
+	        'stops.weatherSnapshots',
+	        'legs.from',
+	        'legs.to',
+	        'crew.user:id,first_name,last_name,email',
+	        'reviews.user:id,first_name,last_name',
+	        'statistics',
+	        'owner:id,first_name,last_name,email',
+	    ]);
+	    
+	    $storage = \Illuminate\Support\Facades\Storage::disk('public');
+	    
+	    // Ensure photos are properly formatted for each stop
+	    foreach ($route->stops as $stop) {
+	        // If photos is a string, decode it
+	        if (is_string($stop->photos)) {
+	            $decoded = json_decode($stop->photos, true);
+	            $stop->photos = is_array($decoded) ? $decoded : [];
+	        }
+	        // If photos is null, set to empty array
+	        if ($stop->photos === null) {
+	            $stop->photos = [];
+	        }
+	        // Ensure it's an array
+	        if (!is_array($stop->photos)) {
+	            $stop->photos = [];
+	        }
+	        
+	        // For API requests, convert to URL format; for web, keep as paths
+	        if ($request->wantsJson() || $request->is('api/*')) {
+	            // API format: return with URLs
+	            $stop->photos = array_values(array_filter(
+	                array_map(function($photo) use ($storage) {
+	                    if (empty($photo) || !is_string($photo)) {
+	                        return null;
+	                    }
+	                    if ($storage->exists($photo)) {
+	                        return [
+	                            'path' => $photo,
+	                            'url' => asset('storage/' . $photo),
+	                        ];
+	                    }
+	                    return null;
+	                }, $stop->photos),
+	                fn($photo) => $photo !== null
+	            ));
+	        } else {
+	            // Web format: keep as simple paths
+	            $stop->photos = array_values(array_filter($stop->photos, function($photo) use ($storage) {
+	                return !empty($photo) && is_string($photo) && $storage->exists($photo);
+	            }));
+	        }
+	        
+	        // Set the photos attribute directly to ensure it's used
+	        $stop->setAttribute('photos', $stop->photos);
+	    }
+	    
+	    // Convert cover_image to full URL for API requests
+	    if ($request->wantsJson() || $request->is('api/*')) {
+	        if ($route->cover_image) {
+	            $route->cover_image_url = asset('storage/' . $route->cover_image);
+	        }
+	        
+	        return response()->json([
+	            'data' => $route,
+	        ]);
+	    }
+	    
+	    // Return view for web requests
+	    return view('itinerary.route-show', ['route' => $route]);
+	})->name('itinerary.routes.show');
     Route::get('/work-log', WorkLogIndex::class)->name('worklog.index');
     Route::get('/industry-review', IndustryReviewIndex::class)->name('industryreview.index');
 
