@@ -13,6 +13,10 @@ use App\Http\Controllers\Itinerary\RouteController as SailingRouteController;
 use App\Http\Controllers\Itinerary\CrewController as SailingCrewController;
 use App\Http\Controllers\Itinerary\ReviewController as SailingReviewController;
 use App\Http\Controllers\Itinerary\CommentController as SailingCommentController;
+use App\Http\Controllers\Api\YachtController;
+use App\Http\Controllers\Api\YachtReviewController;
+use App\Http\Controllers\Api\MarinaController;
+use App\Http\Controllers\Api\MarinaReviewController;
 
 Route::apiResource('itineraries', ItineraryController::class);
 Route::put('/itineraries/{itinerary}/status', [ItineraryController::class, 'updateStatus']);
@@ -88,10 +92,42 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/career-history/scan', [CareerHistoryApiController::class, 'scan']);
     Route::get('/career-history/issue-countries', [CareerHistoryApiController::class, 'issueCountries']);
     Route::get('/career-history/certificate-types', [CareerHistoryApiController::class, 'certificateTypes']);
+
+    // Industry Review System - Authenticated Yacht Review Endpoints
+    Route::post('/yachts/{yachtId}/reviews', [YachtReviewController::class, 'store']);
+    Route::put('/yachts/{yachtId}/reviews/{reviewId}', [YachtReviewController::class, 'update']);
+    Route::delete('/yachts/{yachtId}/reviews/{reviewId}', [YachtReviewController::class, 'destroy']);
+    Route::post('/yachts/{yachtId}/reviews/{reviewId}/vote', [YachtReviewController::class, 'vote']);
+    
+    // Industry Review System - Authenticated Marina Review Endpoints
+    Route::post('/marinas/{marinaId}/reviews', [MarinaReviewController::class, 'store']);
+    Route::put('/marinas/{marinaId}/reviews/{reviewId}', [MarinaReviewController::class, 'update']);
+    Route::delete('/marinas/{marinaId}/reviews/{reviewId}', [MarinaReviewController::class, 'destroy']);
+    Route::post('/marinas/{marinaId}/reviews/{reviewId}/vote', [MarinaReviewController::class, 'vote']);
+
+    // Industry Review System - Yacht & Marina Management (Admin)
+    Route::post('/yachts', [YachtController::class, 'store']);
+    Route::put('/yachts/{id}', [YachtController::class, 'update']);
+    Route::delete('/yachts/{id}', [YachtController::class, 'destroy']);
+    
+    Route::post('/marinas', [MarinaController::class, 'store']);
+    Route::put('/marinas/{id}', [MarinaController::class, 'update']);
+    Route::delete('/marinas/{id}', [MarinaController::class, 'destroy']);
 });
 
 // Optional public endpoints
 Route::get('/career-history/public/certificate-issuers/{typeId}', [CareerHistoryApiController::class, 'getIssuersByType']);
+
+// Industry Review System - Public Yacht & Marina Endpoints
+Route::get('/yachts', [YachtController::class, 'index']);
+Route::get('/yachts/{slug}', [YachtController::class, 'show']);
+Route::get('/yachts/{yachtId}/reviews', [YachtReviewController::class, 'index']);
+Route::get('/yachts/{yachtId}/reviews/{reviewId}', [YachtReviewController::class, 'show']);
+
+Route::get('/marinas', [MarinaController::class, 'index']);
+Route::get('/marinas/{slug}', [MarinaController::class, 'show']);
+Route::get('/marinas/{marinaId}/reviews', [MarinaReviewController::class, 'index']);
+Route::get('/marinas/{marinaId}/reviews/{reviewId}', [MarinaReviewController::class, 'show']);
 
 // Optional token refresh route
 Route::middleware('jwt.refresh')->get('/token/refresh', function () {

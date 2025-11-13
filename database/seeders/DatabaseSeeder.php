@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             AdminSeeder::class,
             ItineraryRouteSeeder::class,
+            YachtSeeder::class,
+            MarinaSeeder::class,
+            IndustryReviewSeeder::class,
         ]);
         
     }

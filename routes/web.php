@@ -252,6 +252,10 @@ Route::middleware([
     Route::get('/work-log', WorkLogIndex::class)->name('worklog.index');
     Route::get('/industry-review', IndustryReviewIndex::class)->name('industryreview.index');
 
+    // Industry Review Management (Admin only - uses API endpoints)
+    Route::get('/industry-review/yachts', \App\Livewire\IndustryReview\YachtManage::class)->name('industryreview.yachts.manage');
+    Route::get('/industry-review/marinas', \App\Livewire\IndustryReview\MarinaManage::class)->name('industryreview.marinas.manage');
+
 });
 
 

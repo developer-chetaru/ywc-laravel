@@ -7,13 +7,14 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Notifications\CustomResetPasswordNotification;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable, HasProfilePhoto, TwoFactorAuthenticatable, HasRoles;
+    use HasFactory, Notifiable, HasProfilePhoto, TwoFactorAuthenticatable, HasRoles, HasApiTokens;
 	
 	protected $guard_name = 'api';
 
@@ -121,5 +122,25 @@ class User extends Authenticatable implements JWTSubject
     public function routeReviews()
     {
         return $this->hasMany(ItineraryRouteReview::class);
+    }
+
+    public function yachtReviews()
+    {
+        return $this->hasMany(YachtReview::class);
+    }
+
+    public function marinaReviews()
+    {
+        return $this->hasMany(MarinaReview::class);
+    }
+
+    public function reviewVotes()
+    {
+        return $this->hasMany(ReviewVote::class);
+    }
+
+    public function reviewComments()
+    {
+        return $this->hasMany(ReviewComment::class);
     }
 }
