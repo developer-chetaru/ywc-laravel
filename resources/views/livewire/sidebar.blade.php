@@ -5,7 +5,12 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
 @endphp
 
 <div
-    x-data="{ isOpen: true, isMobile: window.innerWidth < 768 }"
+    x-data="{ 
+        isOpen: true, 
+        isMobile: window.innerWidth < 768,
+        industryReviewOpen: {{ request()->is('industry-review*') ? 'true' : 'false' }},
+        itineraryOpen: {{ request()->is('itinerary*') ? 'true' : 'false' }}
+    }"
     x-init="
         window.addEventListener('resize', () => isMobile = window.innerWidth < 768);
         $store.sidebar = { isOpen };
@@ -228,61 +233,62 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             @endrole
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
+            {{-- INDUSTRY REVIEW SYSTEM WITH SUBMENU --}}
             <li>
-                <a href="{{ route('industryreview.index') }}"
-                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                    {{ request()->is('industry-review') && !request()->is('industry-review/yachts*') && !request()->is('industry-review/marinas*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-
-                    <img
-                        src="{{ request()->is('industry-review') && !request()->is('industry-review/yachts*') && !request()->is('industry-review/marinas*') ? '/images/industry-review-active.svg' : '/images/industry-review-default.svg' }}"
-                        alt="Industry Review System"
-                        class="w-5 h-5">
-
-                    <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('industry-review') && !request()->is('industry-review/yachts*') && !request()->is('industry-review/marinas*') ? 'text-black' : 'text-white' }}">
-                        Industry Review System
-                    </span>
-                </a>
+                <div>
+                    <button @click="industryReviewOpen = !industryReviewOpen"
+                        class="w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition
+                        {{ request()->is('industry-review*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                        <div class="flex items-center space-x-3">
+                            <img
+                                src="{{ request()->is('industry-review*') ? '/images/industry-review-active.svg' : '/images/industry-review-default.svg' }}"
+                                alt="Industry Review System"
+                                class="w-5 h-5">
+                            <span x-show="isOpen"
+                                class="text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
+                                Industry Review System
+                            </span>
+                        </div>
+                        <svg x-show="isOpen" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': industryReviewOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    
+                    {{-- SUBMENU --}}
+                    <ul x-show="industryReviewOpen && isOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                        <li>
+                            <a href="{{ route('industryreview.index') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('industry-review') && !request()->is('industry-review/yachts*') && !request()->is('industry-review/marinas*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <span class="text-sm font-medium">View All</span>
+                            </a>
+                        </li>
+                        @role('super_admin')
+                        <li>
+                            <a href="{{ route('industryreview.yachts.manage') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('industry-review/yachts*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Manage Yachts</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('industryreview.marinas.manage') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('industry-review/marinas*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Manage Marinas</span>
+                            </a>
+                        </li>
+                        @endrole
+                    </ul>
+                </div>
             </li>
-            
-            {{-- MANAGE YACHTS --}}
-            @role('super_admin')
-            <li>
-                <a href="{{ route('industryreview.yachts.manage') }}"
-                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                    {{ request()->is('industry-review/yachts*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-
-                    <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('industry-review/yachts*') ? 'text-black' : 'text-white' }}">
-                        Manage Yachts
-                    </span>
-                </a>
-            </li>
-            @endrole
-            
-            {{-- MANAGE MARINAS --}}
-            @role('super_admin')
-            <li>
-                <a href="{{ route('industryreview.marinas.manage') }}"
-                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                    {{ request()->is('industry-review/marinas*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-
-                    <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('industry-review/marinas*') ? 'text-black' : 'text-white' }}">
-                        Manage Marinas
-                    </span>
-                </a>
-            </li>
-            @endrole
             @endhasanyrole
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
@@ -303,40 +309,45 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                 </a>
             </li> -->
             
-            {{-- ROUTE LIBRARY --}}
+            {{-- ITINERARY SYSTEM WITH SUBMENU --}}
             <li>
-                <a href="{{ route('itinerary.routes.index') }}"
-                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                                {{ request()->routeIs('itinerary.routes.index') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-
-                    <img
-                        src="{{ request()->routeIs('itinerary.routes.index') ? '/images/itinerarySystemWhite.svg' : '/images/itinerarySystemWhite.svg' }}"
-                        alt="Route Library"
-                        class="w-5 h-5">
-
-                    <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->routeIs('itinerary.routes.index') ? 'text-black' : 'text-white' }}">
-                        Itinerary System Library
-                    </span>
-                </a>
-            </li>
-            
-            {{-- ROUTE PLANNER --}}
-            <li>
-                <a href="{{ route('itinerary.routes.planner') }}"
-                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                                {{ request()->routeIs('itinerary.routes.planner') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-
-                    <img
-                        src="{{ request()->routeIs('itinerary.routes.planner') ? '/images/itinerarySystemWhite.svg' : '/images/itinerarySystemWhite.svg' }}"
-                        alt="Route Planner"
-                        class="w-5 h-5">
-
-                    <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->routeIs('itinerary.routes.planner') ? 'text-black' : 'text-white' }}">
-                        Itinerary Planner
-                    </span>
-                </a>
+                <div>
+                    <button @click="itineraryOpen = !itineraryOpen"
+                        class="w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition
+                        {{ request()->is('itinerary*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                        <div class="flex items-center space-x-3">
+                            <img
+                                src="{{ request()->is('itinerary*') ? '/images/itinerarySystemWhite.svg' : '/images/itinerarySystemWhite.svg' }}"
+                                alt="Itinerary System"
+                                class="w-5 h-5">
+                            <span x-show="isOpen"
+                                class="text-base font-medium {{ request()->is('itinerary*') ? 'text-black' : 'text-white' }}">
+                                Itinerary System
+                            </span>
+                        </div>
+                        <svg x-show="isOpen" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': itineraryOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    
+                    {{-- SUBMENU --}}
+                    <ul x-show="itineraryOpen && isOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                        <li>
+                            <a href="{{ route('itinerary.routes.index') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->routeIs('itinerary.routes.index') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <span class="text-sm font-medium">Itinerary System Library</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('itinerary.routes.planner') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->routeIs('itinerary.routes.planner') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <span class="text-sm font-medium">Itinerary Planner</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             @endhasanyrole
 
