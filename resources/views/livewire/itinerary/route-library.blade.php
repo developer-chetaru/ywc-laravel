@@ -8,7 +8,7 @@
         <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Route Library</h1>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Itinerary Library</h1>
                     <p class="text-sm text-gray-600">Browse curated voyages, public itineraries, and your private drafts</p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3">
@@ -17,7 +17,7 @@
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
-                        Create Route
+                        Create Itinerary
                     </a>
                     <button wire:click="clearFilters"
                             class="inline-flex items-center justify-center px-4 py-3 border-2 border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all">

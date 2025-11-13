@@ -247,7 +247,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             @endhasanyrole
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
-            <li>
+            <!-- <li>
                 <a href="{{ route('itinerary.index') }}"
                     class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
                                 {{ request()->is('itinerary') && !request()->is('itinerary/routes*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
@@ -262,7 +262,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         Itinerary System
                     </span>
                 </a>
-            </li>
+            </li> -->
             
             {{-- ROUTE LIBRARY --}}
             <li>
@@ -277,7 +277,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
 
                     <span x-show="isOpen"
                         class="text-base font-medium {{ request()->routeIs('itinerary.routes.index') ? 'text-black' : 'text-white' }}">
-                        Route Library
+                        Itinerary System Library
                     </span>
                 </a>
             </li>
@@ -295,7 +295,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
 
                     <span x-show="isOpen"
                         class="text-base font-medium {{ request()->routeIs('itinerary.routes.planner') ? 'text-black' : 'text-white' }}">
-                        Route Planner
+                        Itinerary Planner
                     </span>
                 </a>
             </li>
