@@ -37,7 +37,34 @@ class User extends Authenticatable implements JWTSubject
         'birth_province',
         'status',
         'is_active',
-        'token'
+        'token',
+        // Crew profile fields
+        'years_experience',
+        'current_yacht',
+        'languages',
+        'certifications',
+        'specializations',
+        'interests',
+        'availability_status',
+        'availability_message',
+        'looking_to_meet',
+        'looking_for_work',
+        'sea_service_time_months',
+        'previous_yachts',
+        'rating',
+        'total_reviews',
+        // Location tracking fields
+        'latitude',
+        'longitude',
+        'location_name',
+        'location_updated_at',
+        'location_privacy',
+        'share_location',
+        'auto_hide_at_sea',
+        'is_online',
+        'last_seen_at',
+        'visibility',
+        'show_in_discovery',
     ];
 
     protected $hidden = [
@@ -51,6 +78,22 @@ class User extends Authenticatable implements JWTSubject
         'otp_expires_at' => 'datetime',
         'dob' => 'date',
         'password' => 'hashed',
+        'location_updated_at' => 'datetime',
+        'last_seen_at' => 'datetime',
+        'languages' => 'array',
+        'certifications' => 'array',
+        'specializations' => 'array',
+        'interests' => 'array',
+        'previous_yachts' => 'array',
+        'looking_to_meet' => 'boolean',
+        'looking_for_work' => 'boolean',
+        'share_location' => 'boolean',
+        'auto_hide_at_sea' => 'boolean',
+        'is_online' => 'boolean',
+        'show_in_discovery' => 'boolean',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
+        'rating' => 'decimal:2',
     ];
 
     protected $appends = ['profile_photo_url'];
@@ -142,5 +185,133 @@ class User extends Authenticatable implements JWTSubject
     public function reviewComments()
     {
         return $this->hasMany(ReviewComment::class);
+    }
+
+    // Crew Discovery & Networking Relationships
+
+    // Connections
+    public function connections()
+    {
+        return $this->hasMany(UserConnection::class, 'user_id');
+    }
+
+    public function connectedTo()
+    {
+        return $this->hasMany(UserConnection::class, 'connected_user_id');
+    }
+
+    public function acceptedConnections()
+    {
+        return $this->connections()->where('status', 'accepted');
+    }
+
+    public function pendingConnections()
+    {
+        return $this->connections()->where('status', 'pending');
+    }
+
+    // Endorsements
+    public function endorsements()
+    {
+        return $this->hasMany(UserEndorsement::class);
+    }
+
+    public function givenEndorsements()
+    {
+        return $this->hasMany(UserEndorsement::class, 'endorser_id');
+    }
+
+    // Recommendations
+    public function recommendations()
+    {
+        return $this->hasMany(UserRecommendation::class);
+    }
+
+    public function givenRecommendations()
+    {
+        return $this->hasMany(UserRecommendation::class, 'recommender_id');
+    }
+
+    // Rallies
+    public function organizedRallies()
+    {
+        return $this->hasMany(Rally::class, 'organizer_id');
+    }
+
+    public function rallyAttendances()
+    {
+        return $this->hasMany(RallyAttendee::class);
+    }
+
+    public function rallyComments()
+    {
+        return $this->hasMany(RallyComment::class);
+    }
+
+    // Messages
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
+    }
+
+    public function unreadMessages()
+    {
+        return $this->receivedMessages()->where('is_read', false);
+    }
+
+    // Helper methods
+    public function updateLocation(float $latitude, float $longitude, ?string $locationName = null): void
+    {
+        $this->update([
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'location_name' => $locationName,
+            'location_updated_at' => now(),
+        ]);
+    }
+
+    public function setOnline(): void
+    {
+        $this->update([
+            'is_online' => true,
+            'last_seen_at' => now(),
+        ]);
+    }
+
+    public function setOffline(): void
+    {
+        $this->update([
+            'is_online' => false,
+            'last_seen_at' => now(),
+        ]);
+    }
+
+    public function getDistanceTo(float $latitude, float $longitude): float
+    {
+        if (!$this->latitude || !$this->longitude) {
+            return 0;
+        }
+
+        $earthRadius = 6371; // Earth's radius in kilometers
+
+        $latFrom = deg2rad($this->latitude);
+        $lonFrom = deg2rad($this->longitude);
+        $latTo = deg2rad($latitude);
+        $lonTo = deg2rad($longitude);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2) +
+             cos($latFrom) * cos($latTo) *
+             sin($lonDelta / 2) * sin($lonDelta / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 }

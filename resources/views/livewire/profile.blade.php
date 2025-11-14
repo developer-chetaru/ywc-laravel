@@ -235,6 +235,232 @@
                         </div>
                     </form>
 
+                    <!-- Crew Profile Section -->
+                    <div class="mt-8 border-t border-gray-200 pt-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Crew Profile Information</h3>
+                        
+                        <form wire:submit.prevent="updateCrewProfile" class="space-y-6">
+                            <!-- Years of Experience & Current Yacht -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fa-solid fa-star mr-1"></i>Years of Experience
+                                    </label>
+                                    <input type="number" wire:model.defer="years_experience" min="0" max="100"
+                                        class="w-full border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    @error('years_experience') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fa-solid fa-ship mr-1"></i>Current Yacht
+                                    </label>
+                                    <input type="text" wire:model.defer="current_yacht" maxlength="255"
+                                        placeholder="e.g., M/Y Ocean Dream"
+                                        class="w-full border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    @error('current_yacht') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <!-- Sea Service Time -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fa-solid fa-clock mr-1"></i>Sea Service Time (Months)
+                                </label>
+                                <input type="number" wire:model.defer="sea_service_time_months" min="0"
+                                    class="w-full border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                @error('sea_service_time_months') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+
+                            <!-- Availability Status -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fa-solid fa-circle-check mr-1"></i>Availability Status
+                                </label>
+                                <select wire:model.defer="availability_status"
+                                    class="w-full border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select status...</option>
+                                    <option value="available">Available</option>
+                                    <option value="busy">Busy</option>
+                                    <option value="looking_for_work">Looking for Work</option>
+                                    <option value="on_leave">On Leave</option>
+                                </select>
+                                @error('availability_status') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+
+                            <!-- Availability Message -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fa-solid fa-message mr-1"></i>Availability Message
+                                </label>
+                                <textarea wire:model.defer="availability_message" rows="3" maxlength="500"
+                                    placeholder="Tell others about your availability..."
+                                    class="w-full border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                @error('availability_message') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+
+                            <!-- Looking For -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fa-solid fa-search mr-1"></i>Looking For
+                                </label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" wire:model.defer="looking_to_meet" class="mr-2">
+                                        <span>Looking to meet other crew members</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" wire:model.defer="looking_for_work" class="mr-2">
+                                        <span>Looking for work opportunities</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Languages -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fa-solid fa-language mr-1"></i>Languages
+                                </label>
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" wire:model="newLanguage" 
+                                        placeholder="Add language (e.g., English)"
+                                        class="flex-1 border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        wire:keydown.enter.prevent="addLanguage">
+                                    <button type="button" wire:click="addLanguage"
+                                        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                        <i class="fa-solid fa-plus"></i> Add
+                                    </button>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($languages as $index => $language)
+                                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm flex items-center gap-2">
+                                            {{ $language }}
+                                            <button type="button" wire:click="removeLanguage({{ $index }})" class="text-blue-700 hover:text-blue-900">
+                                                <i class="fa-solid fa-times text-xs"></i>
+                                            </button>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- Certifications -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fa-solid fa-certificate mr-1"></i>Certifications
+                                </label>
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" wire:model="newCertification" 
+                                        placeholder="Add certification (e.g., STCW)"
+                                        class="flex-1 border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        wire:keydown.enter.prevent="addCertification">
+                                    <button type="button" wire:click="addCertification"
+                                        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                                        <i class="fa-solid fa-plus"></i> Add
+                                    </button>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($certifications as $index => $cert)
+                                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm flex items-center gap-2">
+                                            {{ $cert }}
+                                            <button type="button" wire:click="removeCertification({{ $index }})" class="text-green-700 hover:text-green-900">
+                                                <i class="fa-solid fa-times text-xs"></i>
+                                            </button>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- Specializations -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fa-solid fa-tools mr-1"></i>Specializations
+                                </label>
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" wire:model="newSpecialization" 
+                                        placeholder="Add specialization"
+                                        class="flex-1 border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        wire:keydown.enter.prevent="addSpecialization">
+                                    <button type="button" wire:click="addSpecialization"
+                                        class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+                                        <i class="fa-solid fa-plus"></i> Add
+                                    </button>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($specializations as $index => $spec)
+                                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm flex items-center gap-2">
+                                            {{ $spec }}
+                                            <button type="button" wire:click="removeSpecialization({{ $index }})" class="text-purple-700 hover:text-purple-900">
+                                                <i class="fa-solid fa-times text-xs"></i>
+                                            </button>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- Interests -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fa-solid fa-heart mr-1"></i>Interests
+                                </label>
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" wire:model="newInterest" 
+                                        placeholder="Add interest"
+                                        class="flex-1 border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        wire:keydown.enter.prevent="addInterest">
+                                    <button type="button" wire:click="addInterest"
+                                        class="px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600">
+                                        <i class="fa-solid fa-plus"></i> Add
+                                    </button>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($interests as $index => $interest)
+                                        <span class="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm flex items-center gap-2">
+                                            {{ $interest }}
+                                            <button type="button" wire:click="removeInterest({{ $index }})" class="text-pink-700 hover:text-pink-900">
+                                                <i class="fa-solid fa-times text-xs"></i>
+                                            </button>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- Previous Yachts -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fa-solid fa-ship mr-1"></i>Previous Yachts
+                                </label>
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" wire:model="newPreviousYacht" 
+                                        placeholder="Add previous yacht name"
+                                        class="flex-1 border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        wire:keydown.enter.prevent="addPreviousYacht">
+                                    <button type="button" wire:click="addPreviousYacht"
+                                        class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                                        <i class="fa-solid fa-plus"></i> Add
+                                    </button>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($previous_yachts as $index => $yacht)
+                                        <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm flex items-center gap-2">
+                                            {{ $yacht }}
+                                            <button type="button" wire:click="removePreviousYacht({{ $index }})" class="text-gray-700 hover:text-gray-900">
+                                                <i class="fa-solid fa-times text-xs"></i>
+                                            </button>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="pt-4 border-t border-gray-200">
+                                <button type="submit" 
+                                    class="px-6 py-2 bg-[#0053FF] text-white rounded-lg hover:bg-[#0046CC] transition font-medium">
+                                    <i class="fa-solid fa-save mr-2"></i>Save Crew Profile
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                 </div>
             </div>
         </div>

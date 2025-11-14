@@ -25,6 +25,9 @@ use App\Livewire\WorkLog\WorkLogIndex;
 use App\Livewire\IndustryReview\IndustryReviewIndex;
 
 use App\Livewire\Roles\RoleIndex;
+use App\Livewire\CrewDiscovery;
+use App\Livewire\UserConnections;
+use App\Livewire\RallyManager;
 
 use App\Http\Controllers\CareerHistoryController;
 use App\Http\Controllers\CocCheckerController;
@@ -164,6 +167,11 @@ Route::middleware([
   	Route::get('/training-resources', TrainingResources::class)->name('training.resources');
 
 	Route::get('/roles', RoleIndex::class)->name('roles.index');
+
+	// Crew Discovery & Networking (API-based, accessible from sidebar)
+	Route::get('/crew-discovery', CrewDiscovery::class)->name('crew.discovery');
+	Route::get('/connections', UserConnections::class)->name('user.connections');
+	Route::get('/rallies', RallyManager::class)->name('rallies.index');
 
   Route::get('/itinerary', ItineraryIndex::class)->name('itinerary.index');
 	Route::get('/marketplace', MarketplaceIndex::class)->name('marketplace.index');

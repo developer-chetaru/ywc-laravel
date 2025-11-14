@@ -9,7 +9,8 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
         isOpen: true, 
         isMobile: window.innerWidth < 768,
         industryReviewOpen: {{ request()->is('industry-review*') ? 'true' : 'false' }},
-        itineraryOpen: {{ request()->is('itinerary*') ? 'true' : 'false' }}
+        itineraryOpen: {{ request()->is('itinerary*') ? 'true' : 'false' }},
+        crewDiscoveryOpen: {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'true' : 'false' }}
     }"
     x-init="
         window.addEventListener('resize', () => isMobile = window.innerWidth < 768);
@@ -391,6 +392,64 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             </li>
             @endhasanyrole
 
+            {{-- CREW DISCOVERY & NETWORKING --}}
+            @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
+            <li>
+                <div>
+                    <button @click="crewDiscoveryOpen = !crewDiscoveryOpen"
+                        class="w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition
+                        {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span x-show="isOpen"
+                                class="text-base font-medium {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'text-black' : 'text-white' }}">
+                                Crew Discovery
+                            </span>
+                        </div>
+                        <svg x-show="isOpen" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': crewDiscoveryOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    
+                    {{-- SUBMENU --}}
+                    <ul x-show="crewDiscoveryOpen && isOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                        <li>
+                            <a href="/crew-discovery"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('crew-discovery*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Discover Crew</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/connections"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('connections*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">My Connections</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/rallies"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('rallies*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Rallies & Events</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            @endhasanyrole
 
             {{-- USER ROLES (Super Admin Only) --}}
             @role('super_admin')

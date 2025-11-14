@@ -17,6 +17,11 @@ use App\Http\Controllers\Api\YachtController;
 use App\Http\Controllers\Api\YachtReviewController;
 use App\Http\Controllers\Api\MarinaController;
 use App\Http\Controllers\Api\MarinaReviewController;
+use App\Http\Controllers\Api\CrewDiscoveryController;
+use App\Http\Controllers\Api\UserConnectionController;
+use App\Http\Controllers\Api\RallyController;
+use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\CrewProfileController;
 
 Route::apiResource('itineraries', ItineraryController::class);
 Route::put('/itineraries/{itinerary}/status', [ItineraryController::class, 'updateStatus']);
@@ -113,6 +118,55 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/marinas', [MarinaController::class, 'store']);
     Route::put('/marinas/{id}', [MarinaController::class, 'update']);
     Route::delete('/marinas/{id}', [MarinaController::class, 'destroy']);
+
+    // Crew Profile & Privacy
+    Route::prefix('crew-profile')->group(function () {
+        Route::get('/', [CrewProfileController::class, 'getProfile']);
+        Route::post('/update', [CrewProfileController::class, 'updateProfile']);
+        Route::post('/privacy', [CrewProfileController::class, 'updatePrivacySettings']);
+        Route::get('/{user}', [CrewProfileController::class, 'getPublicProfile']);
+    });
+
+            // Crew Discovery & Networking Features
+            Route::prefix('crew-discovery')->group(function () {
+                // Location management
+                Route::post('/location/update', [CrewDiscoveryController::class, 'updateLocation']);
+                Route::post('/online-status', [CrewDiscoveryController::class, 'updateOnlineStatus']);
+                
+                // Discovery
+                Route::post('/discover', [CrewDiscoveryController::class, 'discoverNearby']);
+                Route::get('/online', [CrewDiscoveryController::class, 'getOnlineCrew']);
+                Route::get('/all-locations', [CrewDiscoveryController::class, 'getAllCrewLocations']);
+            });
+
+    // User Connections
+    Route::prefix('connections')->group(function () {
+        Route::post('/request', [UserConnectionController::class, 'sendRequest']);
+        Route::get('/requests', [UserConnectionController::class, 'getRequests']);
+        Route::post('/{connection}/accept', [UserConnectionController::class, 'acceptRequest']);
+        Route::post('/{connection}/decline', [UserConnectionController::class, 'declineRequest']);
+        Route::get('/list', [UserConnectionController::class, 'getConnections']);
+        Route::delete('/{connection}', [UserConnectionController::class, 'removeConnection']);
+        Route::post('/block', [UserConnectionController::class, 'blockUser']);
+    });
+
+    // Rallies (Crew Meetups/Events)
+    Route::prefix('rallies')->group(function () {
+        Route::post('/', [RallyController::class, 'store']);
+        Route::get('/discover', [RallyController::class, 'discover']);
+        Route::get('/{rally}', [RallyController::class, 'show']);
+        Route::post('/{rally}/rsvp', [RallyController::class, 'rsvp']);
+        Route::post('/{rally}/comments', [RallyController::class, 'addComment']);
+    });
+
+    // Messaging
+    Route::prefix('messages')->group(function () {
+        Route::post('/send', [MessageController::class, 'send']);
+        Route::get('/conversations', [MessageController::class, 'getConversations']);
+        Route::get('/conversation/{user}', [MessageController::class, 'getConversation']);
+        Route::post('/{user}/read', [MessageController::class, 'markAsRead']);
+        Route::get('/unread-count', [MessageController::class, 'getUnreadCount']);
+    });
 });
 
 // Optional public endpoints
