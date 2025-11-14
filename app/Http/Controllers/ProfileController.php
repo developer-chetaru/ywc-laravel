@@ -73,10 +73,27 @@ class ProfileController extends Controller
         try {
             $user = auth()->user();
 
+            // Format dob from Y-m-d to d/m/Y if it exists
+            $dob = null;
+            if ($user->dob) {
+                try {
+                    $dob = \Carbon\Carbon::createFromFormat('Y-m-d', $user->dob)->format('d/m/Y');
+                } catch (\Exception $e) {
+                    $dob = $user->dob;
+                }
+            }
+
             return response()->json([
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
                 'email' => $user->email,
+                'dob' => $dob,
+                'phone' => $user->phone,
+                'gender' => $user->gender,
+                'nationality' => $user->nationality,
+                'marital_status' => $user->marital_status,
+                'birth_country' => $user->birth_country,
+                'birth_province' => $user->birth_province,
                 'image' => $user->profile_photo_path ? url('uploads/profile/' . $user->profile_photo_path) : null,
             ]);
         } catch (\Exception $e) {
