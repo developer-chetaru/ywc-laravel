@@ -413,48 +413,42 @@
 
 @elserole('super_admin')
 
-<div class="flex-1 flex flex-col overflow-hidden">
-    <div class="flex min-h-screen bg-gray-100">
-        <div class="flex-1 transition-all duration-300">
-            <main class="p-6 flex-1 overflow-y-auto">
-                <div class=" bg-gray-100 p-1">
-                    <!-- Search & Filters -->
-                    <div class="flex gap-4 mb-6">
-                        <div class="relative w-[40%]">
-                            <input id="searchInput" type="search" name="search" placeholder="Search by name, email, or ID"
-                                value="{{ request('search') }}"
-                                class="text-[#616161] placeholder-[#616161] w-full py-3 px-4 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-500 text-sm pl-10 bg-white font-medium">
-                            <img class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 cursor-pointer"
-                                src="https://console-ywc.nativeappdev.com/images/search.svg" alt="search">
-                        </div>
+<div class="w-full">
+    <div class="bg-gray-100 p-1">
+        <!-- Search & Filters -->
+        <div class="flex gap-4 mb-6">
+            <div class="relative w-[40%]">
+                <input id="searchInput" type="search" name="search" placeholder="Search by name, email, or ID"
+                    value="{{ request('search') }}"
+                    class="text-[#616161] placeholder-[#616161] w-full py-3 px-4 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-500 text-sm pl-10 bg-white font-medium">
+                <img class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 cursor-pointer"
+                    src="https://console-ywc.nativeappdev.com/images/search.svg" alt="search">
+            </div>
 
-                        <div class="relative">
-                            <select id="sortFilter" name="sort"
-                                    class="[background-image:none] appearance-none text-[#616161] py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-500 text-sm font-medium bg-white pl-10 pr-4 cursor-pointer min-w-[180px]">
-                                <option value="">Sort by: New to old</option>
-                                <option value="new">New to Old</option>
-                                <option value="old">Old to New</option>
-                            </select>
-                            <img class="pointer-events-none absolute left-3 top-1/2 transform -translate-y-1/2 w-5 cursor-pointer" src="{{ asset('images/sorting-01.svg') }}" alt="">
-                        </div>
+            <div class="relative">
+                <select id="sortFilter" name="sort"
+                        class="[background-image:none] appearance-none text-[#616161] py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-500 text-sm font-medium bg-white pl-10 pr-4 cursor-pointer min-w-[180px]">
+                    <option value="">Sort by: New to old</option>
+                    <option value="new">New to Old</option>
+                    <option value="old">Old to New</option>
+                </select>
+                <img class="pointer-events-none absolute left-3 top-1/2 transform -translate-y-1/2 w-5 cursor-pointer" src="{{ asset('images/sorting-01.svg') }}" alt="">
+            </div>
 
-                        <div class="relative">
-                            <select id="statusFilter" name="status"
-                                    class="[background-image:none] appearance-none text-[#616161] py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-500 text-sm font-medium bg-white px-3 pr-10 cursor-pointer min-w-[180px]">
-                                <option value="">Status</option>
-                                <option value="pending">Pending</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
-                            </select>                            
-                            <img class="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-3 cursor-pointer" src="{{ asset('images/down-arr.svg') }}" alt="">
-                        </div>
-                    </div>
-                                                       
-                    <div id="searchResults">
-                        @include('career-history.super-admin-career-history-dashboard')
-                    </div>
-                </div>
-            </main>
+            <div class="relative">
+                <select id="statusFilter" name="status"
+                        class="[background-image:none] appearance-none text-[#616161] py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-500 text-sm font-medium bg-white px-3 pr-10 cursor-pointer min-w-[180px]">
+                    <option value="">Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>                            
+                <img class="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-3 cursor-pointer" src="{{ asset('images/down-arr.svg') }}" alt="">
+            </div>
+        </div>
+                                                   
+        <div id="searchResults">
+            @include('career-history.super-admin-career-history-dashboard')
         </div>
     </div>
 </div>

@@ -48,7 +48,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
     </div>
 
     <!-- Scrollable Navigation -->
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 overflow-y-auto min-h-0 sidebar-scrollable" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;">
         <ul class="space-y-1 px-2 mt-2 pb-6">
 
             {{-- DASHBOARD --}}
