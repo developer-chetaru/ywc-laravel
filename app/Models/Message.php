@@ -13,6 +13,7 @@ class Message extends Model
     protected $fillable = [
         'sender_id',
         'receiver_id',
+        'group_id',
         'message',
         'is_read',
         'read_at',
@@ -34,6 +35,16 @@ class Message extends Model
     public function receiver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'receiver_id');
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    public function isGroupMessage(): bool
+    {
+        return !is_null($this->group_id);
     }
 
     public function markAsRead(): void

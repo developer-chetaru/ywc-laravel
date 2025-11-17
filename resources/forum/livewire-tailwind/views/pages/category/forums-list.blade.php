@@ -61,7 +61,7 @@
                             <td class="py-6 px-4 text-center">{{ $index + 1 }}</td>
                             <td class="py-6 px-4 font-normal">{{ $forum->title }}</td>
                             <td class="py-6 px-4">
-                                {{ $Str::limit($forum->description, 80) }}
+                                {{ Str::limit($forum->description, 80) }}
                                 @if(strlen($forum->description) > 80)
                                     <a href="{{ Forum::route('category.show', $forum) }}" class="block hover:no-underline capitalize mt-2 text-[#808080] underline w-fit">
                                         Read More

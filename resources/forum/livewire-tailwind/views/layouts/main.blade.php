@@ -41,33 +41,31 @@
 }
 </style>
 </head>
-<body class="forum flex h-screen overflow-hidden font-[Figtree] bg-gray-100 text-gray-800">
+<body class="forum h-screen overflow-hidden font-[Figtree] bg-gray-100 text-gray-800">
 
-    <div class="flex min-h-full w-full">
+    {{-- Sidebar (Fixed Position) --}}
+    @include('livewire.sidebar')
 
-        {{-- Sidebar --}}
-        <div class="h-screen overflow-y-auto">
-            @include('livewire.sidebar')
-        </div>
+    {{-- Content (Adjusts margin based on sidebar state) --}}
+    <div 
+        class="flex flex-col h-screen transition-all duration-300 overflow-hidden"
+        :class="{ 'ml-72': $store.sidebar?.isOpen && window.innerWidth >= 768, 'ml-16': !$store.sidebar?.isOpen && window.innerWidth >= 768 }"
+        x-data>
+        @livewire('navigation-menu')
 
-        {{-- Content --}}
-        <div class="flex-1 flex flex-col h-screen transition-all duration-300">
-            @livewire('navigation-menu')
+        @if (isset($header))
+            <header class="bg-white shadow px-6 py-4 flex-shrink-0 border-b border-gray-200">
+                <div class="text-lg font-semibold text-gray-900">
+                    {{ $header }}
+                </div>
+            </header>
+        @endif
 
-            @if (isset($header))
-                <header class="bg-white shadow px-6 py-4 flex-shrink-0 border-b border-gray-200">
-                    <div class="text-lg font-semibold text-gray-900">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endif
+        <main class="flex-1 overflow-y-auto p-4">
+            {{ $slot }}
+        </main>
 
-            <main class="flex-1 p-4">
-                {{ $slot }}
-            </main>
-
-            <livewire:forum::components.alerts />
-        </div>
+        <livewire:forum::components.alerts />
     </div>
 
     <!-- Alpine + Navbar -->

@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Models\User;
 use App\Models\UserConnection;
 use App\Models\Message;
+use App\Models\Group;
+use App\Models\GroupMember;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -12,7 +14,7 @@ class UserConnections extends Component
 {
     use WithPagination;
 
-    public $tab = 'requests'; // 'requests', 'connections', 'sent'
+    public $tab = 'connections'; // 'connections', 'requests', 'sent'
     public $selectedConnection = null;
     public $showConnectionModal = false;
     public $requestMessage = '';
@@ -26,6 +28,16 @@ class UserConnections extends Component
     public $messageText = '';
     public $messages = [];
     public $conversationUserId = null;
+
+    // Groups
+    public $showGroupModal = false;
+    public $showCreateGroupModal = false;
+    public $groupName = '';
+    public $groupDescription = '';
+    public $selectedGroupMembers = [];
+    public $groups = [];
+    public $selectedGroupId = null;
+    public $groupMessages = [];
 
     public $alert = '';
     public $error = '';
@@ -312,6 +324,163 @@ class UserConnections extends Component
         if ($this->showMessageModal && $this->conversationUserId) {
             $this->loadMessages($this->conversationUserId);
         }
+        if ($this->showGroupModal && $this->selectedGroupId) {
+            $this->loadGroupMessages($this->selectedGroupId);
+        }
+    }
+
+    // Group Methods
+    public function openCreateGroupModal()
+    {
+        $this->showCreateGroupModal = true;
+        $this->groupName = '';
+        $this->groupDescription = '';
+        $this->selectedGroupMembers = [];
+    }
+
+    public function closeCreateGroupModal()
+    {
+        $this->showCreateGroupModal = false;
+        $this->groupName = '';
+        $this->groupDescription = '';
+        $this->selectedGroupMembers = [];
+    }
+
+    public function createGroup()
+    {
+        $this->validate([
+            'groupName' => 'required|string|max:255',
+            'groupDescription' => 'nullable|string|max:1000',
+            'selectedGroupMembers' => 'required|array|min:1',
+        ]);
+
+        try {
+            $group = Group::create([
+                'name' => $this->groupName,
+                'description' => $this->groupDescription,
+                'created_by' => auth()->id(),
+            ]);
+
+            // Add creator as admin
+            GroupMember::create([
+                'group_id' => $group->id,
+                'user_id' => auth()->id(),
+                'role' => 'admin',
+            ]);
+
+            // Add selected members
+            foreach ($this->selectedGroupMembers as $userId) {
+                GroupMember::create([
+                    'group_id' => $group->id,
+                    'user_id' => $userId,
+                    'role' => 'member',
+                ]);
+            }
+
+            $this->alert = 'Group created successfully!';
+            $this->closeCreateGroupModal();
+        } catch (\Exception $e) {
+            $this->error = 'Failed to create group: ' . $e->getMessage();
+        }
+    }
+
+    public function openGroupModal($groupId)
+    {
+        $this->selectedGroupId = $groupId;
+        $this->showGroupModal = true;
+        $this->loadGroupMessages($groupId);
+    }
+
+    public function closeGroupModal()
+    {
+        $this->showGroupModal = false;
+        $this->selectedGroupId = null;
+        $this->groupMessages = [];
+        $this->messageText = '';
+    }
+
+    public function loadGroupMessages($groupId)
+    {
+        $this->groupMessages = Message::where('group_id', $groupId)
+            ->with(['sender:id,first_name,last_name,email,profile_photo_path'])
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($message) {
+                $createdAt = $message->created_at instanceof \Carbon\Carbon 
+                    ? $message->created_at->copy() 
+                    : \Carbon\Carbon::parse($message->created_at);
+                
+                $now = now();
+                $diffInSeconds = (int) abs($now->diffInSeconds($createdAt));
+                $diffInMinutes = (int) abs($now->diffInMinutes($createdAt));
+                $diffInHours = (int) abs($now->diffInHours($createdAt));
+                
+                $timeDisplay = '';
+                if ($diffInSeconds < 30) {
+                    $timeDisplay = 'Just now';
+                } elseif ($diffInSeconds < 60) {
+                    $timeDisplay = 'Just now';
+                } elseif ($diffInMinutes < 60) {
+                    $timeDisplay = $diffInMinutes . ' minute' . ($diffInMinutes > 1 ? 's' : '') . ' ago';
+                } elseif ($diffInHours < 2) {
+                    $timeDisplay = $diffInHours . ' hour ago';
+                } elseif ($createdAt->isToday()) {
+                    $timeDisplay = $createdAt->format('g:i A');
+                } elseif ($createdAt->isYesterday()) {
+                    $timeDisplay = 'Yesterday at ' . $createdAt->format('g:i A');
+                } elseif ($createdAt->isCurrentWeek()) {
+                    $timeDisplay = $createdAt->format('l \a\t g:i A');
+                } elseif ($createdAt->isCurrentYear()) {
+                    $timeDisplay = $createdAt->format('M j, g:i A');
+                } else {
+                    $timeDisplay = $createdAt->format('M j, Y g:i A');
+                }
+                
+                return [
+                    'id' => $message->id,
+                    'sender_id' => $message->sender_id,
+                    'sender_name' => $message->sender->name,
+                    'sender_photo' => $message->sender->profile_photo_url,
+                    'message' => $message->message,
+                    'is_sent' => $message->sender_id === auth()->id(),
+                    'time_display' => $timeDisplay,
+                    'created_at' => $message->created_at,
+                ];
+            });
+    }
+
+    public function sendGroupMessage()
+    {
+        if (!$this->selectedGroupId || !$this->messageText) {
+            return;
+        }
+
+        $this->validate([
+            'selectedGroupId' => 'required|exists:groups,id',
+            'messageText' => 'required|string|max:5000',
+        ]);
+
+        // Check if user is member of group
+        $isMember = GroupMember::where('group_id', $this->selectedGroupId)
+            ->where('user_id', auth()->id())
+            ->exists();
+
+        if (!$isMember) {
+            $this->error = 'You are not a member of this group';
+            return;
+        }
+
+        Message::create([
+            'sender_id' => auth()->id(),
+            'group_id' => $this->selectedGroupId,
+            'message' => trim($this->messageText),
+            'message_type' => 'text',
+        ]);
+
+        $this->messageText = '';
+        $this->loadGroupMessages($this->selectedGroupId);
+        $this->alert = 'Message sent successfully';
+        $this->dispatch('scroll-to-bottom');
     }
 
     public function render()
@@ -363,6 +532,14 @@ class UserConnections extends Component
             ->with('connectedUser:id,first_name,last_name,email,profile_photo_path')
             ->latest()
             ->paginate(10, ['*'], 'sent_page');
+
+        // Load user's groups
+        $this->groups = Group::whereHas('members', function ($q) {
+            $q->where('user_id', auth()->id());
+        })
+        ->with(['creator:id,first_name,last_name', 'members:id,first_name,last_name'])
+        ->latest()
+        ->get();
 
         return view('livewire.user-connections', [
             'requests' => $requests,

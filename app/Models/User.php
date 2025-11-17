@@ -264,6 +264,24 @@ class User extends Authenticatable implements JWTSubject
         return $this->receivedMessages()->where('is_read', false);
     }
 
+    // Groups
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_members', 'user_id', 'group_id')
+            ->withPivot('role', 'joined_at')
+            ->withTimestamps();
+    }
+
+    public function createdGroups()
+    {
+        return $this->hasMany(Group::class, 'created_by');
+    }
+
+    public function groupMemberships()
+    {
+        return $this->hasMany(GroupMember::class);
+    }
+
     // Helper methods
     public function updateLocation(float $latitude, float $longitude, ?string $locationName = null): void
     {
