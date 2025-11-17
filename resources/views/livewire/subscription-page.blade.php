@@ -37,7 +37,7 @@
                 </li>
             </ul>
 
-            @role('user')
+            @unlessrole('super_admin')
             <h4 class="text-[14px] text-[#616161] mb-4">Payment and plans</h4>
             <ul>
                 <li>
@@ -68,10 +68,10 @@
                     </a>
                 </li>
             </ul>
-            @endrole
+            @endunlessrole
         </div>
         
-        @role('user')
+        @unlessrole('super_admin')
         <div class="bg-white p-5 rounded-lg shadow-md col-span-3">
             <div class="w-full">
                 <h2 class="text-xl border-b border-gray-100 font-medium text-[#0053FF] pb-2">Subscription</h2>
@@ -257,6 +257,6 @@
             </div>
         </div>
 
-        @endrole
+        @endunlessrole
     </div>
 </main>
