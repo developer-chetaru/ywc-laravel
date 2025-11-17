@@ -9,7 +9,7 @@
                 <livewire:forum::components.post.card :post="$parent" :single="true" :show-author-pane="false" />
             @endif
 
-            <div class="bg-white rounded-md shadow-md my-2 p-6 dark:bg-slate-700">
+            <div class="bg-white rounded-md shadow-sm border border-gray-200 my-2 p-6">
                 <form wire:submit="reply">
                     <x-forum::form.input-textarea
                         id="content"
@@ -24,7 +24,7 @@
                         </div>
                         <div class="grow text-right">
                             <x-forum::button :label="trans('forum::general.reply')" type="submit" 
-                            class="inline-block rounded-md font-medium text-l text-center disabled:text-slate-500 disabled:bg-slate-300 dark:disabled:text-slate-300 dark:disabled:bg-slate-500 text-white bg-blue-600 hover:text-white hover:bg-blue-500 px-6 py-2"/>
+                            class="inline-block rounded-md font-medium text-l text-center disabled:text-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-white bg-blue-600 hover:text-white hover:bg-blue-700 px-6 py-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"/>
                         </div>
                     </div>
                 </form>

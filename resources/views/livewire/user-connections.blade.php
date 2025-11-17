@@ -348,7 +348,20 @@
                                             </div>
                                         @endif
                                         <div class="rounded-lg px-4 py-2 {{ $message['is_sent'] ? 'bg-[#0053FF] text-white' : 'bg-white text-gray-900 border border-gray-200' }}">
-                                            <p class="text-sm">{{ $message['message'] }}</p>
+                                            @if(!empty($message['attachment_url']) || !empty($message['attachment_path']))
+                                                <div class="mb-2">
+                                                    @php
+                                                        $imageUrl = $message['attachment_url'] ?? asset('storage/' . $message['attachment_path']);
+                                                    @endphp
+                                                    <a href="{{ $imageUrl }}" target="_blank" class="block">
+                                                        <img src="{{ $imageUrl }}" alt="Image" class="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                        <div style="display:none;" class="text-sm text-gray-500">Image not available</div>
+                                                    </a>
+                                                </div>
+                                            @endif
+                                            @if(!empty($message['message']))
+                                                <p class="text-sm">{{ $message['message'] }}</p>
+                                            @endif
                                             <div class="flex items-center justify-between mt-1">
                                                 <p class="text-xs {{ $message['is_sent'] ? 'text-blue-100' : 'text-gray-500' }}">
                                                     {{ $message['time_display'] }}
@@ -375,7 +388,20 @@
                     
                     <!-- Message Input -->
                     <div class="p-4 border-t border-gray-200 bg-white">
+                        @if($messageImage)
+                            <div class="mb-2 relative inline-block">
+                                <img src="{{ $messageImage->temporaryUrl() }}" alt="Preview" class="max-w-xs h-32 object-cover rounded-lg border border-gray-300">
+                                <button wire:click="$set('messageImage', null)" 
+                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition">
+                                    <i class="fa-solid fa-times text-xs"></i>
+                                </button>
+                            </div>
+                        @endif
                         <form wire:submit.prevent="sendMessage" class="flex gap-2">
+                            <label class="cursor-pointer px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center justify-center">
+                                <i class="fa-solid fa-image text-gray-600"></i>
+                                <input type="file" wire:model="messageImage" accept="image/*" class="hidden">
+                            </label>
                             <input type="text" 
                                 wire:model="messageText" 
                                 placeholder="Type a message..." 

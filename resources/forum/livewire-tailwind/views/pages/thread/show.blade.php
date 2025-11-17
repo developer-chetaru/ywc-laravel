@@ -38,16 +38,6 @@
             @endif
         </div>
 
-        @if (count($selectablePostIds) > 0)
-            <div style="margin-bottom: -.6rem;">
-                <x-forum::form.input-checkbox
-                    id="toggle-all"
-                    value=""
-                    :label="trans('forum::posts.select_all')"
-                    x-model="toggledAllPosts"
-                    @click="toggleAllPosts" />
-            </div>
-        @endif
     </div>
 
     <div class="flex flex-col lg:flex-row items-center">
@@ -120,7 +110,7 @@
             <livewire:forum::components.post.card
                 :$post
                 :key="$post->id . $updateKey"
-                :selectable="in_array($post->id, $selectablePostIds)" />
+                :selectable="false" />
         @endforeach
     </div>
 
@@ -133,7 +123,7 @@
 
         {{-- Quick Reply --}}
         @if (!$thread->trashed() && auth()->check())
-            <livewire:forum.quick-reply :thread="$thread" />
+            <livewire:forum.quick-reply :thread="$thread" wire:key="quick-reply-{{ $updateKey }}" />
         @endif
     </div>
 
@@ -142,37 +132,6 @@
 
     
 
-    <div x-show="selectedPosts.length > 0" class="fixed bottom-0 right-0 z-40 left-0 sm:left-auto sm:min-w-96 bg-white shadow-md rounded-md m-4 p-6 z-30 dark:bg-slate-700">
-        <h3>{{ trans('forum::general.with_selection') }}</h3>
-
-        <x-forum::form.input-select
-            id="bulk-action"
-            x-model="postsAction">
-                <option value="none" disabled>{{ trans_choice('forum::general.actions', 1) }}...</option>
-            @can ('deletePosts', $thread)
-                <option value="delete">{{ trans('forum::general.delete') }}</option>
-            @endcan
-            @can ('restorePosts', $thread)
-                <option value="restore">{{ trans('forum::general.restore') }}</option>
-            @endcan
-        </x-forum::form.input-select>
-
-        @if (config('forum.general.soft_deletes'))
-            <x-forum::form.input-checkbox
-                id="permadelete"
-                value=""
-                :label="trans('forum::general.perma_delete')"
-                x-show="postsAction == 'delete'"
-                x-model="permadeletePosts" />
-        @endif
-
-        <div class="mt-4">
-            <x-forum::button
-                :label="trans('forum::general.proceed')"
-                @click="confirmPostsAction"
-                x-bind:disabled="postsAction == 'none'" />
-        </div>
-    </div>
 
     <x-forum::modal x-show="showThreadActionConfirmationModal" :heading="trans('forum::general.confirm_action')" onClose="showThreadActionConfirmationModal = false">
         <span x-text="threadActionConfirmationText"></span>

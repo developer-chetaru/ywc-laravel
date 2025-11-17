@@ -101,7 +101,8 @@ Route::middleware([
     Route::get('/manage-document', ManageDocument::class)->name('manage-document');
   
   	Route::prefix('forum')->name('forum.')->group(function () {
-        require base_path('vendor/riari/laravel-forum/routes/livewire.php');
+        // Use our custom routes file that uses our overridden components
+        require base_path('routes/forum-livewire.php');
     });
   
     Route::get('/forums', [ManageDocumentController::class, 'forums'])->name('forum');

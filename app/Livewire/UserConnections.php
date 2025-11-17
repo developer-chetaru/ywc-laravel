@@ -9,10 +9,13 @@ use App\Models\Group;
 use App\Models\GroupMember;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Storage;
 
 class UserConnections extends Component
 {
     use WithPagination;
+    use WithFileUploads;
 
     public $tab = 'connections'; // 'connections', 'requests', 'sent'
     public $selectedConnection = null;
@@ -28,6 +31,7 @@ class UserConnections extends Component
     public $messageText = '';
     public $messages = [];
     public $conversationUserId = null;
+    public $messageImage = null;
 
     // Groups
     public $showGroupModal = false;
@@ -170,6 +174,7 @@ class UserConnections extends Component
         $this->messageUserId = null;
         $this->messageUserName = '';
         $this->messageText = '';
+        $this->messageImage = null;
         $this->messages = [];
     }
 
@@ -257,6 +262,8 @@ class UserConnections extends Component
                 'receiver_id' => $message->receiver_id,
                 'message' => $message->message,
                 'message_type' => $message->message_type,
+                'attachment_path' => $message->attachment_path,
+                'attachment_url' => $message->attachment_path ? asset('storage/' . $message->attachment_path) : null,
                 'is_sent' => $message->sender_id === auth()->id(),
                 'is_read' => $message->is_read,
                 'sender_name' => $message->sender->name,
@@ -280,8 +287,15 @@ class UserConnections extends Component
     {
         $this->validate([
             'messageUserId' => 'required|exists:users,id',
-            'messageText' => 'required|string|max:5000',
+            'messageText' => 'nullable|string|max:5000',
+            'messageImage' => 'nullable|image|max:5120', // 5MB max
         ]);
+
+        // At least one of message or image must be provided
+        if (empty(trim($this->messageText)) && !$this->messageImage) {
+            $this->error = 'Please enter a message or select an image';
+            return;
+        }
 
         // Check connection
         $connection = UserConnection::where(function ($q) {
@@ -297,17 +311,28 @@ class UserConnections extends Component
             return;
         }
 
+        $attachmentPath = null;
+        $messageType = 'text';
+
+        // Handle image upload
+        if ($this->messageImage) {
+            $attachmentPath = $this->messageImage->store('messages', 'public');
+            $messageType = 'image';
+        }
+
         $message = Message::create([
             'sender_id' => auth()->id(),
             'receiver_id' => $this->messageUserId,
-            'message' => $this->messageText,
-            'message_type' => 'text',
+            'message' => $this->messageText ?? '',
+            'attachment_path' => $attachmentPath,
+            'message_type' => $messageType,
         ]);
 
         // Update connection last interaction
         $connection->update(['last_interaction_at' => now()]);
 
         $this->messageText = '';
+        $this->messageImage = null;
         $this->loadMessages($this->messageUserId);
         $this->alert = 'Message sent successfully';
         

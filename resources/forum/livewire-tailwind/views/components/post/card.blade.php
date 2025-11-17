@@ -1,13 +1,13 @@
 <div id="post-{{ $post->sequence }}" class="post-card my-4" x-data="postCard" data-post="{{ $post->id }}" {{ $selectable ? 'x-on:change=onPostChanged' : '' }}>
-    <div class="bg-white shadow-md rounded-lg flex flex-col sm:flex-row items-stretch dark:bg-slate-700 {{ $post->trashed() ? 'opacity-65' : '' }}" :class="classes">
+    <div class="bg-white shadow-sm border border-gray-200 rounded-lg flex flex-col sm:flex-row items-stretch {{ $post->trashed() ? 'opacity-65' : '' }}" :class="classes">
         @if ($showAuthorPane)
-            <div class="flex flex-row sm:flex-col w-full sm:w-1/5 px-6 py-4 sm:py-6 border-b sm:border-b-0 sm:border-r border-slate-200 dark:border-slate-600">
-                <div class="grow text-lg font-medium truncate">
+            <div class="flex flex-row sm:flex-col w-full sm:w-1/5 px-6 py-4 sm:py-6 border-b sm:border-b-0 sm:border-r border-gray-200 bg-gray-50">
+                <div class="grow text-lg font-medium text-gray-800 truncate">
                     {{ $post->authorName }}
                 </div>
-                <div>
+                <div class="text-gray-600">
                     @if (! isset($single) || ! $single)
-                        <a href="{{ Forum::route('thread.show', $post) }}">#{{ $post->sequence }}</a>
+                        <a href="{{ Forum::route('thread.show', $post) }}" class="text-blue-600 hover:text-blue-700">#{{ $post->sequence }}</a>
                     @endif
                 </div>
             </div>
@@ -17,7 +17,7 @@
                 <livewire:forum::components.post.quote :post="$post->parent" />
             @endif
 
-            <div class="dark:text-slate-100">
+            <div class="text-gray-900">
                 @if ($post->trashed())
                     @can ('viewTrashedPosts')
                         <div class="mb-4">

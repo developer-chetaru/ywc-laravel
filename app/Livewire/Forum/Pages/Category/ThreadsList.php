@@ -27,6 +27,23 @@ class ThreadsList extends Component
         }
     }
 
+    public function deleteThread($id)
+    {
+        try {
+            $thread = Thread::findOrFail($id);
+            
+            if (!\Illuminate\Support\Facades\Gate::allows('delete', $thread)) {
+                session()->flash('error', 'You do not have permission to delete this thread.');
+                return;
+            }
+
+            $thread->delete();
+            session()->flash('success', 'Thread deleted successfully.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to delete thread: ' . $e->getMessage());
+        }
+    }
+
     public function render()
     {
         $query = Thread::with('category');

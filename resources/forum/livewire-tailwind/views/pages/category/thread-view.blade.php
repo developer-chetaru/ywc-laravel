@@ -1,5 +1,16 @@
 <div x-data="{ openMenu: null, editPostModal: @entangle('editPostModal') }">
     @if($selectedThread)
+        {{-- Success/Error Messages --}}
+        @if (session()->has('success'))
+            <div class="mb-4 p-3 text-green-800 bg-green-100 border border-green-300 rounded-lg">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if (session()->has('error'))
+            <div class="mb-4 p-3 text-red-800 bg-red-100 border border-red-300 rounded-lg">
+                {{ session('error') }}
+            </div>
+        @endif
         <div class="flex-1 flex flex-col chat-box h-[calc(100vh-160px)] bg-white rounded-xl relative" wire:key="thread-{{ $selectedThread->id }}">
             <!-- Thread Title -->
             <div class="border-b border-solid border-gray-400 p-5 bg-[#ffffff] z-1 rounded-t-lg">
@@ -13,12 +24,12 @@
 
             <!-- Posts -->
             <div class="p-5 h-full overflow-y-auto [scrollbar-width:none]">
-                @foreach($selectedThread->posts as $post)
+                @forelse($selectedThread->posts as $post)
                     <div class="pb-4 relative">
                         <div class="flex gap-x-3 items-center mb-4">
                             <img src="{{ $post->user && $post->user->profile_photo_path ? asset('storage/' . $post->user->profile_photo_path) : asset('images/profile.png') }}" 
                                 alt="User Avatar" class="w-[30px] h-[30px] rounded-full object-cover" />
-                            <p class="leading-normal font-medium">{{ optional($post->user)->name ?? 'Unknown' }}</p>
+                            <p class="leading-normal font-medium">{{ optional($post->user)->first_name ?? 'Unknown' }} {{ optional($post->user)->last_name ?? '' }}</p>
                             <span class="text-[#808080] relative before:content-[''] before:h-[7px] before:w-[7px] before:bg-[#D9D9D9] before:inline-block before:rounded-full before:mr-[10px]">
                                 {{ $post->created_at->format('M d, Y') }}
                             </span>
@@ -43,7 +54,11 @@
                         </div>
                         <p class="text-[#5A5A5A] whitespace-pre-line">{!! nl2br(e($post->content)) !!}</p>
                     </div>
-                @endforeach
+                @empty
+                    <div class="text-center text-gray-400 py-8">
+                        <p>No posts yet. Be the first to reply!</p>
+                    </div>
+                @endforelse
             </div>
 
             <!-- Reply Box -->

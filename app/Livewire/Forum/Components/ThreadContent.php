@@ -15,7 +15,10 @@ class ThreadContent extends Component
 
     public function mount(Thread $thread)
     {
-        $this->thread = $thread;
+        // Eager load firstPost and author relationships
+        $this->thread = $thread->loadMissing(['firstPost', 'author', 'posts' => function($query) {
+            $query->where('sequence', 0)->limit(1);
+        }]);
         $this->loadPosts();
     }
 

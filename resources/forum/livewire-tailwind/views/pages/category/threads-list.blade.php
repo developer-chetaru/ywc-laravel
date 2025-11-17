@@ -1,4 +1,15 @@
 <div class="">
+    {{-- Success/Error Messages --}}
+    @if (session()->has('success'))
+        <div class="mb-4 p-3 text-green-800 bg-green-100 border border-green-300 rounded-lg">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if (session()->has('error'))
+        <div class="mb-4 p-3 text-red-800 bg-red-100 border border-red-300 rounded-lg">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <!-- 🔹 Header Buttons -->
     <div class="flex gap-4 mb-6">
@@ -74,15 +85,21 @@
                         <td class="py-6 px-4 text-center">{{ $thread->updated_at->format('d/m/Y') }}</td>
                         <td class="px-4 py-6">
                             <div class="justify-center flex gap-2">
-                               <button class="cursor-pointer">
-                                            <img class="w-[37px] h-[37px]" src="/images/chat-new.svg" alt="">
-                                        </button>
-                                <button class="cursor-pointer">
-                                            <img class="w-[37px] h-[37px]" src="/images/edit.svg" alt="">
-                                        </button>
-                                        <button class="cursor-pointer">
-                                            <img class="w-[37px] h-[37px]" src="/images/del.svg" alt="">
-                                        </button>
+                                <a href="{{ Forum::route('thread.show', $thread) }}" class="cursor-pointer hover:opacity-80 transition" title="View Thread">
+                                    <img class="w-[37px] h-[37px]" src="/images/chat-new.svg" alt="View">
+                                </a>
+                                @can('edit', $thread)
+                                    <a href="{{ Forum::route('thread.edit', $thread) }}" class="cursor-pointer hover:opacity-80 transition" title="Edit Thread">
+                                        <img class="w-[37px] h-[37px]" src="/images/edit.svg" alt="Edit">
+                                    </a>
+                                @endcan
+                                @can('delete', $thread)
+                                    <button wire:click="deleteThread({{ $thread->id }})" 
+                                            onclick="return confirm('Are you sure you want to delete this thread?')"
+                                            class="cursor-pointer hover:opacity-80 transition" title="Delete Thread">
+                                        <img class="w-[37px] h-[37px]" src="/images/del.svg" alt="Delete">
+                                    </button>
+                                @endcan
                             </div>
                         </td>
                     </tr>

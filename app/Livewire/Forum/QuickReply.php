@@ -20,18 +20,29 @@ class QuickReply extends Component
             return;
         }
 
+        // Calculate sequence number (next post in thread)
+        $maxSequence = Post::where('thread_id', $this->thread->id)->max('sequence') ?? 0;
+        $nextSequence = $maxSequence + 1;
+
         // Create reply
         $post = Post::create([
             'thread_id' => $this->thread->id,
             'author_id' => Auth::id(),
             'content'   => $this->content,
+            'sequence'  => $nextSequence,
         ]);
 
         // Reset textarea
         $this->reset('content');
 
-        // 🔥 Tell parent/listener to refresh
-        $this->dispatch('postAdded', $post->id);
+        // Dispatch event to refresh the thread posts
+        $this->dispatch('postAdded', postId: $post->id);
+        
+        // Also dispatch a browser event for any JavaScript listeners
+        $this->dispatch('post-added', postId: $post->id);
+        
+        // Show success message
+        session()->flash('success', 'Reply posted successfully!');
     }
 
 

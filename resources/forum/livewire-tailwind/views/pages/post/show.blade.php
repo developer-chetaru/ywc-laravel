@@ -6,7 +6,7 @@
 
             <div class="text-right">
                 <x-forum::link-button :href="$post->route" :label="trans('forum::threads.view')" 
-                class="inline-block rounded-md font-medium text-l text-center disabled:text-slate-500 disabled:bg-slate-300 dark:disabled:text-slate-300 dark:disabled:bg-slate-500 text-white bg-blue-600 hover:text-white hover:bg-blue-500 px-6 py-2"/>
+                class="inline-block rounded-md font-medium text-l text-center disabled:text-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-white bg-blue-600 hover:text-white hover:bg-blue-700 px-6 py-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"/>
             </div>
 
             <livewire:forum::components.post.card :$post :single="true" />

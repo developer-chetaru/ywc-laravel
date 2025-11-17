@@ -1,8 +1,8 @@
 @php
 $colorClasses = match ($intent) {
-    'primary', '', null => 'text-white bg-blue-600 hover:text-white hover:bg-blue-500',
-    'secondary' => 'text-zinc-800 bg-zinc-400/50 hover:bg-zinc-400/35 dark:text-slate-800 dark:bg-slate-400/50 dark:hover:bg-slate-400/65',
-    'danger' => 'text-white bg-red-500 hover:bg-red-400'
+    'primary', '', null => 'text-white bg-blue-600 hover:text-white hover:bg-blue-700',
+    'secondary' => 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50',
+    'danger' => 'text-white bg-red-600 hover:bg-red-700'
 };
 
 $sizeClasses = match ($size) {
@@ -12,7 +12,7 @@ $sizeClasses = match ($size) {
 @endphp
 
 <button
-    class="inline-block rounded-md font-regular text-md text-center disabled:text-slate-500 disabled:bg-slate-300 dark:disabled:text-slate-300 dark:disabled:bg-slate-500 {{ $colorClasses }} {{ $sizeClasses }}"
+    class="inline-block rounded-md font-regular text-md text-center disabled:text-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors {{ $colorClasses }} {{ $sizeClasses }}"
     {{ $attributes }}>
     @if (isset($icon) && !empty($icon))
         @include ("forum::components.icons.{$icon}", ['size' => '5'])

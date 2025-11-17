@@ -85,17 +85,14 @@
                             <td class="py-6 px-4 text-center">{{ $forum->created_at->format('d/m/Y') }}</td>
                             <td class="px-4 py-6">
                                 <div class="justify-center flex gap-2">
-                                    <a href="#" 
-                                    class="cursor-pointer border border-[#616161] hover:text-blue-800 px-6 py-2 rounded-md text-[#616161] text-sm">
+                                    <a href="{{ Forum::route('category.show', $forum) }}" 
+                                    class="cursor-pointer border border-[#616161] hover:text-blue-800 px-6 py-2 rounded-md text-[#616161] text-sm hover:border-blue-600 transition">
                                         View Thread
                                     </a>
                                     @can('edit', $forum)
-                                        <button class="cursor-pointer">
-                                            <img class="w-[37px] h-[37px]" src="/images/edit.svg" alt="">
-                                        </button>
-                                        <button class="cursor-pointer">
-                                            <img class="w-[37px] h-[37px]" src="/images/del.svg" alt="">
-                                        </button>
+                                        <a href="{{ Forum::route('category.edit', $forum) }}" class="cursor-pointer hover:opacity-80 transition">
+                                            <img class="w-[37px] h-[37px]" src="/images/edit.svg" alt="Edit">
+                                        </a>
                                     @endcan
                                 </div>
                             </td>

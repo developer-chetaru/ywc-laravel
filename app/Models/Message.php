@@ -15,6 +15,7 @@ class Message extends Model
         'receiver_id',
         'group_id',
         'message',
+        'attachment_path',
         'is_read',
         'read_at',
         'message_type',

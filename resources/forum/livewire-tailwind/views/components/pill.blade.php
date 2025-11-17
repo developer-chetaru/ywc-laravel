@@ -3,8 +3,8 @@
     text-base
     text-nowrap
     align-middle
-    {{ $bgColor ?? 'bg-zinc-300 dark:bg-slate-500' }}
-    {{ $textColor ?? 'text-zinc-600 dark:text-slate-200' }}
+    {{ $bgColor ?? 'bg-gray-200' }}
+    {{ $textColor ?? 'text-gray-700' }}
     {{ $padding ?? 'px-2' }}
     {{ $margin ?? 'mx-2' }}">
     @if (isset($icon))
