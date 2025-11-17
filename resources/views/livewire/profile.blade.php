@@ -47,7 +47,7 @@
                 </li>
             </ul>
 
-            @role('user')
+            @unlessrole('super_admin')
             <h4 class="text-[14px] text-[#616161] mb-4">Payment and plans</h4>
             <ul>
                 <li class="{{ $currentRoute == 'subscription.page' ? 'active' : '' }}">
@@ -83,7 +83,7 @@
                     </a>
                 </li>
             </ul>
-            @endrole
+            @endunlessrole
         </div>
 
 
@@ -230,6 +230,16 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                                     <input type="email" readonly wire:model="email"
                                         class="w-full bg-gray-100 border border-[#eaeaea] rounded px-4 py-2 cursor-not-allowed">
+                                </div>
+
+                                <!-- Role -->
+                                <div class="md:col-span-2 border-t py-5 border-[#eaeaea] flex flex-col">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-4 py-2 bg-blue-100 text-blue-700 rounded font-medium capitalize">
+                                            {{ Auth::user()->roles->pluck('name')->join(', ') ?: 'No role assigned' }}
+                                        </span>
+                                    </div>
                                 </div>
                             
                         </div>
