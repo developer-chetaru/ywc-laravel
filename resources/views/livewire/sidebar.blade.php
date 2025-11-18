@@ -10,7 +10,8 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
         isMobile: window.innerWidth < 768,
         industryReviewOpen: {{ request()->is('industry-review*') ? 'true' : 'false' }},
         itineraryOpen: {{ request()->is('itinerary*') ? 'true' : 'false' }},
-        crewDiscoveryOpen: {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'true' : 'false' }}
+        crewDiscoveryOpen: {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'true' : 'false' }},
+        documentsCareerOpen: {{ request()->is('documents*') || request()->is('career-history*') ? 'true' : 'false' }}
     }"
     x-init="
         window.addEventListener('resize', () => isMobile = window.innerWidth < 768);
@@ -91,21 +92,57 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             @endrole
 
 
-            {{-- CAREER HISTORY --}}
+            {{-- DOCUMENTS & CAREER HISTORY --}}
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             <li>
-                <a href="/career-history"
-                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                            {{ request()->is('career-history') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-                    <img
-                        src="{{ request()->is('career-history') ? '/images/career.svg' : '/images/manage-dashbaord.svg' }}"
-                        alt="Documents & Career History"
-                        class="w-5 h-5">
-                    <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('career-history') ? 'text-black' : 'text-white' }}">
-                        Documents & Career History
-                    </span>
-                </a>
+                <div>
+                    <div class="w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition
+                        {{ request()->is('documents*') || request()->is('career-history*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                        <a href="{{ route('documents') }}" 
+                            class="flex items-center space-x-3 flex-1"
+                            @click.stop>
+                            <img
+                                src="{{ request()->is('documents*') || request()->is('career-history*') ? '/images/career.svg' : '/images/manage-dashbaord.svg' }}"
+                                alt="Documents & Career History"
+                                class="w-5 h-5">
+                            <span x-show="isOpen"
+                                class="text-base font-medium {{ request()->is('documents*') || request()->is('career-history*') ? 'text-black' : 'text-white' }}">
+                                Documents & Career History
+                            </span>
+                        </a>
+                        <button @click.stop="documentsCareerOpen = !documentsCareerOpen" 
+                            x-show="isOpen"
+                            class="ml-2 p-1 hover:bg-white/10 rounded transition-colors">
+                            <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': documentsCareerOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    {{-- SUBMENU --}}
+                    <ul x-show="documentsCareerOpen && isOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                        <li>
+                            <a href="{{ route('documents') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('documents*') && !request()->is('career-history*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Documents</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('career-history') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('career-history*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Career History</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             @endhasanyrole
 
@@ -295,19 +332,68 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         </ul>
                     </div>
                 @else
-                    {{-- REGULAR USER: SIMPLE LINK (NO DROPDOWN) --}}
-                    <a href="{{ route('industryreview.index') }}"
-                        class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                        {{ request()->is('industry-review*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-                        <img
-                            src="{{ request()->is('industry-review*') ? '/images/industry-review-active.svg' : '/images/industry-review-default.svg' }}"
-                            alt="Industry Review System"
-                            class="w-5 h-5">
-                        <span x-show="isOpen"
-                            class="text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
-                            Industry Review System
-                        </span>
-                    </a>
+                    @role('Captain')
+                        {{-- CAPTAIN: WITH YACHT MANAGEMENT SUBMENU --}}
+                        <div>
+                            <div class="w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition
+                                {{ request()->is('industry-review*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                                <a href="{{ route('industryreview.index') }}" 
+                                    class="flex items-center space-x-3 flex-1"
+                                    @click.stop>
+                                    <img
+                                        src="{{ request()->is('industry-review*') ? '/images/industry-review-active.svg' : '/images/industry-review-default.svg' }}"
+                                        alt="Industry Review System"
+                                        class="w-5 h-5">
+                                    <span x-show="isOpen"
+                                        class="text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
+                                        Industry Review System
+                                    </span>
+                                </a>
+                                <button @click.stop="industryReviewOpen = !industryReviewOpen" 
+                                    x-show="isOpen"
+                                    class="ml-2 p-1 hover:bg-white/10 rounded transition-colors">
+                                    <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': industryReviewOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            {{-- SUBMENU FOR CAPTAINS --}}
+                            <ul x-show="industryReviewOpen && isOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                                <li>
+                                    <a href="{{ route('industryreview.index') }}"
+                                        class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                        {{ request()->is('industry-review') && !request()->is('industry-review/yachts*') && !request()->is('industry-review/marinas*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                        <span class="text-sm font-medium">View All</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('industryreview.yachts.manage') }}"
+                                        class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                        {{ request()->is('industry-review/yachts*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                        </svg>
+                                        <span class="text-sm font-medium">Manage Yachts</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    @else
+                        {{-- REGULAR USER: SIMPLE LINK (NO DROPDOWN) --}}
+                        <a href="{{ route('industryreview.index') }}"
+                            class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                            {{ request()->is('industry-review*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                            <img
+                                src="{{ request()->is('industry-review*') ? '/images/industry-review-active.svg' : '/images/industry-review-default.svg' }}"
+                                alt="Industry Review System"
+                                class="w-5 h-5">
+                            <span x-show="isOpen"
+                                class="text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
+                                Industry Review System
+                            </span>
+                        </a>
+                    @endrole
                 @endrole
             </li>
             @endhasanyrole

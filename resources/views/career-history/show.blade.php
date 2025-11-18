@@ -6,7 +6,7 @@
         <div class="p-4 bg-[#F5F6FA]">
             {{-- Back Button --}}
             <div class="flex gap-4 mb-6">
-                <a href="{{ route('career-history') }}" class="cursor-pointer bg-white border border-[#808080] flex gap-2 justify-center items-center px-4 py-2 rounded-md text-[#808080]">
+                <a href="{{ route('documents') }}" class="cursor-pointer bg-white border border-[#808080] flex gap-2 justify-center items-center px-4 py-2 rounded-md text-[#808080]">
                     <img class="h-3" src="{{ asset('images/left-arr.svg') }}" alt="">Back to career list
                 </a>
             </div>

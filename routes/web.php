@@ -118,7 +118,8 @@ Route::middleware([
   
     //Route::get('/career-history', CareerHistory::class)->name('career-history');
   
-  	Route::get('/career-history', [CareerHistoryController::class, 'index'])->name('career-history');
+  	Route::get('/documents', [CareerHistoryController::class, 'index'])->name('documents');
+  	Route::get('/career-history', \App\Livewire\CareerHistoryView::class)->name('career-history');
     Route::get('/certificate-type/{id}/issuers', [CareerHistoryController::class, 'getIssuersByType']);
     Route::post('/documents/scan', [CareerHistoryController::class, 'scan'])->name('documents.scan');
     Route::post('/career-history', [CareerHistoryController::class, 'store'])->name('career-history.store');

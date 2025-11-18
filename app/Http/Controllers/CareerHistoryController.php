@@ -116,11 +116,17 @@ class CareerHistoryController extends Controller
         // Sort filter
         if ($request->filled('sort')) {
             $sort = $request->input('sort');
-            if ($sort === 'old') {
-                $query->orderBy('created_at', 'asc');
-            } else {
-                $query->orderBy('created_at', 'desc');
-            }
+            match($sort) {
+                'oldest' => $query->orderBy('created_at', 'asc'),
+                'newest' => $query->orderBy('created_at', 'desc'),
+                'name_asc' => $query->orderBy('first_name', 'asc')->orderBy('last_name', 'asc'),
+                'name_desc' => $query->orderBy('first_name', 'desc')->orderBy('last_name', 'desc'),
+                'old' => $query->orderBy('created_at', 'asc'), // Legacy support
+                default => $query->orderBy('created_at', 'desc'),
+            };
+        } else {
+            // Default sort
+            $query->orderBy('created_at', 'desc');
         }
 
         $users = $query->paginate(10)->appends($request->all());
