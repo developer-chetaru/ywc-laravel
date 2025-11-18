@@ -32,6 +32,7 @@ class AuthController extends Controller
         try {
             $roles = Role::where('status', 'Active')
                 ->where('name', '!=', 'super_admin')
+                ->where('name', '!=', 'user')
                 ->select('id', 'name', 'status')
                 ->get();
 
