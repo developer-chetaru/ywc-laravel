@@ -22,6 +22,7 @@ class IndustryReviewIndex extends Component
     public $marinas = [];
     public $loading = false;
     public $showYachtModal = false;
+    public $searchQuery = '';
     
     // Yacht form fields
     public $name = '';
@@ -92,6 +93,7 @@ class IndustryReviewIndex extends Component
     public function setTab($tab)
     {
         $this->activeTab = $tab;
+        // Keep search query when switching tabs - apply search to new tab
         if ($tab === 'yachts') {
             $this->loadYachts();
         } else {
@@ -99,13 +101,49 @@ class IndustryReviewIndex extends Component
         }
     }
 
+    public function search()
+    {
+        if ($this->activeTab === 'yachts') {
+            $this->loadYachts();
+        } else {
+            $this->loadMarinas();
+        }
+    }
+
+    public function clearSearch()
+    {
+        $this->searchQuery = '';
+        if ($this->activeTab === 'yachts') {
+            $this->loadYachts();
+        } else {
+            $this->loadMarinas();
+        }
+    }
+
+    public function updatedSearchQuery()
+    {
+        // Debounce search - search automatically after user stops typing
+        $this->search();
+    }
+
     public function loadYachts()
     {
         $this->loading = true;
         try {
-            $yachts = Yacht::query()
-                ->withCount('reviews')
-                ->orderByDesc('rating_avg')
+            $query = Yacht::query()
+                ->withCount('reviews');
+            
+            // Apply search filter if search query exists
+            if (!empty($this->searchQuery)) {
+                $query->where(function($q) {
+                    $q->where('name', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('type', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('home_port', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('flag_registry', 'like', '%' . $this->searchQuery . '%');
+                });
+            }
+            
+            $yachts = $query->orderByDesc('rating_avg')
                 ->orderByDesc('reviews_count')
                 ->orderBy('name')
                 ->limit(12)
@@ -129,9 +167,20 @@ class IndustryReviewIndex extends Component
     {
         $this->loading = true;
         try {
-            $marinas = Marina::query()
-                ->withCount('reviews')
-                ->orderByDesc('rating_avg')
+            $query = Marina::query()
+                ->withCount('reviews');
+            
+            // Apply search filter if search query exists
+            if (!empty($this->searchQuery)) {
+                $query->where(function($q) {
+                    $q->where('name', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('city', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('country', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('type', 'like', '%' . $this->searchQuery . '%');
+                });
+            }
+            
+            $marinas = $query->orderByDesc('rating_avg')
                 ->orderByDesc('reviews_count')
                 ->orderBy('name')
                 ->limit(12)

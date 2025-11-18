@@ -11,29 +11,56 @@
 
             {{-- Tabs --}}
             <div class="border-b border-gray-200 mb-8">
-                <nav class="-mb-px flex space-x-8">
-                    <button
-                        wire:click="setTab('yachts')"
-                        class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'yachts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                <div class="flex items-center justify-between mb-4">
+                    <nav class="-mb-px flex space-x-8">
+                        <button
+                            wire:click="setTab('yachts')"
+                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'yachts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                                <span>Yacht Reviews</span>
+                            </div>
+                        </button>
+                        <button
+                            wire:click="setTab('marinas')"
+                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'marinas' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span>Marina Reviews</span>
+                            </div>
+                        </button>
+                    </nav>
+                    
+                    {{-- Search Bar --}}
+                    <div class="flex items-center space-x-2">
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                wire:model.live.debounce.300ms="searchQuery"
+                                placeholder="Search {{ $activeTab === 'yachts' ? 'yachts' : 'marinas' }}..."
+                                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                            >
+                            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
-                            <span>Yacht Reviews</span>
                         </div>
-                    </button>
-                    <button
-                        wire:click="setTab('marinas')"
-                        class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'marinas' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            <span>Marina Reviews</span>
-                        </div>
-                    </button>
-                </nav>
+                        @if($searchQuery)
+                            <button 
+                                wire:click="clearSearch"
+                                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                                title="Clear search">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+                </div>
             </div>
 
             {{-- Tab Content --}}

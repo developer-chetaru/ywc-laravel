@@ -234,61 +234,81 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             @endrole
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
-            {{-- INDUSTRY REVIEW SYSTEM WITH SUBMENU --}}
+            {{-- INDUSTRY REVIEW SYSTEM --}}
             <li>
-                <div>
-                    <button @click="industryReviewOpen = !industryReviewOpen"
-                        class="w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition
-                        {{ request()->is('industry-review*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-                        <div class="flex items-center space-x-3">
-                            <img
-                                src="{{ request()->is('industry-review*') ? '/images/industry-review-active.svg' : '/images/industry-review-default.svg' }}"
-                                alt="Industry Review System"
-                                class="w-5 h-5">
-                            <span x-show="isOpen"
-                                class="text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
-                                Industry Review System
-                            </span>
+                @role('super_admin')
+                    {{-- SUPER ADMIN: WITH SUBMENU --}}
+                    <div>
+                        <div class="w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition
+                            {{ request()->is('industry-review*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                            <a href="{{ route('industryreview.index') }}" 
+                                class="flex items-center space-x-3 flex-1"
+                                @click.stop>
+                                <img
+                                    src="{{ request()->is('industry-review*') ? '/images/industry-review-active.svg' : '/images/industry-review-default.svg' }}"
+                                    alt="Industry Review System"
+                                    class="w-5 h-5">
+                                <span x-show="isOpen"
+                                    class="text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
+                                    Industry Review System
+                                </span>
+                            </a>
+                            <button @click.stop="industryReviewOpen = !industryReviewOpen" 
+                                x-show="isOpen"
+                                class="ml-2 p-1 hover:bg-white/10 rounded transition-colors">
+                                <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': industryReviewOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
                         </div>
-                        <svg x-show="isOpen" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': industryReviewOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </button>
-                    
-                    {{-- SUBMENU --}}
-                    <ul x-show="industryReviewOpen && isOpen" x-collapse class="ml-4 mt-1 space-y-1">
-                        <li>
-                            <a href="{{ route('industryreview.index') }}"
-                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
-                                {{ request()->is('industry-review') && !request()->is('industry-review/yachts*') && !request()->is('industry-review/marinas*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
-                                <span class="text-sm font-medium">View All</span>
-                            </a>
-                        </li>
-                        @role('super_admin')
-                        <li>
-                            <a href="{{ route('industryreview.yachts.manage') }}"
-                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
-                                {{ request()->is('industry-review/yachts*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                                </svg>
-                                <span class="text-sm font-medium">Manage Yachts</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('industryreview.marinas.manage') }}"
-                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
-                                {{ request()->is('industry-review/marinas*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
-                                <span class="text-sm font-medium">Manage Marinas</span>
-                            </a>
-                        </li>
-                        @endrole
-                    </ul>
-                </div>
+                        
+                        {{-- SUBMENU --}}
+                        <ul x-show="industryReviewOpen && isOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                            <li>
+                                <a href="{{ route('industryreview.index') }}"
+                                    class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                    {{ request()->is('industry-review') && !request()->is('industry-review/yachts*') && !request()->is('industry-review/marinas*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                    <span class="text-sm font-medium">View All</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('industryreview.yachts.manage') }}"
+                                    class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                    {{ request()->is('industry-review/yachts*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Manage Yachts</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('industryreview.marinas.manage') }}"
+                                    class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                    {{ request()->is('industry-review/marinas*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Manage Marinas</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                @else
+                    {{-- REGULAR USER: SIMPLE LINK (NO DROPDOWN) --}}
+                    <a href="{{ route('industryreview.index') }}"
+                        class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                        {{ request()->is('industry-review*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                        <img
+                            src="{{ request()->is('industry-review*') ? '/images/industry-review-active.svg' : '/images/industry-review-default.svg' }}"
+                            alt="Industry Review System"
+                            class="w-5 h-5">
+                        <span x-show="isOpen"
+                            class="text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
+                            Industry Review System
+                        </span>
+                    </a>
+                @endrole
             </li>
             @endhasanyrole
 
