@@ -86,6 +86,8 @@ class RouteController extends Controller
                 if ($downloadedPath) {
                     $validated['cover_image'] = $downloadedPath;
                 } else {
+                    // Log warning but don't fail the request - just skip the cover image
+                    \Log::warning("Failed to download cover image from URL: {$validated['cover_image']}");
                     unset($validated['cover_image']); // Remove if download failed
                 }
             }
@@ -159,10 +161,52 @@ class RouteController extends Controller
     protected function downloadAndStoreImage(string $url, string $directory): ?string
     {
         try {
-            $response = Http::timeout(10)->get($url);
+            // Add headers to mimic a browser request (required for Google Images and many other services)
+            $response = Http::timeout(15)
+                ->withOptions([
+                    'allow_redirects' => true,
+                    'max_redirects' => 5,
+                ])
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept' => 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                    'Accept-Language' => 'en-US,en;q=0.9',
+                    'Referer' => 'https://www.google.com/',
+                    'Accept-Encoding' => 'gzip, deflate, br',
+                ])
+                ->get($url);
             
             if (!$response->successful()) {
-                \Log::warning("Failed to download image: {$url}");
+                \Log::warning("Failed to download image: {$url} - Status: {$response->status()}");
+                return null;
+            }
+
+            $body = $response->body();
+            
+            // Validate that we actually got image data (check for image magic bytes)
+            $imageMagicBytes = [
+                "\xFF\xD8\xFF", // JPEG
+                "\x89\x50\x4E\x47", // PNG
+                "GIF87a", // GIF87a
+                "GIF89a", // GIF89a
+                "RIFF", // WebP (starts with RIFF)
+            ];
+            
+            $isImage = false;
+            foreach ($imageMagicBytes as $magic) {
+                if (str_starts_with($body, $magic)) {
+                    $isImage = true;
+                    break;
+                }
+            }
+            
+            // Also check for WebP (RIFF...WEBP)
+            if (!$isImage && str_starts_with($body, "RIFF") && strpos($body, "WEBP") !== false) {
+                $isImage = true;
+            }
+            
+            if (!$isImage) {
+                \Log::warning("Downloaded content is not a valid image: {$url}");
                 return null;
             }
 
@@ -171,19 +215,21 @@ class RouteController extends Controller
             $path = $parsedUrl['path'] ?? '';
             $extension = pathinfo($path, PATHINFO_EXTENSION);
             
-            // If no extension in URL, try to detect from content type
+            // If no extension in URL, try to detect from content type or magic bytes
             if (empty($extension)) {
-                $contentType = $response->header('Content-Type');
-                if (str_contains($contentType, 'jpeg') || str_contains($contentType, 'jpg')) {
+                $contentType = $response->header('Content-Type', '');
+                
+                if (str_contains($contentType, 'jpeg') || str_contains($contentType, 'jpg') || str_starts_with($body, "\xFF\xD8\xFF")) {
                     $extension = 'jpg';
-                } elseif (str_contains($contentType, 'png')) {
+                } elseif (str_contains($contentType, 'png') || str_starts_with($body, "\x89\x50\x4E\x47")) {
                     $extension = 'png';
-                } elseif (str_contains($contentType, 'webp')) {
+                } elseif (str_contains($contentType, 'webp') || (str_starts_with($body, "RIFF") && strpos($body, "WEBP") !== false)) {
                     $extension = 'webp';
-                } elseif (str_contains($contentType, 'gif')) {
+                } elseif (str_contains($contentType, 'gif') || str_starts_with($body, "GIF87a") || str_starts_with($body, "GIF89a")) {
                     $extension = 'gif';
                 } else {
-                    $extension = 'jpg'; // Default
+                    // Default to jpg if we can't detect
+                    $extension = 'jpg';
                 }
             }
 
@@ -199,9 +245,15 @@ class RouteController extends Controller
             $filename = Str::random(40) . '.' . $extension;
             $filePath = $directory . '/' . $filename;
 
-            // Store the image
-            Storage::disk('public')->put($filePath, $response->body());
+            // Ensure directory exists
+            if (!Storage::disk('public')->exists($directory)) {
+                Storage::disk('public')->makeDirectory($directory);
+            }
 
+            // Store the image
+            Storage::disk('public')->put($filePath, $body);
+
+            \Log::info("Successfully downloaded and stored image: {$url} -> {$filePath}");
             return $filePath;
         } catch (\Exception $e) {
             \Log::warning("Error downloading image {$url}: {$e->getMessage()}");
