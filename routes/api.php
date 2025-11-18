@@ -38,40 +38,43 @@ Route::put('/itineraries/{itinerary}/status', [ItineraryController::class, 'upda
 Route::post('/itineraries/ai-generate', [ItineraryController::class, 'generateWithAI']);
 
 Route::prefix('itinerary')->group(function () {
-    // Route CRUD operations
+    // Route CRUD operations (index and show are public, others require auth)
     Route::get('/routes', [SailingRouteController::class, 'index']);
-    Route::post('/routes', [SailingRouteController::class, 'store']);
     Route::get('/routes/{route}', [SailingRouteController::class, 'show']);
-    Route::put('/routes/{route}', [SailingRouteController::class, 'update']);
-    Route::delete('/routes/{route}', [SailingRouteController::class, 'destroy']);
-    Route::post('/routes/{route}/clone', [SailingRouteController::class, 'cloneRoute']);
-    Route::post('/routes/{route}/publish', [SailingRouteController::class, 'publish']);
-    Route::get('/routes/{route}/statistics', [SailingRouteController::class, 'statistics']);
-    Route::post('/routes/{route}/weather/refresh', [SailingRouteController::class, 'refreshWeather']);
+    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/routes', [SailingRouteController::class, 'store']);
+        Route::put('/routes/{route}', [SailingRouteController::class, 'update']);
+        Route::delete('/routes/{route}', [SailingRouteController::class, 'destroy']);
+        Route::post('/routes/{route}/clone', [SailingRouteController::class, 'cloneRoute']);
+        Route::post('/routes/{route}/publish', [SailingRouteController::class, 'publish']);
+        Route::get('/routes/{route}/statistics', [SailingRouteController::class, 'statistics']);
+        Route::post('/routes/{route}/weather/refresh', [SailingRouteController::class, 'refreshWeather']);
 
-    // Export routes (for mobile app - returns JSON with download URLs or file data)
-    Route::get('/routes/{route}/export/pdf', [\App\Http\Controllers\Itinerary\ExportController::class, 'pdf']);
-    Route::get('/routes/{route}/export/gpx', [\App\Http\Controllers\Itinerary\ExportController::class, 'gpx']);
-    Route::get('/routes/{route}/export/xlsx', [\App\Http\Controllers\Itinerary\ExportController::class, 'xlsx']);
+        // Export routes (for mobile app - returns JSON with download URLs or file data)
+        Route::get('/routes/{route}/export/pdf', [\App\Http\Controllers\Itinerary\ExportController::class, 'pdf']);
+        Route::get('/routes/{route}/export/gpx', [\App\Http\Controllers\Itinerary\ExportController::class, 'gpx']);
+        Route::get('/routes/{route}/export/xlsx', [\App\Http\Controllers\Itinerary\ExportController::class, 'xlsx']);
 
-    // Crew management
-    Route::get('/routes/{route}/crew', [SailingCrewController::class, 'index']);
-    Route::post('/routes/{route}/crew', [SailingCrewController::class, 'store']);
-    Route::put('/routes/{route}/crew/{crew}', [SailingCrewController::class, 'update']);
-    Route::delete('/routes/{route}/crew/{crew}', [SailingCrewController::class, 'destroy']);
-    Route::post('/routes/{route}/crew/{crew}/respond', [SailingCrewController::class, 'respond']);
+        // Crew management
+        Route::get('/routes/{route}/crew', [SailingCrewController::class, 'index']);
+        Route::post('/routes/{route}/crew', [SailingCrewController::class, 'store']);
+        Route::put('/routes/{route}/crew/{crew}', [SailingCrewController::class, 'update']);
+        Route::delete('/routes/{route}/crew/{crew}', [SailingCrewController::class, 'destroy']);
+        Route::post('/routes/{route}/crew/{crew}/respond', [SailingCrewController::class, 'respond']);
 
-    // Reviews
-    Route::get('/routes/{route}/reviews', [SailingReviewController::class, 'index']);
-    Route::post('/routes/{route}/reviews', [SailingReviewController::class, 'store']);
-    Route::put('/routes/{route}/reviews/{review}', [SailingReviewController::class, 'update']);
-    Route::delete('/routes/{route}/reviews/{review}', [SailingReviewController::class, 'destroy']);
+        // Reviews
+        Route::get('/routes/{route}/reviews', [SailingReviewController::class, 'index']);
+        Route::post('/routes/{route}/reviews', [SailingReviewController::class, 'store']);
+        Route::put('/routes/{route}/reviews/{review}', [SailingReviewController::class, 'update']);
+        Route::delete('/routes/{route}/reviews/{review}', [SailingReviewController::class, 'destroy']);
 
-    // Comments
-    Route::get('/routes/{route}/comments', [SailingCommentController::class, 'index']);
-    Route::post('/routes/{route}/comments', [SailingCommentController::class, 'store']);
-    Route::put('/routes/{route}/comments/{comment}', [SailingCommentController::class, 'update']);
-    Route::delete('/routes/{route}/comments/{comment}', [SailingCommentController::class, 'destroy']);
+        // Comments
+        Route::get('/routes/{route}/comments', [SailingCommentController::class, 'index']);
+        Route::post('/routes/{route}/comments', [SailingCommentController::class, 'store']);
+        Route::put('/routes/{route}/comments/{comment}', [SailingCommentController::class, 'update']);
+        Route::delete('/routes/{route}/comments/{comment}', [SailingCommentController::class, 'destroy']);
+    });
 });
 
 Route::get('/roles', [AuthController::class, 'getRoles']);
