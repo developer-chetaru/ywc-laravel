@@ -44,11 +44,12 @@
     <label class="flex items-center bg-[#fafafa] border border-gray-300 rounded px-2 w-full focus-within:ring-2 focus-within:ring-[#0053FF]">
         <input
             :type="show ? 'text' : 'password'"
-            id="password"
+            id="reset_password"
             name="password"
             placeholder="Password"
             class="w-full bg-transparent border-none outline-none appearance-none focus:ring-0 text-gray-900 placeholder-gray-400 text-base pr-8"
             required
+            minlength="8"
             autocomplete="new-password"
         />
         <button
@@ -61,6 +62,8 @@
             <i :class="show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
         </button>
     </label>
+    <div id="reset_password_requirements" class="password-requirements mt-2 text-sm"></div>
+    <div id="reset_password_strength" class="password-strength mt-2"></div>
 </div>
 
 <!-- Confirm Password -->
@@ -68,7 +71,7 @@
     <label class="flex items-center bg-[#fafafa] border border-gray-300 rounded px-2 w-full focus-within:ring-2 focus-within:ring-[#0053FF]">
         <input
             :type="show ? 'text' : 'password'"
-            id="password_confirmation"
+            id="reset_password_confirmation"
             name="password_confirmation"
             placeholder="Confirm Password"
             class="w-full bg-transparent border-none outline-none appearance-none focus:ring-0 text-gray-900 placeholder-gray-400 text-base pr-8"
@@ -85,7 +88,36 @@
             <i :class="show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
         </button>
     </label>
+    <div id="reset_password_match_message" class="mt-2 text-sm"></div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const password = document.getElementById('reset_password');
+    const confirmPassword = document.getElementById('reset_password_confirmation');
+    const matchMessage = document.getElementById('reset_password_match_message');
+    
+    function checkMatch() {
+        if (confirmPassword.value && password.value) {
+            if (password.value === confirmPassword.value) {
+                matchMessage.innerHTML = '<span class="text-green-600"><i class="fa-solid fa-check-circle mr-1"></i>Passwords match</span>';
+            } else {
+                matchMessage.innerHTML = '<span class="text-red-600"><i class="fa-solid fa-times-circle mr-1"></i>Passwords do not match</span>';
+            }
+        } else {
+            matchMessage.innerHTML = '';
+        }
+    }
+    
+    password.addEventListener('input', checkMatch);
+    confirmPassword.addEventListener('input', checkMatch);
+    
+    // Initialize password validation
+    if (typeof initPasswordValidation !== 'undefined') {
+        initPasswordValidation('reset_password', 'reset_password_requirements', 'reset_password_strength');
+    }
+});
+</script>
 <!-- Validation Errors -->
             <x-validation-errors class="mb-4 text-sm text-blue-600" />
 

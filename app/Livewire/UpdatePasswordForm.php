@@ -16,8 +16,16 @@ class UpdatePasswordForm extends Component
     {
         $this->validate([
             'current_password' => ['required', 'string'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-            'password_confirmation' => ['required', 'string', 'min:6'],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{};\':"\\|,.<>\/])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{};\':"\\|,.<>\/]{8,}$/',
+                'confirmed'
+            ],
+            'password_confirmation' => ['required', 'string'],
+        ], [
+            'password.regex' => 'Password must contain at least 8 characters with uppercase, lowercase, number, and special character.',
         ]);
 
         if (! Hash::check($this->current_password, auth()->user()->password)) {

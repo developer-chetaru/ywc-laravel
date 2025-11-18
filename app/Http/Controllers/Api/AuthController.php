@@ -59,8 +59,14 @@ class AuthController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
             'email'      => 'required|string|email|max:255|unique:users',
-            'password'   => 'required|min:6',
+            'password'   => [
+                'required',
+                'min:8',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{};\':"\\|,.<>\/])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{};\':"\\|,.<>\/]{8,}$/'
+            ],
             'role'       => 'required|string|exists:roles,name',
+        ], [
+            'password.regex' => 'Password must contain at least 8 characters with uppercase, lowercase, number, and special character.',
         ]);
 
         if ($validator->fails()) {
@@ -166,7 +172,15 @@ class AuthController extends Controller
             'first_name' => 'required|string|max:100',
             'last_name'  => 'required|string|max:100',
             'email'      => 'required|string|email|max:100|unique:users',
-            'password'   => 'required|string|min:6|confirmed',
+            'password'   => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{};\':"\\|,.<>\/])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{};\':"\\|,.<>\/]{8,}$/',
+                'confirmed'
+            ],
+        ], [
+            'password.regex' => 'Password must contain at least 8 characters with uppercase, lowercase, number, and special character.',
         ]);
 
         if ($validator->fails()) {
@@ -386,8 +400,15 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'email'                 => 'required|email|exists:users,email',
             'token'                 => 'required|string',
-            'password'              => 'required|min:8|confirmed',
+            'password'              => [
+                'required',
+                'min:8',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{};\':"\\|,.<>\/])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{};\':"\\|,.<>\/]{8,}$/',
+                'confirmed'
+            ],
             'password_confirmation' => 'required'
+        ], [
+            'password.regex' => 'Password must contain at least 8 characters with uppercase, lowercase, number, and special character.',
         ]);
 
         if ($validator->fails()) {

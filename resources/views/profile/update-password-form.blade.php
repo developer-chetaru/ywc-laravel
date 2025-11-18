@@ -34,11 +34,12 @@
                 <label class="flex items-center bg-[#fafafa] border border-gray-300 rounded px-2 w-full focus-within:ring-2 focus-within:ring-[#0053FF]">
                     <input
                         :type="showNew ? 'text' : 'password'"
-                        id="password"
+                        id="profile_password"
                         placeholder="New Password"
                         class="w-full bg-transparent border-none outline-none appearance-none focus:ring-0 text-gray-900 placeholder-gray-400 text-base pr-8"
                         wire:model="state.password"
                         autocomplete="new-password"
+                        minlength="8"
                     />
                     <button type="button" @click="showNew = !showNew"
                         class="ml-2 text-gray-500 focus:outline-none" tabindex="-1" aria-label="Toggle password visibility">
@@ -46,6 +47,8 @@
                     </button>
                 </label>
             </div>
+            <div id="profile_password_requirements" class="password-requirements mt-2 text-sm"></div>
+            <div id="profile_password_strength" class="password-strength mt-2"></div>
             <x-input-error for="password" class="mt-2" />
         </div>
 
@@ -55,7 +58,7 @@
                 <label class="flex items-center bg-[#fafafa] border border-gray-300 rounded px-2 w-full focus-within:ring-2 focus-within:ring-[#0053FF]">
                     <input
                         :type="showConfirm ? 'text' : 'password'"
-                        id="password_confirmation"
+                        id="profile_password_confirmation"
                         placeholder="Confirm Password"
                         class="w-full bg-transparent border-none outline-none appearance-none focus:ring-0 text-gray-900 placeholder-gray-400 text-base pr-8"
                         wire:model="state.password_confirmation"
@@ -67,8 +70,39 @@
                     </button>
                 </label>
             </div>
+            <div id="profile_password_match_message" class="mt-2 text-sm"></div>
             <x-input-error for="password_confirmation" class="mt-2" />
         </div>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const password = document.getElementById('profile_password');
+            const confirmPassword = document.getElementById('profile_password_confirmation');
+            const matchMessage = document.getElementById('profile_password_match_message');
+            
+            function checkMatch() {
+                if (confirmPassword && password && confirmPassword.value && password.value) {
+                    if (password.value === confirmPassword.value) {
+                        matchMessage.innerHTML = '<span class="text-green-600"><i class="fa-solid fa-check-circle mr-1"></i>Passwords match</span>';
+                    } else {
+                        matchMessage.innerHTML = '<span class="text-red-600"><i class="fa-solid fa-times-circle mr-1"></i>Passwords do not match</span>';
+                    }
+                } else if (matchMessage) {
+                    matchMessage.innerHTML = '';
+                }
+            }
+            
+            if (password && confirmPassword) {
+                password.addEventListener('input', checkMatch);
+                confirmPassword.addEventListener('input', checkMatch);
+                
+                // Initialize password validation
+                if (typeof initPasswordValidation !== 'undefined') {
+                    initPasswordValidation('profile_password', 'profile_password_requirements', 'profile_password_strength');
+                }
+            }
+        });
+        </script>
       	<div class="col-span-6 sm:col-span-6">
             <x-action-message on="saved" type="success">
                 Change password updated successfully!

@@ -137,10 +137,13 @@
                       <label class="flex items-center bg-[#fafafa] border border-gray-300 rounded px-3 w-full focus-within:ring-2 focus-within:ring-[#0053FF]">
                           <input
                               :type="showPassword ? 'text' : 'password'"
+                              id="register_password"
                               name="password"
                               placeholder="Password"
                               class="w-full bg-transparent border-none outline-none appearance-none focus:ring-0 text-gray-900 placeholder-gray-400 text-base pr-8"
                               autocomplete="new-password"
+                              required
+                              minlength="8"
                               data-lpignore="true"
                               data-1p-ignore
                               data-bwignore="true"
@@ -150,9 +153,11 @@
                               <i :class="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
                           </button>
                       </label>
-                              @error('password')
-                              <p class="text-sm text-[#0053FF] mt-1">{{ $message }}</p>
-                        @enderror
+                      <div id="register_password_requirements" class="password-requirements mt-2 text-sm"></div>
+                      <div id="register_password_strength" class="password-strength mt-2"></div>
+                      @error('password')
+                          <p class="text-sm text-[#0053FF] mt-1">{{ $message }}</p>
+                      @enderror
                   </div>
 
 
@@ -161,23 +166,58 @@
                       <label class="flex items-center bg-[#fafafa] border border-gray-300 rounded px-3 w-full focus-within:ring-2 focus-within:ring-[#0053FF]">
                           <input
                               :type="showConfirm ? 'text' : 'password'"
+                              id="register_password_confirmation"
                               name="password_confirmation"
                               placeholder="Confirm Password"
                               class="w-full bg-transparent border-none outline-none appearance-none focus:ring-0 text-gray-900 placeholder-gray-400 text-base pr-8"
                               autocomplete="new-password"
+                              required
                               data-lpignore="true"
                               data-1p-ignore
                               data-bwignore="true"
                               data-dashlane-skip="true"      
                           />
-                        @error('password_confirmation')
-                              <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
-                        @enderror
                           <button type="button" @click="showConfirm = !showConfirm" class="ml-2 text-gray-500 focus:outline-none" tabindex="-1">
                               <i :class="showConfirm ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
                           </button>
                       </label>
+                      <div id="password_match_message" class="mt-2 text-sm"></div>
+                      @error('password_confirmation')
+                          <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
+                      @enderror
                   </div>
+                  
+                  <script>
+                  document.addEventListener('DOMContentLoaded', function() {
+                      const password = document.getElementById('register_password');
+                      const confirmPassword = document.getElementById('register_password_confirmation');
+                      const matchMessage = document.getElementById('password_match_message');
+                      
+                      function checkMatch() {
+                          if (confirmPassword.value && password.value) {
+                              if (password.value === confirmPassword.value) {
+                                  matchMessage.innerHTML = '<span class="text-green-600"><i class="fa-solid fa-check-circle mr-1"></i>Passwords match</span>';
+                                  confirmPassword.classList.remove('border-red-500');
+                                  confirmPassword.classList.add('border-green-500');
+                              } else {
+                                  matchMessage.innerHTML = '<span class="text-red-600"><i class="fa-solid fa-times-circle mr-1"></i>Passwords do not match</span>';
+                                  confirmPassword.classList.remove('border-green-500');
+                                  confirmPassword.classList.add('border-red-500');
+                              }
+                          } else {
+                              matchMessage.innerHTML = '';
+                          }
+                      }
+                      
+                      password.addEventListener('input', checkMatch);
+                      confirmPassword.addEventListener('input', checkMatch);
+                      
+                      // Initialize password validation
+                      if (typeof initPasswordValidation !== 'undefined') {
+                          initPasswordValidation('register_password', 'register_password_requirements', 'register_password_strength');
+                      }
+                  });
+                  </script>
 
 
                     @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
