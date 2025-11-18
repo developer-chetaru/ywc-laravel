@@ -39,6 +39,19 @@
                         src="{{ asset('images/down-arr.svg') }}" alt="">
                 </div>
 
+                <!-- Role Filter -->
+                <div class="relative">
+                    <select wire:model.live="role"
+                        class="appearance-none text-[#616161] py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-200 text-sm font-medium bg-white cursor-pointer px-3 pr-12">
+                        <option value="">Role</option>
+                        @foreach($roles as $roleOption)
+                            <option value="{{ $roleOption->name }}">{{ $roleOption->name }}</option>
+                        @endforeach
+                    </select>
+                    <img class="absolute right-3 top-1/2 transform -translate-y-1/2 w-3 cursor-pointer"
+                        src="{{ asset('images/down-arr.svg') }}" alt="">
+                </div>
+
                 <!-- Sort Filter -->
                 <div class="relative">
                     <select wire:model.live="sort"
@@ -62,6 +75,7 @@
                                 <th class="px-4 py-6"><input type="checkbox" /></th>
                                 <th class="px-4 py-6 font-medium text-[#020202]">User Name</th>
                                 <th class="px-4 py-6 font-medium text-[#020202]">Email</th>
+                                <th class="px-4 py-6 font-medium text-[#020202]">Role</th>
                                 <th class="px-4 py-6 font-medium text-[#020202]">Status</th>
                                 <th class="px-4 py-6 font-medium text-[#020202]">Membership</th>
                                 <th class="px-4 py-6 font-medium text-[#020202]">Last Login</th>
@@ -93,6 +107,20 @@
 
                                     <td class="px-4 py-6 text-[#616161]">{{ $user->email }}</td>
 
+                                    <!-- Role -->
+                                    <td class="px-4 py-6">
+                                        @if(count($user->user_roles) > 0)
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach($user->user_roles as $roleName)
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                        {{ $roleName }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <span class="text-[#616161]">–</span>
+                                        @endif
+                                    </td>
 
                                     <!-- Status -->
                                     <td class="px-4 py-6">
@@ -118,7 +146,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-gray-500 py-6">
+                                    <td colspan="9" class="text-center text-gray-500 py-6">
                                         No users found.
                                     </td>
                                 </tr>

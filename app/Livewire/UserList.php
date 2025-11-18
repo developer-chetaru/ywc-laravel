@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 
 class UserList extends Component
@@ -14,6 +15,7 @@ class UserList extends Component
     public $search = '';
     public $status = '';
     public $membership = '';
+    public $role = '';
     public $sort = 'desc';
 
     public $showProfilePopup = false;
@@ -23,12 +25,13 @@ class UserList extends Component
         'search' => ['except' => ''],
         'status' => ['except' => ''],
         'membership' => ['except' => ''],
+        'role' => ['except' => ''],
         'sort' => ['except' => 'desc'],
     ];
 
     public function updated($property)
     {
-        if (in_array($property, ['search', 'status', 'membership', 'sort'])) {
+        if (in_array($property, ['search', 'status', 'membership', 'role', 'sort'])) {
             $this->resetPage();
         }
     }
@@ -62,6 +65,11 @@ class UserList extends Component
         $this->resetPage();
     }
 
+    public function updatedRole()
+    {
+        $this->resetPage();
+    }
+
     public function closeProfilePopup()
     {
         $this->showProfilePopup = false;
@@ -88,7 +96,7 @@ class UserList extends Component
             ->whereHas("roles", function ($q) {
                 $q->where("name", "!=", "super_admin");
             })
-            ->with('latestSubscription');
+            ->with(['latestSubscription', 'roles']);
 
         // Search
         if ($this->search) {
@@ -111,8 +119,15 @@ class UserList extends Component
         if ($this->membership) {
             $query->whereHas('latestSubscription', function ($q) {
                 $q->where('interval', $this->membership === 'yearly' ? 'year' : 'month')
-                ->whereIn('status', ['active', 'trialing'])
-                ->whereDate('end_date', '>=', now());
+                    ->whereIn('status', ['active', 'trialing'])
+                    ->whereDate('end_date', '>=', now());
+            });
+        }
+
+        // Role filter
+        if ($this->role) {
+            $query->whereHas('roles', function ($q) {
+                $q->where('name', $this->role);
             });
         }
 
@@ -128,11 +143,21 @@ class UserList extends Component
             $user->last_login = $user->last_login ? Carbon::parse($user->last_login)->format('d-m-Y') : '–';
             $user->first_login = $user->created_at ? Carbon::parse($user->created_at)->format('d-m-Y') : '–';
 
+            // Get user roles (excluding super_admin)
+            $user->user_roles = $user->roles->where('name', '!=', 'super_admin')->pluck('name')->toArray();
+
             return $user;
         });
 
+        // Get all roles for filter dropdown (excluding super_admin)
+        $roles = Role::where('name', '!=', 'super_admin')
+            ->where('guard_name', 'api')
+            ->orderBy('name')
+            ->get();
+
         return view('livewire.user-list', [
-            'users' => $users
+            'users' => $users,
+            'roles' => $roles
         ])->layout('layouts.app');
     }
 
