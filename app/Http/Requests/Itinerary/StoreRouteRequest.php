@@ -45,7 +45,7 @@ class StoreRouteRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'cover_image' => ['nullable', 'string', 'max:2048'],
+            'cover_image' => ['nullable'],
             'region' => ['nullable', 'string', 'max:255'],
             'difficulty' => ['nullable', 'string', 'max:100'],
             'season' => ['nullable', 'string', 'max:100'],

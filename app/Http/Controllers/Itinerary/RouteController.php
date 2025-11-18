@@ -12,6 +12,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class RouteController extends Controller
 {
@@ -70,7 +73,66 @@ class RouteController extends Controller
     public function store(StoreRouteRequest $request, RouteBuilder $builder): JsonResponse
     {
         try {
-            $route = $builder->createRoute($request->user(), $request->validated());
+            $validated = $request->validated();
+            
+            // Handle cover image - can be file upload, URL, or path
+            if ($request->hasFile('cover_image')) {
+                // File upload
+                $file = $request->file('cover_image');
+                $validated['cover_image'] = $file->store('route-covers', 'public');
+            } elseif (isset($validated['cover_image']) && filter_var($validated['cover_image'], FILTER_VALIDATE_URL)) {
+                // URL - download and store
+                $downloadedPath = $this->downloadAndStoreImage($validated['cover_image'], 'route-covers');
+                if ($downloadedPath) {
+                    $validated['cover_image'] = $downloadedPath;
+                } else {
+                    unset($validated['cover_image']); // Remove if download failed
+                }
+            }
+            
+            // Handle stop photos - can be file uploads, URLs, or paths
+            if ($request->has('stops') && is_array($request->input('stops'))) {
+                foreach ($validated['stops'] as $index => &$stop) {
+                    $processedPhotos = [];
+                    
+                    // Check for file uploads in nested array format
+                    $stopInput = $request->input("stops.{$index}");
+                    if (is_array($stopInput) && $request->hasFile("stops.{$index}.photos")) {
+                        $photos = $request->file("stops.{$index}.photos");
+                        // Handle both single file and array of files
+                        $photosArray = is_array($photos) ? $photos : [$photos];
+                        foreach ($photosArray as $photo) {
+                            if ($photo && $photo->isValid()) {
+                                $processedPhotos[] = $photo->store('route-stops', 'public');
+                            }
+                        }
+                    }
+                    
+                    // Process photos array - check for URLs
+                    if (isset($stop['photos']) && is_array($stop['photos'])) {
+                        foreach ($stop['photos'] as $photo) {
+                            if (filter_var($photo, FILTER_VALIDATE_URL)) {
+                                // It's a URL - download and store
+                                $downloadedPath = $this->downloadAndStoreImage($photo, 'route-stops');
+                                if ($downloadedPath) {
+                                    $processedPhotos[] = $downloadedPath;
+                                }
+                            } elseif (is_string($photo) && !empty($photo)) {
+                                // It's already a path
+                                $processedPhotos[] = $photo;
+                            }
+                        }
+                    }
+                    
+                    // Update stop with processed photos
+                    if (!empty($processedPhotos)) {
+                        $stop['photos'] = $processedPhotos;
+                    }
+                }
+                unset($stop); // Break reference
+            }
+            
+            $route = $builder->createRoute($request->user(), $validated);
 
             $route->loadMissing([
                 'stops',
@@ -88,6 +150,62 @@ class RouteController extends Controller
                 'message' => 'Failed to create route.',
                 'error' => config('app.debug') ? $e->getMessage() : 'An error occurred while creating the route.',
             ], 500);
+        }
+    }
+
+    /**
+     * Download and store an image from URL
+     */
+    protected function downloadAndStoreImage(string $url, string $directory): ?string
+    {
+        try {
+            $response = Http::timeout(10)->get($url);
+            
+            if (!$response->successful()) {
+                \Log::warning("Failed to download image: {$url}");
+                return null;
+            }
+
+            // Get file extension from URL or detect from content type
+            $parsedUrl = parse_url($url);
+            $path = $parsedUrl['path'] ?? '';
+            $extension = pathinfo($path, PATHINFO_EXTENSION);
+            
+            // If no extension in URL, try to detect from content type
+            if (empty($extension)) {
+                $contentType = $response->header('Content-Type');
+                if (str_contains($contentType, 'jpeg') || str_contains($contentType, 'jpg')) {
+                    $extension = 'jpg';
+                } elseif (str_contains($contentType, 'png')) {
+                    $extension = 'png';
+                } elseif (str_contains($contentType, 'webp')) {
+                    $extension = 'webp';
+                } elseif (str_contains($contentType, 'gif')) {
+                    $extension = 'gif';
+                } else {
+                    $extension = 'jpg'; // Default
+                }
+            }
+
+            // Clean extension (remove query params if any)
+            $extension = strtolower(explode('?', $extension)[0]);
+            
+            // Validate extension
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (!in_array($extension, $allowedExtensions)) {
+                $extension = 'jpg'; // Default to jpg if invalid
+            }
+            
+            $filename = Str::random(40) . '.' . $extension;
+            $filePath = $directory . '/' . $filename;
+
+            // Store the image
+            Storage::disk('public')->put($filePath, $response->body());
+
+            return $filePath;
+        } catch (\Exception $e) {
+            \Log::warning("Error downloading image {$url}: {$e->getMessage()}");
+            return null;
         }
     }
 
@@ -165,7 +283,73 @@ class RouteController extends Controller
         try {
             Gate::authorize('update', $route);
 
-            $route = $builder->updateRoute($route, $request->validated());
+            $validated = $request->validated();
+            
+            // Handle cover image - can be file upload, URL, or path
+            if ($request->hasFile('cover_image')) {
+                // Delete old cover image if it exists
+                if ($route->cover_image && Storage::disk('public')->exists($route->cover_image)) {
+                    Storage::disk('public')->delete($route->cover_image);
+                }
+                $file = $request->file('cover_image');
+                $validated['cover_image'] = $file->store('route-covers', 'public');
+            } elseif (isset($validated['cover_image']) && filter_var($validated['cover_image'], FILTER_VALIDATE_URL)) {
+                // URL - download and store
+                // Delete old cover image if it exists
+                if ($route->cover_image && Storage::disk('public')->exists($route->cover_image)) {
+                    Storage::disk('public')->delete($route->cover_image);
+                }
+                $downloadedPath = $this->downloadAndStoreImage($validated['cover_image'], 'route-covers');
+                if ($downloadedPath) {
+                    $validated['cover_image'] = $downloadedPath;
+                } else {
+                    unset($validated['cover_image']); // Remove if download failed
+                }
+            }
+            
+            // Handle stop photos - can be file uploads, URLs, or paths
+            if ($request->has('stops') && is_array($request->input('stops'))) {
+                foreach ($validated['stops'] as $index => &$stop) {
+                    $processedPhotos = [];
+                    
+                    // Check for file uploads in nested array format
+                    $stopInput = $request->input("stops.{$index}");
+                    if (is_array($stopInput) && $request->hasFile("stops.{$index}.photos")) {
+                        $photos = $request->file("stops.{$index}.photos");
+                        // Handle both single file and array of files
+                        $photosArray = is_array($photos) ? $photos : [$photos];
+                        foreach ($photosArray as $photo) {
+                            if ($photo && $photo->isValid()) {
+                                $processedPhotos[] = $photo->store('route-stops', 'public');
+                            }
+                        }
+                    }
+                    
+                    // Process photos array - check for URLs
+                    if (isset($stop['photos']) && is_array($stop['photos'])) {
+                        foreach ($stop['photos'] as $photo) {
+                            if (filter_var($photo, FILTER_VALIDATE_URL)) {
+                                // It's a URL - download and store
+                                $downloadedPath = $this->downloadAndStoreImage($photo, 'route-stops');
+                                if ($downloadedPath) {
+                                    $processedPhotos[] = $downloadedPath;
+                                }
+                            } elseif (is_string($photo) && !empty($photo)) {
+                                // It's already a path
+                                $processedPhotos[] = $photo;
+                            }
+                        }
+                    }
+                    
+                    // Update stop with processed photos
+                    if (!empty($processedPhotos)) {
+                        $stop['photos'] = $processedPhotos;
+                    }
+                }
+                unset($stop); // Break reference
+            }
+
+            $route = $builder->updateRoute($route, $validated);
 
             $route->loadMissing([
                 'stops',

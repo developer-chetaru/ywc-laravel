@@ -45,7 +45,7 @@ class UpdateRouteRequest extends FormRequest
         return [
             'title' => ['sometimes', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],
-            'cover_image' => ['sometimes', 'nullable', 'string', 'max:2048'],
+            'cover_image' => ['sometimes', 'nullable'],
             'region' => ['sometimes', 'nullable', 'string', 'max:255'],
             'difficulty' => ['sometimes', 'nullable', 'string', 'max:100'],
             'season' => ['sometimes', 'nullable', 'string', 'max:100'],
