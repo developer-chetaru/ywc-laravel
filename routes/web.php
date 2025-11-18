@@ -119,7 +119,7 @@ Route::middleware([
     //Route::get('/career-history', CareerHistory::class)->name('career-history');
   
   	Route::get('/documents', [CareerHistoryController::class, 'index'])->name('documents');
-  	Route::get('/career-history', \App\Livewire\CareerHistoryView::class)->name('career-history');
+  	Route::get('/career-history/{userId?}', \App\Livewire\CareerHistoryView::class)->name('career-history');
     Route::get('/certificate-type/{id}/issuers', [CareerHistoryController::class, 'getIssuersByType']);
     Route::post('/documents/scan', [CareerHistoryController::class, 'scan'])->name('documents.scan');
     Route::post('/career-history', [CareerHistoryController::class, 'store'])->name('career-history.store');
@@ -169,6 +169,8 @@ Route::middleware([
   	Route::get('/training-resources', TrainingResources::class)->name('training.resources');
 
 	Route::get('/roles', RoleIndex::class)->name('roles.index');
+
+	Route::get('/master-data', \App\Livewire\Admin\MasterDataManage::class)->name('master-data.index');
 
 	// Crew Discovery & Networking (API-based, accessible from sidebar)
 	Route::get('/crew-discovery', CrewDiscovery::class)->name('crew.discovery');

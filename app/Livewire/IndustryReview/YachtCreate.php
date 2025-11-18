@@ -5,6 +5,7 @@ namespace App\Livewire\IndustryReview;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Http;
+use App\Models\MasterData;
 
 class YachtCreate extends Component
 {
@@ -26,14 +27,6 @@ class YachtCreate extends Component
     public $loading = false;
     public $message = '';
     public $error = '';
-
-    public $types = [
-        'motor_yacht' => 'Motor Yacht',
-        'sailing_yacht' => 'Sailing Yacht',
-        'explorer' => 'Explorer',
-        'catamaran' => 'Catamaran',
-        'other' => 'Other',
-    ];
 
     public $statuses = [
         'charter' => 'Charter',
@@ -134,7 +127,11 @@ class YachtCreate extends Component
 
     public function render()
     {
-        return view('livewire.industry-review.yacht-create');
+        $yachtTypes = MasterData::getYachtTypes();
+        
+        return view('livewire.industry-review.yacht-create', [
+            'yachtTypes' => $yachtTypes,
+        ]);
     }
 }
 

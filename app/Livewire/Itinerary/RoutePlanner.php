@@ -4,6 +4,7 @@ namespace App\Livewire\Itinerary;
 
 use App\Models\ItineraryRoute;
 use App\Models\ItineraryRouteStop;
+use App\Models\MasterData;
 use App\Services\Itinerary\RouteBuilder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -433,7 +434,13 @@ class RoutePlanner extends Component
 
     public function render()
     {
-        return view('livewire.itinerary.route-planner');
+        $routeVisibility = MasterData::getRouteVisibility();
+        $routeStatus = MasterData::getRouteStatus();
+        
+        return view('livewire.itinerary.route-planner', [
+            'routeVisibility' => $routeVisibility,
+            'routeStatus' => $routeStatus,
+        ]);
     }
 
     protected function rules(): array

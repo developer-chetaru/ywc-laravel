@@ -10,6 +10,7 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Yacht;
 use App\Models\User;
+use App\Models\MasterData;
 use App\Services\YachtService;
 
 #[Layout('layouts.app')]
@@ -62,14 +63,6 @@ class YachtManage extends Component
     public $loading = false;
     public $message = '';
     public $error = '';
-
-    public $types = [
-        'motor_yacht' => 'Motor Yacht',
-        'sailing_yacht' => 'Sailing Yacht',
-        'explorer' => 'Explorer',
-        'catamaran' => 'Catamaran',
-        'other' => 'Other',
-    ];
 
     public $statuses = [
         'charter' => 'Charter',
@@ -372,9 +365,12 @@ class YachtManage extends Component
             return $yacht;
         });
 
+        $yachtTypes = MasterData::getYachtTypes();
+
         return view('livewire.industry-review.yacht-manage', [
             'yachts' => $yachts,
             'isCaptain' => $isCaptain,
+            'yachtTypes' => $yachtTypes,
         ]);
     }
 }

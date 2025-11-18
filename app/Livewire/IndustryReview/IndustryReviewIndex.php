@@ -9,6 +9,7 @@ use App\Models\Yacht;
 use App\Models\Marina;
 use App\Models\YachtReview;
 use App\Models\MarinaReview;
+use App\Models\MasterData;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -62,14 +63,6 @@ class IndustryReviewIndex extends Component
     public $reviewLoading = false;
     public $reviewError = '';
     public $reviewMessage = '';
-
-    public $types = [
-        'motor_yacht' => 'Motor Yacht',
-        'sailing_yacht' => 'Sailing Yacht',
-        'explorer' => 'Explorer',
-        'catamaran' => 'Catamaran',
-        'other' => 'Other',
-    ];
 
     public $statuses = [
         'charter' => 'Charter',
@@ -543,6 +536,10 @@ class IndustryReviewIndex extends Component
 
     public function render()
     {
-        return view('livewire.industry-review.industry-review-index');
+        $yachtTypes = MasterData::getYachtTypes();
+        
+        return view('livewire.industry-review.industry-review-index', [
+            'yachtTypes' => $yachtTypes,
+        ]);
     }
 }

@@ -25,8 +25,9 @@
                 <label class="block text-xs uppercase tracking-wide text-gray-500">Visibility</label>
                 <select wire:model.defer="form.visibility"
                         class="mt-1 block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                    <option value="crew">Crew only</option>
-                    <option value="public">Public</option>
+                    @foreach($routeVisibility as $visibility)
+                        <option value="{{ $visibility->code }}">{{ $visibility->name }}</option>
+                    @endforeach
                 </select>
             </div>
         </div>

@@ -95,17 +95,17 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
                             <select wire:model.defer="form.visibility" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="private">Private - Only you</option>
-                                <option value="crew">Crew - Shared with crew members</option>
-                                <option value="public">Public - Visible to everyone</option>
+                                @foreach($routeVisibility as $visibility)
+                                    <option value="{{ $visibility->code }}">{{ $visibility->name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                             <select wire:model.defer="form.status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="draft">Draft - Work in progress</option>
-                                <option value="active">Active - Currently sailing</option>
-                                <option value="completed">Completed - Journey finished</option>
+                                @foreach($routeStatus as $status)
+                                    <option value="{{ $status->code }}">{{ $status->name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div>

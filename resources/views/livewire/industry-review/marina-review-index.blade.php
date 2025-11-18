@@ -60,13 +60,9 @@
                         <select wire:model.live="type"
                                 class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm">
                             <option value="">All Types</option>
-                            <option value="full_service">Full Service</option>
-                            <option value="municipal_port">Municipal Port</option>
-                            <option value="yacht_club">Yacht Club</option>
-                            <option value="anchorage">Anchorage</option>
-                            <option value="mooring_field">Mooring Field</option>
-                            <option value="dry_stack">Dry Stack</option>
-                            <option value="boatyard">Boatyard</option>
+                            @foreach($marinaTypes as $marinaType)
+                                <option value="{{ $marinaType->code }}">{{ $marinaType->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>

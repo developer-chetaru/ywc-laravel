@@ -9,6 +9,7 @@ use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Marina;
+use App\Models\MasterData;
 use App\Services\MarinaService;
 
 #[Layout('layouts.app')]
@@ -54,16 +55,6 @@ class MarinaManage extends Component
     public $loading = false;
     public $message = '';
     public $error = '';
-
-    public $types = [
-        'full_service' => 'Full Service',
-        'municipal_port' => 'Municipal Port',
-        'yacht_club' => 'Yacht Club',
-        'anchorage' => 'Anchorage',
-        'mooring_field' => 'Mooring Field',
-        'dry_stack' => 'Dry Stack',
-        'boatyard' => 'Boatyard',
-    ];
 
     public function updatingSearch()
     {
@@ -272,9 +263,12 @@ class MarinaManage extends Component
             return $marina;
         });
 
+        $marinaTypes = MasterData::getMarinaTypes();
+
         return view('livewire.industry-review.marina-manage', [
             'marinas' => $marinas,
             'countries' => $countries,
+            'marinaTypes' => $marinaTypes,
         ]);
     }
 }

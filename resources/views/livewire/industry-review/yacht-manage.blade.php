@@ -56,8 +56,8 @@
                         <label class="block text-xs font-medium text-gray-700 mb-1">Type</label>
                         <select wire:model.live="filterType" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
                             <option value="">All Types</option>
-                            @foreach($types as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
+                            @foreach($yachtTypes as $yachtType)
+                                <option value="{{ $yachtType->code }}">{{ $yachtType->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -114,7 +114,7 @@
                         @endif
                         @if($filterType)
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Type: {{ $types[$filterType] ?? $filterType }}
+                                Type: {{ $yachtTypes->where('code', $filterType)->first()->name ?? $filterType }}
                                 <button wire:click="$set('filterType', '')" class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200">
                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
@@ -302,8 +302,8 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
                             <select wire:model="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">Select Type</option>
-                                @foreach($types as $key => $label)
-                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @foreach($yachtTypes as $yachtType)
+                                    <option value="{{ $yachtType->code }}">{{ $yachtType->name }}</option>
                                 @endforeach
                             </select>
                             @error('type') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror

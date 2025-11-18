@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use App\Models\Marina;
+use App\Models\MasterData;
 use Illuminate\Support\Facades\Storage;
 
 #[Layout('layouts.app')]
@@ -29,11 +30,9 @@ class MarinaReviewIndex extends Component
     public ?int $min_rating = null;
 
     public array $countries = [];
-    public array $types = [];
 
     public function mount(): void
     {
-        $this->types = ['full_service', 'municipal_port', 'yacht_club', 'anchorage', 'mooring_field', 'dry_stack', 'boatyard'];
         $this->loadCountries();
     }
 
@@ -91,8 +90,11 @@ class MarinaReviewIndex extends Component
             return $marina;
         });
 
+        $marinaTypes = MasterData::getMarinaTypes();
+
         return view('livewire.industry-review.marina-review-index', [
             'marinas' => $marinas,
+            'marinaTypes' => $marinaTypes,
         ]);
     }
 }

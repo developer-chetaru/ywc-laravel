@@ -292,8 +292,8 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
                             <select wire:model="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
                                 <option value="">Select Type</option>
-                                @foreach($types as $key => $label)
-                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @foreach($yachtTypes as $yachtType)
+                                    <option value="{{ $yachtType->code }}">{{ $yachtType->name }}</option>
                                 @endforeach
                             </select>
                         </div>

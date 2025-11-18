@@ -186,6 +186,25 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             </li>
             @endrole
 
+            {{-- MASTER DATA (Super Admin Only) --}}
+            @role('super_admin')
+            <li>
+                <a href="{{ route('master-data.index') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                    {{ request()->routeIs('master-data.*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                    </svg>
+
+                    <span x-show="isOpen"
+                        class="text-base font-medium {{ request()->routeIs('master-data.*') ? 'text-black' : 'text-white' }}">
+                        Master Data
+                    </span>
+                </a>
+            </li>
+            @endrole
+
 
             {{-- LEGAL SUPPORT --}}
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))

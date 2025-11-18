@@ -4,6 +4,7 @@ namespace App\Livewire\Itinerary;
 
 use App\Models\ItineraryRoute;
 use App\Models\ItineraryRouteComment;
+use App\Models\MasterData;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -104,6 +105,11 @@ class RouteDiscussion extends Component
 
     public function render()
     {
+        // Get route visibility options (only crew and public for comments, not private)
+        $routeVisibility = MasterData::getRouteVisibility()->filter(function($item) {
+            return in_array($item->code, ['crew', 'public']);
+        });
+        
         return view('livewire.itinerary.route-discussion', [
             'route' => $this->route,
             'stops' => $this->route->stops ?? collect(),
@@ -112,6 +118,7 @@ class RouteDiscussion extends Component
                 ->with(['user', 'children.user'])
                 ->latest()
                 ->paginate(10),
+            'routeVisibility' => $routeVisibility,
         ]);
     }
 }

@@ -60,11 +60,9 @@
                         <select wire:model.live="type"
                                 class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm">
                             <option value="">All Types</option>
-                            <option value="motor_yacht">Motor Yacht</option>
-                            <option value="sailing_yacht">Sailing Yacht</option>
-                            <option value="explorer">Explorer</option>
-                            <option value="catamaran">Catamaran</option>
-                            <option value="other">Other</option>
+                            @foreach($yachtTypes as $yachtType)
+                                <option value="{{ $yachtType->code }}">{{ $yachtType->name }}</option>
+                            @endforeach
                         </select>
                     </div>
 

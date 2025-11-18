@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use App\Models\Yacht;
+use App\Models\MasterData;
 use Illuminate\Support\Facades\Storage;
 
 #[Layout('layouts.app')]
@@ -31,12 +32,10 @@ class YachtReviewIndex extends Component
     #[Url]
     public ?int $min_recommendation = null;
 
-    public array $types = [];
     public array $statuses = [];
 
     public function mount(): void
     {
-        $this->types = ['motor_yacht', 'sailing_yacht', 'explorer', 'catamaran', 'other'];
         $this->statuses = ['charter', 'private', 'both'];
     }
 
@@ -86,8 +85,11 @@ class YachtReviewIndex extends Component
             return $yacht;
         });
 
+        $yachtTypes = MasterData::getYachtTypes();
+
         return view('livewire.industry-review.yacht-review-index', [
             'yachts' => $yachts,
+            'yachtTypes' => $yachtTypes,
         ]);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Livewire\Itinerary;
 
 use App\Models\ItineraryRoute;
+use App\Models\MasterData;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -191,9 +192,14 @@ class RouteLibrary extends Component
 
         $routes = $query->paginate(9);
 
+        $routeVisibility = MasterData::getRouteVisibility();
+        $routeStatus = MasterData::getRouteStatus();
+
         return view('livewire.itinerary.route-library', [
             'routes' => $routes,
             'availableDays' => $this->availableDays,
+            'routeVisibility' => $routeVisibility,
+            'routeStatus' => $routeStatus,
         ]);
     }
 }

@@ -22,6 +22,16 @@ use App\Http\Controllers\Api\UserConnectionController;
 use App\Http\Controllers\Api\RallyController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\CrewProfileController;
+use App\Http\Controllers\Api\MasterDataController;
+
+// Master Data API - Public endpoints for mobile developers
+Route::get('/master-data', [MasterDataController::class, 'index']);
+Route::get('/master-data/all', [MasterDataController::class, 'getAll']);
+Route::get('/master-data/route-visibility', [MasterDataController::class, 'getRouteVisibility']);
+Route::get('/master-data/route-status', [MasterDataController::class, 'getRouteStatus']);
+Route::get('/master-data/marina-types', [MasterDataController::class, 'getMarinaTypes']);
+Route::get('/master-data/yacht-types', [MasterDataController::class, 'getYachtTypes']);
+Route::get('/master-data/countries', [MasterDataController::class, 'getCountries']);
 
 Route::apiResource('itineraries', ItineraryController::class);
 Route::put('/itineraries/{itinerary}/status', [ItineraryController::class, 'updateStatus']);

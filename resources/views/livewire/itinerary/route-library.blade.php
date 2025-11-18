@@ -147,9 +147,9 @@
                         <select wire:model.live="status"
                                 class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
                             <option value="">All</option>
-                            <option value="draft">Draft</option>
-                            <option value="active">Active</option>
-                            <option value="completed">Completed</option>
+                            @foreach($routeStatus as $status)
+                                <option value="{{ $status->code }}">{{ $status->name }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -159,9 +159,9 @@
                         <select wire:model.live="visibility"
                                 class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
                             <option value="">All</option>
-                            <option value="public">Public</option>
-                            <option value="crew">Crew</option>
-                            <option value="private">Private</option>
+                            @foreach($routeVisibility as $visibility)
+                                <option value="{{ $visibility->code }}">{{ $visibility->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
