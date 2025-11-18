@@ -3,12 +3,41 @@
 namespace App\Http\Requests\Itinerary;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreRouteRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        if ($this->user() === null) {
+            if ($this->expectsJson() || $this->is('api/*')) {
+                throw new HttpResponseException(
+                    response()->json([
+                        'message' => 'Unauthenticated.',
+                    ], 401)
+                );
+            }
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        if ($this->expectsJson() || $this->is('api/*')) {
+            throw new HttpResponseException(
+                response()->json([
+                    'message' => 'The given data was invalid.',
+                    'errors' => $validator->errors(),
+                ], 422)
+            );
+        }
+
+        parent::failedValidation($validator);
     }
 
     public function rules(): array
