@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Models\Yacht;
 
 class Profile extends Component
 {
@@ -19,6 +20,7 @@ class Profile extends Component
     // Crew Profile Fields
     public $years_experience;
     public $current_yacht;
+    public $current_yacht_start_date;
     public $languages = [];
     public $certifications = [];
     public $specializations = [];
@@ -35,7 +37,16 @@ class Profile extends Component
     public $newCertification = '';
     public $newSpecialization = '';
     public $newInterest = '';
-    public $newPreviousYacht = '';
+    
+    // Previous Yacht input helpers
+    public $newPreviousYachtId = '';
+    public $newPreviousYachtName = '';
+    public $newPreviousYachtStartDate = '';
+    public $newPreviousYachtEndDate = '';
+    public $showOtherInput = false;
+    
+    // Yachts list for dropdown
+    public $yachts = [];
 
     public function mount()
     {
@@ -48,6 +59,7 @@ class Profile extends Component
         // Load crew profile fields
         $this->years_experience = $user->years_experience;
         $this->current_yacht = $user->current_yacht;
+        $this->current_yacht_start_date = $user->current_yacht_start_date;
         $this->languages = $user->languages ?? [];
         $this->certifications = $user->certifications ?? [];
         $this->specializations = $user->specializations ?? [];
@@ -57,7 +69,53 @@ class Profile extends Component
         $this->looking_to_meet = $user->looking_to_meet ?? false;
         $this->looking_for_work = $user->looking_for_work ?? false;
         $this->sea_service_time_months = $user->sea_service_time_months;
-        $this->previous_yachts = $user->previous_yachts ?? [];
+        
+        // Load previous yachts - handle both old format (strings) and new format (objects)
+        $previousYachts = $user->previous_yachts ?? [];
+        $this->previous_yachts = [];
+        foreach ($previousYachts as $yacht) {
+            if (is_string($yacht)) {
+                // Old format - convert to new format
+                $this->previous_yachts[] = [
+                    'yacht_id' => null,
+                    'name' => $yacht,
+                    'start_date' => null,
+                    'end_date' => null,
+                ];
+            } else {
+                // New format - fix invalid dates (swap if end < start)
+                $startDate = !empty($yacht['start_date']) ? $yacht['start_date'] : null;
+                $endDate = !empty($yacht['end_date']) ? $yacht['end_date'] : null;
+                
+                // Fix invalid dates by swapping if end date is before start date
+                if ($startDate && $endDate) {
+                    $start = \Carbon\Carbon::parse($startDate);
+                    $end = \Carbon\Carbon::parse($endDate);
+                    
+                    if ($end->lt($start)) {
+                        // Swap dates if end is before start
+                        $temp = $startDate;
+                        $startDate = $endDate;
+                        $endDate = $temp;
+                    }
+                }
+                
+                $this->previous_yachts[] = [
+                    'yacht_id' => $yacht['yacht_id'] ?? null,
+                    'name' => $yacht['name'] ?? '',
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                ];
+            }
+        }
+        
+        // Load yachts for dropdown
+        $this->loadYachts();
+    }
+    
+    public function loadYachts()
+    {
+        $this->yachts = Yacht::orderBy('name')->get(['id', 'name']);
     }
 
     public function updateProfile()
@@ -123,9 +181,27 @@ class Profile extends Component
     
     public function updateCrewProfile()
     {
+        // Fix and validate dates in previous_yachts
+        foreach ($this->previous_yachts as $index => $yacht) {
+            if (is_array($yacht) && isset($yacht['start_date']) && isset($yacht['end_date'])) {
+                if (!empty($yacht['start_date']) && !empty($yacht['end_date'])) {
+                    $startDate = \Carbon\Carbon::parse($yacht['start_date']);
+                    $endDate = \Carbon\Carbon::parse($yacht['end_date']);
+                    
+                    if ($endDate->lt($startDate)) {
+                        // Auto-fix by swapping dates
+                        $temp = $this->previous_yachts[$index]['start_date'];
+                        $this->previous_yachts[$index]['start_date'] = $this->previous_yachts[$index]['end_date'];
+                        $this->previous_yachts[$index]['end_date'] = $temp;
+                    }
+                }
+            }
+        }
+        
         $this->validate([
             'years_experience' => 'nullable|integer|min:0|max:100',
             'current_yacht' => 'nullable|string|max:255',
+            'current_yacht_start_date' => 'nullable|date',
             'languages' => 'nullable|array',
             'certifications' => 'nullable|array',
             'specializations' => 'nullable|array',
@@ -136,12 +212,16 @@ class Profile extends Component
             'looking_for_work' => 'nullable|boolean',
             'sea_service_time_months' => 'nullable|integer|min:0',
             'previous_yachts' => 'nullable|array',
+            'previous_yachts.*.name' => 'required|string|max:255',
+            'previous_yachts.*.start_date' => 'nullable|date',
+            'previous_yachts.*.end_date' => 'nullable|date',
         ]);
 
         $user = Auth::user();
         $user->update([
             'years_experience' => $this->years_experience,
             'current_yacht' => $this->current_yacht,
+            'current_yacht_start_date' => $this->current_yacht_start_date,
             'languages' => $this->languages,
             'certifications' => $this->certifications,
             'specializations' => $this->specializations,
@@ -213,12 +293,84 @@ class Profile extends Component
         $this->interests = array_values($this->interests);
     }
     
+    public function updatedNewPreviousYachtId()
+    {
+        if ($this->newPreviousYachtId === 'other') {
+            $this->showOtherInput = true;
+            $this->newPreviousYachtName = '';
+        } else {
+            $this->showOtherInput = false;
+            $this->newPreviousYachtName = '';
+            if ($this->newPreviousYachtId && is_numeric($this->newPreviousYachtId)) {
+                $yacht = Yacht::find($this->newPreviousYachtId);
+                if ($yacht) {
+                    // Don't set name here, let it be selected from dropdown
+                }
+            }
+        }
+    }
+    
     public function addPreviousYacht()
     {
-        if ($this->newPreviousYacht && !in_array($this->newPreviousYacht, $this->previous_yachts)) {
-            $this->previous_yachts[] = $this->newPreviousYacht;
-            $this->newPreviousYacht = '';
+        $yachtName = '';
+        $yachtId = null;
+        
+        if ($this->newPreviousYachtId === 'other') {
+            // Manual entry
+            if (empty($this->newPreviousYachtName)) {
+                session()->flash('yacht-error', 'Please enter a yacht name.');
+                return;
+            }
+            $yachtName = $this->newPreviousYachtName;
+            $yachtId = null;
+        } else {
+            // Selected from dropdown
+            if (empty($this->newPreviousYachtId)) {
+                session()->flash('yacht-error', 'Please select a yacht.');
+                return;
+            }
+            $yacht = Yacht::find($this->newPreviousYachtId);
+            if (!$yacht) {
+                session()->flash('yacht-error', 'Selected yacht not found.');
+                return;
+            }
+            $yachtName = $yacht->name;
+            $yachtId = $yacht->id;
         }
+        
+        // Validate dates
+        if ($this->newPreviousYachtStartDate && $this->newPreviousYachtEndDate) {
+            $startDate = \Carbon\Carbon::parse($this->newPreviousYachtStartDate);
+            $endDate = \Carbon\Carbon::parse($this->newPreviousYachtEndDate);
+            
+            if ($endDate->lt($startDate)) {
+                session()->flash('yacht-error', 'End date must be after start date.');
+                return;
+            }
+        }
+        
+        // Check if already exists
+        foreach ($this->previous_yachts as $existing) {
+            if (isset($existing['name']) && $existing['name'] === $yachtName) {
+                session()->flash('yacht-error', 'This yacht is already in your list.');
+                return; // Already exists
+            }
+        }
+        
+        $this->previous_yachts[] = [
+            'yacht_id' => $yachtId,
+            'name' => $yachtName,
+            'start_date' => $this->newPreviousYachtStartDate ?: null,
+            'end_date' => $this->newPreviousYachtEndDate ?: null,
+        ];
+        
+        // Reset form
+        $this->newPreviousYachtId = '';
+        $this->newPreviousYachtName = '';
+        $this->newPreviousYachtStartDate = '';
+        $this->newPreviousYachtEndDate = '';
+        $this->showOtherInput = false;
+        session()->forget('yacht-error');
     }
     
     public function removePreviousYacht($index)

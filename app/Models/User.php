@@ -41,6 +41,7 @@ class User extends Authenticatable implements JWTSubject
         // Crew profile fields
         'years_experience',
         'current_yacht',
+        'current_yacht_start_date',
         'languages',
         'certifications',
         'specializations',

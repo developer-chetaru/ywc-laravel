@@ -140,6 +140,7 @@
                         <col style="width: 100px;">
                         <col style="width: 120px;">
                         <col style="width: 100px;">
+                        <col style="width: 120px;">
                         <col style="width: 100px;">
                     </colgroup>
                     <thead class="bg-gray-50">
@@ -150,6 +151,7 @@
                             <th class="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Length</th>
                             <th class="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
                             <th class="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">Reviews</th>
+                            <th class="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center">Members</th>
                             <th class="px-4 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center">Actions</th>
                         </tr>
                     </thead>
@@ -182,6 +184,19 @@
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $yacht->reviews_count }} reviews</td>
                                 <td class="px-4 py-3 text-center">
+                                    @if($yacht->member_count > 0)
+                                        <button wire:click="showMembers({{ $yacht->id }})" 
+                                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors cursor-pointer">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                            </svg>
+                                            {{ $yacht->member_count }}
+                                        </button>
+                                    @else
+                                        <span class="text-sm text-gray-400">0</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <button wire:click="openEditModal({{ $yacht->id }})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,7 +213,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-12 text-center text-gray-500">
+                                <td colspan="8" class="px-4 py-12 text-center text-gray-500">
                                     No yachts found. Click "Add New Yacht" to get started.
                                 </td>
                             </tr>
@@ -341,6 +356,80 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    {{-- Members Modal --}}
+    @if($showMemberModal)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" wire:click="closeMemberModal">
+            <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-y-auto" @click.stop>
+                <div class="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Members on {{ $selectedYachtName }}</h2>
+                        <p class="text-sm text-gray-600 mt-1">{{ count($members) }} {{ count($members) == 1 ? 'member' : 'members' }}</p>
+                    </div>
+                    <button wire:click="closeMemberModal" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    @if(count($members) > 0)
+                        <div class="space-y-3">
+                            @foreach($members as $member)
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-4 flex-1">
+                                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                            @if($member['profile_photo_path'])
+                                                <img src="{{ asset('storage/' . $member['profile_photo_path']) }}" 
+                                                     alt="{{ $member['first_name'] }} {{ $member['last_name'] }}"
+                                                     class="w-12 h-12 rounded-full object-cover">
+                                            @else
+                                                <span class="text-blue-600 font-semibold text-lg">
+                                                    {{ substr($member['first_name'], 0, 1) }}{{ substr($member['last_name'], 0, 1) }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="font-semibold text-gray-900">
+                                                {{ $member['first_name'] }} {{ $member['last_name'] }}
+                                            </div>
+                                            <div class="text-sm text-gray-600">{{ $member['email'] }}</div>
+                                            @if($member['current_yacht_start_date'])
+                                                <div class="text-xs text-gray-500 mt-1">
+                                                    Started: {{ \Carbon\Carbon::parse($member['current_yacht_start_date'])->format('M Y') }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <div class="flex flex-wrap gap-2">
+                                            @if(count($member['roles']) > 0)
+                                                @foreach($member['roles'] as $role)
+                                                    <span class="px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                                        {{ ucfirst(str_replace('_', ' ', $role)) }}
+                                                    </span>
+                                                @endforeach
+                                            @else
+                                                <span class="px-2.5 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                                                    No Role
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-12">
+                            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            <p class="text-gray-600">No members found for this yacht.</p>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     @endif

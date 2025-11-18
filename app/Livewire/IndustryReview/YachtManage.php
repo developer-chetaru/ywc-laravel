@@ -9,6 +9,7 @@ use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Yacht;
+use App\Models\User;
 use App\Services\YachtService;
 
 #[Layout('layouts.app')]
@@ -36,6 +37,12 @@ class YachtManage extends Component
     public $showModal = false;
     public $isEditMode = false;
     public $yachtId = null;
+    
+    // Member list modal
+    public $showMemberModal = false;
+    public $selectedYachtId = null;
+    public $selectedYachtName = '';
+    public $members = [];
 
     // Form fields
     public $name = '';
@@ -235,6 +242,42 @@ class YachtManage extends Component
             $this->loading = false;
         }
     }
+    
+    public function showMembers($yachtId)
+    {
+        $yacht = Yacht::findOrFail($yachtId);
+        $this->selectedYachtId = $yachtId;
+        $this->selectedYachtName = $yacht->name;
+        
+        // Get users with this yacht as current_yacht
+        $this->members = User::where('current_yacht', $yacht->name)
+            ->with('roles')
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'profile_photo_path' => $user->profile_photo_path,
+                    'roles' => $user->getRoleNames()->toArray(),
+                    'current_yacht_start_date' => $user->current_yacht_start_date,
+                ];
+            })
+            ->toArray();
+        
+        $this->showMemberModal = true;
+    }
+    
+    public function closeMemberModal()
+    {
+        $this->showMemberModal = false;
+        $this->selectedYachtId = null;
+        $this->selectedYachtName = '';
+        $this->members = [];
+    }
 
     public function render()
     {
@@ -268,13 +311,17 @@ class YachtManage extends Component
 
         $yachts = $query->paginate($this->perPage);
 
-        // Add cover_image_url
+        // Add cover_image_url and member count
         $yachts->getCollection()->transform(function ($yacht) {
             if ($yacht->cover_image) {
                 $yacht->cover_image_url = asset('storage/' . $yacht->cover_image);
             } else {
                 $yacht->cover_image_url = null;
             }
+            
+            // Get member count (users with this yacht as current_yacht)
+            $yacht->member_count = User::where('current_yacht', $yacht->name)->count();
+            
             return $yacht;
         });
 

@@ -265,10 +265,18 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
                                         <i class="fa-solid fa-ship mr-1"></i>Current Yacht
                                     </label>
-                                    <input type="text" wire:model.defer="current_yacht" maxlength="255"
-                                        placeholder="e.g., M/Y Ocean Dream"
+                                    <select wire:model.defer="current_yacht"
+                                        class="w-full border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
+                                        <option value="">Select yacht...</option>
+                                        @foreach($yachts as $yacht)
+                                            <option value="{{ $yacht->name }}">{{ $yacht->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <input type="date" wire:model.defer="current_yacht_start_date"
+                                        placeholder="Start Date"
                                         class="w-full border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     @error('current_yacht') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                    @error('current_yacht_start_date') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                 </div>
                             </div>
 
@@ -439,24 +447,87 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                     <i class="fa-solid fa-ship mr-1"></i>Previous Yachts
                                 </label>
-                                <div class="flex gap-2 mb-2">
-                                    <input type="text" wire:model="newPreviousYacht" 
-                                        placeholder="Add previous yacht name"
-                                        class="flex-1 border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        wire:keydown.enter.prevent="addPreviousYacht">
+                                <div class="space-y-2 mb-4">
+                                    @if(session()->has('yacht-error'))
+                                        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm">
+                                            {{ session('yacht-error') }}
+                                        </div>
+                                    @endif
+                                    
+                                    <select wire:model.live="newPreviousYachtId" 
+                                        class="w-full border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Select yacht...</option>
+                                        @foreach($yachts as $yacht)
+                                            <option value="{{ $yacht->id }}">{{ $yacht->name }}</option>
+                                        @endforeach
+                                        <option value="other">Other (Manual Entry)</option>
+                                    </select>
+                                    
+                                    @if($showOtherInput)
+                                        <div class="mt-2">
+                                            <label class="block text-xs text-gray-600 mb-1 font-medium">Enter Yacht Name</label>
+                                            <input type="text" wire:model="newPreviousYachtName" 
+                                                placeholder="e.g., M/Y Ocean Dream, S/Y Wind Dancer"
+                                                class="w-full border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    @endif
+                                    
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <input type="date" wire:model="newPreviousYachtStartDate" 
+                                                placeholder="Start Date"
+                                                class="w-full border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                x-on:change="$wire.set('newPreviousYachtEndDate', '')">
+                                            <label class="text-xs text-gray-500 mt-1 block">Start Date</label>
+                                        </div>
+                                        <div>
+                                            <input type="date" wire:model="newPreviousYachtEndDate" 
+                                                placeholder="End Date"
+                                                class="w-full border border-[#eaeaea] rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                @if($newPreviousYachtStartDate) min="{{ $newPreviousYachtStartDate }}" @endif>
+                                            <label class="text-xs text-gray-500 mt-1 block">End Date</label>
+                                        </div>
+                                    </div>
+                                    
                                     <button type="button" wire:click="addPreviousYacht"
-                                        class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                                        class="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
                                         <i class="fa-solid fa-plus"></i> Add
                                     </button>
                                 </div>
-                                <div class="flex flex-wrap gap-2">
+                                
+                                <div class="space-y-2">
                                     @foreach($previous_yachts as $index => $yacht)
-                                        <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm flex items-center gap-2">
-                                            {{ $yacht }}
-                                            <button type="button" wire:click="removePreviousYacht({{ $index }})" class="text-gray-700 hover:text-gray-900">
-                                                <i class="fa-solid fa-times text-xs"></i>
+                                        @php
+                                            $yachtName = is_array($yacht) ? ($yacht['name'] ?? '') : $yacht;
+                                            $startDate = is_array($yacht) && !empty($yacht['start_date']) ? \Carbon\Carbon::parse($yacht['start_date']) : null;
+                                            $endDate = is_array($yacht) && !empty($yacht['end_date']) ? \Carbon\Carbon::parse($yacht['end_date']) : null;
+                                            $isInvalid = $startDate && $endDate && $endDate->lt($startDate);
+                                        @endphp
+                                        <div class="bg-gray-50 border {{ $isInvalid ? 'border-red-300' : 'border-gray-200' }} rounded-lg p-3 flex items-center justify-between">
+                                            <div class="flex-1">
+                                                <div class="font-medium text-gray-900">{{ $yachtName }}</div>
+                                                @if($startDate || $endDate)
+                                                    <div class="text-sm {{ $isInvalid ? 'text-red-600' : 'text-gray-600' }} mt-1">
+                                                        @if($startDate)
+                                                            <span>Start: {{ $startDate->format('M Y') }}</span>
+                                                        @endif
+                                                        @if($startDate && $endDate)
+                                                            <span class="mx-2">-</span>
+                                                        @endif
+                                                        @if($endDate)
+                                                            <span>End: {{ $endDate->format('M Y') }}</span>
+                                                        @endif
+                                                        @if($isInvalid)
+                                                            <span class="ml-2 text-red-600 font-semibold">(Invalid dates)</span>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <button type="button" wire:click="removePreviousYacht({{ $index }})" 
+                                                class="ml-4 text-gray-500 hover:text-red-600 transition-colors">
+                                                <i class="fa-solid fa-times"></i>
                                             </button>
-                                        </span>
+                                        </div>
                                     @endforeach
                                 </div>
                             </div>
