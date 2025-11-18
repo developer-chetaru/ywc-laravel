@@ -58,7 +58,7 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes
-            $table->unique(['user_id', 'period_start', 'period_end', 'period_type']);
+            $table->unique(['user_id', 'period_start', 'period_end', 'period_type'], 'wls_user_period_unique');
             $table->index(['user_id', 'period_type']);
         });
     }
