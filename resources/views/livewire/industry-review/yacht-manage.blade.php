@@ -11,17 +11,26 @@
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">Manage Yachts</h1>
                     <p class="text-sm text-gray-600">Add, edit, and manage yacht information</p>
                 </div>
-                <button wire:click="openAddModal" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Add New Yacht
-                </button>
+                @if(!$isCaptain)
+                    <button wire:click="openAddModal" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Add New Yacht
+                    </button>
+                @endif
             </div>
 
             @if (session('success'))
                 <div class="mb-4 bg-green-50 border-l-4 border-green-400 text-green-700 px-4 py-3 rounded-md">
                     {{ session('success') }}
+                </div>
+            @endif
+
+            @if($isCaptain && !auth()->user()->current_yacht)
+                <div class="mb-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 px-4 py-3 rounded-md">
+                    <p class="font-medium">No Current Yacht Set</p>
+                    <p class="text-sm">Please set your current yacht in your profile to view and manage it here.</p>
                 </div>
             @endif
 
@@ -203,18 +212,24 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
-                                        <button wire:click="deleteYacht({{ $yacht->id }})" onclick="return confirm('Are you sure you want to delete this yacht?')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                        </button>
+                                        @if(!$isCaptain)
+                                            <button wire:click="deleteYacht({{ $yacht->id }})" onclick="return confirm('Are you sure you want to delete this yacht?')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="8" class="px-4 py-12 text-center text-gray-500">
-                                    No yachts found. Click "Add New Yacht" to get started.
+                                    @if($isCaptain)
+                                        No yacht found. Please set your current yacht in your profile.
+                                    @else
+                                        No yachts found. Click "Add New Yacht" to get started.
+                                    @endif
                                 </td>
                             </tr>
                         @endforelse

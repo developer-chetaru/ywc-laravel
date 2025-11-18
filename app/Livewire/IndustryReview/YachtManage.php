@@ -113,6 +113,16 @@ class YachtManage extends Component
 
     public function openAddModal()
     {
+        // Prevent captains from adding new yachts
+        $user = auth()->user();
+        if ($user) {
+            $userRoles = $user->getRoleNames()->toArray();
+            if (in_array('Captain', $userRoles)) {
+                session()->flash('error', 'Captains cannot add new yachts.');
+                return;
+            }
+        }
+        
         $this->resetForm();
         $this->isEditMode = false;
         $this->showModal = true;
@@ -229,6 +239,17 @@ class YachtManage extends Component
 
     public function deleteYacht($yachtId)
     {
+        // Prevent captains from deleting yachts
+        $user = auth()->user();
+        if ($user) {
+            $userRoles = $user->getRoleNames()->toArray();
+            if (in_array('Captain', $userRoles)) {
+                $this->error = 'Captains cannot delete yachts.';
+                $this->loading = false;
+                return;
+            }
+        }
+
         $this->loading = true;
         try {
             $yacht = Yacht::findOrFail($yachtId);
@@ -281,9 +302,35 @@ class YachtManage extends Component
 
     public function render()
     {
+        $user = auth()->user();
+        // Check for Captain role - get all role names and check if 'Captain' is in the list
+        $isCaptain = false;
+        $currentYacht = null;
+        
+        if ($user) {
+            $userRoles = $user->getRoleNames()->toArray();
+            $isCaptain = in_array('Captain', $userRoles);
+            
+            if ($isCaptain) {
+                $currentYacht = $user->current_yacht ? trim($user->current_yacht) : null;
+            }
+        }
+
         $query = Yacht::query()
-            ->withCount('reviews')
-            ->when($this->search, function ($q) {
+            ->withCount('reviews');
+        
+        // For captains, only show their current yacht (apply this filter first and make it strict)
+        if ($isCaptain) {
+            if ($currentYacht) {
+                // Only show the yacht that matches the captain's current_yacht exactly
+                $query->where('name', $currentYacht);
+            } else {
+                // If captain has no current yacht set, show no yachts
+                $query->whereRaw('1 = 0'); // This ensures no results
+            }
+        }
+        
+        $query->when($this->search, function ($q) {
                 $q->where(function ($inner) {
                     $inner->where('name', 'like', "%{$this->search}%")
                         ->orWhere('home_port', 'like', "%{$this->search}%")
@@ -327,6 +374,7 @@ class YachtManage extends Component
 
         return view('livewire.industry-review.yacht-manage', [
             'yachts' => $yachts,
+            'isCaptain' => $isCaptain,
         ]);
     }
 }
