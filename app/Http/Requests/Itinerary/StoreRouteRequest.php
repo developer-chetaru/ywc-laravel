@@ -15,6 +15,7 @@ class StoreRouteRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
             'cover_image' => ['nullable', 'string', 'max:2048'],
             'region' => ['nullable', 'string', 'max:255'],
             'difficulty' => ['nullable', 'string', 'max:100'],
@@ -39,7 +40,9 @@ class StoreRouteRequest extends FormRequest
             'stops.*.photos' => ['nullable', 'array'],
             'stops.*.photos.*' => ['string'],
             'stops.*.tasks' => ['nullable', 'array'],
+            'stops.*.tasks.*' => ['string'],
             'stops.*.checklists' => ['nullable', 'array'],
+            'stops.*.checklists.*' => ['string'],
             'stops.*.eta' => ['nullable', 'date'],
             'stops.*.ata' => ['nullable', 'date'],
             'stops.*.requires_clearance' => ['nullable', 'boolean'],

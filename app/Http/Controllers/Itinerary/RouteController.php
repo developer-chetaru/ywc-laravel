@@ -69,82 +69,121 @@ class RouteController extends Controller
 
     public function store(StoreRouteRequest $request, RouteBuilder $builder): JsonResponse
     {
-        $route = $builder->createRoute($request->user(), $request->validated());
+        try {
+            $route = $builder->createRoute($request->user(), $request->validated());
 
-        return response()->json([
-            'message' => 'Route created successfully.',
-            'data' => $route,
-        ], 201);
+            $route->loadMissing([
+                'stops',
+                'legs',
+                'statistics',
+                'owner:id,first_name,last_name,email',
+            ]);
+
+            return response()->json([
+                'message' => 'Route created successfully.',
+                'data' => $route,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create route.',
+                'error' => config('app.debug') ? $e->getMessage() : 'An error occurred while creating the route.',
+            ], 500);
+        }
     }
 
     public function show(Request $request, ItineraryRoute $route): JsonResponse
     {
-        Gate::authorize('view', $route);
+        try {
+            Gate::authorize('view', $route);
 
-        $route->loadMissing([
-            'stops.weatherSnapshots',
-            'legs.from',
-            'legs.to',
-            'crew.user:id,first_name,last_name,email',
-            'reviews.user:id,first_name,last_name',
-            'statistics',
-            'owner:id,first_name,last_name,email',
-        ]);
+            $route->loadMissing([
+                'stops.weatherSnapshots',
+                'legs.from',
+                'legs.to',
+                'crew.user:id,first_name,last_name,email',
+                'reviews.user:id,first_name,last_name',
+                'statistics',
+                'owner:id,first_name,last_name,email',
+            ]);
 
-        // Ensure photos are properly formatted for each stop
-        foreach ($route->stops as $stop) {
-            // If photos is a string, decode it
-            if (is_string($stop->photos)) {
-                $decoded = json_decode($stop->photos, true);
-                $stop->photos = is_array($decoded) ? $decoded : [];
-            }
-            // If photos is null, set to empty array
-            if ($stop->photos === null) {
-                $stop->photos = [];
-            }
-            // Ensure it's an array
-            if (!is_array($stop->photos)) {
-                $stop->photos = [];
-            }
-            // Convert photo paths to full URLs and filter out invalid ones
-            $stop->photos = array_values(array_filter(
-                array_map(function($photo) {
-                    if (empty($photo) || !is_string($photo)) {
+            // Ensure photos are properly formatted for each stop
+            foreach ($route->stops as $stop) {
+                // If photos is a string, decode it
+                if (is_string($stop->photos)) {
+                    $decoded = json_decode($stop->photos, true);
+                    $stop->photos = is_array($decoded) ? $decoded : [];
+                }
+                // If photos is null, set to empty array
+                if ($stop->photos === null) {
+                    $stop->photos = [];
+                }
+                // Ensure it's an array
+                if (!is_array($stop->photos)) {
+                    $stop->photos = [];
+                }
+                // Convert photo paths to full URLs and filter out invalid ones
+                $stop->photos = array_values(array_filter(
+                    array_map(function($photo) {
+                        if (empty($photo) || !is_string($photo)) {
+                            return null;
+                        }
+                        // Check if file exists
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($photo)) {
+                            return [
+                                'path' => $photo,
+                                'url' => \Illuminate\Support\Facades\Storage::disk('public')->url($photo),
+                            ];
+                        }
                         return null;
-                    }
-                    // Check if file exists
-                    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($photo)) {
-                        return [
-                            'path' => $photo,
-                            'url' => \Illuminate\Support\Facades\Storage::disk('public')->url($photo),
-                        ];
-                    }
-                    return null;
-                }, $stop->photos),
-                fn($photo) => $photo !== null
-            ));
-        }
+                    }, $stop->photos),
+                    fn($photo) => $photo !== null
+                ));
+            }
 
-        // Convert cover_image to full URL if it exists
-        if ($route->cover_image) {
-            $route->cover_image_url = \Illuminate\Support\Facades\Storage::disk('public')->url($route->cover_image);
-        }
+            // Convert cover_image to full URL if it exists
+            if ($route->cover_image) {
+                $route->cover_image_url = \Illuminate\Support\Facades\Storage::disk('public')->url($route->cover_image);
+            }
 
-        return response()->json([
-            'data' => $route,
-        ]);
+            return response()->json([
+                'data' => $route,
+            ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'message' => 'You do not have permission to view this route.',
+            ], 403);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve route.',
+                'error' => config('app.debug') ? $e->getMessage() : 'An error occurred while retrieving the route.',
+            ], 500);
+        }
     }
 
     public function update(UpdateRouteRequest $request, RouteBuilder $builder, ItineraryRoute $route): JsonResponse
     {
-        Gate::authorize('update', $route);
+        try {
+            Gate::authorize('update', $route);
 
-        $route = $builder->updateRoute($route, $request->validated());
+            $route = $builder->updateRoute($route, $request->validated());
 
-        return response()->json([
-            'message' => 'Route updated successfully.',
-            'data' => $route,
-        ]);
+            $route->loadMissing([
+                'stops',
+                'legs',
+                'statistics',
+                'owner:id,first_name,last_name,email',
+            ]);
+
+            return response()->json([
+                'message' => 'Route updated successfully.',
+                'data' => $route,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update route.',
+                'error' => config('app.debug') ? $e->getMessage() : 'An error occurred while updating the route.',
+            ], 500);
+        }
     }
 
     public function destroy(ItineraryRoute $route): JsonResponse

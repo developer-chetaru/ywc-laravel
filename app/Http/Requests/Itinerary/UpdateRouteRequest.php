@@ -15,6 +15,7 @@ class UpdateRouteRequest extends FormRequest
     {
         return [
             'title' => ['sometimes', 'string', 'max:255'],
+            'description' => ['sometimes', 'nullable', 'string'],
             'cover_image' => ['sometimes', 'nullable', 'string', 'max:2048'],
             'region' => ['sometimes', 'nullable', 'string', 'max:255'],
             'difficulty' => ['sometimes', 'nullable', 'string', 'max:100'],
@@ -40,7 +41,9 @@ class UpdateRouteRequest extends FormRequest
             'stops.*.photos' => ['nullable', 'array'],
             'stops.*.photos.*' => ['string'],
             'stops.*.tasks' => ['nullable', 'array'],
+            'stops.*.tasks.*' => ['string'],
             'stops.*.checklists' => ['nullable', 'array'],
+            'stops.*.checklists.*' => ['string'],
             'stops.*.eta' => ['nullable', 'date'],
             'stops.*.ata' => ['nullable', 'date'],
             'stops.*.requires_clearance' => ['nullable', 'boolean'],
