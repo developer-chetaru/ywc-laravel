@@ -205,7 +205,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Login and get token
+     * Login and get token (JWT - for backward compatibility)
      */
 	public function login(Request $request)
     {
@@ -244,6 +244,68 @@ class AuthController extends Controller
         $role = $user->roles->pluck('name')->first();
 
         // 5️⃣ Response with Token
+        return response()->json([
+            'status'  => true,
+            'message' => 'Login successful',
+            'data' => [
+                'token'       => $token,
+                'token_type'  => 'Bearer',
+                'user_id'     => $user->id,
+                'first_name'  => $user->first_name,
+                'last_name'   => $user->last_name,
+                'email'       => $user->email,
+                'role'        => $role,
+                'profile_url' => $user->profile_url,
+                'qrcode'      => $user->qrcode
+            ]
+        ], 200);
+    }
+
+    /**
+     * Login with Sanctum (for API routes using auth:sanctum)
+     */
+    public function loginSanctum(Request $request)
+    {
+        // 1️⃣ Validate Request
+        $validator = Validator::make($request->all(), [
+            'email'    => 'required|email',
+            'password' => 'required|string|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'The given data was invalid.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // 2️⃣ Attempt Login
+        if (!auth()->attempt(['email' => $request->email, 'password' => $request->password])) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Invalid email or password'
+            ], 401);
+        }
+
+        $user = auth()->user();
+
+        // 3️⃣ Check if user is active
+        if (!$user->is_active) {
+            auth()->logout();
+            return response()->json([
+                'status'  => false,
+                'message' => 'Please verify your email before login.'
+            ], 403);
+        }
+
+        // 4️⃣ Create Sanctum Token
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        // 5️⃣ Get user's role
+        $role = $user->roles->pluck('name')->first();
+
+        // 6️⃣ Response with Token
         return response()->json([
             'status'  => true,
             'message' => 'Login successful',
