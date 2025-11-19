@@ -65,7 +65,7 @@ class YachtController extends Controller
             return response()->json([
                 'message' => 'Yacht created successfully.',
                 'data' => $yacht,
-            ], 201);
+            ], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
         }

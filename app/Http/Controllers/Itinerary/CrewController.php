@@ -69,7 +69,7 @@ class CrewController extends Controller
      *         )
      *     ),
      *     @OA\Response(
-     *         response=201,
+     *         response=200,
      *         description="Crew invitation sent",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Crew invitation sent."),
@@ -107,7 +107,7 @@ class CrewController extends Controller
         return response()->json([
             'message' => 'Crew invitation sent.',
             'data' => $assignment->load('user:id,first_name,last_name,email'),
-        ], 201);
+        ], 200);
     }
 
     /**

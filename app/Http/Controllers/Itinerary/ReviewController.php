@@ -69,7 +69,7 @@ class ReviewController extends Controller
      *         )
      *     ),
      *     @OA\Response(
-     *         response=201,
+     *         response=200,
      *         description="Review submitted",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Review submitted."),
@@ -101,7 +101,7 @@ class ReviewController extends Controller
         return response()->json([
             'message' => 'Review submitted.',
             'data' => $review->fresh('user:id,first_name,last_name'),
-        ], 201);
+        ], 200);
     }
 
     /**

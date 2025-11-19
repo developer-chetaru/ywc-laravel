@@ -206,7 +206,7 @@ class CareerHistoryApiController extends Controller
                     'document' => $document->fresh(),
                     'file_url' => $publicPath,
                 ],
-            ], 201);
+            ], 200);
 
         } catch (ValidationException $e) {
             return response()->json([
@@ -295,7 +295,7 @@ class CareerHistoryApiController extends Controller
             return response()->json([
                 'message' => ucfirst($documentType) . ' uploaded successfully!',
                 'data'    => $documentData,
-            ], 201);
+            ], 200);
 
         } catch (ValidationException $e) {
             return response()->json([
@@ -472,7 +472,7 @@ class CareerHistoryApiController extends Controller
             'success' => true,
             'message' => 'Document uploaded successfully',
             'document' => $document->fresh()
-        ], 201);
+        ], 200);
     }
 
     /**

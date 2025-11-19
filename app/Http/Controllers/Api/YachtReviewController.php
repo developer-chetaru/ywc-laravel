@@ -109,7 +109,7 @@ class YachtReviewController extends Controller
         return response()->json([
             'message' => 'Review submitted successfully.',
             'data' => $review->fresh(['user', 'photos']),
-        ], 201);
+        ], 200);
     }
 
     public function update(Request $request, $yachtId, $reviewId): JsonResponse

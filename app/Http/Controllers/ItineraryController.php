@@ -50,7 +50,7 @@ class ItineraryController extends Controller
      *         )
      *     ),
      *     @OA\Response(
-     *         response=201,
+     *         response=200,
      *         description="Itinerary created successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Itinerary saved successfully")

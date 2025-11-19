@@ -78,7 +78,7 @@ class MessageController extends Controller
             'status' => true,
             'message' => 'Message sent',
             'data' => $message->load('sender:id,first_name,last_name,email,profile_photo_path'),
-        ], 201);
+        ], 200);
     }
 
     /**

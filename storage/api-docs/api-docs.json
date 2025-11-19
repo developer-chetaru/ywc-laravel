@@ -124,7 +124,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Signup successful",
                         "content": {
                             "application/json": {
@@ -225,7 +225,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "User registered successfully",
                         "content": {
                             "application/json": {
@@ -699,7 +699,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Comment posted",
                         "content": {
                             "application/json": {
@@ -979,7 +979,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Crew invitation sent",
                         "content": {
                             "application/json": {
@@ -1538,7 +1538,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Review submitted",
                         "content": {
                             "application/json": {
@@ -1864,7 +1864,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Route created successfully",
                         "content": {
                             "application/json": {
@@ -2120,7 +2120,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Route cloned successfully",
                         "content": {
                             "application/json": {
@@ -2424,7 +2424,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Itinerary created successfully",
                         "content": {
                             "application/json": {
@@ -2964,7 +2964,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Yacht created successfully",
                         "content": {
                             "application/json": {
@@ -3388,7 +3388,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Review submitted successfully",
                         "content": {
                             "application/json": {
@@ -3920,7 +3920,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Marina created successfully",
                         "content": {
                             "application/json": {
@@ -4356,7 +4356,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Review submitted successfully",
                         "content": {
                             "application/json": {

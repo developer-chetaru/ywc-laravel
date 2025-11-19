@@ -73,7 +73,7 @@ class CommentController extends Controller
      *         )
      *     ),
      *     @OA\Response(
-     *         response=201,
+     *         response=200,
      *         description="Comment posted",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Comment posted."),
@@ -105,7 +105,7 @@ class CommentController extends Controller
         return response()->json([
             'message' => 'Comment posted.',
             'data' => $comment->fresh('user:id,first_name,last_name'),
-        ], 201);
+        ], 200);
     }
 
     /**

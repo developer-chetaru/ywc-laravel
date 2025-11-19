@@ -64,7 +64,7 @@ class MarinaController extends Controller
             return response()->json([
                 'message' => 'Marina created successfully.',
                 'data' => $marina,
-            ], 201);
+            ], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
         }

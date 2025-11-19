@@ -69,7 +69,7 @@ class AuthController extends Controller
                 'message' => 'User registered successfully',
                 'user'    => $user,
                 'token'   => $token,
-            ], 201);
+            ], 200);
 
         } catch (\Exception $e) {
             return response()->json([

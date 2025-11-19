@@ -61,7 +61,7 @@ class UserConnectionController extends Controller
             'status' => true,
             'message' => 'Connection request sent',
             'data' => $connection->load('connectedUser:id,first_name,last_name,email,profile_photo_path'),
-        ], 201);
+        ], 200);
     }
 
     /**

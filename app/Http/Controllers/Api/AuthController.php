@@ -97,7 +97,7 @@ class AuthController extends Controller
      *         )
      *     ),
      *     @OA\Response(
-     *         response=201,
+     *         response=200,
      *         description="Signup successful",
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="boolean", example=true),
@@ -228,7 +228,7 @@ class AuthController extends Controller
                 'profile_url' => $user->profile_url,
                 'qrcode' => $user->qrcode,
             ]
-        ], 201);
+        ], 200);
     }
 
     /**
@@ -248,7 +248,7 @@ class AuthController extends Controller
      *         )
      *     ),
      *     @OA\Response(
-     *         response=201,
+     *         response=200,
      *         description="User registered successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="boolean", example=true),
@@ -297,7 +297,7 @@ class AuthController extends Controller
             'status'  => true,
             'message' => 'User registered successfully!',
             'user'    => $user,
-        ], 201);
+        ], 200);
     }
 
     /**

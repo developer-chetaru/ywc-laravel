@@ -78,7 +78,7 @@ class RallyController extends Controller
             'status' => true,
             'message' => 'Rally created successfully',
             'data' => $rally->load('organizer:id,first_name,last_name,email'),
-        ], 201);
+        ], 200);
     }
 
     /**
@@ -299,6 +299,6 @@ class RallyController extends Controller
             'status' => true,
             'message' => 'Comment added',
             'data' => $comment->load('user:id,first_name,last_name,email,profile_photo_path'),
-        ], 201);
+        ], 200);
     }
 }
