@@ -91,7 +91,7 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 require base_path('vendor/riari/laravel-forum/routes/api.php');
 
-Route::middleware('auth:api')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
 
 
 
