@@ -49,9 +49,8 @@ class StoreRouteRequest extends FormRequest
         // If cover_image is a file, remove it from input to prevent validation issues
         // The controller will handle file storage before validation
         if ($this->hasFile('cover_image')) {
-            $this->merge([
-                'cover_image' => null, // Remove file from input, controller will add stored path
-            ]);
+            // Remove the file from the request payload so validation doesn't capture tmp path
+            $this->request->remove('cover_image');
         }
         
         // Remove file objects from stops photos to prevent validation issues
@@ -59,11 +58,9 @@ class StoreRouteRequest extends FormRequest
             $stops = $this->input('stops');
             foreach ($stops as $index => $stop) {
                 if (isset($stop['photos']) && is_array($stop['photos'])) {
-                    // Remove any UploadedFile objects, keep only strings (paths/URLs)
-                    $filteredPhotos = array_filter($stop['photos'], function($photo) {
-                        return is_string($photo) || (is_object($photo) && !($photo instanceof \Illuminate\Http\UploadedFile));
+                    $stops[$index]['photos'] = array_filter($stop['photos'], function($photo) {
+                        return is_string($photo);
                     });
-                    $stops[$index]['photos'] = array_values($filteredPhotos);
                 }
             }
             $this->merge(['stops' => $stops]);
