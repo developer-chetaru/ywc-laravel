@@ -207,7 +207,27 @@ class AuthController extends Controller
     }
 
     /**
-     * Login and get token (JWT - for backward compatibility)
+     * @OA\Post(
+     *     path="/api/login",
+     *     summary="Login and receive access tokens",
+     *     tags={"Authentication"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email","password"},
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="Secret123!")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Login successful"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Invalid credentials"
+     *     )
+     * )
      */
 	public function login(Request $request)
     {
