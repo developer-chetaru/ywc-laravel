@@ -46,8 +46,28 @@ class StoreRouteRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // Files are handled by the controller, so we don't need to modify them here
-        // This method is just here in case we need to preprocess data
+        // If cover_image is a file, remove it from input to prevent validation issues
+        // The controller will handle file storage before validation
+        if ($this->hasFile('cover_image')) {
+            $this->merge([
+                'cover_image' => null, // Remove file from input, controller will add stored path
+            ]);
+        }
+        
+        // Remove file objects from stops photos to prevent validation issues
+        if ($this->has('stops') && is_array($this->input('stops'))) {
+            $stops = $this->input('stops');
+            foreach ($stops as $index => $stop) {
+                if (isset($stop['photos']) && is_array($stop['photos'])) {
+                    // Remove any UploadedFile objects, keep only strings (paths/URLs)
+                    $filteredPhotos = array_filter($stop['photos'], function($photo) {
+                        return is_string($photo) || (is_object($photo) && !($photo instanceof \Illuminate\Http\UploadedFile));
+                    });
+                    $stops[$index]['photos'] = array_values($filteredPhotos);
+                }
+            }
+            $this->merge(['stops' => $stops]);
+        }
     }
 
     public function rules(): array

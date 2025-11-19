@@ -83,8 +83,21 @@ class RouteController extends Controller
                 $file = $request->file('cover_image');
                 if ($file && $file->isValid()) {
                     $coverImagePath = $file->store('route-covers', 'public');
-                    Log::info('Cover image stored', ['path' => $coverImagePath]);
+                    Log::info('Cover image stored', [
+                        'path' => $coverImagePath,
+                        'file_size' => $file->getSize(),
+                        'file_mime' => $file->getMimeType(),
+                    ]);
+                } else {
+                    Log::warning('Cover image file is invalid', [
+                        'has_file' => $request->hasFile('cover_image'),
+                        'file_valid' => $file ? $file->isValid() : false,
+                    ]);
                 }
+            } else {
+                Log::info('No cover image file in request', [
+                    'all_files' => array_keys($request->allFiles()),
+                ]);
             }
             
             // Process stop photos files BEFORE validation
@@ -95,6 +108,10 @@ class RouteController extends Controller
                     $processedPhotos = $this->processStopPhotos($request, $index, $stopInput);
                     if (!empty($processedPhotos)) {
                         $stopsPhotosBackup[$index] = $processedPhotos;
+                        Log::info("Processed {$index} photos for stop {$index}", [
+                            'count' => count($processedPhotos),
+                            'paths' => $processedPhotos,
+                        ]);
                     }
                 }
             }
@@ -102,9 +119,11 @@ class RouteController extends Controller
             // Now run validation
             $validated = $request->validated();
             
-            // Merge processed files into validated data
+            // ALWAYS use our stored cover image path if we have one
+            // This prevents validation from overwriting with temporary path
             if ($coverImagePath) {
                 $validated['cover_image'] = $coverImagePath;
+                Log::info('Using stored cover image path', ['path' => $coverImagePath]);
             } elseif (isset($validated['cover_image'])) {
                 // Check if it's a URL
                 if (filter_var($validated['cover_image'], FILTER_VALIDATE_URL)) {
@@ -126,9 +145,12 @@ class RouteController extends Controller
             // Merge processed stop photos into validated stops data
             if (isset($validated['stops']) && is_array($validated['stops'])) {
                 foreach ($validated['stops'] as $index => &$stop) {
-                    // Use processed photos from backup if available
+                    // ALWAYS use processed photos from backup if available (processed before validation)
                     if (isset($stopsPhotosBackup[$index]) && !empty($stopsPhotosBackup[$index])) {
                         $stop['photos'] = $stopsPhotosBackup[$index];
+                        Log::info("Using backup photos for stop {$index}", [
+                            'count' => count($stopsPhotosBackup[$index]),
+                        ]);
                     } else {
                         // Process photos from validated data (URLs or existing paths)
                         $processedPhotos = $this->processStopPhotos($request, $index, $stop);
@@ -146,6 +168,22 @@ class RouteController extends Controller
                 }
                 unset($stop); // Break reference
             }
+            
+            // Final check: ensure cover_image is not a temporary path
+            if (isset($validated['cover_image']) && (str_starts_with($validated['cover_image'], '/tmp/') || str_starts_with($validated['cover_image'], 'tmp/'))) {
+                Log::warning('Cover image is temporary path, removing', ['path' => $validated['cover_image']]);
+                unset($validated['cover_image']);
+            }
+            
+            // Log final validated data for debugging
+            Log::info('Final validated data before createRoute', [
+                'has_cover_image' => isset($validated['cover_image']),
+                'cover_image' => $validated['cover_image'] ?? null,
+                'stops_count' => count($validated['stops'] ?? []),
+                'stops_with_photos' => array_map(function($stop) {
+                    return isset($stop['photos']) ? count($stop['photos']) : 0;
+                }, $validated['stops'] ?? []),
+            ]);
             
             $route = $builder->createRoute($request->user(), $validated);
 
