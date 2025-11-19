@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -75,21 +76,37 @@ class RouteController extends Controller
         try {
             $validated = $request->validated();
             
+            // Debug: Log all files in request
+            Log::info('Store route - All files in request', [
+                'all_files_keys' => array_keys($request->allFiles()),
+                'has_cover_image_file' => $request->hasFile('cover_image'),
+            ]);
+            
             // Handle cover image - can be file upload, URL, or path
             if ($request->hasFile('cover_image')) {
                 // File upload
                 $file = $request->file('cover_image');
-                $validated['cover_image'] = $file->store('route-covers', 'public');
-            } elseif (isset($validated['cover_image']) && filter_var($validated['cover_image'], FILTER_VALIDATE_URL)) {
-                // URL - download and store
-                $downloadedPath = $this->downloadAndStoreImage($validated['cover_image'], 'route-covers');
-                if ($downloadedPath) {
-                    $validated['cover_image'] = $downloadedPath;
-                } else {
-                    // Log warning but don't fail the request - just skip the cover image
-                    \Log::warning("Failed to download cover image from URL: {$validated['cover_image']}");
-                    unset($validated['cover_image']); // Remove if download failed
+                if ($file && $file->isValid()) {
+                    $validated['cover_image'] = $file->store('route-covers', 'public');
+                    Log::info('Cover image stored', ['path' => $validated['cover_image']]);
                 }
+            } elseif (isset($validated['cover_image'])) {
+                // Check if it's a URL
+                if (filter_var($validated['cover_image'], FILTER_VALIDATE_URL)) {
+                    // URL - download and store
+                    $downloadedPath = $this->downloadAndStoreImage($validated['cover_image'], 'route-covers');
+                    if ($downloadedPath) {
+                        $validated['cover_image'] = $downloadedPath;
+                    } else {
+                        // Log warning but don't fail the request - just skip the cover image
+                        Log::warning("Failed to download cover image from URL: {$validated['cover_image']}");
+                        unset($validated['cover_image']); // Remove if download failed
+                    }
+                } elseif (empty($validated['cover_image']) || $validated['cover_image'] === '0' || $validated['cover_image'] === '') {
+                    // Remove empty or "0" values
+                    unset($validated['cover_image']);
+                }
+                // If it's a string path, keep it as is
             }
             
             // Handle stop photos - can be file uploads, URLs, or paths
@@ -242,6 +259,13 @@ class RouteController extends Controller
     {
         $processedPhotos = [];
         
+        // Get all files to check what we have
+        $allFiles = $request->allFiles();
+        \Log::info("Processing stop photos for stop {$stopIndex}", [
+            'all_files_keys' => array_keys($allFiles),
+            'stop_photos_in_data' => $stop['photos'] ?? null,
+        ]);
+        
         // Check for file uploads in nested array format (stops[0][photos][0])
         // First, try to get files as an array using dot notation
         if ($request->hasFile("stops.{$stopIndex}.photos")) {
@@ -250,7 +274,9 @@ class RouteController extends Controller
             $photosArray = is_array($photos) ? $photos : [$photos];
             foreach ($photosArray as $photo) {
                 if ($photo && $photo->isValid()) {
-                    $processedPhotos[] = $photo->store('route-stops', 'public');
+                    $path = $photo->store('route-stops', 'public');
+                    $processedPhotos[] = $path;
+                    \Log::info("Stored photo from stops.{$stopIndex}.photos", ['path' => $path]);
                 }
             }
         }
@@ -262,7 +288,9 @@ class RouteController extends Controller
             if ($request->hasFile($fileKey)) {
                 $photo = $request->file($fileKey);
                 if ($photo && $photo->isValid()) {
-                    $processedPhotos[] = $photo->store('route-stops', 'public');
+                    $path = $photo->store('route-stops', 'public');
+                    $processedPhotos[] = $path;
+                    \Log::info("Stored photo from {$fileKey}", ['path' => $path]);
                 }
                 $photoIndex++;
             } else {
@@ -271,18 +299,59 @@ class RouteController extends Controller
         }
         
         // Also check allFiles() for any files that match the pattern (handles array bracket notation)
-        $allFiles = $request->allFiles();
+        // Laravel might parse stops[0][photos][0] differently, so check all keys
         foreach ($allFiles as $key => $file) {
-            // Match patterns like: stops[0][photos][0], stops.0.photos.0, etc.
-            // Use a more flexible pattern matching
-            $pattern1 = "/^stops\[?{$stopIndex}\]?\[photos\]\[(\d+)\]?$/";
-            $pattern2 = "/^stops\.{$stopIndex}\.photos\.(\d+)$/";
+            // Match various patterns:
+            // - stops[0][photos][0] (exact match)
+            // - stops.0.photos.0 (dot notation)
+            // - stops[0].photos[0] (mixed)
+            // - stops.0[photos][0] (mixed)
+            // Also handle cases where Laravel might flatten it differently
             
-            if (preg_match($pattern1, $key, $matches) || preg_match($pattern2, $key, $matches)) {
+            $matched = false;
+            
+            // Exact match for stops[0][photos][0]
+            if ($key === "stops[{$stopIndex}][photos][0]" || 
+                preg_match("/^stops\[{$stopIndex}\]\[photos\]\[(\d+)\]$/", $key)) {
+                $matched = true;
+            }
+            // Dot notation stops.0.photos.0
+            elseif (preg_match("/^stops\.{$stopIndex}\.photos\.(\d+)$/", $key)) {
+                $matched = true;
+            }
+            // Mixed notation
+            elseif (preg_match("/^stops\[{$stopIndex}\]\.photos\[(\d+)\]$/", $key) ||
+                    preg_match("/^stops\.{$stopIndex}\[photos\]\[(\d+)\]$/", $key)) {
+                $matched = true;
+            }
+            
+            if ($matched) {
                 $fileArray = is_array($file) ? $file : [$file];
                 foreach ($fileArray as $photo) {
                     if ($photo && $photo->isValid()) {
-                        $processedPhotos[] = $photo->store('route-stops', 'public');
+                        $path = $photo->store('route-stops', 'public');
+                        $processedPhotos[] = $path;
+                        \Log::info("Stored photo from {$key}", ['path' => $path]);
+                    }
+                }
+            }
+        }
+        
+        // Also try accessing via nested array structure if Laravel parsed it that way
+        // Check if stops array has nested structure with files
+        $stopsInput = $request->input('stops');
+        if (is_array($stopsInput) && isset($stopsInput[$stopIndex])) {
+            $stopInput = $stopsInput[$stopIndex];
+            if (is_array($stopInput) && isset($stopInput['photos'])) {
+                // Check if photos contains UploadedFile objects
+                $photosInput = $stopInput['photos'];
+                if (is_array($photosInput)) {
+                    foreach ($photosInput as $photo) {
+                        if ($photo instanceof \Illuminate\Http\UploadedFile && $photo->isValid()) {
+                            $path = $photo->store('route-stops', 'public');
+                            $processedPhotos[] = $path;
+                            \Log::info("Stored photo from nested stops input", ['path' => $path]);
+                        }
                     }
                 }
             }
