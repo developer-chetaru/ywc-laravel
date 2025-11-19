@@ -6,11 +6,13 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Carbon\Carbon;
 use App\Mail\VerifyUserEmail;
 use App\Models\User;
@@ -222,14 +224,15 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // 2️⃣ Attempt Login with JWT
-        if (!$token = auth('api')->attempt(['email' => $request->email, 'password' => $request->password])) {
+        // 2️⃣ Attempt Login with JWT (backward compatibility)
+        if (!$jwtToken = auth('api')->attempt(['email' => $request->email, 'password' => $request->password])) {
             return response()->json([
                 'status'  => false,
                 'message' => 'Invalid email or password'
             ], 401);
         }
 
+        /** @var User $user */
         $user = auth('api')->user();
 
         // 3️⃣ Check if user is active
@@ -240,6 +243,13 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // 🔄 Issue Sanctum token for new API flow
+        // Remove previous tokens to avoid bloating table
+        if (method_exists($user, 'tokens')) {
+            $user->tokens()->delete();
+        }
+        $sanctumToken = $user->createToken('api-token')->plainTextToken;
+
         // 4️⃣ Get user's role
         $role = $user->roles->pluck('name')->first();
 
@@ -248,8 +258,9 @@ class AuthController extends Controller
             'status'  => true,
             'message' => 'Login successful',
             'data' => [
-                'token'       => $token,
+                'token'       => $sanctumToken, // Sanctum token for auth:sanctum routes
                 'token_type'  => 'Bearer',
+                'jwt_token'   => $jwtToken, // Legacy JWT token (optional)
                 'user_id'     => $user->id,
                 'first_name'  => $user->first_name,
                 'last_name'   => $user->last_name,
@@ -266,61 +277,8 @@ class AuthController extends Controller
      */
     public function loginSanctum(Request $request)
     {
-        // 1️⃣ Validate Request
-        $validator = Validator::make($request->all(), [
-            'email'    => 'required|email',
-            'password' => 'required|string|min:6',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'The given data was invalid.',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        // 2️⃣ Attempt Login
-        if (!auth()->attempt(['email' => $request->email, 'password' => $request->password])) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Invalid email or password'
-            ], 401);
-        }
-
-        $user = auth()->user();
-
-        // 3️⃣ Check if user is active
-        if (!$user->is_active) {
-            auth()->logout();
-            return response()->json([
-                'status'  => false,
-                'message' => 'Please verify your email before login.'
-            ], 403);
-        }
-
-        // 4️⃣ Create Sanctum Token
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        // 5️⃣ Get user's role
-        $role = $user->roles->pluck('name')->first();
-
-        // 6️⃣ Response with Token
-        return response()->json([
-            'status'  => true,
-            'message' => 'Login successful',
-            'data' => [
-                'token'       => $token,
-                'token_type'  => 'Bearer',
-                'user_id'     => $user->id,
-                'first_name'  => $user->first_name,
-                'last_name'   => $user->last_name,
-                'email'       => $user->email,
-                'role'        => $role,
-                'profile_url' => $user->profile_url,
-                'qrcode'      => $user->qrcode
-            ]
-        ], 200);
+        // Legacy endpoint now delegates to the main login method
+        return $this->login($request);
     }
 	
     public function loginOld(Request $request)
@@ -393,7 +351,7 @@ class AuthController extends Controller
      */
     public function refresh()
     {
-        return $this->respondWithToken(auth('api')->refresh());
+        return $this->respondWithToken(JWTAuth::refresh());
     }
 
     /**
@@ -401,11 +359,15 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
+        $ttl = method_exists(JWTAuth::factory(), 'getTTL')
+            ? JWTAuth::factory()->getTTL()
+            : config('jwt.ttl', 60);
+
         return response()->json([
             'status'       => true,
             'access_token' => $token,
             'token_type'   => 'bearer',
-            'expires_in'   => auth('api')->factory()->getTTL() * 60,
+            'expires_in'   => $ttl * 60,
             'user'         => auth('api')->user(),
         ]);
     }
@@ -444,7 +406,7 @@ class AuthController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            \Log::error('forgotPassword error: '.$e->getMessage());
+            Log::error('forgotPassword error: '.$e->getMessage());
             return response()->json([
                 'status' => false,
                 'message' => 'Unable to send reset link. Please try again later.',

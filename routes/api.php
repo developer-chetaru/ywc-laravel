@@ -82,8 +82,7 @@ Route::post('/register', [AuthController::class, 'register']);
 
 Route::post('/logout', [AuthController::class, 'logout']);
 
-Route::post('/login', [AuthController::class, 'login']); // JWT login (backward compatibility)
-Route::post('/login/sanctum', [AuthController::class, 'loginSanctum']); // Sanctum login for API routes
+Route::post('/login', [AuthController::class, 'login']); // API login (returns Sanctum + legacy JWT token)
 Route::get('/roles', [AuthController::class, 'getRoles']);
 Route::post('/signup', [AuthController::class, 'signup']);
 
