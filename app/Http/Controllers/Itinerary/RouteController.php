@@ -74,22 +74,37 @@ class RouteController extends Controller
     public function store(StoreRouteRequest $request, RouteBuilder $builder): JsonResponse
     {
         try {
-            $validated = $request->validated();
+            // Process files BEFORE validation (similar to Livewire component)
+            // This ensures files are stored and paths are available for validation
             
-            // Debug: Log all files in request
-            Log::info('Store route - All files in request', [
-                'all_files_keys' => array_keys($request->allFiles()),
-                'has_cover_image_file' => $request->hasFile('cover_image'),
-            ]);
-            
-            // Handle cover image - can be file upload, URL, or path
+            // Process cover image file first
+            $coverImagePath = null;
             if ($request->hasFile('cover_image')) {
-                // File upload
                 $file = $request->file('cover_image');
                 if ($file && $file->isValid()) {
-                    $validated['cover_image'] = $file->store('route-covers', 'public');
-                    Log::info('Cover image stored', ['path' => $validated['cover_image']]);
+                    $coverImagePath = $file->store('route-covers', 'public');
+                    Log::info('Cover image stored', ['path' => $coverImagePath]);
                 }
+            }
+            
+            // Process stop photos files BEFORE validation
+            $stopsPhotosBackup = [];
+            $stopsInput = $request->input('stops', []);
+            if (is_array($stopsInput)) {
+                foreach ($stopsInput as $index => $stopInput) {
+                    $processedPhotos = $this->processStopPhotos($request, $index, $stopInput);
+                    if (!empty($processedPhotos)) {
+                        $stopsPhotosBackup[$index] = $processedPhotos;
+                    }
+                }
+            }
+            
+            // Now run validation
+            $validated = $request->validated();
+            
+            // Merge processed files into validated data
+            if ($coverImagePath) {
+                $validated['cover_image'] = $coverImagePath;
             } elseif (isset($validated['cover_image'])) {
                 // Check if it's a URL
                 if (filter_var($validated['cover_image'], FILTER_VALIDATE_URL)) {
@@ -98,9 +113,8 @@ class RouteController extends Controller
                     if ($downloadedPath) {
                         $validated['cover_image'] = $downloadedPath;
                     } else {
-                        // Log warning but don't fail the request - just skip the cover image
                         Log::warning("Failed to download cover image from URL: {$validated['cover_image']}");
-                        unset($validated['cover_image']); // Remove if download failed
+                        unset($validated['cover_image']);
                     }
                 } elseif (empty($validated['cover_image']) || $validated['cover_image'] === '0' || $validated['cover_image'] === '') {
                     // Remove empty or "0" values
@@ -109,17 +123,25 @@ class RouteController extends Controller
                 // If it's a string path, keep it as is
             }
             
-            // Handle stop photos - can be file uploads, URLs, or paths
-            if ($request->has('stops') && is_array($request->input('stops'))) {
+            // Merge processed stop photos into validated stops data
+            if (isset($validated['stops']) && is_array($validated['stops'])) {
                 foreach ($validated['stops'] as $index => &$stop) {
-                    $processedPhotos = $this->processStopPhotos($request, $index, $stop);
-                    
-                    // Update stop with processed photos
-                    if (!empty($processedPhotos)) {
-                        $stop['photos'] = $processedPhotos;
-                    } elseif (isset($stop['photos'])) {
-                        // If no processed photos but photos array exists, set to empty array
-                        $stop['photos'] = [];
+                    // Use processed photos from backup if available
+                    if (isset($stopsPhotosBackup[$index]) && !empty($stopsPhotosBackup[$index])) {
+                        $stop['photos'] = $stopsPhotosBackup[$index];
+                    } else {
+                        // Process photos from validated data (URLs or existing paths)
+                        $processedPhotos = $this->processStopPhotos($request, $index, $stop);
+                        if (!empty($processedPhotos)) {
+                            $stop['photos'] = $processedPhotos;
+                        } elseif (isset($stop['photos'])) {
+                            // Filter out empty values
+                            $stop['photos'] = array_values(array_filter($stop['photos'], function($photo) {
+                                return !empty($photo) && is_string($photo);
+                            }));
+                        } else {
+                            $stop['photos'] = [];
+                        }
                     }
                 }
                 unset($stop); // Break reference
@@ -455,16 +477,40 @@ class RouteController extends Controller
         try {
             Gate::authorize('update', $route);
 
-            $validated = $request->validated();
+            // Process files BEFORE validation (similar to Livewire component)
             
-            // Handle cover image - can be file upload, URL, or path
+            // Process cover image file first
+            $coverImagePath = null;
             if ($request->hasFile('cover_image')) {
                 // Delete old cover image if it exists
                 if ($route->cover_image && Storage::disk('public')->exists($route->cover_image)) {
                     Storage::disk('public')->delete($route->cover_image);
                 }
                 $file = $request->file('cover_image');
-                $validated['cover_image'] = $file->store('route-covers', 'public');
+                if ($file && $file->isValid()) {
+                    $coverImagePath = $file->store('route-covers', 'public');
+                    Log::info('Cover image stored', ['path' => $coverImagePath]);
+                }
+            }
+            
+            // Process stop photos files BEFORE validation
+            $stopsPhotosBackup = [];
+            $stopsInput = $request->input('stops', []);
+            if (is_array($stopsInput)) {
+                foreach ($stopsInput as $index => $stopInput) {
+                    $processedPhotos = $this->processStopPhotos($request, $index, $stopInput);
+                    if (!empty($processedPhotos)) {
+                        $stopsPhotosBackup[$index] = $processedPhotos;
+                    }
+                }
+            }
+            
+            // Now run validation
+            $validated = $request->validated();
+            
+            // Merge processed files into validated data
+            if ($coverImagePath) {
+                $validated['cover_image'] = $coverImagePath;
             } elseif (isset($validated['cover_image']) && filter_var($validated['cover_image'], FILTER_VALIDATE_URL)) {
                 // URL - download and store
                 // Delete old cover image if it exists
@@ -479,17 +525,25 @@ class RouteController extends Controller
                 }
             }
             
-            // Handle stop photos - can be file uploads, URLs, or paths
-            if ($request->has('stops') && is_array($request->input('stops'))) {
+            // Merge processed stop photos into validated stops data
+            if (isset($validated['stops']) && is_array($validated['stops'])) {
                 foreach ($validated['stops'] as $index => &$stop) {
-                    $processedPhotos = $this->processStopPhotos($request, $index, $stop);
-                    
-                    // Update stop with processed photos
-                    if (!empty($processedPhotos)) {
-                        $stop['photos'] = $processedPhotos;
-                    } elseif (isset($stop['photos'])) {
-                        // If no processed photos but photos array exists, set to empty array
-                        $stop['photos'] = [];
+                    // Use processed photos from backup if available
+                    if (isset($stopsPhotosBackup[$index]) && !empty($stopsPhotosBackup[$index])) {
+                        $stop['photos'] = $stopsPhotosBackup[$index];
+                    } else {
+                        // Process photos from validated data (URLs or existing paths)
+                        $processedPhotos = $this->processStopPhotos($request, $index, $stop);
+                        if (!empty($processedPhotos)) {
+                            $stop['photos'] = $processedPhotos;
+                        } elseif (isset($stop['photos'])) {
+                            // Filter out empty values
+                            $stop['photos'] = array_values(array_filter($stop['photos'], function($photo) {
+                                return !empty($photo) && is_string($photo);
+                            }));
+                        } else {
+                            $stop['photos'] = [];
+                        }
                     }
                 }
                 unset($stop); // Break reference
