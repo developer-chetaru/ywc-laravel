@@ -95,40 +95,14 @@ class RouteController extends Controller
             // Handle stop photos - can be file uploads, URLs, or paths
             if ($request->has('stops') && is_array($request->input('stops'))) {
                 foreach ($validated['stops'] as $index => &$stop) {
-                    $processedPhotos = [];
-                    
-                    // Check for file uploads in nested array format
-                    $stopInput = $request->input("stops.{$index}");
-                    if (is_array($stopInput) && $request->hasFile("stops.{$index}.photos")) {
-                        $photos = $request->file("stops.{$index}.photos");
-                        // Handle both single file and array of files
-                        $photosArray = is_array($photos) ? $photos : [$photos];
-                        foreach ($photosArray as $photo) {
-                            if ($photo && $photo->isValid()) {
-                                $processedPhotos[] = $photo->store('route-stops', 'public');
-                            }
-                        }
-                    }
-                    
-                    // Process photos array - check for URLs
-                    if (isset($stop['photos']) && is_array($stop['photos'])) {
-                        foreach ($stop['photos'] as $photo) {
-                            if (filter_var($photo, FILTER_VALIDATE_URL)) {
-                                // It's a URL - download and store
-                                $downloadedPath = $this->downloadAndStoreImage($photo, 'route-stops');
-                                if ($downloadedPath) {
-                                    $processedPhotos[] = $downloadedPath;
-                                }
-                            } elseif (is_string($photo) && !empty($photo)) {
-                                // It's already a path
-                                $processedPhotos[] = $photo;
-                            }
-                        }
-                    }
+                    $processedPhotos = $this->processStopPhotos($request, $index, $stop);
                     
                     // Update stop with processed photos
                     if (!empty($processedPhotos)) {
                         $stop['photos'] = $processedPhotos;
+                    } elseif (isset($stop['photos'])) {
+                        // If no processed photos but photos array exists, set to empty array
+                        $stop['photos'] = [];
                     }
                 }
                 unset($stop); // Break reference
@@ -261,6 +235,83 @@ class RouteController extends Controller
         }
     }
 
+    /**
+     * Process stop photos from request - handles file uploads, URLs, and existing paths
+     */
+    protected function processStopPhotos(Request $request, int $stopIndex, array $stop): array
+    {
+        $processedPhotos = [];
+        
+        // Check for file uploads in nested array format (stops[0][photos][0])
+        // First, try to get files as an array using dot notation
+        if ($request->hasFile("stops.{$stopIndex}.photos")) {
+            $photos = $request->file("stops.{$stopIndex}.photos");
+            // Handle both single file and array of files
+            $photosArray = is_array($photos) ? $photos : [$photos];
+            foreach ($photosArray as $photo) {
+                if ($photo && $photo->isValid()) {
+                    $processedPhotos[] = $photo->store('route-stops', 'public');
+                }
+            }
+        }
+        
+        // Also check for individual file uploads using dot notation (stops.0.photos.0, stops.0.photos.1, etc.)
+        $photoIndex = 0;
+        while (true) {
+            $fileKey = "stops.{$stopIndex}.photos.{$photoIndex}";
+            if ($request->hasFile($fileKey)) {
+                $photo = $request->file($fileKey);
+                if ($photo && $photo->isValid()) {
+                    $processedPhotos[] = $photo->store('route-stops', 'public');
+                }
+                $photoIndex++;
+            } else {
+                break; // No more files
+            }
+        }
+        
+        // Also check allFiles() for any files that match the pattern (handles array bracket notation)
+        $allFiles = $request->allFiles();
+        foreach ($allFiles as $key => $file) {
+            // Match patterns like: stops[0][photos][0], stops.0.photos.0, etc.
+            // Use a more flexible pattern matching
+            $pattern1 = "/^stops\[?{$stopIndex}\]?\[photos\]\[(\d+)\]?$/";
+            $pattern2 = "/^stops\.{$stopIndex}\.photos\.(\d+)$/";
+            
+            if (preg_match($pattern1, $key, $matches) || preg_match($pattern2, $key, $matches)) {
+                $fileArray = is_array($file) ? $file : [$file];
+                foreach ($fileArray as $photo) {
+                    if ($photo && $photo->isValid()) {
+                        $processedPhotos[] = $photo->store('route-stops', 'public');
+                    }
+                }
+            }
+        }
+        
+        // Process photos array from validated data - check for URLs or existing paths
+        if (isset($stop['photos']) && is_array($stop['photos'])) {
+            foreach ($stop['photos'] as $photo) {
+                // Skip if it's an UploadedFile object (already processed above)
+                if ($photo instanceof \Illuminate\Http\UploadedFile) {
+                    continue;
+                }
+                
+                if (filter_var($photo, FILTER_VALIDATE_URL)) {
+                    // It's a URL - download and store
+                    $downloadedPath = $this->downloadAndStoreImage($photo, 'route-stops');
+                    if ($downloadedPath) {
+                        $processedPhotos[] = $downloadedPath;
+                    }
+                } elseif (is_string($photo) && !empty($photo)) {
+                    // It's already a path
+                    $processedPhotos[] = $photo;
+                }
+            }
+        }
+        
+        return $processedPhotos;
+    }
+
     public function show(Request $request, ItineraryRoute $route): JsonResponse
     {
         try {
@@ -362,40 +413,14 @@ class RouteController extends Controller
             // Handle stop photos - can be file uploads, URLs, or paths
             if ($request->has('stops') && is_array($request->input('stops'))) {
                 foreach ($validated['stops'] as $index => &$stop) {
-                    $processedPhotos = [];
-                    
-                    // Check for file uploads in nested array format
-                    $stopInput = $request->input("stops.{$index}");
-                    if (is_array($stopInput) && $request->hasFile("stops.{$index}.photos")) {
-                        $photos = $request->file("stops.{$index}.photos");
-                        // Handle both single file and array of files
-                        $photosArray = is_array($photos) ? $photos : [$photos];
-                        foreach ($photosArray as $photo) {
-                            if ($photo && $photo->isValid()) {
-                                $processedPhotos[] = $photo->store('route-stops', 'public');
-                            }
-                        }
-                    }
-                    
-                    // Process photos array - check for URLs
-                    if (isset($stop['photos']) && is_array($stop['photos'])) {
-                        foreach ($stop['photos'] as $photo) {
-                            if (filter_var($photo, FILTER_VALIDATE_URL)) {
-                                // It's a URL - download and store
-                                $downloadedPath = $this->downloadAndStoreImage($photo, 'route-stops');
-                                if ($downloadedPath) {
-                                    $processedPhotos[] = $downloadedPath;
-                                }
-                            } elseif (is_string($photo) && !empty($photo)) {
-                                // It's already a path
-                                $processedPhotos[] = $photo;
-                            }
-                        }
-                    }
+                    $processedPhotos = $this->processStopPhotos($request, $index, $stop);
                     
                     // Update stop with processed photos
                     if (!empty($processedPhotos)) {
                         $stop['photos'] = $processedPhotos;
+                    } elseif (isset($stop['photos'])) {
+                        // If no processed photos but photos array exists, set to empty array
+                        $stop['photos'] = [];
                     }
                 }
                 unset($stop); // Break reference

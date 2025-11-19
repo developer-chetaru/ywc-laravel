@@ -68,7 +68,7 @@ class UpdateRouteRequest extends FormRequest
             'stops.*.description' => ['nullable', 'string'],
             'stops.*.notes' => ['nullable', 'string'],
             'stops.*.photos' => ['nullable', 'array'],
-            'stops.*.photos.*' => ['string'],
+            'stops.*.photos.*' => ['nullable'], // Can be file or string - handled by controller
             'stops.*.tasks' => ['nullable', 'array'],
             'stops.*.tasks.*' => ['string'],
             'stops.*.checklists' => ['nullable', 'array'],

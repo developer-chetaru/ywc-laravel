@@ -40,12 +40,22 @@ class StoreRouteRequest extends FormRequest
         parent::failedValidation($validator);
     }
 
+    /**
+     * Prepare the data for validation.
+     * This allows us to handle file uploads before validation runs.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Files are handled by the controller, so we don't need to modify them here
+        // This method is just here in case we need to preprocess data
+    }
+
     public function rules(): array
     {
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'cover_image' => ['nullable'],
+            'cover_image' => ['nullable'], // Can be file or string - handled by controller
             'region' => ['nullable', 'string', 'max:255'],
             'difficulty' => ['nullable', 'string', 'max:100'],
             'season' => ['nullable', 'string', 'max:100'],
@@ -67,7 +77,7 @@ class StoreRouteRequest extends FormRequest
             'stops.*.description' => ['nullable', 'string'],
             'stops.*.notes' => ['nullable', 'string'],
             'stops.*.photos' => ['nullable', 'array'],
-            'stops.*.photos.*' => ['string'],
+            'stops.*.photos.*' => ['nullable'], // Can be file or string - handled by controller
             'stops.*.tasks' => ['nullable', 'array'],
             'stops.*.tasks.*' => ['string'],
             'stops.*.checklists' => ['nullable', 'array'],
