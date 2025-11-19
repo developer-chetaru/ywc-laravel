@@ -50,11 +50,11 @@ return [
         ],
     ],
     'defaults' => [
-        'routes' => [
-            /*
-             * Route for accessing parsed swagger annotations.
-             */
-            'docs' => 'docs',
+            'routes' => [
+                /*
+                 * Route for accessing parsed swagger annotations.
+                 */
+                'docs' => 'api/docs',
 
             /*
              * Route for Oauth2 authentication callback.

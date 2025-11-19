@@ -117,58 +117,118 @@
 </head>
 
 <body @if(config('l5-swagger.defaults.ui.display.dark_mode')) id="dark-mode" @endif>
-<div id="swagger-ui"></div>
+<div id="swagger-ui">
+    <div style="padding: 20px; text-align: center;">
+        <p>Loading Swagger UI...</p>
+    </div>
+</div>
 
-<script src="{{ l5_swagger_asset($documentation, 'swagger-ui-bundle.js') }}"></script>
-<script src="{{ l5_swagger_asset($documentation, 'swagger-ui-standalone-preset.js') }}"></script>
 <script>
-    window.onload = function() {
-        const urls = [];
-
-        @foreach($urlsToDocs as $title => $url)
-            urls.push({name: "{{ $title }}", url: "{{ $url }}"});
-        @endforeach
-
-        // Build a system
-        const ui = SwaggerUIBundle({
-            dom_id: '#swagger-ui',
-            urls: urls,
-            "urls.primaryName": "{{ $documentationTitle }}",
-            operationsSorter: {!! isset($operationsSorter) ? '"' . $operationsSorter . '"' : 'null' !!},
-            configUrl: {!! isset($configUrl) ? '"' . $configUrl . '"' : 'null' !!},
-            validatorUrl: {!! isset($validatorUrl) ? '"' . $validatorUrl . '"' : 'null' !!},
-            oauth2RedirectUrl: "{{ route('l5-swagger.'.$documentation.'.oauth2_callback', [], $useAbsolutePath) }}",
-
-            requestInterceptor: function(request) {
-                request.headers['X-CSRF-TOKEN'] = '{{ csrf_token() }}';
-                return request;
-            },
-
-            presets: [
-                SwaggerUIBundle.presets.apis,
-                SwaggerUIStandalonePreset
-            ],
-
-            plugins: [
-                SwaggerUIBundle.plugins.DownloadUrl
-            ],
-
-            layout: "StandaloneLayout",
-            docExpansion : "{!! config('l5-swagger.defaults.ui.display.doc_expansion', 'none') !!}",
-            deepLinking: true,
-            filter: {!! config('l5-swagger.defaults.ui.display.filter') ? 'true' : 'false' !!},
-            persistAuthorization: "{!! config('l5-swagger.defaults.ui.authorization.persist_authorization') ? 'true' : 'false' !!}",
-
-        })
-
-        window.ui = ui
-
-        @if(in_array('oauth2', array_column(config('l5-swagger.defaults.securityDefinitions.securitySchemes'), 'type')))
-        ui.initOAuth({
-            usePkceWithAuthorizationCodeGrant: "{!! (bool)config('l5-swagger.defaults.ui.authorization.oauth2.use_pkce_with_authorization_code_grant') !!}"
-        })
-        @endif
+    // Function to check if SwaggerUIBundle is loaded
+    function checkSwaggerUILoaded() {
+        if (typeof SwaggerUIBundle === 'undefined' || typeof SwaggerUIStandalonePreset === 'undefined') {
+            return false;
+        }
+        return true;
     }
+
+    // Function to initialize Swagger UI
+    function initSwaggerUI() {
+        if (!checkSwaggerUILoaded()) {
+            document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error: Swagger UI libraries failed to load</h2><p>Please check that the asset files are accessible at:<br>{{ l5_swagger_asset($documentation, "swagger-ui-bundle.js") }}<br>{{ l5_swagger_asset($documentation, "swagger-ui-standalone-preset.js") }}</p></div>';
+            return;
+        }
+
+        try {
+            const urls = [];
+
+            @foreach($urlsToDocs as $title => $url)
+                urls.push({name: "{{ $title }}", url: "{{ $url }}"});
+            @endforeach
+
+            if (urls.length === 0) {
+                document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error: No documentation URLs found</h2><p>Please check your l5-swagger configuration.</p></div>';
+                return;
+            }
+
+            // Build a system
+            const ui = SwaggerUIBundle({
+                dom_id: '#swagger-ui',
+                urls: urls,
+                "urls.primaryName": "{{ $documentationTitle }}",
+                operationsSorter: {!! isset($operationsSorter) ? '"' . $operationsSorter . '"' : 'null' !!},
+                configUrl: {!! isset($configUrl) ? '"' . $configUrl . '"' : 'null' !!},
+                validatorUrl: {!! isset($validatorUrl) ? '"' . $validatorUrl . '"' : 'null' !!},
+                oauth2RedirectUrl: "{{ route('l5-swagger.'.$documentation.'.oauth2_callback', [], $useAbsolutePath) }}",
+
+                requestInterceptor: function(request) {
+                    request.headers['X-CSRF-TOKEN'] = '{{ csrf_token() }}';
+                    return request;
+                },
+
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+
+                layout: "StandaloneLayout",
+                docExpansion : "{!! config('l5-swagger.defaults.ui.display.doc_expansion', 'none') !!}",
+                deepLinking: true,
+                filter: {!! config('l5-swagger.defaults.ui.display.filter') ? 'true' : 'false' !!},
+                persistAuthorization: "{!! config('l5-swagger.defaults.ui.authorization.persist_authorization') ? 'true' : 'false' !!}",
+
+                onComplete: function() {
+                    console.log("Swagger UI loaded successfully");
+                },
+
+                onFailure: function(data) {
+                    console.error("Swagger UI failed to load:", data);
+                    document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error loading API documentation</h2><p>Please check the browser console for details.</p></div>';
+                }
+            })
+
+            window.ui = ui
+
+            @if(in_array('oauth2', array_column(config('l5-swagger.defaults.securityDefinitions.securitySchemes'), 'type')))
+            ui.initOAuth({
+                usePkceWithAuthorizationCodeGrant: "{!! (bool)config('l5-swagger.defaults.ui.authorization.oauth2.use_pkce_with_authorization_code_grant') !!}"
+            })
+            @endif
+        } catch (error) {
+            console.error("Error initializing Swagger UI:", error);
+            document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error initializing Swagger UI</h2><p>' + error.message + '</p></div>';
+        }
+    }
+
+    // Load scripts and initialize
+    const bundleScript = document.createElement('script');
+    bundleScript.src = "{{ l5_swagger_asset($documentation, 'swagger-ui-bundle.js') }}";
+    bundleScript.onerror = function() {
+        document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error: Failed to load swagger-ui-bundle.js</h2><p>Please check that the file exists and is accessible.</p></div>';
+    };
+    bundleScript.onload = function() {
+        const presetScript = document.createElement('script');
+        presetScript.src = "{{ l5_swagger_asset($documentation, 'swagger-ui-standalone-preset.js') }}";
+        presetScript.onerror = function() {
+            document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error: Failed to load swagger-ui-standalone-preset.js</h2><p>Please check that the file exists and is accessible.</p></div>';
+        };
+        presetScript.onload = function() {
+            // Wait a bit for scripts to fully initialize
+            setTimeout(function() {
+                if (checkSwaggerUILoaded()) {
+                    initSwaggerUI();
+                } else {
+                    document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error: SwaggerUIBundle not available after loading scripts</h2><p>Please check the browser console for errors.</p></div>';
+                }
+            }, 100);
+        };
+        document.body.appendChild(presetScript);
+    };
+    document.body.appendChild(bundleScript);
 </script>
 </body>
 </html>
