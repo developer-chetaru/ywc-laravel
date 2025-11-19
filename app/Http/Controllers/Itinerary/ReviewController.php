@@ -12,6 +12,27 @@ use Illuminate\Validation\Rule;
 
 class ReviewController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/itinerary/routes/{route}/reviews",
+     *     summary="Get reviews for a route",
+     *     tags={"Itinerary Reviews"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paginated list of reviews",
+     *         @OA\JsonContent(type="object")
+     *     ),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
+     */
     public function index(ItineraryRoute $route): JsonResponse
     {
         Gate::authorize('view', $route);
@@ -25,6 +46,40 @@ class ReviewController extends Controller
         return response()->json($reviews);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/itinerary/routes/{route}/reviews",
+     *     summary="Create a review for a route",
+     *     tags={"Itinerary Reviews"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"rating"},
+     *             @OA\Property(property="rating", type="integer", minimum=1, maximum=5, example=5),
+     *             @OA\Property(property="comment", type="string", example="Great route! Highly recommended."),
+     *             @OA\Property(property="media", type="array", @OA\Items(type="string"), example={"url1", "url2"})
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Review submitted",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Review submitted."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     public function store(Request $request, ItineraryRoute $route): JsonResponse
     {
         Gate::authorize('view', $route);
@@ -49,6 +104,45 @@ class ReviewController extends Controller
         ], 201);
     }
 
+    /**
+     * @OA\Put(
+     *     path="/api/itinerary/routes/{route}/reviews/{review}",
+     *     summary="Update a review",
+     *     tags={"Itinerary Reviews"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Parameter(
+     *         name="review",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Review ID"
+     *     ),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="rating", type="integer", minimum=1, maximum=5),
+     *             @OA\Property(property="comment", type="string"),
+     *             @OA\Property(property="status", type="string", enum={"pending", "published", "flagged"})
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Review updated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Review updated."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied"),
+     *     @OA\Response(response=404, description="Review not found")
+     * )
+     */
     public function update(Request $request, ItineraryRoute $route, ItineraryRouteReview $review): JsonResponse
     {
         Gate::authorize('update', $route);
@@ -69,6 +163,37 @@ class ReviewController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/itinerary/routes/{route}/reviews/{review}",
+     *     summary="Delete a review",
+     *     tags={"Itinerary Reviews"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Parameter(
+     *         name="review",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Review ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Review removed",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Review removed.")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied"),
+     *     @OA\Response(response=404, description="Review not found")
+     * )
+     */
     public function destroy(ItineraryRoute $route, ItineraryRouteReview $review): JsonResponse
     {
         Gate::authorize('update', $route);

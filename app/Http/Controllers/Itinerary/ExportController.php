@@ -20,6 +20,37 @@ class ExportController extends Controller
         // Middleware is applied in routes/web.php and routes/api.php
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/itinerary/routes/{route}/export/pdf",
+     *     summary="Export route as PDF",
+     *     tags={"Itinerary Export"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="PDF export generated (returns JSON with download URL for API requests)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="PDF export generated successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="download_url", type="string", example="/storage/exports/route_123.pdf"),
+     *                 @OA\Property(property="filename", type="string", example="route_mediterranean_2024-11-19.html"),
+     *                 @OA\Property(property="file_path", type="string", example="exports/route_123.pdf")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
+     */
     public function pdf(Request $request, ItineraryRoute $route): BinaryFileResponse|JsonResponse
     {
         Gate::authorize('view', $route);
@@ -48,6 +79,37 @@ class ExportController extends Controller
         ])->deleteFileAfterSend(true);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/itinerary/routes/{route}/export/gpx",
+     *     summary="Export route as GPX",
+     *     tags={"Itinerary Export"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="GPX export generated (returns JSON with download URL for API requests)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="GPX export generated successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="download_url", type="string", example="/storage/exports/route_123.gpx"),
+     *                 @OA\Property(property="filename", type="string", example="route_mediterranean_2024-11-19.gpx"),
+     *                 @OA\Property(property="file_path", type="string", example="exports/route_123.gpx")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
+     */
     public function gpx(Request $request, ItineraryRoute $route): BinaryFileResponse|JsonResponse
     {
         Gate::authorize('view', $route);
@@ -76,6 +138,37 @@ class ExportController extends Controller
         ])->deleteFileAfterSend(true);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/itinerary/routes/{route}/export/xlsx",
+     *     summary="Export route as XLSX/CSV",
+     *     tags={"Itinerary Export"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="XLSX export generated (returns JSON with download URL for API requests)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="XLSX export generated successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="download_url", type="string", example="/storage/exports/route_123.csv"),
+     *                 @OA\Property(property="filename", type="string", example="route_mediterranean_2024-11-19.csv"),
+     *                 @OA\Property(property="file_path", type="string", example="exports/route_123.csv")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
+     */
     public function xlsx(Request $request, ItineraryRoute $route): BinaryFileResponse|JsonResponse
     {
         Gate::authorize('view', $route);

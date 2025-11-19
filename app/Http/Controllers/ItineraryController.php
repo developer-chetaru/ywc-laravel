@@ -8,11 +8,56 @@ use Illuminate\Support\Facades\Http;
 
 class ItineraryController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/itineraries",
+     *     summary="Get all itineraries",
+     *     tags={"Itinerary"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of itineraries",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(type="object")
+     *         )
+     *     )
+     * )
+     */
     public function index()
     {
         return response()->json(Itinerary::all());
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/itineraries",
+     *     summary="Create a new itinerary",
+     *     tags={"Itinerary"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"title", "description", "day_count", "itinerary_days"},
+     *                 @OA\Property(property="user_id", type="integer", example=1),
+     *                 @OA\Property(property="title", type="string", example="7-Day Mediterranean Cruise"),
+     *                 @OA\Property(property="description", type="string", example="A beautiful sailing itinerary"),
+     *                 @OA\Property(property="day_count", type="integer", example=7),
+     *                 @OA\Property(property="itinerary_days", type="string", format="json", description="JSON array of itinerary days"),
+     *                 @OA\Property(property="day_0_files", type="array", @OA\Items(type="string", format="binary"), description="Images for day 0")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Itinerary created successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Itinerary saved successfully")
+     *         )
+     *     )
+     * )
+     */
   public function store(Request $request)
     {
         $itinerary = new Itinerary();
@@ -49,11 +94,66 @@ class ItineraryController extends Controller
     }
 
 
+    /**
+     * @OA\Get(
+     *     path="/api/itineraries/{id}",
+     *     summary="Get a specific itinerary",
+     *     tags={"Itinerary"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Itinerary ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Itinerary details",
+     *         @OA\JsonContent(type="object")
+     *     ),
+     *     @OA\Response(response=404, description="Itinerary not found")
+     * )
+     */
     public function show(Itinerary $itinerary)
     {
         return response()->json($itinerary);
     }
 
+    /**
+     * @OA\Put(
+     *     path="/api/itineraries/{id}",
+     *     summary="Update an itinerary",
+     *     tags={"Itinerary"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Itinerary ID"
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="title", type="string", example="Updated Itinerary Title"),
+     *                 @OA\Property(property="description", type="string", example="Updated description"),
+     *                 @OA\Property(property="day_count", type="integer", example=7),
+     *                 @OA\Property(property="itinerary_days", type="string", format="json", description="JSON array of itinerary days")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Itinerary updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Itinerary updated successfully"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     */
     public function update(Request $request, $id)
     {
         $itinerary = Itinerary::findOrFail($id);
@@ -106,11 +206,64 @@ class ItineraryController extends Controller
     }
 
 
+    /**
+     * @OA\Delete(
+     *     path="/api/itineraries/{id}",
+     *     summary="Delete an itinerary",
+     *     tags={"Itinerary"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Itinerary ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Itinerary deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Itinerary deleted")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Itinerary not found")
+     * )
+     */
     public function destroy(Itinerary $itinerary)
     {
         $itinerary->delete();
         return response()->json(['message' => 'Itinerary deleted']);
     }
+    
+    /**
+     * @OA\Put(
+     *     path="/api/itineraries/{itinerary}/status",
+     *     summary="Update itinerary status",
+     *     tags={"Itinerary"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="itinerary",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Itinerary ID"
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"status"},
+     *             @OA\Property(property="status", type="string", enum={"approved", "rejected", "pending"}, example="approved")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Status updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Itinerary approved successfully")
+     *         )
+     *     )
+     * )
+     */
         public function updateStatus(Request $request, Itinerary $itinerary)
     {
         // $user = $request->user();
@@ -128,6 +281,47 @@ class ItineraryController extends Controller
         return response()->json(['message' => "Itinerary {$validated['status']} successfully"]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/itineraries/ai-generate",
+     *     summary="Generate itinerary using AI",
+     *     tags={"Itinerary"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"place","days"},
+     *             @OA\Property(property="place", type="string", maxLength=255, example="Barcelona, Spain"),
+     *             @OA\Property(property="days", type="integer", minimum=1, maximum=30, example=7)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="AI-generated itinerary",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="title", type="string", example="Itinerary for Barcelona, Spain - 7 Day(s)"),
+     *             @OA\Property(property="description", type="string"),
+     *             @OA\Property(property="place", type="string", example="Barcelona, Spain"),
+     *             @OA\Property(property="days", type="integer", example=7),
+     *             @OA\Property(property="itinerary_days", type="array", @OA\Items(type="object")),
+     *             @OA\Property(property="coordinates", type="object"),
+     *             @OA\Property(property="weather_summary", type="object"),
+     *             @OA\Property(property="local_cuisine", type="array", @OA\Items(type="string")),
+     *             @OA\Property(property="travel_tips", type="array", @OA\Items(type="string")),
+     *             @OA\Property(property="packing_list", type="array", @OA\Items(type="string"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Failed to generate itinerary"
+     *     )
+     * )
+     */
     public function generateWithAI(Request $request)
     {
         $validated = $request->validate([

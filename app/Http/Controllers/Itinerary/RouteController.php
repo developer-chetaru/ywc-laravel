@@ -19,7 +19,66 @@ use Illuminate\Support\Str;
 
 class RouteController extends Controller
 {
-
+    /**
+     * @OA\Get(
+     *     path="/api/itinerary/routes",
+     *     summary="List all sailing routes",
+     *     tags={"Itinerary Routes"},
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         @OA\Schema(type="string"),
+     *         description="Search in title, description, or tags"
+     *     ),
+     *     @OA\Parameter(
+     *         name="region",
+     *         in="query",
+     *         @OA\Schema(type="string"),
+     *         description="Filter by region"
+     *     ),
+     *     @OA\Parameter(
+     *         name="difficulty",
+     *         in="query",
+     *         @OA\Schema(type="string"),
+     *         description="Filter by difficulty level"
+     *     ),
+     *     @OA\Parameter(
+     *         name="season",
+     *         in="query",
+     *         @OA\Schema(type="string"),
+     *         description="Filter by season"
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         @OA\Schema(type="string"),
+     *         description="Filter by status"
+     *     ),
+     *     @OA\Parameter(
+     *         name="visibility",
+     *         in="query",
+     *         @OA\Schema(type="string"),
+     *         description="Filter by visibility"
+     *     ),
+     *     @OA\Parameter(
+     *         name="days",
+     *         in="query",
+     *         @OA\Schema(type="integer"),
+     *         description="Filter by duration in days"
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         @OA\Schema(type="integer", default=15),
+     *         description="Items per page"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paginated list of routes",
+     *         @OA\JsonContent(type="object")
+     *     )
+     * )
+     */
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -71,6 +130,41 @@ class RouteController extends Controller
         return response()->json($routes);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/itinerary/routes",
+     *     summary="Create a new sailing route",
+     *     tags={"Itinerary Routes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"title"},
+     *                 @OA\Property(property="title", type="string", example="Mediterranean Adventure"),
+     *                 @OA\Property(property="description", type="string", example="A beautiful sailing route"),
+     *                 @OA\Property(property="cover_image", type="string", format="binary", description="Cover image file"),
+     *                 @OA\Property(property="stops", type="string", format="json", description="JSON array of route stops"),
+     *                 @OA\Property(property="visibility", type="string", enum={"public", "private", "crew"}, example="public", description="Route visibility"),
+     *                 @OA\Property(property="difficulty", type="string", example="intermediate"),
+     *                 @OA\Property(property="season", type="string", example="summer"),
+     *                 @OA\Property(property="region", type="string", example="Mediterranean")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Route created successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Route created successfully."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Validation error"),
+     *     @OA\Response(response=500, description="Failed to create route")
+     * )
+     */
     public function store(StoreRouteRequest $request, RouteBuilder $builder): JsonResponse
     {
         try {
@@ -197,7 +291,7 @@ class RouteController extends Controller
             return response()->json([
                 'message' => 'Route created successfully.',
                 'data' => $route,
-            ], 201);
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to create route.',
@@ -441,6 +535,29 @@ class RouteController extends Controller
         return $processedPhotos;
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/itinerary/routes/{route}",
+     *     summary="Get a specific sailing route",
+     *     tags={"Itinerary Routes"},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Route details",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied"),
+     *     @OA\Response(response=404, description="Route not found")
+     * )
+     */
     public function show(Request $request, ItineraryRoute $route): JsonResponse
     {
         try {
@@ -510,6 +627,44 @@ class RouteController extends Controller
         }
     }
 
+    /**
+     * @OA\Put(
+     *     path="/api/itinerary/routes/{route}",
+     *     summary="Update a sailing route",
+     *     tags={"Itinerary Routes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="title", type="string", example="Updated Route Title"),
+     *                 @OA\Property(property="description", type="string"),
+     *                 @OA\Property(property="cover_image", type="string", format="binary"),
+     *                 @OA\Property(property="stops", type="string", format="json"),
+     *                 @OA\Property(property="visibility", type="string", enum={"public", "private", "crew"})
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Route updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Route updated successfully."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied"),
+     *     @OA\Response(response=500, description="Failed to update route")
+     * )
+     */
     public function update(UpdateRouteRequest $request, RouteBuilder $builder, ItineraryRoute $route): JsonResponse
     {
         try {
@@ -608,6 +763,30 @@ class RouteController extends Controller
         }
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/itinerary/routes/{route}",
+     *     summary="Delete a sailing route",
+     *     tags={"Itinerary Routes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Route deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Route deleted.")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied"),
+     *     @OA\Response(response=404, description="Route not found")
+     * )
+     */
     public function destroy(ItineraryRoute $route): JsonResponse
     {
         Gate::authorize('delete', $route);
@@ -619,6 +798,38 @@ class RouteController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/itinerary/routes/{route}/clone",
+     *     summary="Clone a sailing route",
+     *     tags={"Itinerary Routes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID to clone"
+     *     ),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="title", type="string", example="Copy of Route"),
+     *             @OA\Property(property="visibility", type="string", enum={"public", "private", "crew"}),
+     *             @OA\Property(property="season", type="string"),
+     *             @OA\Property(property="difficulty", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Route cloned successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Route copied to your account."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
+     */
     public function cloneRoute(Request $request, RouteBuilder $builder, ItineraryRoute $route): JsonResponse
     {
         Gate::authorize('copy', $route);
@@ -632,9 +843,39 @@ class RouteController extends Controller
         return response()->json([
             'message' => 'Route copied to your account.',
             'data' => $clone,
-        ], 201);
+        ], 200);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/itinerary/routes/{route}/publish",
+     *     summary="Publish or unpublish a route",
+     *     tags={"Itinerary Routes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="publish", type="boolean", example=true),
+     *             @OA\Property(property="visibility", type="string", enum={"public", "private", "crew"})
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Route publish status updated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Route published successfully."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
+     */
     public function publish(Request $request, ItineraryRoute $route): JsonResponse
     {
         Gate::authorize('publish', $route);
@@ -653,6 +894,37 @@ class RouteController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/itinerary/routes/{route}/statistics",
+     *     summary="Get route statistics",
+     *     tags={"Itinerary Routes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Route statistics",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="views_total", type="integer", example=150),
+     *                 @OA\Property(property="views_unique", type="integer", example=120),
+     *                 @OA\Property(property="copies_total", type="integer", example=5),
+     *                 @OA\Property(property="reviews_count", type="integer", example=10),
+     *                 @OA\Property(property="rating_avg", type="number", format="float", example=4.5),
+     *                 @OA\Property(property="favorites_count", type="integer", example=25),
+     *                 @OA\Property(property="shares_count", type="integer", example=8)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
+     */
     public function statistics(ItineraryRoute $route): JsonResponse
     {
         Gate::authorize('view', $route);
@@ -677,6 +949,30 @@ class RouteController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/itinerary/routes/{route}/weather/refresh",
+     *     summary="Refresh weather forecast for route",
+     *     tags={"Itinerary Routes"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Weather forecast refreshed",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Weather forecast refreshed."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
+     */
     public function refreshWeather(ItineraryRoute $route, WeatherService $weatherService): JsonResponse
     {
         Gate::authorize('update', $route);

@@ -12,6 +12,27 @@ use Illuminate\Validation\Rule;
 
 class CommentController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/itinerary/routes/{route}/comments",
+     *     summary="Get comments for a route",
+     *     tags={"Itinerary Comments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paginated list of comments",
+     *         @OA\JsonContent(type="object")
+     *     ),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
+     */
     public function index(ItineraryRoute $route): JsonResponse
     {
         Gate::authorize('view', $route);
@@ -27,6 +48,42 @@ class CommentController extends Controller
         return response()->json($comments);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/itinerary/routes/{route}/comments",
+     *     summary="Create a comment on a route",
+     *     tags={"Itinerary Comments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"body"},
+     *             @OA\Property(property="stop_id", type="integer", example=1, description="Optional: Stop ID to comment on"),
+     *             @OA\Property(property="parent_id", type="integer", example=5, description="Optional: Parent comment ID for replies"),
+     *             @OA\Property(property="body", type="string", example="Great route! Looking forward to trying it."),
+     *             @OA\Property(property="attachments", type="array", @OA\Items(type="string"), example={"url1", "url2"}),
+     *             @OA\Property(property="visibility", type="string", enum={"crew", "public"}, example="public")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Comment posted",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Comment posted."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     public function store(Request $request, ItineraryRoute $route): JsonResponse
     {
         Gate::authorize('view', $route);
@@ -51,6 +108,45 @@ class CommentController extends Controller
         ], 201);
     }
 
+    /**
+     * @OA\Put(
+     *     path="/api/itinerary/routes/{route}/comments/{comment}",
+     *     summary="Update a comment",
+     *     tags={"Itinerary Comments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Parameter(
+     *         name="comment",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Comment ID"
+     *     ),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="body", type="string", example="Updated comment text"),
+     *             @OA\Property(property="visibility", type="string", enum={"crew", "public"}),
+     *             @OA\Property(property="status", type="string", enum={"active", "hidden", "flagged"})
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Comment updated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Comment updated."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied"),
+     *     @OA\Response(response=404, description="Comment not found")
+     * )
+     */
     public function update(Request $request, ItineraryRoute $route, ItineraryRouteComment $comment): JsonResponse
     {
         $user = $request->user();
@@ -73,6 +169,37 @@ class CommentController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/itinerary/routes/{route}/comments/{comment}",
+     *     summary="Delete a comment",
+     *     tags={"Itinerary Comments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="route",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Route ID"
+     *     ),
+     *     @OA\Parameter(
+     *         name="comment",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Comment ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Comment removed",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Comment removed.")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied"),
+     *     @OA\Response(response=404, description="Comment not found")
+     * )
+     */
     public function destroy(Request $request, ItineraryRoute $route, ItineraryRouteComment $comment): JsonResponse
     {
         $user = $request->user();
