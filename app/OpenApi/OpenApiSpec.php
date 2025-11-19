@@ -10,12 +10,12 @@ namespace App\OpenApi;
  *         description="API documentation for YWC platform."
  *     ),
  *     @OA\Server(
- *         url="https://console-ywc.nativeappdev.com",
- *         description="Production server"
+ *         url=L5_SWAGGER_CONST_PRODUCTION_URL,
+ *         description="Production Server"
  *     ),
  *     @OA\Server(
- *         url="http://127.0.0.1:8000",
- *         description="Development server"
+ *         url=L5_SWAGGER_CONST_DEVELOPMENT_URL,
+ *         description="Development Server"
  *     ),
  *     @OA\Components(
  *         @OA\SecurityScheme(

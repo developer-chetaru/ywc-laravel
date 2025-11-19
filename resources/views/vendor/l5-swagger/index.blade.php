@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ $documentationTitle }}</title>
-    <link rel="stylesheet" type="text/css" href="{{ l5_swagger_asset($documentation, 'swagger-ui.css') }}">
+    @php
+        // Force CDN usage since local asset route returns 404 on server
+        // Using CDN is more reliable and doesn't depend on asset routes
+        $swaggerUiCss = 'https://unpkg.com/swagger-ui-dist@5.30.2/swagger-ui.css';
+        $swaggerUiBundle = 'https://unpkg.com/swagger-ui-dist@5.30.2/swagger-ui-bundle.js';
+        $swaggerUiPreset = 'https://unpkg.com/swagger-ui-dist@5.30.2/swagger-ui-standalone-preset.js';
+    @endphp
+    <link rel="stylesheet" type="text/css" href="{{ $swaggerUiCss }}">
     <link rel="icon" type="image/png" href="{{ l5_swagger_asset($documentation, 'favicon-32x32.png') }}" sizes="32x32"/>
     <link rel="icon" type="image/png" href="{{ l5_swagger_asset($documentation, 'favicon-16x16.png') }}" sizes="16x16"/>
     <style>
@@ -204,31 +211,54 @@
         }
     }
 
-    // Load scripts and initialize
-    const bundleScript = document.createElement('script');
-    bundleScript.src = "{{ l5_swagger_asset($documentation, 'swagger-ui-bundle.js') }}";
-    bundleScript.onerror = function() {
-        document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error: Failed to load swagger-ui-bundle.js</h2><p>Please check that the file exists and is accessible.</p></div>';
-    };
-    bundleScript.onload = function() {
-        const presetScript = document.createElement('script');
-        presetScript.src = "{{ l5_swagger_asset($documentation, 'swagger-ui-standalone-preset.js') }}";
-        presetScript.onerror = function() {
-            document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error: Failed to load swagger-ui-standalone-preset.js</h2><p>Please check that the file exists and is accessible.</p></div>';
+    // Load scripts and initialize with CDN fallback
+    const bundleUrl = "{{ $swaggerUiBundle }}";
+    const presetUrl = "{{ $swaggerUiPreset }}";
+    const cdnBundleUrl = "https://unpkg.com/swagger-ui-dist@5.30.2/swagger-ui-bundle.js";
+    const cdnPresetUrl = "https://unpkg.com/swagger-ui-dist@5.30.2/swagger-ui-standalone-preset.js";
+    
+    function loadScript(url, onSuccess, onError, retryUrl = null) {
+        const script = document.createElement('script');
+        script.src = url;
+        script.onerror = function() {
+            if (retryUrl && url !== retryUrl) {
+                // Try CDN fallback
+                console.warn('Failed to load ' + url + ', trying CDN fallback...');
+                loadScript(retryUrl, onSuccess, onError);
+            } else {
+                onError();
+            }
         };
-        presetScript.onload = function() {
-            // Wait a bit for scripts to fully initialize
-            setTimeout(function() {
-                if (checkSwaggerUILoaded()) {
-                    initSwaggerUI();
-                } else {
-                    document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error: SwaggerUIBundle not available after loading scripts</h2><p>Please check the browser console for errors.</p></div>';
-                }
-            }, 100);
-        };
-        document.body.appendChild(presetScript);
-    };
-    document.body.appendChild(bundleScript);
+        script.onload = onSuccess;
+        document.body.appendChild(script);
+    }
+    
+    loadScript(
+        bundleUrl,
+        function() {
+            loadScript(
+                presetUrl,
+                function() {
+                    // Wait a bit for scripts to fully initialize
+                    setTimeout(function() {
+                        if (checkSwaggerUILoaded()) {
+                            initSwaggerUI();
+                        } else {
+                            document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error: SwaggerUIBundle not available after loading scripts</h2><p>Please check the browser console for errors.</p></div>';
+                        }
+                    }, 100);
+                },
+                function() {
+                    document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error: Failed to load swagger-ui-standalone-preset.js</h2><p>Tried both local and CDN sources. Please check your network connection.</p></div>';
+                },
+                cdnPresetUrl
+            );
+        },
+        function() {
+            document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Error: Failed to load swagger-ui-bundle.js</h2><p>Tried both local and CDN sources. Please check your network connection.</p></div>';
+        },
+        cdnBundleUrl
+    );
 </script>
 </body>
 </html>
