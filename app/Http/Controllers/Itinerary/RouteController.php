@@ -127,6 +127,58 @@ class RouteController extends Controller
 
         $routes = $query->paginate($request->input('per_page', 15))->withQueryString();
 
+        // Convert image paths to full URLs
+        $routes->getCollection()->transform(function ($route) {
+            // Convert cover_image to full URL
+            if ($route->cover_image) {
+                $route->cover_image_url = Storage::disk('public')->url($route->cover_image);
+            }
+            
+            // If stops are loaded, convert stop photos to full URLs
+            if ($route->relationLoaded('stops')) {
+                foreach ($route->stops as $stop) {
+                    // Ensure photos is an array
+                    if (is_string($stop->photos)) {
+                        $decoded = json_decode($stop->photos, true);
+                        $stop->photos = is_array($decoded) ? $decoded : [];
+                    }
+                    if ($stop->photos === null) {
+                        $stop->photos = [];
+                    }
+                    if (!is_array($stop->photos)) {
+                        $stop->photos = [];
+                    }
+                    
+                    // Convert photo paths to full URLs
+                    $stop->photos = array_values(array_filter(
+                        array_map(function($photo) {
+                            if (empty($photo) || !is_string($photo)) {
+                                return null;
+                            }
+                            // If it's already a URL, return as is
+                            if (filter_var($photo, FILTER_VALIDATE_URL)) {
+                                return [
+                                    'path' => $photo,
+                                    'url' => $photo,
+                                ];
+                            }
+                            // Check if file exists and convert to URL
+                            if (Storage::disk('public')->exists($photo)) {
+                                return [
+                                    'path' => $photo,
+                                    'url' => Storage::disk('public')->url($photo),
+                                ];
+                            }
+                            return null;
+                        }, $stop->photos),
+                        fn($photo) => $photo !== null
+                    ));
+                }
+            }
+            
+            return $route;
+        });
+
         return response()->json($routes);
     }
 
