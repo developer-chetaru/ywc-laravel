@@ -74,7 +74,7 @@
                     @elseif(count($yachts) > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             @foreach($yachts as $yacht)
-                                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col border border-gray-200">
+                                <div wire:key="yacht-{{ $yacht['id'] }}" class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col border border-gray-200">
                                     <div class="relative h-48 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden group">
                                         @if(isset($yacht['cover_image_url']))
                                             <img src="{{ $yacht['cover_image_url'] }}" alt="{{ $yacht['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -125,11 +125,23 @@
                                     </div>
                                     <div class="border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-3">
                                         <button 
+                                            wire:key="yacht-btn-{{ $yacht['id'] }}"
                                             wire:click="viewDetails('yacht', {{ $yacht['id'] }})" 
-                                            wire:loading.attr="disabled"
+                                            @if($loadingItemId === $yacht['id'] && $loadingItemType === 'yacht')
+                                                disabled
+                                            @endif
                                             class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm disabled:opacity-50">
-                                            <span wire:loading.remove wire:target="viewDetails">View Details</span>
-                                            <span wire:loading wire:target="viewDetails">Loading...</span>
+                                            @if($loadingItemId === $yacht['id'] && $loadingItemType === 'yacht')
+                                                <span class="flex items-center">
+                                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Loading...
+                                                </span>
+                                            @else
+                                                <span>View Details</span>
+                                            @endif
                                         </button>
                                     </div>
                                 </div>
@@ -153,7 +165,7 @@
                     @elseif(count($marinas) > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($marinas as $marina)
-                                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col border border-gray-200">
+                                <div wire:key="marina-{{ $marina['id'] }}" class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col border border-gray-200">
                                     <div class="relative h-48 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden group">
                                         @if(isset($marina['cover_image_url']))
                                             <img src="{{ $marina['cover_image_url'] }}" alt="{{ $marina['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -196,11 +208,23 @@
                                     </div>
                                     <div class="border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-3">
                                         <button 
+                                            wire:key="marina-btn-{{ $marina['id'] }}"
                                             wire:click="viewDetails('marina', {{ $marina['id'] }})" 
-                                            wire:loading.attr="disabled"
+                                            @if($loadingItemId === $marina['id'] && $loadingItemType === 'marina')
+                                                disabled
+                                            @endif
                                             class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm disabled:opacity-50">
-                                            <span wire:loading.remove wire:target="viewDetails">View Details</span>
-                                            <span wire:loading wire:target="viewDetails">Loading...</span>
+                                            @if($loadingItemId === $marina['id'] && $loadingItemType === 'marina')
+                                                <span class="flex items-center">
+                                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Loading...
+                                                </span>
+                                            @else
+                                                <span>View Details</span>
+                                            @endif
                                         </button>
                                     </div>
                                 </div>

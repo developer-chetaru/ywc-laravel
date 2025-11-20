@@ -47,6 +47,8 @@ class IndustryReviewIndex extends Component
     public $detailType = 'yacht'; // 'yacht' or 'marina'
     public $detailData = null;
     public $detailLoading = false;
+    public $loadingItemId = null; // Track which specific item is loading
+    public $loadingItemType = null; // Track the type of item being loaded
     public $detailError = null;
     public $reviews = [];
 
@@ -277,16 +279,18 @@ class IndustryReviewIndex extends Component
     public function viewDetails($type, $identifier)
     {
         try {
-            $this->detailLoading = true;
-            $this->detailType = $type;
-            $this->showDetailModal = true;
-            $this->detailData = null;
-            $this->detailError = null;
-
             // Convert identifier to integer if it's numeric
             if (is_numeric($identifier)) {
                 $identifier = (int) $identifier;
             }
+            
+            $this->detailLoading = true;
+            $this->loadingItemId = $identifier;
+            $this->loadingItemType = $type;
+            $this->detailType = $type;
+            $this->showDetailModal = true;
+            $this->detailData = null;
+            $this->detailError = null;
 
             if ($type === 'yacht') {
                 // Try to find by ID first (most reliable)
@@ -341,6 +345,8 @@ class IndustryReviewIndex extends Component
             ]);
         } finally {
             $this->detailLoading = false;
+            $this->loadingItemId = null;
+            $this->loadingItemType = null;
         }
     }
 
