@@ -11,7 +11,7 @@
             "description": "Production Server"
         },
         {
-            "url": "http://localhost",
+            "url":  "http://127.0.0.1:8000",
             "description": "Development Server"
         }
     ],
@@ -1780,6 +1780,16 @@
                         }
                     },
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
                         "name": "per_page",
                         "in": "query",
                         "description": "Items per page",
@@ -2070,6 +2080,98 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/itinerary/routes/filter-options": {
+            "get": {
+                "tags": [
+                    "Itinerary Routes"
+                ],
+                "summary": "Get filter options for route library (regions, difficulties, seasons, available days)",
+                "operationId": "getRouteFilterOptions",
+                "description": "Returns all available filter options that can be used in the route library. Respects user visibility permissions - authenticated users see their own routes plus public and crew-visible routes, while unauthenticated users only see public routes.",
+                "responses": {
+                    "200": {
+                        "description": "Filter options retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Filter options retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "regions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "List of unique region values from available routes",
+                                                    "example": [
+                                                        "Mediterranean",
+                                                        "Caribbean",
+                                                        "Pacific",
+                                                        "Atlantic"
+                                                    ]
+                                                },
+                                                "difficulties": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "List of unique difficulty levels from available routes",
+                                                    "example": [
+                                                        "beginner",
+                                                        "intermediate",
+                                                        "advanced",
+                                                        "expert"
+                                                    ]
+                                                },
+                                                "seasons": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "List of unique season values from available routes",
+                                                    "example": [
+                                                        "summer",
+                                                        "winter",
+                                                        "spring",
+                                                        "autumn"
+                                                    ]
+                                                },
+                                                "available_days": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "integer"
+                                                    },
+                                                    "description": "List of unique duration days (duration_days > 0) from available routes, sorted ascending. Only includes routes visible to the user.",
+                                                    "example": [
+                                                        3,
+                                                        5,
+                                                        7,
+                                                        10,
+                                                        14,
+                                                        21
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
             }
         },
         "/api/itinerary/routes/{route}/clone": {
@@ -2844,6 +2946,16 @@
                         }
                     },
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
                         "name": "per_page",
                         "in": "query",
                         "description": "Items per page",
@@ -3234,6 +3346,16 @@
                                 "helpful"
                             ],
                             "default": "helpful"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
                         }
                     },
                     {
@@ -3807,6 +3929,16 @@
                         }
                     },
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
                         "name": "per_page",
                         "in": "query",
                         "description": "Items per page",
@@ -4185,6 +4317,16 @@
                                 "helpful"
                             ],
                             "default": "helpful"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
                         }
                     },
                     {
@@ -5523,6 +5665,1192 @@
                     }
                 ]
             }
+        },
+        "/api/work-logs": {
+            "get": {
+                "tags": [
+                    "Work Log"
+                ],
+                "summary": "List work log entries",
+                "operationId": "listWorkLogs",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "Filter by user ID (super admin only)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Filter by start date (YYYY-MM-DD)",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "Filter by end date (YYYY-MM-DD)",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "location_status",
+                        "in": "query",
+                        "description": "Filter by location status",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "at_sea",
+                                "in_port",
+                                "in_yard",
+                                "on_leave",
+                                "shore_leave"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "compliance_status",
+                        "in": "query",
+                        "description": "Filter by compliance status",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "compliant",
+                                "warning",
+                                "violation"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "is_compliant",
+                        "in": "query",
+                        "description": "Filter by compliance (true/false)",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of work log entries",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Work Log"
+                ],
+                "summary": "Create a new work log entry",
+                "operationId": "createWorkLog",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "work_date"
+                                ],
+                                "properties": {
+                                    "work_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-11-20"
+                                    },
+                                    "start_time": {
+                                        "type": "string",
+                                        "format": "time",
+                                        "example": "08:00:00"
+                                    },
+                                    "end_time": {
+                                        "type": "string",
+                                        "format": "time",
+                                        "example": "17:00:00"
+                                    },
+                                    "total_hours_worked": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "maximum": 24,
+                                        "example": 8.5
+                                    },
+                                    "overtime_hours": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "example": 0.5
+                                    },
+                                    "break_minutes": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "example": 60
+                                    },
+                                    "total_rest_hours": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "maximum": 24,
+                                        "example": 10.0
+                                    },
+                                    "sleep_hours": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "maximum": 24,
+                                        "example": 8.0
+                                    },
+                                    "rest_uninterrupted": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "location_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "at_sea",
+                                            "in_port",
+                                            "in_yard",
+                                            "on_leave",
+                                            "shore_leave"
+                                        ],
+                                        "example": "at_sea"
+                                    },
+                                    "location_name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Mediterranean Sea"
+                                    },
+                                    "port_name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Monaco"
+                                    },
+                                    "latitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": -90,
+                                        "maximum": 90,
+                                        "example": 43.7384
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": -180,
+                                        "maximum": 180,
+                                        "example": 7.4246
+                                    },
+                                    "yacht_id": {
+                                        "type": "integer",
+                                        "description": "Yacht ID from yacht management",
+                                        "example": 1
+                                    },
+                                    "yacht_name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Ocean Dream"
+                                    },
+                                    "yacht_type": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Motor Yacht"
+                                    },
+                                    "yacht_length": {
+                                        "type": "string",
+                                        "maxLength": 50,
+                                        "example": "60m"
+                                    },
+                                    "yacht_flag": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Cayman Islands"
+                                    },
+                                    "position_rank": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Chief Stewardess"
+                                    },
+                                    "department": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Interior"
+                                    },
+                                    "weather_conditions": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Sunny"
+                                    },
+                                    "sea_state": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Calm"
+                                    },
+                                    "visibility": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Good"
+                                    },
+                                    "activities": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "Guest service",
+                                            "Meal preparation",
+                                            "Cleaning"
+                                        ]
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Additional notes about the day"
+                                    },
+                                    "comments": {
+                                        "type": "string",
+                                        "example": "Additional comments"
+                                    },
+                                    "is_day_off": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "rest_periods": {
+                                        "type": "array",
+                                        "description": "Array of rest periods",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "start_time": {
+                                                    "type": "string",
+                                                    "format": "time",
+                                                    "example": "22:00:00"
+                                                },
+                                                "end_time": {
+                                                    "type": "string",
+                                                    "format": "time",
+                                                    "example": "06:00:00"
+                                                },
+                                                "duration_hours": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 8.0
+                                                },
+                                                "type": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "night_sleep",
+                                                        "day_rest",
+                                                        "break",
+                                                        "other"
+                                                    ],
+                                                    "example": "night_sleep"
+                                                },
+                                                "is_uninterrupted": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "location": {
+                                                    "type": "string",
+                                                    "example": "Cabin"
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "Rest period notes"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Work log entry created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Work log entry created successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/work-logs/{id}": {
+            "get": {
+                "tags": [
+                    "Work Log"
+                ],
+                "summary": "Get a specific work log entry",
+                "operationId": "getWorkLog",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Work log ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Work log entry details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "404": {
+                        "description": "Work log entry not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Work Log"
+                ],
+                "summary": "Update a work log entry",
+                "operationId": "updateWorkLog",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Work log ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "work_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "start_time": {
+                                        "type": "string",
+                                        "format": "time"
+                                    },
+                                    "end_time": {
+                                        "type": "string",
+                                        "format": "time"
+                                    },
+                                    "total_hours_worked": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "maximum": 24
+                                    },
+                                    "overtime_hours": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0
+                                    },
+                                    "break_minutes": {
+                                        "type": "integer",
+                                        "minimum": 0
+                                    },
+                                    "total_rest_hours": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "maximum": 24
+                                    },
+                                    "sleep_hours": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "maximum": 24
+                                    },
+                                    "rest_uninterrupted": {
+                                        "type": "boolean"
+                                    },
+                                    "location_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "at_sea",
+                                            "in_port",
+                                            "in_yard",
+                                            "on_leave",
+                                            "shore_leave"
+                                        ]
+                                    },
+                                    "location_name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "port_name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "latitude": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "yacht_id": {
+                                        "type": "integer"
+                                    },
+                                    "yacht_name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "yacht_type": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "yacht_length": {
+                                        "type": "string",
+                                        "maxLength": 50
+                                    },
+                                    "yacht_flag": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "position_rank": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "department": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "weather_conditions": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "sea_state": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "visibility": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "activities": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    },
+                                    "comments": {
+                                        "type": "string"
+                                    },
+                                    "is_day_off": {
+                                        "type": "boolean"
+                                    },
+                                    "rest_periods": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Work log entry updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Work log entry updated successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied - can only update own entries (or super admin)"
+                    },
+                    "404": {
+                        "description": "Work log entry not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Work Log"
+                ],
+                "summary": "Delete a work log entry",
+                "operationId": "deleteWorkLog",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Work log ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Work log entry deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Work log entry deleted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied - can only delete own entries (or super admin)"
+                    },
+                    "404": {
+                        "description": "Work log entry not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/work-logs/statistics": {
+            "get": {
+                "tags": [
+                    "Work Log"
+                ],
+                "summary": "Get work log statistics",
+                "operationId": "getWorkLogStatistics",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "Filter by user ID (super admin only)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Start date for statistics (YYYY-MM-DD)",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "End date for statistics (YYYY-MM-DD)",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_filter",
+                        "in": "query",
+                        "description": "Preset date filter",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "today",
+                                "week",
+                                "month",
+                                "custom"
+                            ],
+                            "default": "month"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Work log statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "total_days": {
+                                                    "type": "integer",
+                                                    "example": 30
+                                                },
+                                                "total_hours_worked": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 240.5
+                                                },
+                                                "total_rest_hours": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 300.0
+                                                },
+                                                "average_hours_per_day": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 8.02
+                                                },
+                                                "days_at_sea": {
+                                                    "type": "integer",
+                                                    "example": 25
+                                                },
+                                                "days_in_port": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "days_on_leave": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "compliant_days": {
+                                                    "type": "integer",
+                                                    "example": 28
+                                                },
+                                                "violation_days": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/work-logs/compliance": {
+            "get": {
+                "tags": [
+                    "Work Log"
+                ],
+                "summary": "Get compliance summary",
+                "operationId": "getComplianceSummary",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "Filter by user ID (super admin only)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Start date for compliance check (YYYY-MM-DD)",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "End date for compliance check (YYYY-MM-DD)",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_filter",
+                        "in": "query",
+                        "description": "Preset date filter",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "today",
+                                "week",
+                                "month",
+                                "custom"
+                            ],
+                            "default": "week"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Compliance summary",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "total_days": {
+                                                    "type": "integer",
+                                                    "example": 7
+                                                },
+                                                "compliant_days": {
+                                                    "type": "integer",
+                                                    "example": 6
+                                                },
+                                                "warning_days": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "violation_days": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "compliance_percentage": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 85.71
+                                                },
+                                                "total_hours_worked": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 56.5
+                                                },
+                                                "total_rest_hours": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 70.0
+                                                },
+                                                "average_hours_per_day": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 8.07
+                                                },
+                                                "weekly_compliance": {
+                                                    "properties": {
+                                                        "is_compliant": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        },
+                                                        "total_work_hours": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 56.5
+                                                        },
+                                                        "total_rest_hours": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 70.0
+                                                        },
+                                                        "days_worked": {
+                                                            "type": "integer",
+                                                            "example": 7
+                                                        },
+                                                        "remaining_work_hours": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "nullable": true,
+                                                            "example": 11.5,
+                                                            "description": "Remaining hours before weekly limit (77 hours)"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/work-logs/{id}/rest-periods": {
+            "post": {
+                "tags": [
+                    "Work Log"
+                ],
+                "summary": "Add rest period to work log entry",
+                "operationId": "addRestPeriod",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Work log ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "start_time",
+                                    "end_time"
+                                ],
+                                "properties": {
+                                    "start_time": {
+                                        "type": "string",
+                                        "format": "time",
+                                        "example": "22:00:00"
+                                    },
+                                    "end_time": {
+                                        "type": "string",
+                                        "format": "time",
+                                        "example": "06:00:00"
+                                    },
+                                    "duration_hours": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 8.0
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "night_sleep",
+                                            "day_rest",
+                                            "break",
+                                            "other"
+                                        ],
+                                        "example": "night_sleep"
+                                    },
+                                    "is_uninterrupted": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "Cabin"
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Rest period notes"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rest period added successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rest period added successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "404": {
+                        "description": "Work log entry not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/work-logs/{id}/rest-periods/{restPeriodId}": {
+            "put": {
+                "tags": [
+                    "Work Log"
+                ],
+                "summary": "Update a rest period",
+                "operationId": "updateRestPeriod",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Work log ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "restPeriodId",
+                        "in": "path",
+                        "description": "Rest period ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "start_time": {
+                                        "type": "string",
+                                        "format": "time"
+                                    },
+                                    "end_time": {
+                                        "type": "string",
+                                        "format": "time"
+                                    },
+                                    "duration_hours": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "night_sleep",
+                                            "day_rest",
+                                            "break",
+                                            "other"
+                                        ]
+                                    },
+                                    "is_uninterrupted": {
+                                        "type": "boolean"
+                                    },
+                                    "location": {
+                                        "type": "string"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rest period updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rest period updated successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "404": {
+                        "description": "Rest period not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Work Log"
+                ],
+                "summary": "Delete a rest period",
+                "operationId": "deleteRestPeriod",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Work log ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "restPeriodId",
+                        "in": "path",
+                        "description": "Rest period ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rest period deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rest period deleted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "404": {
+                        "description": "Rest period not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -5583,6 +6911,10 @@
         {
             "name": "Crew Discovery",
             "description": "Crew discovery and location-based networking endpoints"
+        },
+        {
+            "name": "Work Log",
+            "description": "Work & Rest Hours Log endpoints for MLC 2006 compliance tracking"
         }
     ]
 }

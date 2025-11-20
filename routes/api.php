@@ -39,6 +39,7 @@ Route::post('/itineraries/ai-generate', [ItineraryController::class, 'generateWi
 
 Route::prefix('itinerary')->group(function () {
     // Route CRUD operations (index and show are public, others require auth)
+    Route::get('/routes/filter-options', [SailingRouteController::class, 'filterOptions']);
     Route::get('/routes', [SailingRouteController::class, 'index']);
     Route::get('/routes/{route}', [SailingRouteController::class, 'show']);
     

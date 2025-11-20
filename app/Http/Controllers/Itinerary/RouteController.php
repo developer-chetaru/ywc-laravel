@@ -985,5 +985,98 @@ class RouteController extends Controller
             'data' => $route->fresh('stops.weatherSnapshots'),
         ]);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/itinerary/routes/filter-options",
+     *     summary="Get filter options for route library (regions, difficulties, seasons, available days)",
+     *     tags={"Itinerary Routes"},
+     *     description="Returns all available filter options that can be used in the route library. Respects user visibility permissions - authenticated users see their own routes plus public and crew-visible routes, while unauthenticated users only see public routes.",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Filter options retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Filter options retrieved successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="regions", type="array", @OA\Items(type="string"), example={"Mediterranean", "Caribbean", "Pacific", "Atlantic"}, description="List of unique region values from available routes"),
+     *                 @OA\Property(property="difficulties", type="array", @OA\Items(type="string"), example={"beginner", "intermediate", "advanced", "expert"}, description="List of unique difficulty levels from available routes"),
+     *                 @OA\Property(property="seasons", type="array", @OA\Items(type="string"), example={"summer", "winter", "spring", "autumn"}, description="List of unique season values from available routes"),
+     *                 @OA\Property(property="available_days", type="array", @OA\Items(type="integer"), example={3, 5, 7, 10, 14, 21}, description="List of unique duration days (duration_days > 0) from available routes, sorted ascending. Only includes routes visible to the user.")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function filterOptions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Get all unique regions
+        $regions = ItineraryRoute::query()
+            ->select('region')
+            ->whereNotNull('region')
+            ->distinct()
+            ->orderBy('region')
+            ->pluck('region')
+            ->all();
+
+        // Get all unique difficulties
+        $difficulties = ItineraryRoute::query()
+            ->select('difficulty')
+            ->whereNotNull('difficulty')
+            ->distinct()
+            ->orderBy('difficulty')
+            ->pluck('difficulty')
+            ->all();
+
+        // Get all unique seasons
+        $seasons = ItineraryRoute::query()
+            ->select('season')
+            ->whereNotNull('season')
+            ->distinct()
+            ->orderBy('season')
+            ->pluck('season')
+            ->all();
+
+        // Get available days with visibility rules
+        $query = ItineraryRoute::query()
+            ->select('duration_days')
+            ->whereNotNull('duration_days')
+            ->where('duration_days', '>', 0);
+
+        // Apply same visibility rules as the main query
+        if ($user) {
+            $query->where(function ($sub) use ($user) {
+                $sub->where('user_id', $user->id)
+                    ->orWhere('visibility', 'public')
+                    ->orWhere(function ($crewQuery) use ($user) {
+                        $crewQuery->where('visibility', 'crew')
+                            ->whereHas('crew', function ($crew) use ($user) {
+                                $crew->where('user_id', $user->id)
+                                    ->where('status', 'accepted');
+                            });
+                    });
+            });
+        } else {
+            $query->where('visibility', 'public');
+        }
+
+        $availableDays = $query->distinct()
+            ->orderBy('duration_days')
+            ->pluck('duration_days')
+            ->all();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Filter options retrieved successfully',
+            'data' => [
+                'regions' => $regions,
+                'difficulties' => $difficulties,
+                'seasons' => $seasons,
+                'available_days' => $availableDays,
+            ],
+        ]);
+    }
 }
 
