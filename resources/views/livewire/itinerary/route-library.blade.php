@@ -293,15 +293,6 @@
                                         <span class="hidden sm:inline truncate">View</span>
                                         <span class="sm:hidden">V</span>
                                     </a>
-                                    <button wire:click="cloneRoute({{ $route->id }})"
-                                            class="flex-1 inline-flex items-center justify-center px-2 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all min-w-0"
-                                            title="Copy Route">
-                                        <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                        </svg>
-                                        <span class="hidden sm:inline truncate">Copy</span>
-                                        <span class="sm:hidden">C</span>
-                                    </button>
                                     <a href="{{ route('itinerary.routes.planner') }}?template={{ $route->id }}"
                                        class="flex-1 inline-flex items-center justify-center px-2 py-2 text-xs font-medium text-white bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-sm min-w-0"
                                        title="Customize Route">
@@ -311,6 +302,22 @@
                                         <span class="hidden sm:inline truncate">Customize</span>
                                         <span class="sm:hidden">Edit</span>
                                     </a>
+                                    @php
+                                        $user = Auth::user();
+                                        $canDelete = $user && ($user->hasRole('super_admin') || $route->user_id === $user->id);
+                                    @endphp
+                                    @if($canDelete)
+                                        <button wire:click="deleteRoute({{ $route->id }})"
+                                                wire:confirm="Are you sure you want to delete this route? This action cannot be undone."
+                                                class="flex-1 inline-flex items-center justify-center px-2 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all min-w-0"
+                                                title="Delete Route">
+                                            <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            <span class="hidden sm:inline truncate">Delete</span>
+                                            <span class="sm:hidden">Del</span>
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         </article>

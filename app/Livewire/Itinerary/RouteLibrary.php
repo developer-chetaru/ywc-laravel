@@ -149,6 +149,28 @@ class RouteLibrary extends Component
         $this->redirectRoute('itinerary.routes.show', $clone);
     }
 
+    public function deleteRoute(int $routeId): void
+    {
+        $route = ItineraryRoute::findOrFail($routeId);
+        $user = Auth::user();
+        
+        abort_unless($user, 403);
+
+        // Check if user is super admin or the route creator
+        if (!$user->hasRole('super_admin') && $route->user_id !== $user->id) {
+            abort(403, 'You do not have permission to delete this route.');
+        }
+
+        try {
+            $routeTitle = $route->title;
+            $route->delete();
+            
+            session()->flash('status', "Route '{$routeTitle}' has been deleted successfully.");
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to delete route: ' . $e->getMessage());
+        }
+    }
+
     public function render()
     {
         $user = Auth::user();
