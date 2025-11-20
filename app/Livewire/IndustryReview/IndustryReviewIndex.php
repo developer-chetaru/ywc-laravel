@@ -283,70 +283,53 @@ class IndustryReviewIndex extends Component
             if (is_numeric($identifier)) {
                 $identifier = (int) $identifier;
             }
-            
-            $this->detailLoading = true;
-            $this->loadingItemId = $identifier;
-            $this->loadingItemType = $type;
-            $this->detailType = $type;
-            $this->showDetailModal = true;
-            $this->detailData = null;
-            $this->detailError = null;
 
             if ($type === 'yacht') {
                 // Try to find by ID first (most reliable)
-                $item = Yacht::where('id', $identifier)
-                    ->withCount('reviews')
-                    ->first();
+                $item = Yacht::where('id', $identifier)->first();
                 
                 // If not found by ID, try slug
                 if (!$item) {
-                    $item = Yacht::where('slug', $identifier)
-                        ->withCount('reviews')
-                        ->first();
+                    $item = Yacht::where('slug', $identifier)->first();
                 }
+                
+                if (!$item) {
+                    session()->flash('error', 'Yacht not found.');
+                    return;
+                }
+                
+                // Ensure slug exists
+                $slug = $item->slug ?? (string) $item->id;
+                
+                // Redirect to yacht review show page
+                return $this->redirect(route('yacht-reviews.show', $slug), navigate: true);
             } else {
                 // Try to find by ID first (most reliable)
-                $item = Marina::where('id', $identifier)
-                    ->withCount('reviews')
-                    ->first();
+                $item = Marina::where('id', $identifier)->first();
                 
                 // If not found by ID, try slug
                 if (!$item) {
-                    $item = Marina::where('slug', $identifier)
-                        ->withCount('reviews')
-                        ->first();
+                    $item = Marina::where('slug', $identifier)->first();
                 }
+                
+                if (!$item) {
+                    session()->flash('error', 'Marina not found.');
+                    return;
+                }
+                
+                // Ensure slug exists
+                $slug = $item->slug ?? (string) $item->id;
+                
+                // Redirect to marina review show page
+                return $this->redirect(route('marina-reviews.show', $slug), navigate: true);
             }
-            
-            if (!$item) {
-                throw new \Exception("{$type} not found with identifier: {$identifier}");
-            }
-            
-            $itemArray = $item->toArray();
-            if ($item->cover_image) {
-                $itemArray['cover_image_url'] = asset('storage/' . $item->cover_image);
-            }
-            
-            // Ensure slug exists
-            if (empty($itemArray['slug'])) {
-                $itemArray['slug'] = (string) $item->id;
-            }
-            
-            $this->detailData = $itemArray;
-            
-            // Load reviews
-            $this->loadReviews($type, $item->id);
         } catch (\Exception $e) {
-            $this->detailError = 'Failed to load details: ' . $e->getMessage();
+            session()->flash('error', 'Failed to load details: ' . $e->getMessage());
             \Log::error('View details error: ' . $e->getMessage(), [
                 'type' => $type,
                 'identifier' => $identifier,
                 'trace' => $e->getTraceAsString()
             ]);
-        } finally {
-            $this->detailLoading = false;
-            $this->loadingItemId = null;
-            $this->loadingItemType = null;
         }
     }
 

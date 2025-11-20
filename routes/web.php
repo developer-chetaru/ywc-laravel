@@ -264,6 +264,14 @@ Route::middleware([
     Route::get('/work-log', WorkLogIndex::class)->name('worklog.index');
     Route::get('/industry-review', IndustryReviewIndex::class)->name('industryreview.index');
 
+    // Industry Review Create Pages (must come before show pages to avoid conflicts)
+    Route::get('/industry-review/yachts/{yachtId?}/reviews/create', \App\Livewire\IndustryReview\YachtReviewCreate::class)->name('yacht-reviews.create')->where('yachtId', '[0-9]+');
+    Route::get('/industry-review/marinas/{marinaId?}/reviews/create', \App\Livewire\IndustryReview\MarinaReviewCreate::class)->name('marina-reviews.create')->where('marinaId', '[0-9]+');
+
+    // Industry Review Show Pages
+    Route::get('/industry-review/yachts/{slug}', \App\Livewire\IndustryReview\YachtReviewShow::class)->name('yacht-reviews.show');
+    Route::get('/industry-review/marinas/{slug}', \App\Livewire\IndustryReview\MarinaReviewShow::class)->name('marina-reviews.show');
+
     // Industry Review Management (Admin only - uses API endpoints)
     Route::get('/industry-review/yachts', \App\Livewire\IndustryReview\YachtManage::class)->name('industryreview.yachts.manage');
     Route::get('/industry-review/marinas', \App\Livewire\IndustryReview\MarinaManage::class)->name('industryreview.marinas.manage');

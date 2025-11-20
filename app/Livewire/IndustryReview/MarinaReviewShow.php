@@ -57,6 +57,7 @@ class MarinaReviewShow extends Component
                 'user_id' => $user->id,
                 'reviewable_type' => MarinaReview::class,
                 'reviewable_id' => $review->id,
+                'review_id' => $review->id,
                 'is_helpful' => true,
             ]);
             $review->increment('helpful_count');
@@ -90,6 +91,7 @@ class MarinaReviewShow extends Component
                 'user_id' => $user->id,
                 'reviewable_type' => MarinaReview::class,
                 'reviewable_id' => $review->id,
+                'review_id' => $review->id,
                 'is_helpful' => false,
             ]);
             $review->increment('not_helpful_count');

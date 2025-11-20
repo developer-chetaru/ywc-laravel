@@ -223,6 +223,7 @@ class YachtReviewController extends Controller
                 'user_id' => $user->id,
                 'reviewable_type' => YachtReview::class,
                 'reviewable_id' => $review->id,
+                'review_id' => $review->id,
                 'is_helpful' => $request->is_helpful,
             ]);
             if ($request->is_helpful) {
