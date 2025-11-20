@@ -48,7 +48,7 @@ use Stripe\Checkout\Session as CheckoutSession;
 
 
 Route::get('/', function () {
-    return redirect()->to('https://console-ywc.nativeappdev.com/login');
+    return redirect()->to('/login');
 });
 
 Route::post('/register', [RegisteredUserController::class, 'store'])->name('register');
