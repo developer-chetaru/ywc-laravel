@@ -401,7 +401,12 @@ class AuthController extends Controller
         // 4️⃣ Get user's role
         $role = $user->roles->pluck('name')->first();
 
-        // 5️⃣ Response with Token
+        // 5️⃣ Check if profile is completed (first_name, last_name, and email are all filled)
+        $isProfileCompleted = !empty($user->first_name) && 
+                              !empty($user->last_name) && 
+                              !empty($user->email);
+
+        // 6️⃣ Response with Token
         return response()->json([
             'status'  => true,
             'message' => 'Login successful',
@@ -415,7 +420,8 @@ class AuthController extends Controller
                 'email'       => $user->email,
                 'role'        => $role,
                 'profile_url' => $user->profile_url,
-                'qrcode'      => $user->qrcode
+                'qrcode'      => $user->qrcode,
+                'is_profile_completed' => $isProfileCompleted
             ]
         ], 200);
     }

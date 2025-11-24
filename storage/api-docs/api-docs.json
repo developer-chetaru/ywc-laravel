@@ -345,6 +345,11 @@
                                                 "qrcode": {
                                                     "type": "string",
                                                     "example": "/storage/qrcodes/user_1_abc123.png"
+                                                },
+                                                "is_profile_completed": {
+                                                    "type": "boolean",
+                                                    "description": "Indicates if user profile is completed (first_name, last_name, and email are all filled)",
+                                                    "example": true
                                                 }
                                             },
                                             "type": "object"
