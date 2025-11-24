@@ -1027,7 +1027,7 @@ class RouteController extends Controller
      */
     public function refreshWeather(ItineraryRoute $route, WeatherService $weatherService): JsonResponse
     {
-        Gate::authorize('update', $route);
+        Gate::authorize('view', $route);
 
         $route->loadMissing('stops');
         $weatherService->syncRouteWeather($route);
