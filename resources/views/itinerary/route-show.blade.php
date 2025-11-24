@@ -331,13 +331,9 @@
                 </div>
 
                 {{-- Additional Sections --}}
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                        @livewire('itinerary.route-weather', ['route' => $route], key('weather-'.$route->id))
-                    </div>
-                    <div>
-                        @livewire('itinerary.route-exports', ['route' => $route], key('exports-'.$route->id))
-                    </div>
+                <div class="space-y-6">
+                    @livewire('itinerary.route-weather', ['route' => $route], key('weather-'.$route->id))
+                    @livewire('itinerary.route-exports', ['route' => $route], key('exports-'.$route->id))
                 </div>
 
                 @livewire('itinerary.route-crew-manager', ['route' => $route], key('crew-'.$route->id))

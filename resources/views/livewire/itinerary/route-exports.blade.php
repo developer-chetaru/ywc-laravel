@@ -1,4 +1,4 @@
-<div class="space-y-4">
+<div class="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
     <h3 class="text-lg font-semibold text-gray-800">Export Route</h3>
     <p class="text-sm text-gray-600">Download this route in various formats for offline use or sharing.</p>
 

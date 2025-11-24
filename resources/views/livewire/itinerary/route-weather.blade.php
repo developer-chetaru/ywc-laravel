@@ -1,4 +1,4 @@
-<div class="space-y-4">
+<div class="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
     <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-800">Weather Forecast</h3>
         <button
