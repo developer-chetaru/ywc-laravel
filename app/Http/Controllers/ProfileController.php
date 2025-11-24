@@ -94,6 +94,7 @@ class ProfileController extends Controller
                 'marital_status' => $user->marital_status,
                 'birth_country' => $user->birth_country,
                 'birth_province' => $user->birth_province,
+                'user_id'=>$user ->id,
                 'image' => $user->profile_photo_path ? url('uploads/profile/' . $user->profile_photo_path) : null,
             ]);
         } catch (\Exception $e) {
