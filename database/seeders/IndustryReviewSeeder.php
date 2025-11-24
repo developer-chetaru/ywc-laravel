@@ -30,18 +30,19 @@ class IndustryReviewSeeder extends Seeder
         
         // Reset rating statistics for all yachts
         DB::table('yachts')->update([
-            'average_rating' => null,
-            'total_reviews' => 0,
-            'recommendation_percentage' => null,
+            'rating_avg' => 0,
+            'rating_count' => 0,
+            'reviews_count' => 0,
+            'recommendation_percentage' => 0,
             'updated_at' => now(),
         ]);
         $this->command->info('Reset yacht rating statistics.');
         
         // Reset rating statistics for all marinas
         DB::table('marinas')->update([
-            'average_rating' => null,
-            'total_reviews' => 0,
-            'recommendation_percentage' => null,
+            'rating_avg' => 0,
+            'rating_count' => 0,
+            'reviews_count' => 0,
             'updated_at' => now(),
         ]);
         $this->command->info('Reset marina rating statistics.');
