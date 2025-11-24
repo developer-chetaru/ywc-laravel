@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 use App\Notifications\CustomResetPasswordNotification;
 use Illuminate\Http\JsonResponse;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -496,15 +497,57 @@ class AuthController extends Controller
      *     )
      * )
      */
-    public function logout()
+    public function logout(Request $request)
     {
         try {
-            auth('api')->logout();
+            $token = $request->bearerToken();
+            
+            if (!$token) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Token not provided'
+                ], 401);
+            }
 
-            return response()->json([
-                'status' => true,
-                'message' => 'User logged out successfully'
-            ], 200);
+            // Check if it's a Sanctum token (contains '|') or JWT token
+            if (strpos($token, '|') !== false) {
+                // Sanctum token format: "token_id|hash"
+                // We need to find and delete this token
+                [$tokenId, $tokenHash] = explode('|', $token, 2);
+                
+                // Get the token from database
+                $personalAccessToken = PersonalAccessToken::findToken($token);
+                
+                if ($personalAccessToken) {
+                    // Delete the specific token
+                    $personalAccessToken->delete();
+                    
+                    return response()->json([
+                        'status' => true,
+                        'message' => 'User logged out successfully'
+                    ], 200);
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid token'
+                    ], 401);
+                }
+            } else {
+                // JWT token - invalidate it
+                try {
+                    JWTAuth::setToken($token)->invalidate();
+                    
+                    return response()->json([
+                        'status' => true,
+                        'message' => 'User logged out successfully'
+                    ], 200);
+                } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid token'
+                    ], 401);
+                }
+            }
 
         } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
             return response()->json([
