@@ -600,6 +600,194 @@
                 }
             }
         },
+        "/api/profile": {
+            "get": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get authenticated user's profile",
+                "operationId": "getUserProfile",
+                "responses": {
+                    "200": {
+                        "description": "User profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "first_name": {
+                                            "type": "string",
+                                            "example": "John"
+                                        },
+                                        "last_name": {
+                                            "type": "string",
+                                            "example": "Doe"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email",
+                                            "example": "john.doe@example.com"
+                                        },
+                                        "dob": {
+                                            "type": "string",
+                                            "example": "01/01/1990",
+                                            "description": "Date of birth in d/m/Y format"
+                                        },
+                                        "phone": {
+                                            "type": "string",
+                                            "example": "+1234567890"
+                                        },
+                                        "gender": {
+                                            "type": "string",
+                                            "example": "male"
+                                        },
+                                        "nationality": {
+                                            "type": "string",
+                                            "example": "British"
+                                        },
+                                        "marital_status": {
+                                            "type": "string",
+                                            "example": "single"
+                                        },
+                                        "birth_country": {
+                                            "type": "string",
+                                            "example": "United Kingdom"
+                                        },
+                                        "birth_province": {
+                                            "type": "string",
+                                            "example": "London"
+                                        },
+                                        "user_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "image": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "nullable": true,
+                                            "example": "https://example.com/uploads/profile/user_1.jpg"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Failed to fetch user profile"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update authenticated user's profile",
+                "operationId": "updateUserProfile",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john.doe@example.com"
+                                    },
+                                    "dob": {
+                                        "type": "string",
+                                        "example": "01/01/1990",
+                                        "description": "Date of birth in d/m/Y format"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+1234567890"
+                                    },
+                                    "gender": {
+                                        "type": "string",
+                                        "example": "male"
+                                    },
+                                    "nationality": {
+                                        "type": "string",
+                                        "example": "British"
+                                    },
+                                    "marital_status": {
+                                        "type": "string",
+                                        "example": "single"
+                                    },
+                                    "birth_country": {
+                                        "type": "string",
+                                        "example": "United Kingdom"
+                                    },
+                                    "birth_province": {
+                                        "type": "string",
+                                        "example": "London"
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Profile photo image file"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Update failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/itinerary/routes/{route}/comments": {
             "get": {
                 "tags": [
@@ -6486,6 +6674,10 @@
         {
             "name": "Work Log",
             "description": "Work & Rest Hours Log endpoints for MLC 2006 compliance tracking"
+        },
+        {
+            "name": "Profile",
+            "description": "User profile management endpoints"
         }
     ]
 }
