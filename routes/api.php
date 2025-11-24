@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\RallyController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\CrewProfileController;
 use App\Http\Controllers\Api\MasterDataController;
+use App\Http\Controllers\Api\WorkLogController;
 
 // Master Data API - Public endpoints for mobile developers
 Route::get('/master-data', [MasterDataController::class, 'index']);
@@ -180,6 +181,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/conversation/{user}', [MessageController::class, 'getConversation']);
         Route::post('/{user}/read', [MessageController::class, 'markAsRead']);
         Route::get('/unread-count', [MessageController::class, 'getUnreadCount']);
+    });
+
+    // Work Log
+    Route::prefix('work-logs')->group(function () {
+        Route::get('/', [WorkLogController::class, 'index']);
+        Route::post('/', [WorkLogController::class, 'store']);
+        Route::get('/statistics', [WorkLogController::class, 'statistics']);
+        Route::get('/compliance', [WorkLogController::class, 'compliance']);
+        Route::get('/{id}', [WorkLogController::class, 'show']);
+        Route::put('/{id}', [WorkLogController::class, 'update']);
+        Route::delete('/{id}', [WorkLogController::class, 'destroy']);
+        Route::post('/{id}/rest-periods', [WorkLogController::class, 'addRestPeriod']);
+        Route::put('/{id}/rest-periods/{restPeriodId}', [WorkLogController::class, 'updateRestPeriod']);
+        Route::delete('/{id}/rest-periods/{restPeriodId}', [WorkLogController::class, 'deleteRestPeriod']);
     });
 });
 
