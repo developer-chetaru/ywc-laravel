@@ -248,14 +248,15 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             </li>
             @endhasanyrole
 
-            @role($nonAdminRoles)
+            @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             <li>
-                <div class="flex items-center space-x-3 px-4 py-3 rounded-lg transition opacity-50 cursor-not-allowed">
-                    <img src="/images/brain-white.svg" alt="Mental Health Support" class="w-5 h-5">
-                    <span x-show="isOpen" class="text-base font-medium">Mental Health Support</span>
-                </div>
+                <a href="{{ route('mental-health') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                    {{ request()->is('mental-health*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                    <img src="{{ request()->is('mental-health*') ? '/images/brain-02.svg' : '/images/brain-white.svg' }}" alt="Mental Health Support" class="w-5 h-5">
+                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('mental-health*') ? 'text-black' : 'text-white' }}">Mental Health Support</span>
+                </a>
             </li>
-            @endrole
+            @endhasanyrole
 
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
@@ -271,23 +272,25 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             </li>
             @endhasanyrole
 
-            @role($nonAdminRoles)
+            @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             <li>
-                <div class="flex items-center space-x-3 px-4 py-3 rounded-lg transition opacity-50 cursor-not-allowed">
-                    <img src="/images/save-money-dollar-white.svg" alt="Financial Future Planning" class="w-5 h-5">
-                    <span x-show="isOpen" class="text-base font-medium">Financial Future Planning</span>
-                </div>
+                <a href="{{ route('financial-future-planning') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                    {{ request()->is('financial-future-planning*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                    <img src="{{ request()->is('financial-future-planning*') ? '/images/save-money-dollar.svg' : '/images/save-money-dollar-white.svg' }}" alt="Financial Future Planning" class="w-5 h-5">
+                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('financial-future-planning*') ? 'text-black' : 'text-white' }}">Financial Future Planning</span>
+                </a>
             </li>
-            @endrole
+            @endhasanyrole
 
-            @role($nonAdminRoles)
+            @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             <li>
-                <div class="flex items-center space-x-3 px-4 py-3 rounded-lg transition opacity-50 cursor-not-allowed">
-                    <img src="/images/money-bag-white.svg" alt="Pension & Investment Advice" class="w-5 h-5">
-                    <span x-show="isOpen" class="text-base font-medium">Pension & Investment Advice</span>
-                </div>
+                <a href="{{ route('pension-investment-advice') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                    {{ request()->is('pension-investment-advice*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                    <img src="{{ request()->is('pension-investment-advice*') ? '/images/money-bag-ywc.svg' : '/images/money-bag-white.svg' }}" alt="Pension & Investment Advice" class="w-5 h-5">
+                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('pension-investment-advice*') ? 'text-black' : 'text-white' }}">Pension & Investment Advice</span>
+                </a>
             </li>
-            @endrole
+            @endhasanyrole
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             {{-- INDUSTRY REVIEW SYSTEM --}}

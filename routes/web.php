@@ -107,7 +107,15 @@ Route::middleware([
   
     Route::get('/forums', [ManageDocumentController::class, 'forums'])->name('forum');
     Route::get('/documents', [ManageDocumentController::class, 'documents'])->name('documents');
-    Route::get('/mental-health', [ManageDocumentController::class, 'mentalHealth'])->name('mental-health');
+    Route::get('/mental-health', function () {
+        return view('coming-soon', ['title' => 'Mental Health Support']);
+    })->name('mental-health');
+    Route::get('/financial-future-planning', function () {
+        return view('coming-soon', ['title' => 'Financial Future Planning']);
+    })->name('financial-future-planning');
+    Route::get('/pension-investment-advice', function () {
+        return view('coming-soon', ['title' => 'Pension & Investment Advice']);
+    })->name('pension-investment-advice');
     Route::get('/training', [ManageDocumentController::class, 'training'])->name('training');
     Route::get('/weather', [ManageDocumentController::class, 'weather'])->name('weather');
     Route::get('/review', [ManageDocumentController::class, 'review'])->name('review');
