@@ -430,7 +430,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Select Yacht</label>
-                                    <select wire:model="yachtId" wire:change="updatedYachtId"
+                                    <select wire:model.live="yachtId"
                                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                         <option value="">-- Select Yacht --</option>
                                         @foreach($yachts as $yacht)
