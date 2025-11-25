@@ -9,22 +9,32 @@
                 @else
 					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         @php
+                            // Dashboard cards: defaultImage shows on gray bg (needs colored icon), hoverImage shows on blue bg (needs white icon)
                             $dashboardItems = [
-                                ['label' => 'Career History', 'defaultImage' => '/images/manage-document-black.svg', 'hoverImage' => '/images/manage-dashbaord.svg', 'url' => '/career-history'],
+                                ['label' => 'Career History', 'defaultImage' => '/images/career.svg', 'hoverImage' => '/images/manage-dashbaord.svg', 'url' => route('career-history', auth()->id())],
                                 ['label' => 'Legal Support', 'defaultImage' => '/images/justice-scale-01.svg', 'hoverImage' => '/images/justice-scale-white.svg', 'url' => route('legal-support.index')],
-                                ['label' => 'Mentor Health Support', 'defaultImage' => '/images/brain-02.svg', 'hoverImage' => '/images/brain-white.svg', 'url' => '/documents', 'disabled' => true],
+                                ['label' => 'Training & Resources', 'defaultImage' => '/images/training-and-resources-active.svg', 'hoverImage' => '/images/training-and-resources-default.svg', 'url' => route('training.resources')],
+                                ['label' => 'Mental Health Support', 'defaultImage' => '/images/brain-02.svg', 'hoverImage' => '/images/brain-white.svg', 'url' => route('documents')],
                                 ['label' => 'Department Forums', 'defaultImage' => '/images/message-multiple-01 (1).svg', 'hoverImage' => '/images/message-multiple-white.svg', 'url' => '/forum'],
-                                ['label' => 'Financial Future Planning', 'defaultImage' => '/images/save-money-dollar.svg', 'hoverImage' => '/images/save-money-dollar-white.svg', 'url' => '/training', 'disabled' => true],
-                                ['label' => 'Pension & Investment Advice', 'defaultImage' => '/images/money-bag-ywc.svg', 'hoverImage' => '/images/money-bag-white.svg', 'url' => '/weather', 'disabled' => true],
-                                ['label' => 'Industry Review System', 'defaultImage' => '/images/Review (2).svg', 'hoverImage' => '/images/Review-white.svg', 'url' => '/review', 'disabled' => true],
-                                ['label' => 'Itinerary System', 'defaultImage' => '/images/itinerarySystem.svg', 'hoverImage' => '/images/itinerarySystemWhite.svg', 'url' => '/itinerary-system', 'disabled' => true],
+                                ['label' => 'Financial Future Planning', 'defaultImage' => '/images/save-money-dollar.svg', 'hoverImage' => '/images/save-money-dollar-white.svg', 'url' => route('training')],
+                                ['label' => 'Pension & Investment Advice', 'defaultImage' => '/images/money-bag-ywc.svg', 'hoverImage' => '/images/money-bag-white.svg', 'url' => route('training')],
+                                ['label' => 'Industry Review System', 'defaultImage' => '/images/industry-review-active.svg', 'hoverImage' => '/images/industry-review-default.svg', 'url' => route('industryreview.index')],
+                                ['label' => 'Itinerary System', 'defaultImage' => '/images/itinerarySystem.svg', 'hoverImage' => '/images/itinerarySystemWhite.svg', 'url' => route('itinerary.routes.index')],
+                                ['label' => 'Market Place', 'defaultImage' => '/images/market-place-active-icon.svg', 'hoverImage' => '/images/market-place-default-icon.svg', 'url' => route('marketplace.index')],
+                                ['label' => 'Work Log', 'defaultImage' => '/images/work-log-active.svg', 'hoverImage' => '/images/work-log-defult.svg', 'url' => route('worklog.index')],
+                                ['label' => 'Crew Discovery', 'defaultImage' => '/images/discover-circle.svg', 'hoverImage' => '/images/discover-circle-white.svg', 'url' => route('crew.discovery')],
                             ];
                         @endphp
 
                         @foreach ($dashboardItems as $item)
                             @php
                                 $isDisabled = isset($item['disabled']) && $item['disabled'];
-                                $isActive = request()->is(ltrim($item['url'], '/'));
+                                // Check if current URL matches the item URL
+                                $itemUrl = parse_url($item['url'], PHP_URL_PATH);
+                                $currentPath = request()->path();
+                                $isActive = $itemUrl === '/' . $currentPath || 
+                                           request()->is(ltrim($itemUrl, '/')) ||
+                                           request()->is(ltrim($itemUrl, '/') . '*');
                             @endphp
 
                             @if($isDisabled)
