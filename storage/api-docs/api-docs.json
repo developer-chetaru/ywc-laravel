@@ -665,6 +665,125 @@
                                             "format": "uri",
                                             "nullable": true,
                                             "example": "https://example.com/uploads/profile/user_1.jpg"
+                                        },
+                                        "years_experience": {
+                                            "type": "integer",
+                                            "nullable": true,
+                                            "example": 15,
+                                            "description": "Years of experience in yachting"
+                                        },
+                                        "current_yacht": {
+                                            "type": "string",
+                                            "nullable": true,
+                                            "example": "Ocean Dream",
+                                            "description": "Current yacht name"
+                                        },
+                                        "current_yacht_start_date": {
+                                            "type": "string",
+                                            "nullable": true,
+                                            "example": "01/15/2020",
+                                            "description": "Start date at current yacht in m/d/Y format"
+                                        },
+                                        "sea_service_time_months": {
+                                            "type": "integer",
+                                            "nullable": true,
+                                            "example": 120,
+                                            "description": "Total sea service time in months"
+                                        },
+                                        "availability_status": {
+                                            "type": "string",
+                                            "nullable": true,
+                                            "enum": ["available", "busy", "looking_for_work", "on_leave"],
+                                            "example": "available",
+                                            "description": "Current availability status"
+                                        },
+                                        "availability_message": {
+                                            "type": "string",
+                                            "nullable": true,
+                                            "example": "Available for new opportunities",
+                                            "description": "Custom availability message"
+                                        },
+                                        "looking_to_meet": {
+                                            "type": "boolean",
+                                            "example": false,
+                                            "description": "Looking to meet other crew members"
+                                        },
+                                        "looking_for_work": {
+                                            "type": "boolean",
+                                            "example": true,
+                                            "description": "Looking for work opportunities"
+                                        },
+                                        "languages": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "example": ["English", "French", "Spanish"],
+                                            "description": "List of languages spoken"
+                                        },
+                                        "certifications": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "example": ["STCW", "MCA Y4", "RYA Yachtmaster"],
+                                            "description": "List of certifications"
+                                        },
+                                        "specializations": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "example": ["Navigation", "Engineering", "Deck Management"],
+                                            "description": "List of specializations"
+                                        },
+                                        "interests": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "example": ["Sailing", "Diving", "Photography"],
+                                            "description": "List of interests"
+                                        },
+                                        "previous_yachts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "yacht_id": {
+                                                        "type": "integer",
+                                                        "nullable": true,
+                                                        "example": 5,
+                                                        "description": "Yacht ID from yacht management system"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Sea Breeze",
+                                                        "description": "Yacht name"
+                                                    },
+                                                    "start_date": {
+                                                        "type": "string",
+                                                        "nullable": true,
+                                                        "example": "01/01/2018",
+                                                        "description": "Start date in m/d/Y format"
+                                                    },
+                                                    "end_date": {
+                                                        "type": "string",
+                                                        "nullable": true,
+                                                        "example": "12/31/2019",
+                                                        "description": "End date in m/d/Y format"
+                                                    }
+                                                }
+                                            },
+                                            "example": [
+                                                {
+                                                    "yacht_id": 5,
+                                                    "name": "Sea Breeze",
+                                                    "start_date": "01/01/2018",
+                                                    "end_date": "12/31/2019"
+                                                }
+                                            ],
+                                            "description": "List of previous yachts with dates"
                                         }
                                     },
                                     "type": "object"
@@ -743,6 +862,127 @@
                                         "type": "string",
                                         "format": "binary",
                                         "description": "Profile photo image file"
+                                    },
+                                    "years_experience": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 100,
+                                        "example": 15,
+                                        "description": "Years of experience in yachting"
+                                    },
+                                    "current_yacht": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Ocean Dream",
+                                        "description": "Current yacht name"
+                                    },
+                                    "current_yacht_start_date": {
+                                        "type": "string",
+                                        "example": "01/15/2020",
+                                        "description": "Start date at current yacht in m/d/Y format"
+                                    },
+                                    "sea_service_time_months": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "example": 120,
+                                        "description": "Total sea service time in months"
+                                    },
+                                    "availability_status": {
+                                        "type": "string",
+                                        "enum": ["available", "busy", "looking_for_work", "on_leave"],
+                                        "example": "available",
+                                        "description": "Current availability status"
+                                    },
+                                    "availability_message": {
+                                        "type": "string",
+                                        "maxLength": 500,
+                                        "example": "Available for new opportunities",
+                                        "description": "Custom availability message"
+                                    },
+                                    "looking_to_meet": {
+                                        "type": "boolean",
+                                        "example": false,
+                                        "description": "Looking to meet other crew members"
+                                    },
+                                    "looking_for_work": {
+                                        "type": "boolean",
+                                        "example": true,
+                                        "description": "Looking for work opportunities"
+                                    },
+                                    "languages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 255
+                                        },
+                                        "example": ["English", "French", "Spanish"],
+                                        "description": "List of languages spoken"
+                                    },
+                                    "certifications": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 255
+                                        },
+                                        "example": ["STCW", "MCA Y4", "RYA Yachtmaster"],
+                                        "description": "List of certifications"
+                                    },
+                                    "specializations": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 255
+                                        },
+                                        "example": ["Navigation", "Engineering", "Deck Management"],
+                                        "description": "List of specializations"
+                                    },
+                                    "interests": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 255
+                                        },
+                                        "example": ["Sailing", "Diving", "Photography"],
+                                        "description": "List of interests"
+                                    },
+                                    "previous_yachts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "required": ["name"],
+                                            "properties": {
+                                                "yacht_id": {
+                                                    "type": "integer",
+                                                    "example": 5,
+                                                    "description": "Yacht ID from yacht management system (optional)"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "maxLength": 255,
+                                                    "example": "Sea Breeze",
+                                                    "description": "Yacht name (required)"
+                                                },
+                                                "start_date": {
+                                                    "type": "string",
+                                                    "example": "01/01/2018",
+                                                    "description": "Start date in m/d/Y format"
+                                                },
+                                                "end_date": {
+                                                    "type": "string",
+                                                    "example": "12/31/2019",
+                                                    "description": "End date in m/d/Y format (must be after start_date)"
+                                                }
+                                            }
+                                        },
+                                        "example": [
+                                            {
+                                                "yacht_id": 5,
+                                                "name": "Sea Breeze",
+                                                "start_date": "01/01/2018",
+                                                "end_date": "12/31/2019"
+                                            }
+                                        ],
+                                        "description": "List of previous yachts with dates"
                                     }
                                 },
                                 "type": "object"
