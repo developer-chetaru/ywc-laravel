@@ -39,4 +39,8 @@ return [
         'api_key' => env('OPENWEATHER_API_KEY', 'b21f6d5394907c41d84972c8fdb51999'),
     ],
 
+    'google_analytics' => [
+        'id' => env('GOOGLE_ANALYTICS_ID'),
+    ],
+
 ];

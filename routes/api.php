@@ -91,6 +91,9 @@ Route::post('/signup', [AuthController::class, 'signup']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
+// Waitlist (public endpoint)
+Route::post('/waitlist/join', [\App\Http\Controllers\LandingPageController::class, 'joinWaitlist']);
+
 require base_path('vendor/riari/laravel-forum/routes/api.php');
 
 Route::middleware('auth:sanctum')->group(function () {

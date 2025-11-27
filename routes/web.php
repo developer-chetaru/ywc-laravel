@@ -34,6 +34,8 @@ use App\Http\Controllers\CocCheckerController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\QRCodeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\WaitlistAdminController;
 use App\Livewire\TrainingResources;
 
 use App\Models\Order as InternalOrder;
@@ -47,11 +49,17 @@ use Stripe\Checkout\Session as CheckoutSession;
 
 
 
-Route::get('/', function () {
-    return redirect()->to('/login');
-});
+Route::get('/', [LandingPageController::class, 'index'])->name('landing');
+Route::post('/waitlist/join', [LandingPageController::class, 'joinWaitlist'])->name('waitlist.join');
 
 Route::post('/register', [RegisteredUserController::class, 'store'])->name('register');
+
+
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'role:super_admin', 'setlocale'])
+    ->group(function () {
+        Route::get('/admin/waitlist', [WaitlistAdminController::class, 'index'])->name('admin.waitlist');
+        Route::patch('/admin/waitlist/{waitlist}', [WaitlistAdminController::class, 'update'])->name('admin.waitlist.update');
+    });
 
 
 Route::get('/test-reset-mail', function () {

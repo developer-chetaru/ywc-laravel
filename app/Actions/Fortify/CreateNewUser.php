@@ -45,6 +45,16 @@ class CreateNewUser implements CreatesNewUsers
 
         $user->assignRole($input['role']);
 
+        // Auto-subscribe to main community thread
+        if (config('forum.main_thread_id')) {
+            try {
+                $subscriptionService = app(\App\Services\Forum\ForumSubscriptionService::class);
+                $subscriptionService->subscribeNewUser($user);
+            } catch (\Exception $e) {
+                // Log error but don't fail registration
+                \Log::warning("Failed to auto-subscribe user to main thread: " . $e->getMessage());
+            }
+        }
         
         $expires = Carbon::now()->addMinutes(1440);
         $verificationUrl = URL::temporarySignedRoute('user.verify', $expires, ['id' => $user->id]);
