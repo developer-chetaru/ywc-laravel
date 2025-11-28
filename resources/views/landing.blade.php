@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="YachtCrew - The premier platform for yacht crew networking, career management, and industry insights. Join our waitlist today!">
+    <meta name="description" content="Yacht Workers Council - The premier platform for yacht crew networking, career management, and industry insights. Join our waitlist today!">
     
-    <title>YachtCrew - Connect, Grow, Succeed | Join Our Waitlist</title>
+    <title>Yacht Workers Council - Connect, Grow, Succeed | Join Our Waitlist</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -363,8 +363,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <img src="{{ asset('images/ywc-logo.svg') }}" alt="YachtCrew Logo" class="h-10 w-auto">
-                    <span class="ml-3 text-xl font-bold text-[#0053FF]">YachtCrew</span>
+                    <img src="{{ asset('images/ywc-logo.svg') }}" alt="Yacht Workers Council Logo" class="h-10 w-auto">
+                    <span class="ml-3 text-xl font-bold text-[#0053FF]">Yacht Workers Council</span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <a href="{{ route('login') }}" class="text-gray-700 hover:text-[#0053FF] px-4 py-2 rounded-md text-sm font-medium transition">
@@ -536,7 +536,7 @@
                     <form method="POST" action="{{ route('waitlist.join') }}" class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100" id="waitlist-form">
                         @csrf
                         <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Join Our Waitlist</h2>
-                        <p class="text-center text-gray-600 mb-6">Be among the first to access YachtCrew when we launch</p>
+                        <p class="text-center text-gray-600 mb-6">Be among the first to access Yacht Workers Council when we launch</p>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                             <div>
@@ -579,7 +579,7 @@
                         </button>
 
                         <p class="text-sm text-gray-500 text-center mt-4">
-                            By joining, you agree to receive updates about YachtCrew. We respect your privacy.
+                            By joining, you agree to receive updates about Yacht Workers Council. We respect your privacy.
                         </p>
                     </form>
                 </div>
@@ -688,7 +688,7 @@
             <div class="text-center mb-12">
                 <p class="text-xs uppercase tracking-[0.45em] text-blue-300 mb-3">Launch Journey</p>
                 <h2 class="text-3xl sm:text-4xl font-bold">From Waitlist to Crew Ready</h2>
-                <p class="text-base text-slate-300 max-w-2xl mx-auto mt-4">We’re inviting the first 1,000 crew to shape the future of yacht careers. Here’s how you’ll experience YachtCrew.</p>
+                <p class="text-base text-slate-300 max-w-2xl mx-auto mt-4">We’re inviting the first 1,000 crew to shape the future of yacht careers. Here’s how you’ll experience Yacht Workers Council.</p>
             </div>
             <div class="timeline">
                 <div class="timeline-item">
@@ -736,8 +736,8 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
                     <div class="flex items-center mb-4">
-                        <img src="{{ asset('images/ywc-logo.svg') }}" alt="YachtCrew Logo" class="h-8 w-auto">
-                        <span class="ml-2 text-xl font-bold">YachtCrew</span>
+                        <img src="{{ asset('images/ywc-logo.svg') }}" alt="Yacht Workers Council Logo" class="h-8 w-auto">
+                        <span class="ml-2 text-xl font-bold">Yacht Workers Council</span>
                     </div>
                     <p class="text-gray-400">Built for crew, by crew. The premier platform for yacht crew professionals.</p>
                 </div>
@@ -754,7 +754,7 @@
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; {{ date('Y') }} YachtCrew. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} Yacht Workers Council. All rights reserved.</p>
             </div>
         </div>
     </footer>
