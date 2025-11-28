@@ -43,4 +43,8 @@ return [
         'id' => env('GOOGLE_ANALYTICS_ID'),
     ],
 
+    'google_maps' => [
+        'api_key' => env('GOOGLE_MAPS_API_KEY'),
+    ],
+
 ];

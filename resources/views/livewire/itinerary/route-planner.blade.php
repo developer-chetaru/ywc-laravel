@@ -137,13 +137,17 @@
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div>
+                                    <div class="relative">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Stop Name <span class="text-red-500">*</span>
                                         </label>
-                                        <input type="text" wire:model.defer="stops.{{ $index }}.name" 
+                                        <input type="text" 
+                                            id="stop-name-{{ $index }}"
+                                            wire:model.defer="stops.{{ $index }}.name" 
                                             placeholder="e.g., Mumbai Port, Goa Marina"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 placeholder:text-gray-400">
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 placeholder:text-gray-400 stop-name-autocomplete"
+                                            autocomplete="off">
+                                        <div id="autocomplete-dropdown-{{ $index }}" class="autocomplete-dropdown hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"></div>
                                         @error("stops.$index.name") <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                     </div>
                                     <div>
@@ -157,9 +161,13 @@
                                             Latitude
                                             <span class="text-xs font-normal text-gray-500 ml-1">(-90 to 90)</span>
                                         </label>
-                                        <input type="text" wire:model.live="stops.{{ $index }}.latitude" 
+                                        <input type="text" 
+                                            id="stop-latitude-{{ $index }}"
+                                            wire:model.live="stops.{{ $index }}.latitude" 
                                             placeholder="e.g., 19.07598 (Mumbai)"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 placeholder:text-gray-400">
+                                            class="stop-coordinate-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 placeholder:text-gray-400"
+                                            autocomplete="off"
+                                            inputmode="decimal">
                                         <p class="text-xs text-gray-500 mt-1">Examples: Mumbai (19.07598), Goa (15.2993), Monaco (43.7384)</p>
                                         @error("stops.$index.latitude") <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                     </div>
@@ -168,9 +176,13 @@
                                             Longitude
                                             <span class="text-xs font-normal text-gray-500 ml-1">(-180 to 180)</span>
                                         </label>
-                                        <input type="text" wire:model.live="stops.{{ $index }}.longitude" 
+                                        <input type="text" 
+                                            id="stop-longitude-{{ $index }}"
+                                            wire:model.live="stops.{{ $index }}.longitude" 
                                             placeholder="e.g., 72.87766 (Mumbai)"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 placeholder:text-gray-400">
+                                            class="stop-coordinate-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 placeholder:text-gray-400"
+                                            autocomplete="off"
+                                            inputmode="decimal">
                                         <p class="text-xs text-gray-500 mt-1">Examples: Mumbai (72.87766), Goa (74.1240), Monaco (7.4246)</p>
                                         @error("stops.$index.longitude") <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                     </div>
@@ -274,12 +286,300 @@
             height: 100%;
             width: 100%;
         }
+        .autocomplete-dropdown {
+            z-index: 1000;
+        }
+        .autocomplete-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s;
+        }
+        .autocomplete-item:hover,
+        .autocomplete-item.active {
+            background-color: #f3f4f6;
+        }
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+        .autocomplete-item-name {
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+        .autocomplete-item-details {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
     </style>
 @endpush
 
 @push('scripts')
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
     <script>
+        // OpenStreetMap Nominatim Autocomplete (No API key required)
+        (function() {
+            let searchTimeouts = {};
+            let activeDropdown = null;
+            let selectedIndex = -1;
+
+            function initAutocompleteForStop(input, index) {
+                const dropdown = document.getElementById('autocomplete-dropdown-' + index);
+                if (!dropdown) return;
+
+                // Debounce search function
+                function performSearch(query) {
+                    if (query.length < 3) {
+                        dropdown.classList.add('hidden');
+                        return;
+                    }
+
+                    // Clear previous timeout
+                    if (searchTimeouts[index]) {
+                        clearTimeout(searchTimeouts[index]);
+                    }
+
+                    // Debounce the search
+                    searchTimeouts[index] = setTimeout(() => {
+                        searchNominatim(query, index, dropdown);
+                    }, 300);
+                }
+
+                // Handle input events
+                input.addEventListener('input', function(e) {
+                    const query = e.target.value.trim();
+                    selectedIndex = -1;
+                    performSearch(query);
+                });
+
+                // Handle focus
+                input.addEventListener('focus', function(e) {
+                    const query = e.target.value.trim();
+                    if (query.length >= 3) {
+                        performSearch(query);
+                    }
+                });
+
+                // Handle keyboard navigation
+                input.addEventListener('keydown', function(e) {
+                    const items = dropdown.querySelectorAll('.autocomplete-item');
+                    
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                        updateSelection(items);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        selectedIndex = Math.max(selectedIndex - 1, -1);
+                        updateSelection(items);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (selectedIndex >= 0 && items[selectedIndex]) {
+                            items[selectedIndex].click();
+                        }
+                    } else if (e.key === 'Escape') {
+                        dropdown.classList.add('hidden');
+                    }
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                        dropdown.classList.add('hidden');
+                    }
+                });
+            }
+
+            function updateSelection(items) {
+                items.forEach((item, index) => {
+                    if (index === selectedIndex) {
+                        item.classList.add('active');
+                        item.scrollIntoView({ block: 'nearest' });
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
+            async function searchNominatim(query, index, dropdown) {
+                try {
+                    // Use Nominatim API (free, no key required)
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`;
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'User-Agent': 'YachtWorkersCouncil/1.0'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Search failed');
+                    }
+
+                    const results = await response.json();
+                    displayResults(results, index, dropdown);
+                } catch (error) {
+                    console.error('Geocoding error:', error);
+                    dropdown.classList.add('hidden');
+                }
+            }
+
+            function displayResults(results, index, dropdown) {
+                dropdown.innerHTML = '';
+
+                if (results.length === 0) {
+                    dropdown.innerHTML = '<div class="autocomplete-item"><div class="autocomplete-item-details">No results found</div></div>';
+                    dropdown.classList.remove('hidden');
+                    return;
+                }
+
+                results.forEach((result, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.dataset.lat = result.lat;
+                    item.dataset.lng = result.lon;
+                    item.dataset.name = result.display_name;
+
+                    const name = result.display_name.split(',')[0];
+                    const details = result.display_name.split(',').slice(1, 3).join(',').trim();
+
+                    item.innerHTML = `
+                        <div class="autocomplete-item-name">${name}</div>
+                        <div class="autocomplete-item-details">${details || result.display_name}</div>
+                    `;
+
+                    item.addEventListener('click', function() {
+                        selectPlace(result, index);
+                    });
+
+                    dropdown.appendChild(item);
+                });
+
+                dropdown.classList.remove('hidden');
+            }
+
+            function selectPlace(place, index) {
+                const input = document.getElementById('stop-name-' + index);
+                const dropdown = document.getElementById('autocomplete-dropdown-' + index);
+                const latInput = document.getElementById('stop-latitude-' + index);
+                const lngInput = document.getElementById('stop-longitude-' + index);
+                const labelInput = document.querySelector(`input[wire\\:model*="stops.${index}.location_label"]`);
+
+                if (!input || !latInput || !lngInput) return;
+
+                // Ensure fields are editable (remove readonly if any)
+                latInput.removeAttribute('readonly');
+                lngInput.removeAttribute('readonly');
+                latInput.removeAttribute('disabled');
+                lngInput.removeAttribute('disabled');
+
+                // Update stop name
+                input.value = place.display_name;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+
+                // Update latitude and longitude
+                const lat = parseFloat(place.lat).toFixed(6);
+                const lng = parseFloat(place.lon).toFixed(6);
+
+                latInput.value = lat;
+                latInput.dispatchEvent(new Event('input', { bubbles: true }));
+                latInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+                lngInput.value = lng;
+                lngInput.dispatchEvent(new Event('input', { bubbles: true }));
+                lngInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+                // Optionally update location label
+                if (labelInput && !labelInput.value) {
+                    const type = place.type || place.class || '';
+                    if (type) {
+                        labelInput.value = type.charAt(0).toUpperCase() + type.slice(1);
+                        labelInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        labelInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+
+                // Hide dropdown
+                dropdown.classList.add('hidden');
+                selectedIndex = -1;
+
+                // Ensure fields remain editable - trigger Livewire update
+                if (typeof Livewire !== 'undefined') {
+                    // Small delay to ensure Livewire processes the update
+                    setTimeout(() => {
+                        latInput.focus();
+                        latInput.blur();
+                        lngInput.focus();
+                        lngInput.blur();
+                    }, 100);
+                }
+            }
+
+            // Ensure coordinate fields are always editable
+            function ensureCoordinateFieldsEditable() {
+                document.querySelectorAll('.stop-coordinate-input').forEach(function(input) {
+                    // Remove any readonly or disabled attributes
+                    input.removeAttribute('readonly');
+                    input.removeAttribute('disabled');
+                    
+                    // Ensure input type is text (not number which might have restrictions)
+                    if (input.type === 'number') {
+                        input.type = 'text';
+                    }
+                    
+                    // Make sure it's not blocked by any pointer-events
+                    input.style.pointerEvents = 'auto';
+                    input.style.cursor = 'text';
+                });
+            }
+
+            // Initialize autocomplete for existing fields
+            function initAllAutocompletes() {
+                document.querySelectorAll('.stop-name-autocomplete').forEach(function(input) {
+                    const index = input.id.replace('stop-name-', '');
+                    initAutocompleteForStop(input, index);
+                });
+                
+                // Ensure coordinate fields are editable
+                ensureCoordinateFieldsEditable();
+            }
+
+            // Initialize on page load
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initAllAutocompletes);
+            } else {
+                initAllAutocompletes();
+            }
+
+            // Re-initialize when Livewire updates the DOM
+            if (typeof Livewire !== 'undefined') {
+                document.addEventListener('livewire:init', () => {
+                    Livewire.hook('morph.updated', ({ el, component }) => {
+                        setTimeout(() => {
+                            initAllAutocompletes();
+                            ensureCoordinateFieldsEditable();
+                        }, 100);
+                    });
+                });
+
+                Livewire.hook('morph.updated', ({ el, component }) => {
+                    setTimeout(() => {
+                        initAllAutocompletes();
+                        ensureCoordinateFieldsEditable();
+                    }, 100);
+                });
+            }
+            
+            // Also ensure fields are editable on any input event
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('stop-coordinate-input')) {
+                    e.target.removeAttribute('readonly');
+                    e.target.removeAttribute('disabled');
+                }
+            }, true);
+        })();
+
         (function() {
             let map = null;
             let markers = [];
