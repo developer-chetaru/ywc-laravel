@@ -35,12 +35,15 @@ class MarinaReview extends Model
         'helpful_count',
         'not_helpful_count',
         'is_approved',
+        'is_flagged',
+        'flag_reason',
     ];
 
     protected $casts = [
         'is_anonymous' => 'boolean',
         'is_verified' => 'boolean',
         'is_approved' => 'boolean',
+        'is_flagged' => 'boolean',
         'visit_date' => 'date',
     ];
 

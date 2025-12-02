@@ -4882,12 +4882,2937 @@
                 ]
             }
         },
+        "/api/contractors": {
+            "get": {
+                "tags": [
+                    "Industry Review - Contractors"
+                ],
+                "summary": "List all contractors",
+                "operationId": "listContractors",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search in name, business name, city, or country",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Filter by contractor category",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "technical_services",
+                                "refit_repair",
+                                "equipment_supplier",
+                                "professional_services",
+                                "crew_services"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "min_rating",
+                        "in": "query",
+                        "description": "Minimum average rating",
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "minimum": 0,
+                            "maximum": 5
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of contractors",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Industry Review - Contractors"
+                ],
+                "summary": "Create a new contractor",
+                "operationId": "createContractor",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "category"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Marine Tech Solutions"
+                                    },
+                                    "business_name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Marine Tech Solutions LLC"
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "enum": [
+                                            "technical_services",
+                                            "refit_repair",
+                                            "equipment_supplier",
+                                            "professional_services",
+                                            "crew_services"
+                                        ],
+                                        "example": "technical_services"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Professional marine electronics and navigation systems"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Monaco"
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Monaco"
+                                    },
+                                    "country": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Monaco"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "+377 93 30 00 00"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255,
+                                        "example": "info@marinetech.mc"
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "maxLength": 255,
+                                        "example": "https://www.marinetech.mc"
+                                    },
+                                    "specialties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": ["Radar installation", "GPS upgrade", "Furuno certified"]
+                                    },
+                                    "languages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": ["English", "French"]
+                                    },
+                                    "emergency_service": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "response_time": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "24 hours"
+                                    },
+                                    "service_area": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Mediterranean"
+                                    },
+                                    "price_range": {
+                                        "type": "string",
+                                        "enum": ["€", "€€", "€€€", "€€€€"],
+                                        "example": "€€"
+                                    },
+                                    "logo": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Contractor logo image file"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Contractor created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Contractor created successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/contractors/{slug}": {
+            "get": {
+                "tags": [
+                    "Industry Review - Contractors"
+                ],
+                "summary": "Get contractor details by slug",
+                "operationId": "getContractorBySlug",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "description": "Contractor slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contractor details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contractor not found"
+                    }
+                }
+            }
+        },
+        "/api/contractors/{id}": {
+            "put": {
+                "tags": [
+                    "Industry Review - Contractors"
+                ],
+                "summary": "Update a contractor",
+                "operationId": "updateContractor",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Contractor ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "business_name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "enum": [
+                                            "technical_services",
+                                            "refit_repair",
+                                            "equipment_supplier",
+                                            "professional_services",
+                                            "crew_services"
+                                        ]
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "country": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "maxLength": 255
+                                    },
+                                    "specialties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "languages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "emergency_service": {
+                                        "type": "boolean"
+                                    },
+                                    "response_time": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "service_area": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "price_range": {
+                                        "type": "string",
+                                        "enum": ["€", "€€", "€€€", "€€€€"]
+                                    },
+                                    "logo": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Contractor updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Contractor updated successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contractor not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Industry Review - Contractors"
+                ],
+                "summary": "Delete a contractor",
+                "operationId": "deleteContractor",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Contractor ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contractor deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Contractor deleted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contractor not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/contractors/{contractorId}/reviews": {
+            "get": {
+                "tags": [
+                    "Industry Review - Contractor Reviews"
+                ],
+                "summary": "Get reviews for a contractor",
+                "operationId": "getContractorReviews",
+                "parameters": [
+                    {
+                        "name": "contractorId",
+                        "in": "path",
+                        "description": "Contractor ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "rating",
+                        "in": "query",
+                        "description": "Filter by rating (1-5)",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "recent",
+                                "rating",
+                                "helpful"
+                            ],
+                            "default": "helpful"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of reviews",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contractor not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Industry Review - Contractor Reviews"
+                ],
+                "summary": "Create a review for a contractor",
+                "operationId": "createContractorReview",
+                "parameters": [
+                    {
+                        "name": "contractorId",
+                        "in": "path",
+                        "description": "Contractor ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "review",
+                                    "overall_rating"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Excellent service and professionalism"
+                                    },
+                                    "review": {
+                                        "type": "string",
+                                        "minLength": 50,
+                                        "example": "Marine Tech Solutions provided exceptional service for our radar upgrade. The technician was knowledgeable, professional, and completed the work on time."
+                                    },
+                                    "overall_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5
+                                    },
+                                    "quality_of_work_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5
+                                    },
+                                    "professionalism_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5
+                                    },
+                                    "pricing_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 4
+                                    },
+                                    "timeliness_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5
+                                    },
+                                    "would_hire_again": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "would_recommend": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "is_anonymous": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "service_provided": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Radar installation"
+                                    },
+                                    "cost": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5000.00
+                                    },
+                                    "timeframe": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "2 days"
+                                    },
+                                    "photos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        },
+                                        "description": "Review photos (max 5MB each)"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Review submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review submitted successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Contractor not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/contractors/{contractorId}/reviews/{reviewId}": {
+            "get": {
+                "tags": [
+                    "Industry Review - Contractor Reviews"
+                ],
+                "summary": "Get a specific contractor review",
+                "operationId": "getContractorReview",
+                "parameters": [
+                    {
+                        "name": "contractorId",
+                        "in": "path",
+                        "description": "Contractor ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Industry Review - Contractor Reviews"
+                ],
+                "summary": "Update a contractor review",
+                "operationId": "updateContractorReview",
+                "parameters": [
+                    {
+                        "name": "contractorId",
+                        "in": "path",
+                        "description": "Contractor ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "review": {
+                                        "type": "string",
+                                        "minLength": 50
+                                    },
+                                    "overall_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "quality_of_work_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "professionalism_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "pricing_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "timeliness_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "would_hire_again": {
+                                        "type": "boolean"
+                                    },
+                                    "would_recommend": {
+                                        "type": "boolean"
+                                    },
+                                    "is_anonymous": {
+                                        "type": "boolean"
+                                    },
+                                    "service_provided": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "cost": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "timeframe": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "photos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Review updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review updated successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied - can only update own reviews"
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Industry Review - Contractor Reviews"
+                ],
+                "summary": "Delete a contractor review",
+                "operationId": "deleteContractorReview",
+                "parameters": [
+                    {
+                        "name": "contractorId",
+                        "in": "path",
+                        "description": "Contractor ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review deleted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied - can only delete own reviews"
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/contractors/{contractorId}/reviews/{reviewId}/vote": {
+            "post": {
+                "tags": [
+                    "Industry Review - Contractor Reviews"
+                ],
+                "summary": "Vote on a contractor review (helpful/not helpful)",
+                "operationId": "voteContractorReview",
+                "parameters": [
+                    {
+                        "name": "contractorId",
+                        "in": "path",
+                        "description": "Contractor ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_helpful"
+                                ],
+                                "properties": {
+                                    "is_helpful": {
+                                        "type": "boolean",
+                                        "example": true,
+                                        "description": "true for helpful, false for not helpful"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Vote recorded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vote recorded."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/brokers": {
+            "get": {
+                "tags": [
+                    "Industry Review - Brokers"
+                ],
+                "summary": "List all brokers",
+                "operationId": "listBrokers",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search in name, company name, or primary location",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "min_rating",
+                        "in": "query",
+                        "description": "Minimum average rating",
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "minimum": 0,
+                            "maximum": 5
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of brokers",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Industry Review - Brokers"
+                ],
+                "summary": "Create a new broker",
+                "operationId": "createBroker",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Elite Yacht Crew"
+                                    },
+                                    "company_name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Elite Yacht Crew Agency"
+                                    },
+                                    "primary_location": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Monaco"
+                                    },
+                                    "offices": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": ["Monaco", "Fort Lauderdale"]
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "+377 93 30 00 00"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255,
+                                        "example": "info@elitecrew.mc"
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "maxLength": 255,
+                                        "example": "https://www.elitecrew.mc"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Premier yacht crew placement agency"
+                                    },
+                                    "crew_fees": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "FREE"
+                                    },
+                                    "specialties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": ["Captain placements", "Interior crew", "Engineering"]
+                                    },
+                                    "verification": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": ["MYBA Member", "Licensed agency"]
+                                    },
+                                    "average_placement_time": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "2-4 weeks"
+                                    },
+                                    "positions_per_month": {
+                                        "type": "integer",
+                                        "example": 50
+                                    },
+                                    "success_rate": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "maximum": 100,
+                                        "example": 85.5
+                                    },
+                                    "logo": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Broker logo image file"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Broker created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Broker created successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/brokers/{slug}": {
+            "get": {
+                "tags": [
+                    "Industry Review - Brokers"
+                ],
+                "summary": "Get broker details by slug",
+                "operationId": "getBrokerBySlug",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "description": "Broker slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Broker details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found"
+                    }
+                }
+            }
+        },
+        "/api/brokers/{id}": {
+            "put": {
+                "tags": [
+                    "Industry Review - Brokers"
+                ],
+                "summary": "Update a broker",
+                "operationId": "updateBroker",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Broker ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "company_name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "primary_location": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "offices": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "crew_fees": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "specialties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "verification": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "average_placement_time": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "positions_per_month": {
+                                        "type": "integer"
+                                    },
+                                    "success_rate": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                    },
+                                    "logo": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Broker updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Broker updated successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Industry Review - Brokers"
+                ],
+                "summary": "Delete a broker",
+                "operationId": "deleteBroker",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Broker ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Broker deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Broker deleted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/brokers/{brokerId}/reviews": {
+            "get": {
+                "tags": [
+                    "Industry Review - Broker Reviews"
+                ],
+                "summary": "Get reviews for a broker",
+                "operationId": "getBrokerReviews",
+                "parameters": [
+                    {
+                        "name": "brokerId",
+                        "in": "path",
+                        "description": "Broker ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "rating",
+                        "in": "query",
+                        "description": "Filter by rating (1-5)",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "recent",
+                                "rating",
+                                "helpful"
+                            ],
+                            "default": "helpful"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of reviews",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Industry Review - Broker Reviews"
+                ],
+                "summary": "Create a review for a broker",
+                "operationId": "createBrokerReview",
+                "parameters": [
+                    {
+                        "name": "brokerId",
+                        "in": "path",
+                        "description": "Broker ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "review",
+                                    "overall_rating"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Great experience with placement"
+                                    },
+                                    "review": {
+                                        "type": "string",
+                                        "minLength": 50,
+                                        "example": "Elite Yacht Crew helped me find the perfect position. The team was professional, responsive, and really understood what I was looking for."
+                                    },
+                                    "overall_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5
+                                    },
+                                    "job_quality_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5
+                                    },
+                                    "communication_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5
+                                    },
+                                    "professionalism_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5
+                                    },
+                                    "fees_transparency_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 4
+                                    },
+                                    "support_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5
+                                    },
+                                    "would_use_again": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "would_recommend": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "is_anonymous": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "placement_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-06-15"
+                                    },
+                                    "position_placed": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Chief Stewardess"
+                                    },
+                                    "yacht_name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Ocean Dream"
+                                    },
+                                    "placement_timeframe": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "3 weeks"
+                                    },
+                                    "photos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        },
+                                        "description": "Review photos (max 5MB each)"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Review submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review submitted successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/brokers/{brokerId}/reviews/{reviewId}": {
+            "get": {
+                "tags": [
+                    "Industry Review - Broker Reviews"
+                ],
+                "summary": "Get a specific broker review",
+                "operationId": "getBrokerReview",
+                "parameters": [
+                    {
+                        "name": "brokerId",
+                        "in": "path",
+                        "description": "Broker ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Industry Review - Broker Reviews"
+                ],
+                "summary": "Update a broker review",
+                "operationId": "updateBrokerReview",
+                "parameters": [
+                    {
+                        "name": "brokerId",
+                        "in": "path",
+                        "description": "Broker ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "review": {
+                                        "type": "string",
+                                        "minLength": 50
+                                    },
+                                    "overall_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "job_quality_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "communication_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "professionalism_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "fees_transparency_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "support_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "would_use_again": {
+                                        "type": "boolean"
+                                    },
+                                    "would_recommend": {
+                                        "type": "boolean"
+                                    },
+                                    "is_anonymous": {
+                                        "type": "boolean"
+                                    },
+                                    "placement_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "position_placed": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "yacht_name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "placement_timeframe": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "photos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Review updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review updated successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied - can only update own reviews"
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Industry Review - Broker Reviews"
+                ],
+                "summary": "Delete a broker review",
+                "operationId": "deleteBrokerReview",
+                "parameters": [
+                    {
+                        "name": "brokerId",
+                        "in": "path",
+                        "description": "Broker ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review deleted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied - can only delete own reviews"
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/brokers/{brokerId}/reviews/{reviewId}/vote": {
+            "post": {
+                "tags": [
+                    "Industry Review - Broker Reviews"
+                ],
+                "summary": "Vote on a broker review (helpful/not helpful)",
+                "operationId": "voteBrokerReview",
+                "parameters": [
+                    {
+                        "name": "brokerId",
+                        "in": "path",
+                        "description": "Broker ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_helpful"
+                                ],
+                                "properties": {
+                                    "is_helpful": {
+                                        "type": "boolean",
+                                        "example": true,
+                                        "description": "true for helpful, false for not helpful"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Vote recorded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vote recorded."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/restaurants": {
+            "get": {
+                "tags": [
+                    "Industry Review - Restaurants"
+                ],
+                "summary": "List all restaurants and shore services",
+                "operationId": "listRestaurants",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search in name, city, or country",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter by type",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "restaurant",
+                                "bar",
+                                "cafe",
+                                "shop",
+                                "service"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "min_rating",
+                        "in": "query",
+                        "description": "Minimum average rating",
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "minimum": 0,
+                            "maximum": 5
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of restaurants and services",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Industry Review - Restaurants"
+                ],
+                "summary": "Create a new restaurant or shore service",
+                "operationId": "createRestaurant",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "The Yacht Club Restaurant"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "restaurant",
+                                            "bar",
+                                            "cafe",
+                                            "shop",
+                                            "service"
+                                        ],
+                                        "example": "restaurant"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Fine dining restaurant with waterfront views"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Monaco"
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Monaco"
+                                    },
+                                    "country": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Monaco"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "+377 93 30 00 00"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255,
+                                        "example": "info@yachtclub.mc"
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "maxLength": 255,
+                                        "example": "https://www.yachtclub.mc"
+                                    },
+                                    "cuisine_type": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": ["Mediterranean", "Seafood"],
+                                        "description": "For restaurants only"
+                                    },
+                                    "services_offered": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": ["Laundry", "Provisions", "Fuel"],
+                                        "description": "For services only"
+                                    },
+                                    "price_range": {
+                                        "type": "string",
+                                        "enum": ["$", "$$", "$$$", "$$$$"],
+                                        "example": "$$$"
+                                    },
+                                    "cover_image": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Cover image file"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Restaurant/service created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Restaurant created successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/restaurants/{slug}": {
+            "get": {
+                "tags": [
+                    "Industry Review - Restaurants"
+                ],
+                "summary": "Get restaurant/service details by slug",
+                "operationId": "getRestaurantBySlug",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "description": "Restaurant slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Restaurant/service details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Restaurant not found"
+                    }
+                }
+            }
+        },
+        "/api/restaurants/{id}": {
+            "put": {
+                "tags": [
+                    "Industry Review - Restaurants"
+                ],
+                "summary": "Update a restaurant or service",
+                "operationId": "updateRestaurant",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Restaurant ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "restaurant",
+                                            "bar",
+                                            "cafe",
+                                            "shop",
+                                            "service"
+                                        ]
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "country": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "maxLength": 255
+                                    },
+                                    "cuisine_type": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "services_offered": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "price_range": {
+                                        "type": "string",
+                                        "enum": ["$", "$$", "$$$", "$$$$"]
+                                    },
+                                    "cover_image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Restaurant/service updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Restaurant updated successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Restaurant not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Industry Review - Restaurants"
+                ],
+                "summary": "Delete a restaurant or service",
+                "operationId": "deleteRestaurant",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Restaurant ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Restaurant/service deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Restaurant deleted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Restaurant not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/restaurants/{restaurantId}/reviews": {
+            "get": {
+                "tags": [
+                    "Industry Review - Restaurant Reviews"
+                ],
+                "summary": "Get reviews for a restaurant or service",
+                "operationId": "getRestaurantReviews",
+                "parameters": [
+                    {
+                        "name": "restaurantId",
+                        "in": "path",
+                        "description": "Restaurant ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "rating",
+                        "in": "query",
+                        "description": "Filter by rating (1-5)",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "recent",
+                                "rating",
+                                "helpful"
+                            ],
+                            "default": "helpful"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of reviews",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Restaurant not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Industry Review - Restaurant Reviews"
+                ],
+                "summary": "Create a review for a restaurant or service",
+                "operationId": "createRestaurantReview",
+                "parameters": [
+                    {
+                        "name": "restaurantId",
+                        "in": "path",
+                        "description": "Restaurant ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "review",
+                                    "overall_rating"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Excellent food and service"
+                                    },
+                                    "review": {
+                                        "type": "string",
+                                        "minLength": 50,
+                                        "example": "Great restaurant with amazing views and excellent service. The crew discount made it even better!"
+                                    },
+                                    "overall_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5
+                                    },
+                                    "food_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5,
+                                        "description": "For restaurants only"
+                                    },
+                                    "service_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5
+                                    },
+                                    "atmosphere_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 5,
+                                        "description": "For restaurants/bars/cafes only"
+                                    },
+                                    "value_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5,
+                                        "example": 4
+                                    },
+                                    "would_recommend": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "is_anonymous": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "visit_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-06-15"
+                                    },
+                                    "crew_type": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Captain"
+                                    },
+                                    "photos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        },
+                                        "description": "Review photos (max 5MB each)"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Review submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review submitted successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Restaurant not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/restaurants/{restaurantId}/reviews/{reviewId}": {
+            "get": {
+                "tags": [
+                    "Industry Review - Restaurant Reviews"
+                ],
+                "summary": "Get a specific restaurant review",
+                "operationId": "getRestaurantReview",
+                "parameters": [
+                    {
+                        "name": "restaurantId",
+                        "in": "path",
+                        "description": "Restaurant ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Industry Review - Restaurant Reviews"
+                ],
+                "summary": "Update a restaurant review",
+                "operationId": "updateRestaurantReview",
+                "parameters": [
+                    {
+                        "name": "restaurantId",
+                        "in": "path",
+                        "description": "Restaurant ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "review": {
+                                        "type": "string",
+                                        "minLength": 50
+                                    },
+                                    "overall_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "food_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "service_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "atmosphere_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "value_rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "would_recommend": {
+                                        "type": "boolean"
+                                    },
+                                    "is_anonymous": {
+                                        "type": "boolean"
+                                    },
+                                    "visit_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "crew_type": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "photos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Review updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review updated successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied - can only update own reviews"
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Industry Review - Restaurant Reviews"
+                ],
+                "summary": "Delete a restaurant review",
+                "operationId": "deleteRestaurantReview",
+                "parameters": [
+                    {
+                        "name": "restaurantId",
+                        "in": "path",
+                        "description": "Restaurant ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review deleted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied - can only delete own reviews"
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/restaurants/{restaurantId}/reviews/{reviewId}/vote": {
+            "post": {
+                "tags": [
+                    "Industry Review - Restaurant Reviews"
+                ],
+                "summary": "Vote on a restaurant review (helpful/not helpful)",
+                "operationId": "voteRestaurantReview",
+                "parameters": [
+                    {
+                        "name": "restaurantId",
+                        "in": "path",
+                        "description": "Restaurant ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "Review ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_helpful"
+                                ],
+                                "properties": {
+                                    "is_helpful": {
+                                        "type": "boolean",
+                                        "example": true,
+                                        "description": "true for helpful, false for not helpful"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Vote recorded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vote recorded."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/crew-discovery/location/update": {
             "post": {
                 "tags": [
                     "Crew Discovery"
                 ],
                 "summary": "Update user's location",
+                "description": "Updates the authenticated user's current location coordinates. This endpoint automatically enables location sharing (share_location) and discovery visibility (show_in_discovery) when a location is set. The location is used for nearby crew discovery and map-based features.",
                 "operationId": "updateCrewLocation",
                 "requestBody": {
                     "required": true,
@@ -4988,6 +7913,7 @@
                     "Crew Discovery"
                 ],
                 "summary": "Update user's online status",
+                "description": "Updates the authenticated user's online/offline status. When set to online, the user will appear in online crew listings and discovery features. The last_seen_at timestamp is automatically updated when status changes.",
                 "operationId": "updateOnlineStatus",
                 "requestBody": {
                     "required": true,
@@ -5060,6 +7986,7 @@
                     "Crew Discovery"
                 ],
                 "summary": "Discover nearby crew members",
+                "description": "Discovers crew members within a specified radius from the provided coordinates. Results are filtered by user visibility settings (everyone, connections_only, verified_only) and can be further filtered by position, experience level, availability status, languages, and interests. Results are sorted by distance from the search center. Only users with location sharing enabled and discovery visibility enabled are included.",
                 "operationId": "discoverNearbyCrew",
                 "requestBody": {
                     "required": true,
@@ -5345,6 +8272,7 @@
                     "Crew Discovery"
                 ],
                 "summary": "Get online crew members",
+                "description": "Retrieves a list of currently online crew members who have location sharing and discovery visibility enabled. If the authenticated user has location set, distance calculations are included. Results are limited to 50 crew members and sorted by distance (if available) or by last seen time.",
                 "operationId": "getOnlineCrew",
                 "responses": {
                     "200": {
@@ -5416,6 +8344,7 @@
                     "Crew Discovery"
                 ],
                 "summary": "Get all crew locations (for map view)",
+                "description": "Retrieves all crew member locations for map-based visualization. This endpoint respects user visibility settings and location privacy preferences. Coordinates are returned based on each user's location_privacy setting (exact, approximate, or hidden). The authenticated user is always included in results even if location sharing is disabled. Results can be filtered by position, experience level, availability status, and search query. Maximum 500 results are returned, sorted by distance (if coordinates provided) or by online status and last seen time.",
                 "operationId": "getAllCrewLocations",
                 "parameters": [
                     {
@@ -6906,6 +9835,30 @@
         {
             "name": "Industry Review - Marina Reviews",
             "description": "Marina review endpoints for the Industry Review System"
+        },
+        {
+            "name": "Industry Review - Contractors",
+            "description": "Contractor management endpoints for the Industry Review System"
+        },
+        {
+            "name": "Industry Review - Contractor Reviews",
+            "description": "Contractor review endpoints for the Industry Review System"
+        },
+        {
+            "name": "Industry Review - Brokers",
+            "description": "Broker management endpoints for the Industry Review System"
+        },
+        {
+            "name": "Industry Review - Broker Reviews",
+            "description": "Broker review endpoints for the Industry Review System"
+        },
+        {
+            "name": "Industry Review - Restaurants",
+            "description": "Restaurant and shore service management endpoints for the Industry Review System"
+        },
+        {
+            "name": "Industry Review - Restaurant Reviews",
+            "description": "Restaurant and shore service review endpoints for the Industry Review System"
         },
         {
             "name": "Crew Discovery",

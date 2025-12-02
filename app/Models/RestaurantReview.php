@@ -6,35 +6,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class YachtReview extends Model
+class RestaurantReview extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'yacht_id',
+        'restaurant_id',
         'user_id',
         'title',
         'review',
-        'pros',
-        'cons',
         'overall_rating',
-        // New 5-category rating system
-        'yacht_quality_rating',
-        'crew_culture_rating',
-        'management_rating',
-        'benefits_rating',
-        // Legacy fields (kept for backward compatibility)
-        'working_conditions_rating',
-        'compensation_rating',
-        'crew_welfare_rating',
-        'yacht_condition_rating',
-        'career_development_rating',
+        'food_rating',
+        'service_rating',
+        'atmosphere_rating',
+        'value_rating',
         'would_recommend',
         'is_anonymous',
         'is_verified',
-        'work_start_date',
-        'work_end_date',
-        'position_held',
+        'visit_date',
+        'crew_tips',
         'helpful_count',
         'not_helpful_count',
         'is_approved',
@@ -48,26 +38,25 @@ class YachtReview extends Model
         'is_verified' => 'boolean',
         'is_approved' => 'boolean',
         'is_flagged' => 'boolean',
-        'work_start_date' => 'date',
-        'work_end_date' => 'date',
+        'visit_date' => 'date',
     ];
 
     protected static function booted(): void
     {
-        static::saved(function (YachtReview $review) {
+        static::saved(function (RestaurantReview $review) {
             if ($review->is_approved) {
-                $review->yacht->updateRatingStats();
+                $review->restaurant->updateRatingStats();
             }
         });
 
-        static::deleted(function (YachtReview $review) {
-            $review->yacht->updateRatingStats();
+        static::deleted(function (RestaurantReview $review) {
+            $review->restaurant->updateRatingStats();
         });
     }
 
-    public function yacht()
+    public function restaurant()
     {
-        return $this->belongsTo(Yacht::class);
+        return $this->belongsTo(Restaurant::class);
     }
 
     public function user()
@@ -89,20 +78,4 @@ class YachtReview extends Model
     {
         return $this->morphMany(ReviewComment::class, 'reviewable')->where('review_id', $this->id)->whereNull('parent_id');
     }
-
-    public function allComments()
-    {
-        return $this->morphMany(ReviewComment::class, 'reviewable')->where('review_id', $this->id);
-    }
-
-    public function managementResponse()
-    {
-        return $this->hasOne(YachtManagementResponse::class);
-    }
-
-    public function userVote($userId)
-    {
-        return $this->votes()->where('user_id', $userId)->first();
-    }
 }
-

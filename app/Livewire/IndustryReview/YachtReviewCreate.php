@@ -25,7 +25,12 @@ class YachtReviewCreate extends Component
     public $pros = '';
     public $cons = '';
     public $overall_rating = 5;
+    // New 5-category rating system
+    public $yacht_quality_rating = null;
+    public $crew_culture_rating = null;
     public $management_rating = null;
+    public $benefits_rating = null;
+    // Legacy fields (kept for backward compatibility)
     public $working_conditions_rating = null;
     public $compensation_rating = null;
     public $crew_welfare_rating = null;
@@ -45,7 +50,12 @@ class YachtReviewCreate extends Component
         'pros' => 'nullable|string',
         'cons' => 'nullable|string',
         'overall_rating' => 'required|integer|min:1|max:5',
+        // New 5-category rating system
+        'yacht_quality_rating' => 'nullable|integer|min:1|max:5',
+        'crew_culture_rating' => 'nullable|integer|min:1|max:5',
         'management_rating' => 'nullable|integer|min:1|max:5',
+        'benefits_rating' => 'nullable|integer|min:1|max:5',
+        // Legacy fields
         'working_conditions_rating' => 'nullable|integer|min:1|max:5',
         'compensation_rating' => 'nullable|integer|min:1|max:5',
         'crew_welfare_rating' => 'nullable|integer|min:1|max:5',
@@ -83,7 +93,12 @@ class YachtReviewCreate extends Component
         $this->pros = $review->pros;
         $this->cons = $review->cons;
         $this->overall_rating = $review->overall_rating;
+        // New 5-category rating system
+        $this->yacht_quality_rating = $review->yacht_quality_rating ?? $review->yacht_condition_rating;
+        $this->crew_culture_rating = $review->crew_culture_rating;
         $this->management_rating = $review->management_rating;
+        $this->benefits_rating = $review->benefits_rating ?? ($review->compensation_rating && $review->crew_welfare_rating ? round(($review->compensation_rating + $review->crew_welfare_rating) / 2) : null);
+        // Legacy fields
         $this->working_conditions_rating = $review->working_conditions_rating;
         $this->compensation_rating = $review->compensation_rating;
         $this->crew_welfare_rating = $review->crew_welfare_rating;
@@ -124,7 +139,12 @@ class YachtReviewCreate extends Component
         $review->pros = $this->pros;
         $review->cons = $this->cons;
         $review->overall_rating = $this->overall_rating;
+        // New 5-category rating system
+        $review->yacht_quality_rating = $this->yacht_quality_rating;
+        $review->crew_culture_rating = $this->crew_culture_rating;
         $review->management_rating = $this->management_rating;
+        $review->benefits_rating = $this->benefits_rating;
+        // Legacy fields (kept for backward compatibility)
         $review->working_conditions_rating = $this->working_conditions_rating;
         $review->compensation_rating = $this->compensation_rating;
         $review->crew_welfare_rating = $this->crew_welfare_rating;

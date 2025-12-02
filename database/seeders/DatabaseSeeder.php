@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
             YachtSeeder::class,
             MarinaSeeder::class,
             IndustryReviewSeeder::class,
+            ContractorSeeder::class,
+            BrokerSeeder::class,
+            RestaurantSeeder::class,
         ]);
         
     }

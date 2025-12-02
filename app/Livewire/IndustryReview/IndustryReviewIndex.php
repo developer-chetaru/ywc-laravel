@@ -7,8 +7,14 @@ use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 use App\Models\Yacht;
 use App\Models\Marina;
+use App\Models\Contractor;
+use App\Models\Broker;
+use App\Models\Restaurant;
 use App\Models\YachtReview;
 use App\Models\MarinaReview;
+use App\Models\ContractorReview;
+use App\Models\BrokerReview;
+use App\Models\RestaurantReview;
 use App\Models\MasterData;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -21,6 +27,9 @@ class IndustryReviewIndex extends Component
     public $activeTab = 'yachts';
     public $yachts = [];
     public $marinas = [];
+    public $contractors = [];
+    public $brokers = [];
+    public $restaurants = [];
     public $loading = false;
     public $showYachtModal = false;
     public $searchQuery = '';
@@ -76,43 +85,46 @@ class IndustryReviewIndex extends Component
     {
         // Check if tab is specified in query string
         $tab = request()->query('tab', 'yachts');
-        if ($tab === 'marinas') {
-            $this->activeTab = 'marinas';
-            $this->loadMarinas();
-        } else {
-            $this->activeTab = 'yachts';
-            $this->loadYachts();
-        }
+        $this->activeTab = $tab;
+        $this->loadTabData($tab);
     }
 
     public function setTab($tab)
     {
         $this->activeTab = $tab;
-        // Keep search query when switching tabs - apply search to new tab
-        if ($tab === 'yachts') {
-            $this->loadYachts();
-        } else {
-            $this->loadMarinas();
+        $this->loadTabData($tab);
+    }
+
+    public function loadTabData($tab)
+    {
+        switch ($tab) {
+            case 'yachts':
+                $this->loadYachts();
+                break;
+            case 'marinas':
+                $this->loadMarinas();
+                break;
+            case 'contractors':
+                $this->loadContractors();
+                break;
+            case 'brokers':
+                $this->loadBrokers();
+                break;
+            case 'restaurants':
+                $this->loadRestaurants();
+                break;
         }
     }
 
     public function search()
     {
-        if ($this->activeTab === 'yachts') {
-            $this->loadYachts();
-        } else {
-            $this->loadMarinas();
-        }
+        $this->loadTabData($this->activeTab);
     }
 
     public function clearSearch()
     {
         $this->searchQuery = '';
-        if ($this->activeTab === 'yachts') {
-            $this->loadYachts();
-        } else {
-            $this->loadMarinas();
-        }
+        $this->loadTabData($this->activeTab);
     }
 
     public function updatedSearchQuery()
@@ -190,6 +202,119 @@ class IndustryReviewIndex extends Component
             })->toArray();
         } catch (\Exception $e) {
             $this->marinas = [];
+        } finally {
+            $this->loading = false;
+        }
+    }
+
+    public function loadContractors()
+    {
+        $this->loading = true;
+        try {
+            $query = Contractor::query()
+                ->withCount('reviews');
+            
+            if (!empty($this->searchQuery)) {
+                $query->where(function($q) {
+                    $q->where('name', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('business_name', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('city', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('country', 'like', '%' . $this->searchQuery . '%');
+                });
+            }
+            
+            $contractors = $query->orderByDesc('rating_avg')
+                ->orderByDesc('reviews_count')
+                ->orderBy('name')
+                ->limit(12)
+                ->get();
+
+            $this->contractors = $contractors->map(function ($contractor) {
+                $contractorArray = $contractor->toArray();
+                if ($contractor->logo && !str_starts_with($contractor->logo, 'http')) {
+                    $contractorArray['logo_url'] = asset('storage/' . $contractor->logo);
+                } elseif ($contractor->logo) {
+                    $contractorArray['logo_url'] = $contractor->logo;
+                }
+                return $contractorArray;
+            })->toArray();
+        } catch (\Exception $e) {
+            $this->contractors = [];
+        } finally {
+            $this->loading = false;
+        }
+    }
+
+    public function loadBrokers()
+    {
+        $this->loading = true;
+        try {
+            $query = Broker::query()
+                ->withCount('reviews');
+            
+            if (!empty($this->searchQuery)) {
+                $query->where(function($q) {
+                    $q->where('name', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('business_name', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('primary_location', 'like', '%' . $this->searchQuery . '%');
+                });
+            }
+            
+            $brokers = $query->orderByDesc('rating_avg')
+                ->orderByDesc('reviews_count')
+                ->orderBy('name')
+                ->limit(12)
+                ->get();
+
+            $this->brokers = $brokers->map(function ($broker) {
+                $brokerArray = $broker->toArray();
+                if ($broker->logo && !str_starts_with($broker->logo, 'http')) {
+                    $brokerArray['logo_url'] = asset('storage/' . $broker->logo);
+                } elseif ($broker->logo) {
+                    $brokerArray['logo_url'] = $broker->logo;
+                }
+                return $brokerArray;
+            })->toArray();
+        } catch (\Exception $e) {
+            $this->brokers = [];
+        } finally {
+            $this->loading = false;
+        }
+    }
+
+    public function loadRestaurants()
+    {
+        $this->loading = true;
+        try {
+            $query = Restaurant::query()
+                ->withCount('reviews');
+            
+            if (!empty($this->searchQuery)) {
+                $query->where(function($q) {
+                    $q->where('name', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('city', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('country', 'like', '%' . $this->searchQuery . '%')
+                      ->orWhere('type', 'like', '%' . $this->searchQuery . '%');
+                });
+            }
+            
+            $restaurants = $query->orderByDesc('rating_avg')
+                ->orderByDesc('reviews_count')
+                ->orderBy('name')
+                ->limit(12)
+                ->get();
+
+            $this->restaurants = $restaurants->map(function ($restaurant) {
+                $restaurantArray = $restaurant->toArray();
+                if ($restaurant->cover_image && !str_starts_with($restaurant->cover_image, 'http')) {
+                    $restaurantArray['cover_image_url'] = asset('storage/' . $restaurant->cover_image);
+                } elseif ($restaurant->cover_image) {
+                    $restaurantArray['cover_image_url'] = $restaurant->cover_image;
+                }
+                return $restaurantArray;
+            })->toArray();
+        } catch (\Exception $e) {
+            $this->restaurants = [];
         } finally {
             $this->loading = false;
         }
@@ -285,43 +410,45 @@ class IndustryReviewIndex extends Component
             }
 
             if ($type === 'yacht') {
-                // Try to find by ID first (most reliable)
-                $item = Yacht::where('id', $identifier)->first();
-                
-                // If not found by ID, try slug
-                if (!$item) {
-                    $item = Yacht::where('slug', $identifier)->first();
-                }
-                
+                $item = Yacht::where('id', $identifier)->orWhere('slug', $identifier)->first();
                 if (!$item) {
                     session()->flash('error', 'Yacht not found.');
                     return;
                 }
-                
-                // Ensure slug exists
                 $slug = $item->slug ?? (string) $item->id;
-                
-                // Redirect to yacht review show page
                 return $this->redirect(route('yacht-reviews.show', $slug), navigate: true);
-            } else {
-                // Try to find by ID first (most reliable)
-                $item = Marina::where('id', $identifier)->first();
-                
-                // If not found by ID, try slug
-                if (!$item) {
-                    $item = Marina::where('slug', $identifier)->first();
-                }
-                
+            } elseif ($type === 'marina') {
+                $item = Marina::where('id', $identifier)->orWhere('slug', $identifier)->first();
                 if (!$item) {
                     session()->flash('error', 'Marina not found.');
                     return;
                 }
-                
-                // Ensure slug exists
                 $slug = $item->slug ?? (string) $item->id;
-                
-                // Redirect to marina review show page
                 return $this->redirect(route('marina-reviews.show', $slug), navigate: true);
+            } elseif ($type === 'contractor') {
+                $item = Contractor::where('id', $identifier)->orWhere('slug', $identifier)->first();
+                if (!$item) {
+                    session()->flash('error', 'Contractor not found.');
+                    return;
+                }
+                $slug = $item->slug ?? (string) $item->id;
+                return $this->redirect(route('contractor-reviews.show', $slug), navigate: true);
+            } elseif ($type === 'broker') {
+                $item = Broker::where('id', $identifier)->orWhere('slug', $identifier)->first();
+                if (!$item) {
+                    session()->flash('error', 'Broker not found.');
+                    return;
+                }
+                $slug = $item->slug ?? (string) $item->id;
+                return $this->redirect(route('broker-reviews.show', $slug), navigate: true);
+            } elseif ($type === 'restaurant') {
+                $item = Restaurant::where('id', $identifier)->orWhere('slug', $identifier)->first();
+                if (!$item) {
+                    session()->flash('error', 'Restaurant not found.');
+                    return;
+                }
+                $slug = $item->slug ?? (string) $item->id;
+                return $this->redirect(route('restaurant-reviews.show', $slug), navigate: true);
             }
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to load details: ' . $e->getMessage());

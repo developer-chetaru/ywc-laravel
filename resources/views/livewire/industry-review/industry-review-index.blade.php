@@ -10,56 +10,88 @@
             </div>
 
             {{-- Tabs --}}
-            <div class="border-b border-gray-200 mb-8">
-                <div class="flex items-center justify-between mb-4">
-                    <nav class="-mb-px flex space-x-8">
-                        <button
-                            wire:click="setTab('yachts')"
-                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'yachts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                            <div class="flex items-center space-x-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                                </svg>
-                                <span>Yacht Reviews</span>
-                            </div>
-                        </button>
-                        <button
-                            wire:click="setTab('marinas')"
-                            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'marinas' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                            <div class="flex items-center space-x-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
-                                <span>Marina Reviews</span>
-                            </div>
-                        </button>
-                    </nav>
-                    
-                    {{-- Search Bar --}}
-                    <div class="flex items-center space-x-2">
-                        <div class="relative">
-                            <input 
-                                type="text" 
-                                wire:model.live.debounce.300ms="searchQuery"
-                                placeholder="Search {{ $activeTab === 'yachts' ? 'yachts' : 'marinas' }}..."
-                                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
-                            >
-                            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex space-x-8 mb-4">
+                    <button
+                        wire:click="setTab('yachts')"
+                        class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'yachts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                             </svg>
+                            <span>Yacht Reviews</span>
                         </div>
-                        @if($searchQuery)
-                            <button 
-                                wire:click="clearSearch"
-                                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-                                title="Clear search">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        @endif
+                    </button>
+                    <button
+                        wire:click="setTab('marinas')"
+                        class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'marinas' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span>Marina Reviews</span>
+                        </div>
+                    </button>
+                    <button
+                        wire:click="setTab('contractors')"
+                        class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'contractors' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span>Contractor Reviews</span>
+                        </div>
+                    </button>
+                    <button
+                        wire:click="setTab('brokers')"
+                        class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'brokers' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            <span>Broker Reviews</span>
+                        </div>
+                    </button>
+                    <button
+                        wire:click="setTab('restaurants')"
+                        class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'restaurants' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                            </svg>
+                            <span>Restaurant & Service Reviews</span>
+                        </div>
+                    </button>
+                </nav>
+            </div>
+
+            {{-- Search Bar --}}
+            <div class="mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="relative flex-1 max-w-md">
+                        <input 
+                            type="text" 
+                            wire:model.live.debounce.300ms="searchQuery"
+                            placeholder="Search {{ $activeTab === 'yachts' ? 'yachts' : ($activeTab === 'marinas' ? 'marinas' : ($activeTab === 'contractors' ? 'contractors' : ($activeTab === 'brokers' ? 'brokers' : 'restaurants'))) }}..."
+                            class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
+                        >
+                        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
                     </div>
+                    @if($searchQuery)
+                        <button 
+                            wire:click="clearSearch"
+                            class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                            title="Clear search">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            <span>Clear</span>
+                        </button>
+                    @endif
                 </div>
             </div>
 
@@ -145,7 +177,7 @@
                             <p class="text-gray-600">No yachts available at the moment.</p>
                         </div>
                     @endif
-                @else
+                @elseif($activeTab === 'marinas')
                     @if($loading)
                         <div class="text-center py-12">
                             <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -216,6 +248,203 @@
                             </svg>
                             <h3 class="text-xl font-semibold text-gray-900 mb-2">No marinas found</h3>
                             <p class="text-gray-600">No marinas available at the moment.</p>
+                        </div>
+                    @endif
+                @elseif($activeTab === 'contractors')
+                    @if($loading)
+                        <div class="text-center py-12">
+                            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                            <p class="mt-4 text-gray-600">Loading contractors...</p>
+                        </div>
+                    @elseif(count($contractors) > 0)
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            @foreach($contractors as $contractor)
+                                <div wire:key="contractor-{{ $contractor['id'] }}" class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col border border-gray-200">
+                                    <div class="relative h-48 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden group">
+                                        @if(isset($contractor['logo_url']))
+                                            <img src="{{ $contractor['logo_url'] }}" alt="{{ $contractor['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center">
+                                                <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                </svg>
+                                            </div>
+                                        @endif
+                                        @if(isset($contractor['rating_avg']) && $contractor['rating_avg'] > 0)
+                                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg">
+                                                <svg class="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 20 20">
+                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
+                                                </svg>
+                                                <span class="text-sm font-bold text-gray-900">{{ number_format($contractor['rating_avg'], 1) }}</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="p-5 flex-1 flex flex-col space-y-3">
+                                        <h2 class="text-xl font-bold text-gray-900 line-clamp-2">{{ $contractor['name'] ?? 'Unknown Contractor' }}</h2>
+                                        <div class="text-sm text-gray-600">
+                                            @if(isset($contractor['city']) && isset($contractor['country']))
+                                                {{ $contractor['city'] }}, {{ $contractor['country'] }}
+                                            @elseif(isset($contractor['country']))
+                                                {{ $contractor['country'] }}
+                                            @else
+                                                —
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                            <div class="flex items-center gap-2 text-xs text-gray-600">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
+                                                </svg>
+                                                <span class="font-medium">{{ $contractor['reviews_count'] ?? 0 }} {{ ($contractor['reviews_count'] ?? 0) == 1 ? 'review' : 'reviews' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-3">
+                                        @php
+                                            $contractorSlug = $contractor['slug'] ?? $contractor['id'];
+                                        @endphp
+                                        <a 
+                                            href="{{ route('contractor-reviews.show', $contractorSlug) }}"
+                                            class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">No contractors found</h3>
+                            <p class="text-gray-600">No contractors available at the moment.</p>
+                        </div>
+                    @endif
+                @elseif($activeTab === 'brokers')
+                    @if($loading)
+                        <div class="text-center py-12">
+                            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                            <p class="mt-4 text-gray-600">Loading brokers...</p>
+                        </div>
+                    @elseif(count($brokers) > 0)
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            @foreach($brokers as $broker)
+                                <div wire:key="broker-{{ $broker['id'] }}" class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col border border-gray-200">
+                                    <div class="relative h-48 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden group">
+                                        @if(isset($broker['logo_url']))
+                                            <img src="{{ $broker['logo_url'] }}" alt="{{ $broker['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center">
+                                                <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                                </svg>
+                                            </div>
+                                        @endif
+                                        @if(isset($broker['rating_avg']) && $broker['rating_avg'] > 0)
+                                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg">
+                                                <svg class="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 20 20">
+                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
+                                                </svg>
+                                                <span class="text-sm font-bold text-gray-900">{{ number_format($broker['rating_avg'], 1) }}</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="p-5 flex-1 flex flex-col space-y-3">
+                                        <h2 class="text-xl font-bold text-gray-900 line-clamp-2">{{ $broker['name'] ?? 'Unknown Broker' }}</h2>
+                                        <div class="text-sm text-gray-600">{{ $broker['primary_location'] ?? '—' }}</div>
+                                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                            <div class="flex items-center gap-2 text-xs text-gray-600">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
+                                                </svg>
+                                                <span class="font-medium">{{ $broker['reviews_count'] ?? 0 }} {{ ($broker['reviews_count'] ?? 0) == 1 ? 'review' : 'reviews' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-3">
+                                        @php
+                                            $brokerSlug = $broker['slug'] ?? $broker['id'];
+                                        @endphp
+                                        <a 
+                                            href="{{ route('broker-reviews.show', $brokerSlug) }}"
+                                            class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">No brokers found</h3>
+                            <p class="text-gray-600">No brokers available at the moment.</p>
+                        </div>
+                    @endif
+                @elseif($activeTab === 'restaurants')
+                    @if($loading)
+                        <div class="text-center py-12">
+                            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                            <p class="mt-4 text-gray-600">Loading restaurants...</p>
+                        </div>
+                    @elseif(count($restaurants) > 0)
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            @foreach($restaurants as $restaurant)
+                                <div wire:key="restaurant-{{ $restaurant['id'] }}" class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col border border-gray-200">
+                                    <div class="relative h-48 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden group">
+                                        @if(isset($restaurant['cover_image_url']))
+                                            <img src="{{ $restaurant['cover_image_url'] }}" alt="{{ $restaurant['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center">
+                                                <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                                                </svg>
+                                            </div>
+                                        @endif
+                                        @if(isset($restaurant['rating_avg']) && $restaurant['rating_avg'] > 0)
+                                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg">
+                                                <svg class="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 20 20">
+                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
+                                                </svg>
+                                                <span class="text-sm font-bold text-gray-900">{{ number_format($restaurant['rating_avg'], 1) }}</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="p-5 flex-1 flex flex-col space-y-3">
+                                        <h2 class="text-xl font-bold text-gray-900 line-clamp-2">{{ $restaurant['name'] ?? 'Unknown Restaurant' }}</h2>
+                                        <div class="text-sm text-gray-600">
+                                            @if(isset($restaurant['city']) && isset($restaurant['country']))
+                                                {{ $restaurant['city'] }}, {{ $restaurant['country'] }}
+                                            @elseif(isset($restaurant['country']))
+                                                {{ $restaurant['country'] }}
+                                            @else
+                                                —
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                            <div class="flex items-center gap-2 text-xs text-gray-600">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
+                                                </svg>
+                                                <span class="font-medium">{{ $restaurant['reviews_count'] ?? 0 }} {{ ($restaurant['reviews_count'] ?? 0) == 1 ? 'review' : 'reviews' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-3">
+                                        @php
+                                            $restaurantSlug = $restaurant['slug'] ?? $restaurant['id'];
+                                        @endphp
+                                        <a 
+                                            href="{{ route('restaurant-reviews.show', $restaurantSlug) }}"
+                                            class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">No restaurants found</h3>
+                            <p class="text-gray-600">No restaurants available at the moment.</p>
                         </div>
                     @endif
                 @endif
