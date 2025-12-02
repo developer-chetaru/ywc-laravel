@@ -307,6 +307,13 @@ Route::middleware([
 
     // Restaurant Reviews (Listing page)
     Route::get('/industry-review/restaurants/list', \App\Livewire\IndustryReview\RestaurantIndex::class)->name('restaurant-reviews.index');
+    
+    // Admin & Advanced Features
+    Route::get('/industry-review/moderation', \App\Livewire\IndustryReview\ModerationDashboard::class)->name('industryreview.moderation');
+    Route::get('/industry-review/statistics', \App\Livewire\IndustryReview\StatisticsDashboard::class)->name('industryreview.statistics');
+    Route::get('/industry-review/brokers/compare', \App\Livewire\IndustryReview\BrokerComparison::class)->name('broker-reviews.compare');
+    Route::get('/industry-review/location/{location}', \App\Livewire\IndustryReview\LocationResources::class)->name('industryreview.location');
+    Route::get('/industry-review/education', \App\Livewire\IndustryReview\EducationalContent::class)->name('industryreview.education');
     Route::get('/industry-review/restaurants/{restaurantId?}/reviews/create', \App\Livewire\IndustryReview\RestaurantReviewCreate::class)->name('restaurant-reviews.create')->where('restaurantId', '[0-9]+');
     Route::get('/industry-review/restaurants/{slug}', \App\Livewire\IndustryReview\RestaurantReviewShow::class)->name('restaurant-reviews.show');
 

@@ -83,6 +83,26 @@
                             <div class="p-5 flex-1 flex flex-col">
                                 <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-1">{{ $broker->name }}</h3>
                                 <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ $broker->business_name }}</p>
+                                
+                                {{-- Badges --}}
+                                <div class="flex flex-wrap gap-1 mb-3">
+                                    @if($broker->is_verified)
+                                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">✓ Verified</span>
+                                    @endif
+                                    @if($broker->is_licensed)
+                                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">✓ Licensed</span>
+                                    @endif
+                                    @if($broker->is_myba_member)
+                                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">MYBA</span>
+                                    @endif
+                                    @if($broker->rating_avg >= 4.5 && $broker->reviews_count >= 50)
+                                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">⭐ Top Rated</span>
+                                    @endif
+                                    @if($broker->years_in_business >= 10)
+                                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">🏆 10+ Years</span>
+                                    @endif
+                                </div>
+                                
                                 <div class="flex items-center mb-3">
                                     <div class="flex items-center">
                                         @for($i = 1; $i <= 5; $i++)

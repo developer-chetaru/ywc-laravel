@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Validator;
 
 class YachtService
 {
-    public function create(array $data, $file = null)
+    public function create(array $data, $file = null, $user = null)
     {
         $validator = Validator::make($data, [
             'name' => 'required|string|max:255',
@@ -33,6 +33,22 @@ class YachtService
         // Handle cover image upload
         if ($file) {
             $validated['cover_image'] = $file->store('yachts', 'public');
+        }
+
+        // Set created_by_user_id and added_by_role if user is provided
+        if ($user) {
+            $validated['created_by_user_id'] = $user->id;
+            
+            // Determine role
+            if ($user->hasRole('super_admin')) {
+                $validated['added_by_role'] = 'super_admin';
+            } elseif ($user->hasRole('Captain')) {
+                $validated['added_by_role'] = 'captain';
+            } elseif ($user->hasRole('Crew Member') || $user->hasRole('crew_member')) {
+                $validated['added_by_role'] = 'crew_member';
+            } elseif ($user->hasRole('admin')) {
+                $validated['added_by_role'] = 'super_admin'; // Admin treated as super_admin for yacht management
+            }
         }
 
         $yacht = Yacht::create($validated);

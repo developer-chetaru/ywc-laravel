@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Models\ItineraryRoute;
 use App\Models\ItineraryRouteReview;
+use App\Models\Yacht;
 use App\Policies\ItineraryRoutePolicy;
 use App\Policies\ItineraryRouteReviewPolicy;
+use App\Policies\YachtPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(ItineraryRoute::class, ItineraryRoutePolicy::class);
         Gate::policy(ItineraryRouteReview::class, ItineraryRouteReviewPolicy::class);
+        Gate::policy(Yacht::class, YachtPolicy::class);
         
         // Register forum Livewire components
         Livewire::component('forum::pages.category.forums-list', ForumsList::class);

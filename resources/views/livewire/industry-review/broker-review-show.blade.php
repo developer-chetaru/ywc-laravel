@@ -24,6 +24,36 @@
             </div>
         </div>
 
+        {{-- Red Flag Warnings --}}
+        @php
+            $redFlags = $broker->red_flags;
+        @endphp
+        @if(count($redFlags) > 0)
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-red-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold text-red-800 mb-2">⚠️ WARNING - MULTIPLE COMPLAINTS</h3>
+                        <p class="text-red-700 mb-3">This broker has the following concerns reported by crew members:</p>
+                        <ul class="list-disc list-inside space-y-1 text-red-700">
+                            @foreach($redFlags as $flag)
+                                <li>
+                                    <strong>{{ ucfirst(str_replace('_', ' ', $flag['type'])) }}:</strong> 
+                                    {{ $flag['message'] }}
+                                    @if(isset($flag['count']))
+                                        ({{ $flag['count'] }} reviews)
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                        <p class="text-red-800 font-semibold mt-3">PROCEED WITH CAUTION - Read reviews carefully before engaging</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="bg-white shadow-lg rounded-xl p-6">
             <div class="flex gap-4 mb-6">
                 <select wire:model.live="sortBy" class="px-4 py-2 border rounded-lg">

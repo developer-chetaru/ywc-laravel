@@ -8,6 +8,8 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use App\Models\Yacht;
 use App\Models\User;
 use App\Models\MasterData;
@@ -106,12 +108,22 @@ class YachtManage extends Component
 
     public function openAddModal()
     {
-        // Prevent captains from adding new yachts
-        $user = auth()->user();
-        if ($user) {
-            $userRoles = $user->getRoleNames()->toArray();
-            if (in_array('Captain', $userRoles)) {
-                session()->flash('error', 'Captains cannot add new yachts.');
+        $user = Auth::user();
+        if (!$user) {
+            session()->flash('error', 'You must be logged in.');
+            return;
+        }
+
+        // Check permission using policy
+        if (!Gate::allows('create', Yacht::class)) {
+            session()->flash('error', 'You do not have permission to add yachts.');
+            return;
+        }
+
+        // Additional validation for Captains: yacht name must match their current_yacht
+        if ($user->hasRole('Captain')) {
+            if (!$user->current_yacht) {
+                session()->flash('error', 'Please set your current yacht in your profile before adding it to the system.');
                 return;
             }
         }
@@ -123,6 +135,14 @@ class YachtManage extends Component
 
     public function openEditModal($yachtId)
     {
+        $yacht = Yacht::findOrFail($yachtId);
+        
+        // Check permission using policy
+        if (!Gate::allows('update', $yacht)) {
+            session()->flash('error', 'You do not have permission to edit this yacht.');
+            return;
+        }
+
         $this->yachtId = $yachtId;
         $this->isEditMode = true;
         $this->loadYacht($yachtId);
@@ -210,12 +230,38 @@ class YachtManage extends Component
             if ($this->crew_capacity) $data['crew_capacity'] = $this->crew_capacity;
             if ($this->guest_capacity) $data['guest_capacity'] = $this->guest_capacity;
 
+            $user = Auth::user();
+
             if ($this->isEditMode) {
                 $yacht = Yacht::findOrFail($this->yachtId);
+                
+                // Check permission
+                if (!Gate::allows('update', $yacht)) {
+                    $this->error = 'You do not have permission to edit this yacht.';
+                    $this->loading = false;
+                    return;
+                }
+                
                 $service->update($yacht, $data, $this->cover_image);
                 $this->message = 'Yacht updated successfully!';
             } else {
-                $service->create($data, $this->cover_image);
+                // Check permission
+                if (!Gate::allows('create', Yacht::class)) {
+                    $this->error = 'You do not have permission to add yachts.';
+                    $this->loading = false;
+                    return;
+                }
+
+                // Additional validation for Captains: yacht name must match their current_yacht
+                if ($user->hasRole('Captain')) {
+                    if (!$user->current_yacht || trim($user->current_yacht) !== trim($this->name)) {
+                        $this->error = 'As a Captain, you can only add yachts that match your current yacht (' . ($user->current_yacht ?? 'not set') . ').';
+                        $this->loading = false;
+                        return;
+                    }
+                }
+
+                $service->create($data, $this->cover_image, $user);
                 $this->message = 'Yacht created successfully!';
             }
 
@@ -232,20 +278,17 @@ class YachtManage extends Component
 
     public function deleteYacht($yachtId)
     {
-        // Prevent captains from deleting yachts
-        $user = auth()->user();
-        if ($user) {
-            $userRoles = $user->getRoleNames()->toArray();
-            if (in_array('Captain', $userRoles)) {
-                $this->error = 'Captains cannot delete yachts.';
-                $this->loading = false;
-                return;
-            }
-        }
-
         $this->loading = true;
         try {
             $yacht = Yacht::findOrFail($yachtId);
+            
+            // Check permission using policy
+            if (!Gate::allows('delete', $yacht)) {
+                $this->error = 'You do not have permission to delete this yacht.';
+                $this->loading = false;
+                return;
+            }
+
             $service = app(YachtService::class);
             $service->delete($yacht);
             $this->message = 'Yacht deleted successfully!';
@@ -310,7 +353,8 @@ class YachtManage extends Component
         }
 
         $query = Yacht::query()
-            ->withCount('reviews');
+            ->withCount('reviews')
+            ->with('createdBy');
         
         // For captains, only show their current yacht (apply this filter first and make it strict)
         if ($isCaptain) {

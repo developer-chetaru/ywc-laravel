@@ -114,4 +114,83 @@ class Broker extends Model
         
         $this->save();
     }
+
+    public function getRedFlagsAttribute()
+    {
+        $flags = [];
+        $reviews = $this->allReviews()->where('is_approved', true)->get();
+        
+        if ($reviews->count() < 5) {
+            return $flags; // Not enough reviews to determine red flags
+        }
+
+        // Check for hidden fees complaints
+        $hiddenFeesCount = $reviews->filter(function ($review) {
+            return stripos($review->review, 'hidden fee') !== false || 
+                   stripos($review->review, 'surprise fee') !== false ||
+                   ($review->fees_transparency_rating && $review->fees_transparency_rating <= 2);
+        })->count();
+        
+        if ($hiddenFeesCount >= 3) {
+            $flags[] = [
+                'type' => 'hidden_fees',
+                'severity' => 'high',
+                'message' => 'Multiple reviews mention hidden fees',
+                'count' => $hiddenFeesCount,
+            ];
+        }
+
+        // Check for misrepresented positions
+        $misrepresentedCount = $reviews->filter(function ($review) {
+            return stripos($review->review, 'misrepresent') !== false || 
+                   stripos($review->review, 'bait and switch') !== false ||
+                   ($review->job_quality_rating && $review->job_quality_rating <= 2);
+        })->count();
+        
+        if ($misrepresentedCount >= 3) {
+            $flags[] = [
+                'type' => 'misrepresented',
+                'severity' => 'high',
+                'message' => 'Multiple reviews report misrepresented positions',
+                'count' => $misrepresentedCount,
+            ];
+        }
+
+        // Check for poor communication
+        $poorCommCount = $reviews->filter(function ($review) {
+            return ($review->communication_rating && $review->communication_rating <= 2);
+        })->count();
+        
+        if ($poorCommCount >= ($reviews->count() * 0.3)) {
+            $flags[] = [
+                'type' => 'poor_communication',
+                'severity' => 'medium',
+                'message' => '30%+ of reviews report poor communication',
+                'count' => $poorCommCount,
+            ];
+        }
+
+        // Check for low recommendation rate
+        $recommendRate = ($this->would_recommend_count / max($reviews->count(), 1)) * 100;
+        if ($recommendRate < 50 && $reviews->count() >= 10) {
+            $flags[] = [
+                'type' => 'low_recommendation',
+                'severity' => 'high',
+                'message' => 'Less than 50% would recommend',
+                'rate' => round($recommendRate, 1),
+            ];
+        }
+
+        // Check for low overall rating
+        if ($this->rating_avg < 2.5 && $reviews->count() >= 10) {
+            $flags[] = [
+                'type' => 'low_rating',
+                'severity' => 'high',
+                'message' => 'Overall rating below 2.5/5',
+                'rating' => $this->rating_avg,
+            ];
+        }
+
+        return $flags;
+    }
 }

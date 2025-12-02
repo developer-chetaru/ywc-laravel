@@ -2994,6 +2994,7 @@
                     "Industry Review - Yachts"
                 ],
                 "summary": "Create a new yacht",
+                "description": "Create a new yacht in the system. Role-based permissions apply: Super Admin and Admin can create any yacht. Captains can only create yachts matching their current_yacht profile setting. Crew Members can create yachts they've worked on. The system automatically tracks who created the yacht (created_by_user_id and added_by_role).",
                 "operationId": "createYacht",
                 "requestBody": {
                     "required": true,
@@ -3115,6 +3116,7 @@
                     "Industry Review - Yachts"
                 ],
                 "summary": "Get yacht details by slug",
+                "description": "Retrieves detailed information about a yacht including gallery images, ratings, and reviews count. Gallery images are included in the response with their URLs, categories, and order.",
                 "operationId": "getYachtBySlug",
                 "parameters": [
                     {
@@ -3155,6 +3157,7 @@
                     "Industry Review - Yachts"
                 ],
                 "summary": "Update a yacht",
+                "description": "Update yacht information. Role-based permissions apply: Super Admin and Admin can update any yacht. Captains can update their own yacht (matching current_yacht or yacht they created). Crew Members can update yachts they created.",
                 "operationId": "updateYacht",
                 "parameters": [
                     {
@@ -3270,6 +3273,7 @@
                     "Industry Review - Yachts"
                 ],
                 "summary": "Delete a yacht",
+                "description": "Delete a yacht from the system. Role-based permissions apply: Only Super Admin and Admin can delete yachts. Captains and Crew Members cannot delete yachts.",
                 "operationId": "deleteYacht",
                 "parameters": [
                     {
@@ -3301,6 +3305,313 @@
                     },
                     "404": {
                         "description": "Yacht not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/yachts/{yachtId}/gallery": {
+            "post": {
+                "tags": [
+                    "Industry Review - Yachts"
+                ],
+                "summary": "Add image to yacht gallery",
+                "description": "Add an image to the yacht's gallery. Maximum 20 images per yacht. Images can be categorized (exterior, interior, crew_areas, deck, engine_room, bridge, crew_mess, crew_cabins, other).",
+                "operationId": "addYachtGalleryImage",
+                "parameters": [
+                    {
+                        "name": "yachtId",
+                        "in": "path",
+                        "description": "Yacht ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "image"
+                                ],
+                                "properties": {
+                                    "image": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Image file (max 5MB)"
+                                    },
+                                    "caption": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "description": "Optional caption for the image"
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "enum": [
+                                            "exterior",
+                                            "interior",
+                                            "crew_areas",
+                                            "deck",
+                                            "engine_room",
+                                            "bridge",
+                                            "crew_mess",
+                                            "crew_cabins",
+                                            "other"
+                                        ],
+                                        "default": "other",
+                                        "description": "Image category. Options: exterior, interior, crew_areas, deck, engine_room, bridge, crew_mess, crew_cabins, other"
+                                    },
+                                    "order": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "description": "Display order (lower numbers appear first)"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Image added successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Image added successfully."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "yacht_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "image_path": {
+                                                    "type": "string",
+                                                    "example": "yacht-gallery/image.jpg"
+                                                },
+                                                "image_url": {
+                                                    "type": "string",
+                                                    "example": "http://example.com/storage/yacht-gallery/image.jpg"
+                                                },
+                                                "caption": {
+                                                    "type": "string",
+                                                    "example": "Main exterior view"
+                                                },
+                                                "category": {
+                                                    "type": "string",
+                                                    "example": "exterior"
+                                                },
+                                                "order": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error or maximum images limit reached",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Maximum 20 images allowed per yacht."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Yacht not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/yachts/{yachtId}/gallery/{imageId}": {
+            "delete": {
+                "tags": [
+                    "Industry Review - Yachts"
+                ],
+                "summary": "Delete image from yacht gallery",
+                "description": "Remove an image from the yacht's gallery. Only users with permission to edit the yacht can delete gallery images.",
+                "operationId": "deleteYachtGalleryImage",
+                "parameters": [
+                    {
+                        "name": "yachtId",
+                        "in": "path",
+                        "description": "Yacht ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "imageId",
+                        "in": "path",
+                        "description": "Gallery image ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Image deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Image deleted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Yacht or image not found"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/yachts/{yachtId}/gallery/order": {
+            "put": {
+                "tags": [
+                    "Industry Review - Yachts"
+                ],
+                "summary": "Update gallery image order",
+                "description": "Update the display order of gallery images. Provide an array of image IDs with their new order values.",
+                "operationId": "updateYachtGalleryOrder",
+                "parameters": [
+                    {
+                        "name": "yachtId",
+                        "in": "path",
+                        "description": "Yacht ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "images"
+                                ],
+                                "properties": {
+                                    "images": {
+                                        "type": "array",
+                                        "description": "Array of image objects with id and order",
+                                        "items": {
+                                            "type": "object",
+                                            "required": [
+                                                "id",
+                                                "order"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "description": "Gallery image ID",
+                                                    "example": 1
+                                                },
+                                                "order": {
+                                                    "type": "integer",
+                                                    "minimum": 0,
+                                                    "description": "New display order",
+                                                    "example": 0
+                                                }
+                                            }
+                                        },
+                                        "example": [
+                                            {
+                                                "id": 1,
+                                                "order": 0
+                                            },
+                                            {
+                                                "id": 2,
+                                                "order": 1
+                                            },
+                                            {
+                                                "id": 3,
+                                                "order": 2
+                                            }
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Image order updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Image order updated successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "404": {
+                        "description": "Yacht not found"
+                    },
+                    "403": {
+                        "description": "Permission denied"
                     }
                 },
                 "security": [

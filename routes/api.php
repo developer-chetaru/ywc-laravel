@@ -133,6 +133,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/yachts/{id}', [YachtController::class, 'update']);
     Route::delete('/yachts/{id}', [YachtController::class, 'destroy']);
     
+    // Yacht Gallery
+    Route::post('/yachts/{yachtId}/gallery', [YachtController::class, 'addGalleryImage']);
+    Route::delete('/yachts/{yachtId}/gallery/{imageId}', [YachtController::class, 'deleteGalleryImage']);
+    Route::put('/yachts/{yachtId}/gallery/order', [YachtController::class, 'updateGalleryImageOrder']);
+    
     Route::post('/marinas', [MarinaController::class, 'store']);
     Route::put('/marinas/{id}', [MarinaController::class, 'update']);
     Route::delete('/marinas/{id}', [MarinaController::class, 'destroy']);

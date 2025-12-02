@@ -64,6 +64,9 @@ class Yacht extends Model
         'crew_culture_rating_avg',
         'management_rating_avg',
         'benefits_rating_avg',
+        // Role-based management
+        'created_by_user_id',
+        'added_by_role',
     ];
 
     protected $casts = [
@@ -103,6 +106,16 @@ class Yacht extends Model
     public function managementResponses()
     {
         return $this->hasMany(YachtManagementResponse::class);
+    }
+
+    public function gallery()
+    {
+        return $this->hasMany(YachtGallery::class)->orderBy('order')->orderBy('id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
     public function updateRatingStats()
