@@ -11,12 +11,12 @@
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">Manage Marinas</h1>
                     <p class="text-sm text-gray-600">Add, edit, and manage marina information</p>
                 </div>
-                <button wire:click="openAddModal" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all">
+                <a href="{{ route('industryreview.marinas.create') }}" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     Add New Marina
-                </button>
+                </a>
             </div>
 
             {{-- Filters and Search --}}
@@ -168,11 +168,11 @@
                                 <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ $marina->reviews_count }} reviews</td>
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex items-center justify-center gap-2">
-                                        <button wire:click="openEditModal({{ $marina->id }})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                                        <a href="{{ route('industryreview.marinas.edit', $marina->id) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
-                                        </button>
+                                        </a>
                                         <button wire:click="deleteMarina({{ $marina->id }})" onclick="return confirm('Are you sure you want to delete this marina?')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -224,102 +224,4 @@
         </div>
     </div>
 
-    {{-- Modal --}}
-    @if($showModal)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" wire:click="closeModal">
-            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" @click.stop>
-                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
-                    <h2 class="text-2xl font-bold text-gray-900">{{ $isEditMode ? 'Edit Marina' : 'Add New Marina' }}</h2>
-                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                @if($error)
-                    <div class="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <p class="text-red-800">{{ $error }}</p>
-                    </div>
-                @endif
-                @if($message)
-                    <div class="mx-6 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <p class="text-green-800">{{ $message }}</p>
-                    </div>
-                @endif
-                <form wire:submit.prevent="save" class="p-6 space-y-4">
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Marina Name *</label>
-                            <input type="text" wire:model="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                            @error('name') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Country *</label>
-                            <input type="text" wire:model="country" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                            @error('country') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Region</label>
-                            <input type="text" wire:model="region" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
-                            <input type="text" wire:model="city" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                            <textarea wire:model="address" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
-                            <select wire:model="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                                <option value="">Select Type</option>
-                                @foreach($marinaTypes as $marinaType)
-                                    <option value="{{ $marinaType->code }}">{{ $marinaType->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('type') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                            <input type="text" wire:model="phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                            <input type="email" wire:model="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Website</label>
-                            <input type="url" wire:model="website" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
-                        @if($cover_image_preview)
-                            <img src="{{ $cover_image_preview }}" alt="Preview" class="w-32 h-32 object-cover rounded-lg mb-2">
-                        @elseif($existing_cover_image)
-                            <img src="{{ $existing_cover_image }}" alt="Current" class="w-32 h-32 object-cover rounded-lg mb-2">
-                        @endif
-                        <input type="file" wire:model="cover_image" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        @error('cover_image') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="flex gap-4 pt-4 border-t border-gray-200">
-                        <button type="submit" wire:loading.attr="disabled" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50">
-                            <span wire:loading.remove wire:target="save">{{ $isEditMode ? 'Update' : 'Create' }} Marina</span>
-                            <span wire:loading wire:target="save" class="flex items-center justify-center">
-                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                {{ $isEditMode ? 'Updating...' : 'Creating...' }}
-                            </span>
-                        </button>
-                        <button type="button" wire:click="closeModal" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endif
 </div>

@@ -3,15 +3,15 @@
         <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Manage Restaurants & Services</h1>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Manage Restaurants</h1>
                     <p class="text-sm text-gray-600">Add, edit, and manage restaurant and service information</p>
                 </div>
-                <button wire:click="openAddModal" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all">
+                <a href="{{ route('industryreview.restaurants.create') }}" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     Add New Restaurant
-                </button>
+                </a>
             </div>
 
             <div class="mb-6 space-y-4">
@@ -80,7 +80,7 @@
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ number_format($restaurant->rating_avg, 1) }} ({{ $restaurant->reviews_count }})</td>
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex items-center justify-center gap-2">
-                                        <button wire:click="openEditModal({{ $restaurant->id }})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit">
+                                        <a href="{{ route('industryreview.restaurants.edit', $restaurant->id) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
@@ -120,100 +120,4 @@
         </div>
     </div>
 
-    @if($showModal)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" wire:click="closeModal">
-            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" @click.stop>
-                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
-                    <h2 class="text-2xl font-bold text-gray-900">{{ $isEditMode ? 'Edit Restaurant' : 'Add New Restaurant' }}</h2>
-                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                @if($error)
-                    <div class="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <p class="text-red-800">{{ $error }}</p>
-                    </div>
-                @endif
-                <form wire:submit.prevent="save" class="p-6 space-y-4">
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Name *</label>
-                            <input type="text" wire:model="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
-                            <input type="text" wire:model="business_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
-                            <select wire:model="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                                @foreach($types as $key => $label)
-                                    <option value="{{ $key }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
-                            <input type="text" wire:model="city" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                            <input type="text" wire:model="country" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                            <input type="text" wire:model="phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                            <input type="email" wire:model="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Website</label>
-                            <input type="url" wire:model="website" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                            <textarea wire:model="description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
-                            <select wire:model="price_range" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="">Select</option>
-                                @foreach($priceRanges as $range)
-                                    <option value="{{ $range }}">{{ $range }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" wire:model="crew_friendly" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <label class="ml-2 text-sm text-gray-700">Crew Friendly</label>
-                        </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" wire:model="crew_discount" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <label class="ml-2 text-sm text-gray-700">Crew Discount</label>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
-                        @if($cover_image_preview)
-                            <img src="{{ $cover_image_preview }}" alt="Preview" class="w-32 h-32 object-cover rounded-lg mb-2">
-                        @elseif($existing_cover_image)
-                            <img src="{{ $existing_cover_image }}" alt="Current" class="w-32 h-32 object-cover rounded-lg mb-2">
-                        @endif
-                        <input type="file" wire:model="cover_image" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                    </div>
-                    <div class="flex gap-4 pt-4 border-t border-gray-200">
-                        <button type="submit" wire:loading.attr="disabled" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50">
-                            <span wire:loading.remove wire:target="save">{{ $isEditMode ? 'Update' : 'Create' }} Restaurant</span>
-                            <span wire:loading wire:target="save">Saving...</span>
-                        </button>
-                        <button type="button" wire:click="closeModal" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endif
 </div>

@@ -12,12 +12,12 @@
                     <p class="text-sm text-gray-600">Add, edit, and manage yacht information</p>
                 </div>
                 @can('create', \App\Models\Yacht::class)
-                    <button wire:click="openAddModal" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all">
+                    <a href="{{ route('industryreview.yachts.create') }}" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
                         Add New Yacht
-                    </button>
+                    </a>
                 @endcan
             </div>
 
@@ -229,13 +229,13 @@
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     @if($yacht->member_count > 0)
-                                        <button wire:click="showMembers({{ $yacht->id }})" 
+                                        <a href="{{ route('industryreview.yachts.members', $yacht->id) }}" 
                                             class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors cursor-pointer">
                                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                             </svg>
                                             {{ $yacht->member_count }}
-                                        </button>
+                                        </a>
                                     @else
                                         <span class="text-sm text-gray-400">0</span>
                                     @endif
@@ -243,11 +243,11 @@
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         @can('update', $yacht)
-                                            <button wire:click="openEditModal({{ $yacht->id }})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                                            <a href="{{ route('industryreview.yachts.edit', $yacht->id) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                                 </svg>
-                                            </button>
+                                            </a>
                                         @endcan
                                         @can('delete', $yacht)
                                             <button wire:click="deleteYacht({{ $yacht->id }})" onclick="return confirm('Are you sure you want to delete this yacht?')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
@@ -306,184 +306,5 @@
         </div>
     </div>
 
-    {{-- Modal --}}
-    @if($showModal)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" wire:click="closeModal">
-            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" @click.stop>
-                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
-                    <h2 class="text-2xl font-bold text-gray-900">{{ $isEditMode ? 'Edit Yacht' : 'Add New Yacht' }}</h2>
-                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                @if($error)
-                    <div class="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <p class="text-red-800">{{ $error }}</p>
-                    </div>
-                @endif
-                @if($message)
-                    <div class="mx-6 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <p class="text-green-800">{{ $message }}</p>
-                    </div>
-                @endif
-                <form wire:submit.prevent="save" class="p-6 space-y-4">
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Yacht Name *</label>
-                            <input type="text" wire:model="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            @error('name') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
-                            <select wire:model="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="">Select Type</option>
-                                @foreach($yachtTypes as $yachtType)
-                                    <option value="{{ $yachtType->code }}">{{ $yachtType->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('type') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Length (meters)</label>
-                            <input type="number" step="0.1" wire:model="length_meters" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Length (feet)</label>
-                            <input type="number" step="0.1" wire:model="length_feet" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Year Built</label>
-                            <input type="number" wire:model="year_built" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Status *</label>
-                            <select wire:model="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                @foreach($statuses as $key => $label)
-                                    <option value="{{ $key }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Flag/Registry</label>
-                            <input type="text" wire:model="flag_registry" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Home Port</label>
-                            <input type="text" wire:model="home_port" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Crew Capacity</label>
-                            <input type="number" wire:model="crew_capacity" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Guest Capacity</label>
-                            <input type="number" wire:model="guest_capacity" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
-                        @if($cover_image_preview)
-                            <img src="{{ $cover_image_preview }}" alt="Preview" class="w-32 h-32 object-cover rounded-lg mb-2">
-                        @elseif($existing_cover_image)
-                            <img src="{{ $existing_cover_image }}" alt="Current" class="w-32 h-32 object-cover rounded-lg mb-2">
-                        @endif
-                        <input type="file" wire:model="cover_image" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        @error('cover_image') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="flex gap-4 pt-4 border-t border-gray-200">
-                        <button type="submit" wire:loading.attr="disabled" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50">
-                            <span wire:loading.remove wire:target="save">{{ $isEditMode ? 'Update' : 'Create' }} Yacht</span>
-                            <span wire:loading wire:target="save" class="flex items-center justify-center">
-                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                {{ $isEditMode ? 'Updating...' : 'Creating...' }}
-                            </span>
-                        </button>
-                        <button type="button" wire:click="closeModal" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endif
-
-    {{-- Members Modal --}}
-    @if($showMemberModal)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" wire:click="closeMemberModal">
-            <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-y-auto" @click.stop>
-                <div class="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-900">Members on {{ $selectedYachtName }}</h2>
-                        <p class="text-sm text-gray-600 mt-1">{{ count($members) }} {{ count($members) == 1 ? 'member' : 'members' }}</p>
-                    </div>
-                    <button wire:click="closeMemberModal" class="text-gray-400 hover:text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                
-                <div class="p-6">
-                    @if(count($members) > 0)
-                        <div class="space-y-3">
-                            @foreach($members as $member)
-                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
-                                    <div class="flex items-center gap-4 flex-1">
-                                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                            @if($member['profile_photo_path'])
-                                                <img src="{{ asset('storage/' . $member['profile_photo_path']) }}" 
-                                                     alt="{{ $member['first_name'] }} {{ $member['last_name'] }}"
-                                                     class="w-12 h-12 rounded-full object-cover">
-                                            @else
-                                                <span class="text-blue-600 font-semibold text-lg">
-                                                    {{ substr($member['first_name'], 0, 1) }}{{ substr($member['last_name'], 0, 1) }}
-                                                </span>
-                                            @endif
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <div class="font-semibold text-gray-900">
-                                                {{ $member['first_name'] }} {{ $member['last_name'] }}
-                                            </div>
-                                            <div class="text-sm text-gray-600">{{ $member['email'] }}</div>
-                                            @if($member['current_yacht_start_date'])
-                                                <div class="text-xs text-gray-500 mt-1">
-                                                    Started: {{ \Carbon\Carbon::parse($member['current_yacht_start_date'])->format('M Y') }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                        <div class="flex flex-wrap gap-2">
-                                            @if(count($member['roles']) > 0)
-                                                @foreach($member['roles'] as $role)
-                                                    <span class="px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                                                        {{ ucfirst(str_replace('_', ' ', $role)) }}
-                                                    </span>
-                                                @endforeach
-                                            @else
-                                                <span class="px-2.5 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
-                                                    No Role
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-12">
-                            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                            <p class="text-gray-600">No members found for this yacht.</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    @endif
 </div>
 

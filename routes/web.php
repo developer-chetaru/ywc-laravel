@@ -289,16 +289,31 @@ Route::middleware([
     Route::get('/industry-review/yachts/{yachtId?}/reviews/create', \App\Livewire\IndustryReview\YachtReviewCreate::class)->name('yacht-reviews.create')->where('yachtId', '[0-9]+');
     Route::get('/industry-review/marinas/{marinaId?}/reviews/create', \App\Livewire\IndustryReview\MarinaReviewCreate::class)->name('marina-reviews.create')->where('marinaId', '[0-9]+');
 
-    // Industry Review Show Pages
+    // Industry Review Management - Specific routes must come before slug routes
+    Route::get('/industry-review/yachts', \App\Livewire\IndustryReview\YachtManage::class)->name('industryreview.yachts.manage');
+    Route::get('/industry-review/yachts/create', \App\Livewire\IndustryReview\YachtForm::class)->name('industryreview.yachts.create');
+    Route::get('/industry-review/yachts/{id}/edit', \App\Livewire\IndustryReview\YachtForm::class)->name('industryreview.yachts.edit')->where('id', '[0-9]+');
+    Route::get('/industry-review/yachts/{id}/members', \App\Livewire\IndustryReview\YachtMembers::class)->name('industryreview.yachts.members')->where('id', '[0-9]+');
+    
+    Route::get('/industry-review/marinas', \App\Livewire\IndustryReview\MarinaManage::class)->name('industryreview.marinas.manage');
+    Route::get('/industry-review/marinas/create', \App\Livewire\IndustryReview\MarinaForm::class)->name('industryreview.marinas.create');
+    Route::get('/industry-review/marinas/{id}/edit', \App\Livewire\IndustryReview\MarinaForm::class)->name('industryreview.marinas.edit')->where('id', '[0-9]+');
+
+    // Industry Review Show Pages - Must come after specific routes
     Route::get('/industry-review/yachts/{slug}', \App\Livewire\IndustryReview\YachtReviewShow::class)->name('yacht-reviews.show');
     Route::get('/industry-review/marinas/{slug}', \App\Livewire\IndustryReview\MarinaReviewShow::class)->name('marina-reviews.show');
-
-    // Industry Review Management (Default routes - same as yachts)
-    Route::get('/industry-review/yachts', \App\Livewire\IndustryReview\YachtManage::class)->name('industryreview.yachts.manage');
-    Route::get('/industry-review/marinas', \App\Livewire\IndustryReview\MarinaManage::class)->name('industryreview.marinas.manage');
+    
     Route::get('/industry-review/contractors', \App\Livewire\IndustryReview\ContractorManage::class)->name('industryreview.contractors.manage');
+    Route::get('/industry-review/contractors/create', \App\Livewire\IndustryReview\ContractorForm::class)->name('industryreview.contractors.create');
+    Route::get('/industry-review/contractors/{id}/edit', \App\Livewire\IndustryReview\ContractorForm::class)->name('industryreview.contractors.edit')->where('id', '[0-9]+');
+    
     Route::get('/industry-review/brokers', \App\Livewire\IndustryReview\BrokerManage::class)->name('industryreview.brokers.manage');
+    Route::get('/industry-review/brokers/create', \App\Livewire\IndustryReview\BrokerForm::class)->name('industryreview.brokers.create');
+    Route::get('/industry-review/brokers/{id}/edit', \App\Livewire\IndustryReview\BrokerForm::class)->name('industryreview.brokers.edit')->where('id', '[0-9]+');
+    
     Route::get('/industry-review/restaurants', \App\Livewire\IndustryReview\RestaurantManage::class)->name('industryreview.restaurants.manage');
+    Route::get('/industry-review/restaurants/create', \App\Livewire\IndustryReview\RestaurantForm::class)->name('industryreview.restaurants.create');
+    Route::get('/industry-review/restaurants/{id}/edit', \App\Livewire\IndustryReview\RestaurantForm::class)->name('industryreview.restaurants.edit')->where('id', '[0-9]+');
 
     // Contractor Reviews (Listing page)
     Route::get('/industry-review/contractors/list', \App\Livewire\IndustryReview\ContractorIndex::class)->name('contractor-reviews.index');
