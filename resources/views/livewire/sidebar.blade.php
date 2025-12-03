@@ -4,9 +4,32 @@ use Spatie\Permission\Models\Role;
 $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArray();
 @endphp
 
+{{-- Mobile Overlay --}}
+<div 
+    x-show="$store.sidebar?.isOpen && window.innerWidth < 768"
+    @click="$store.sidebar.isOpen = false"
+    x-transition:enter="transition-opacity ease-linear duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition-opacity ease-linear duration-300"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 md:hidden"
+    x-cloak
+    x-init="
+        $watch('$store.sidebar.isOpen', (val) => {
+            if (val && window.innerWidth < 768) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        });
+    "
+></div>
+
 <div
     x-data="{ 
-        isOpen: true, 
+        isOpen: window.innerWidth >= 768, 
         isMobile: window.innerWidth < 768,
         industryReviewOpen: {{ request()->is('industry-review*') ? 'true' : 'false' }},
         itineraryOpen: {{ request()->is('itinerary*') ? 'true' : 'false' }},
@@ -14,9 +37,39 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
         documentsCareerOpen: {{ request()->is('documents*') || request()->is('career-history*') ? 'true' : 'false' }}
     }"
     x-init="
-        window.addEventListener('resize', () => isMobile = window.innerWidth < 768);
-        $store.sidebar = { isOpen };
-        $watch('isOpen', val => $store.sidebar.isOpen = val);
+        // Wait for Alpine to be ready
+        $nextTick(() => {
+            // Initialize store if it doesn't exist
+            if (!$store.sidebar) {
+                $store.sidebar = { isOpen: isOpen };
+            } else {
+                // Sync local state with store
+                isOpen = $store.sidebar.isOpen;
+            }
+            
+            // Watch for store changes and update local state
+            $watch('$store.sidebar.isOpen', (val) => {
+                isOpen = val;
+            });
+            
+            // Watch local state and update store
+            $watch('isOpen', (val) => {
+                if ($store.sidebar) {
+                    $store.sidebar.isOpen = val;
+                }
+            });
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth < 768;
+            if (window.innerWidth >= 768) {
+                isOpen = true;
+            } else if (!wasMobile && isMobile) {
+                isOpen = false;
+            }
+        });
     "
     class="h-screen bg-[#0066FF] text-white flex flex-col transition-all duration-300 z-50 fixed inset-y-0 left-0"
     :class="{
@@ -25,6 +78,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
         'translate-x-0 w-72': isMobile && isOpen,
         '-translate-x-full': isMobile && !isOpen
     }"
+    @click.stop
     style="will-change: transform, width;">
     <!-- Header -->
     <div class="flex items-center justify-between p-4 py-5 border-b border-blue-300 flex-shrink-0">
@@ -34,16 +88,29 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                 Yacht Workers Council
             </span>
         </div>
-        <div>
-            <template x-if="isOpen">
-                <button @click="isOpen = !isOpen" class="text-white z-10">
-                    <img src="{{ asset('images/right-icon.svg') }}" alt="">
-                </button>
-            </template>
-            <template x-if="!isOpen">
-                <button @click="isOpen = !isOpen" class="text-white cursor-pointer text-xl">
-                    ☰
-                </button>
+        <div class="flex items-center">
+            <!-- Mobile close button (always visible on mobile when open) -->
+            <button 
+                x-show="isMobile && isOpen"
+                @click="isOpen = false"
+                class="text-white cursor-pointer p-2 hover:bg-white/10 rounded transition-colors"
+                aria-label="Close sidebar">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <!-- Desktop toggle buttons -->
+            <template x-if="!isMobile">
+                <template x-if="isOpen">
+                    <button @click="isOpen = !isOpen" class="text-white z-10">
+                        <img src="{{ asset('images/right-icon.svg') }}" alt="">
+                    </button>
+                </template>
+                <template x-if="!isOpen">
+                    <button @click="isOpen = !isOpen" class="text-white cursor-pointer text-xl">
+                        ☰
+                    </button>
+                </template>
             </template>
         </div>
     </div>

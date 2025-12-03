@@ -78,6 +78,9 @@ a.common-btn {
 a.common-btn:hover {
     background-color: transparent;
 }
+a.common-btn:active {
+    transform: scale(0.98);
+}
 
 p,
 li {
@@ -247,6 +250,14 @@ header .row {
     font-family: "DM Sans", sans-serif;
     padding: 10px 18px;
     color: #616161;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.banner-form .gfield input:focus,
+.banner-form .gfield select:focus {
+    border-color: #0053FF;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 83, 255, 0.1);
 }
 
 
@@ -274,6 +285,9 @@ header .row {
 .banner-form input[type="submit"]:hover {
     background-color: transparent;
     color: #0053FF;
+}
+.banner-form input[type="submit"]:active {
+    transform: scale(0.98);
 }
 .banner-form form p {
     margin-bottom: 0;
@@ -866,4 +880,304 @@ a.login-btn.common-btn {
 .transform {
     padding: 35px 0 45px 0;
 }
+.banner {
+    padding-top: 100px;
+    padding-bottom: 50px;
+}
+.banner .row {
+    flex-direction: column;
+    row-gap: 30px;
+}
+.banner-left {
+    margin-bottom: 0;
+}
+.banner-form {
+    padding: 25px 20px;
+}
+.banner-form h3 {
+    font-size: 24px;
+}
+.banner-form p {
+    font-size: 14px;
+}
+.wishlist-right-content {
+    row-gap: 25px;
+}
+.wishlist-box.row {
+    flex-direction: row;
+    column-gap: 15px;
+}
+.wishlist-box-left span {
+    font-size: 18px;
+    min-width: 45px;
+    min-height: 45px;
+    padding: 8px;
+}
+.wishlist-box-right h4 {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+.wishlist-box-right p {
+    font-size: 14px;
+}
+.transform-right-content p {
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+.transform-right-content a.common-btn {
+    width: 100%;
+    text-align: center;
+}
+.platform-box {
+    padding: 20px 18px;
+}
+.platform-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 12px;
+}
+.platform-icon img {
+    width: 28px;
+    height: 28px;
+}
+.platform-content h4 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+.platform-content p {
+    font-size: 14px;
+}
+.features-content {
+    padding: 18px;
+}
+.features-content h4 {
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+.features-content p {
+    font-size: 14px;
+}
+footer {
+    padding: 35px 0;
+}
+.footer-logo {
+    margin-bottom: 20px;
+}
+.footer-logo img {
+    max-width: 200px;
+}
+footer h3 {
+    font-size: 14px;
+    line-height: 20px;
+    margin-bottom: 20px;
+}
+.footer-social.row {
+    column-gap: 18px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+}
+.footer-social img {
+    width: 18px;
+    height: 18px;
+}
+p.footer-copy {
+    font-size: 12px;
+}
+}
+
+/* Mobile touch improvements */
+@media (hover: none) and (pointer: coarse) {
+    a.common-btn,
+    .banner-form input[type="submit"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+
+@media(max-width: 480px) {
+    .container {
+        padding: 0 15px;
+    }
+    header {
+        padding-top: 15px;
+    }
+    header .logo {
+        width: 55%;
+    }
+    header .logo img {
+        max-width: 140px;
+    }
+    .header-btn {
+        width: 45%;
+    }
+    a.login-btn.common-btn {
+        font-size: 12px;
+        padding: 10px 20px;
+    }
+    .banner {
+        padding-top: 80px;
+        padding-bottom: 40px;
+    }
+    .banner h1 {
+        font-size: 28px;
+        letter-spacing: 0.5px;
+        margin-bottom: 15px;
+    }
+    .banner-left p {
+        font-size: 14px;
+        line-height: 140%;
+    }
+    .banner-form {
+        padding: 20px 18px;
+    }
+    .banner-form h3 {
+        font-size: 20px;
+        margin-bottom: 8px;
+    }
+    .banner-form p {
+        font-size: 13px;
+        margin-bottom: 18px;
+    }
+    .banner-form .gfield {
+        margin-bottom: 15px;
+    }
+    .banner-form .gfield label {
+        font-size: 11px;
+        margin-bottom: 6px;
+    }
+    .banner-form .gfield input,
+    .banner-form .gfield select {
+        height: 45px;
+        font-size: 14px;
+        padding: 8px 15px;
+    }
+    .banner-form .gfield input::placeholder {
+        font-size: 14px;
+    }
+    .banner-form input[type="submit"] {
+        font-size: 14px;
+        padding: 14px 10px;
+        margin-bottom: 12px;
+    }
+    .banner-form form p {
+        font-size: 11px;
+    }
+    h2 {
+        font-size: 22px;
+    }
+    .section-heading {
+        margin-bottom: 25px;
+    }
+    .section-heading h2 {
+        margin-bottom: 10px;
+    }
+    .section-heading p {
+        font-size: 14px;
+    }
+    section {
+        margin-bottom: 50px;
+    }
+    .features-section {
+        margin-bottom: 50px;
+    }
+    .features-grid {
+        gap: 15px;
+    }
+    .features-content {
+        padding: 15px;
+    }
+    .features-content h4 {
+        font-size: 16px;
+        margin-bottom: 6px;
+    }
+    .features-content p {
+        font-size: 13px;
+    }
+    .platform {
+        padding: 40px 0;
+    }
+    .platform-grid {
+        gap: 15px;
+    }
+    .platform-box {
+        padding: 18px 15px;
+    }
+    .platform-icon {
+        width: 45px;
+        height: 45px;
+        margin-bottom: 10px;
+    }
+    .platform-icon img {
+        width: 24px;
+        height: 24px;
+    }
+    .platform-content h4 {
+        font-size: 15px;
+        margin-bottom: 8px;
+    }
+    .platform-content p {
+        font-size: 13px;
+    }
+    .waitlist {
+        margin-bottom: 50px;
+    }
+    .wishlist-left .section-heading {
+        margin-bottom: 25px;
+    }
+    .wishlist-right-content {
+        row-gap: 20px;
+    }
+    .wishlist-box.row {
+        column-gap: 12px;
+    }
+    .wishlist-box-left span {
+        font-size: 16px;
+        min-width: 40px;
+        min-height: 40px;
+        padding: 6px;
+    }
+    .wishlist-box-right h4 {
+        font-size: 15px;
+        margin-bottom: 6px;
+    }
+    .wishlist-box-right p {
+        font-size: 13px;
+    }
+    .transform {
+        padding: 30px 0 35px 0;
+    }
+    .transform-left .section-heading {
+        margin-bottom: 20px;
+    }
+    .transform-right-content p {
+        font-size: 13px;
+        margin-bottom: 18px;
+    }
+    .transform-right-content a.common-btn {
+        font-size: 14px;
+        padding: 14px 20px;
+    }
+    footer {
+        padding: 30px 0;
+    }
+    .footer-logo img {
+        max-width: 160px;
+    }
+    footer h3 {
+        font-size: 13px;
+        line-height: 18px;
+        margin-bottom: 18px;
+    }
+    .footer-social.row {
+        column-gap: 15px;
+        margin-bottom: 18px;
+        padding-bottom: 18px;
+    }
+    .footer-social img {
+        width: 16px;
+        height: 16px;
+    }
+    p.footer-copy {
+        font-size: 11px;
+    }
 }

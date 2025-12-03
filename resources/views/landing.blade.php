@@ -4,8 +4,9 @@
 <head>
     <title>YWC</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="description" content="Yacht Workers Council - The premier platform for yacht crew networking, career management, and industry insights. Join our waitlist today!">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- ========== main css ========== -->
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
@@ -448,13 +449,15 @@
                 }
                 
                 try {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value;
+                    
                     const response = await fetch(waitlistForm.action, {
                         method: 'POST',
                         body: formData,
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
                             'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value
+                            'X-CSRF-TOKEN': csrfToken
                         }
                     });
                     

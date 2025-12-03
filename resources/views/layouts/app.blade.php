@@ -30,6 +30,9 @@
             background-color: #F5F6FA;
             color: #0053FF;
         }
+        
+        /* Alpine.js x-cloak */
+        [x-cloak] { display: none !important; }
     </style>
     <!-- Styles -->
     @stack('styles')
@@ -121,6 +124,32 @@
     @stack('modals')
     @livewireScripts
     @stack('scripts')
+    
+    <script>
+        // Initialize Alpine store for sidebar - ensure it's available early
+        if (typeof Alpine !== 'undefined') {
+            document.addEventListener('alpine:init', () => {
+                Alpine.store('sidebar', {
+                    isOpen: window.innerWidth >= 768,
+                    toggle() {
+                        this.isOpen = !this.isOpen;
+                    }
+                });
+            });
+        } else {
+            // Fallback: wait for Alpine to load
+            document.addEventListener('DOMContentLoaded', () => {
+                if (window.Alpine) {
+                    window.Alpine.store('sidebar', {
+                        isOpen: window.innerWidth >= 768,
+                        toggle() {
+                            this.isOpen = !this.isOpen;
+                        }
+                    });
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>

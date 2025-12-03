@@ -1,5 +1,36 @@
 <nav class="bg-white border-b border-gray-100 flex items-center justify-between px-4 py-3 relative z-10">
 
+    {{-- Mobile Menu Button (Left Side) --}}
+    <button 
+        x-data="{ 
+            isMobile: window.innerWidth < 768,
+            toggleSidebar() {
+                if (this.$store && this.$store.sidebar) {
+                    this.$store.sidebar.isOpen = !this.$store.sidebar.isOpen;
+                } else if (window.Alpine && window.Alpine.store('sidebar')) {
+                    window.Alpine.store('sidebar').isOpen = !window.Alpine.store('sidebar').isOpen;
+                }
+            }
+        }"
+        x-init="
+            window.addEventListener('resize', () => isMobile = window.innerWidth < 768);
+            // Ensure store exists
+            $nextTick(() => {
+                if (!$store.sidebar) {
+                    $store.sidebar = { isOpen: false };
+                }
+            });
+        "
+        @click="toggleSidebar()"
+        x-show="isMobile"
+        class="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 mr-3 z-50 relative"
+        aria-label="Toggle sidebar"
+        type="button">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+
     {{-- Right Side Navigation --}}
     <div class="flex items-center space-x-4 ml-auto">
         
