@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\YachtController;
 use App\Http\Controllers\Api\YachtReviewController;
 use App\Http\Controllers\Api\MarinaController;
 use App\Http\Controllers\Api\MarinaReviewController;
+use App\Http\Controllers\Api\ContractorController;
+use App\Http\Controllers\Api\ContractorReviewController;
 use App\Http\Controllers\Api\CrewDiscoveryController;
 use App\Http\Controllers\Api\UserConnectionController;
 use App\Http\Controllers\Api\RallyController;
@@ -128,6 +130,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/marinas/{marinaId}/reviews/{reviewId}', [MarinaReviewController::class, 'destroy']);
     Route::post('/marinas/{marinaId}/reviews/{reviewId}/vote', [MarinaReviewController::class, 'vote']);
 
+    // Industry Review System - Authenticated Contractor Review Endpoints
+    Route::post('/contractors', [ContractorController::class, 'store']);
+    Route::put('/contractors/{id}', [ContractorController::class, 'update']);
+    Route::delete('/contractors/{id}', [ContractorController::class, 'destroy']);
+
+    Route::post('/contractors/{contractorId}/reviews', [ContractorReviewController::class, 'store']);
+    Route::put('/contractors/{contractorId}/reviews/{reviewId}', [ContractorReviewController::class, 'update']);
+    Route::delete('/contractors/{contractorId}/reviews/{reviewId}', [ContractorReviewController::class, 'destroy']);
+    Route::post('/contractors/{contractorId}/reviews/{reviewId}/vote', [ContractorReviewController::class, 'vote']);
+
     // Industry Review System - Yacht & Marina Management (Admin)
     Route::post('/yachts', [YachtController::class, 'store']);
     Route::put('/yachts/{id}', [YachtController::class, 'update']);
@@ -219,6 +231,12 @@ Route::get('/marinas', [MarinaController::class, 'index']);
 Route::get('/marinas/{slug}', [MarinaController::class, 'show']);
 Route::get('/marinas/{marinaId}/reviews', [MarinaReviewController::class, 'index']);
 Route::get('/marinas/{marinaId}/reviews/{reviewId}', [MarinaReviewController::class, 'show']);
+
+// Industry Review System - Public Contractor Endpoints
+Route::get('/contractors', [ContractorController::class, 'index']);
+Route::get('/contractors/{slug}', [ContractorController::class, 'show']);
+Route::get('/contractors/{contractorId}/reviews', [ContractorReviewController::class, 'index']);
+Route::get('/contractors/{contractorId}/reviews/{reviewId}', [ContractorReviewController::class, 'show']);
 
 // Optional token refresh route
 Route::middleware('jwt.refresh')->get('/token/refresh', function () {
