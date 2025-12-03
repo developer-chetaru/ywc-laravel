@@ -19,6 +19,10 @@ use App\Http\Controllers\Api\MarinaController;
 use App\Http\Controllers\Api\MarinaReviewController;
 use App\Http\Controllers\Api\ContractorController;
 use App\Http\Controllers\Api\ContractorReviewController;
+use App\Http\Controllers\Api\BrokerController;
+use App\Http\Controllers\Api\BrokerReviewController;
+use App\Http\Controllers\Api\RestaurantController;
+use App\Http\Controllers\Api\RestaurantReviewController;
 use App\Http\Controllers\Api\CrewDiscoveryController;
 use App\Http\Controllers\Api\UserConnectionController;
 use App\Http\Controllers\Api\RallyController;
@@ -140,6 +144,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/contractors/{contractorId}/reviews/{reviewId}', [ContractorReviewController::class, 'destroy']);
     Route::post('/contractors/{contractorId}/reviews/{reviewId}/vote', [ContractorReviewController::class, 'vote']);
 
+    // Industry Review System - Authenticated Broker Review Endpoints
+    Route::post('/brokers', [BrokerController::class, 'store']);
+    Route::put('/brokers/{id}', [BrokerController::class, 'update']);
+    Route::delete('/brokers/{id}', [BrokerController::class, 'destroy']);
+
+    Route::post('/brokers/{brokerId}/reviews', [BrokerReviewController::class, 'store']);
+    Route::put('/brokers/{brokerId}/reviews/{reviewId}', [BrokerReviewController::class, 'update']);
+    Route::delete('/brokers/{brokerId}/reviews/{reviewId}', [BrokerReviewController::class, 'destroy']);
+    Route::post('/brokers/{brokerId}/reviews/{reviewId}/vote', [BrokerReviewController::class, 'vote']);
+
+    // Industry Review System - Authenticated Restaurant Review Endpoints
+    Route::post('/restaurants', [RestaurantController::class, 'store']);
+    Route::put('/restaurants/{id}', [RestaurantController::class, 'update']);
+    Route::delete('/restaurants/{id}', [RestaurantController::class, 'destroy']);
+
+    Route::post('/restaurants/{restaurantId}/reviews', [RestaurantReviewController::class, 'store']);
+    Route::put('/restaurants/{restaurantId}/reviews/{reviewId}', [RestaurantReviewController::class, 'update']);
+    Route::delete('/restaurants/{restaurantId}/reviews/{reviewId}', [RestaurantReviewController::class, 'destroy']);
+    Route::post('/restaurants/{restaurantId}/reviews/{reviewId}/vote', [RestaurantReviewController::class, 'vote']);
+
     // Industry Review System - Yacht & Marina Management (Admin)
     Route::post('/yachts', [YachtController::class, 'store']);
     Route::put('/yachts/{id}', [YachtController::class, 'update']);
@@ -237,6 +261,18 @@ Route::get('/contractors', [ContractorController::class, 'index']);
 Route::get('/contractors/{slug}', [ContractorController::class, 'show']);
 Route::get('/contractors/{contractorId}/reviews', [ContractorReviewController::class, 'index']);
 Route::get('/contractors/{contractorId}/reviews/{reviewId}', [ContractorReviewController::class, 'show']);
+
+// Industry Review System - Public Broker Endpoints
+Route::get('/brokers', [BrokerController::class, 'index']);
+Route::get('/brokers/{slug}', [BrokerController::class, 'show']);
+Route::get('/brokers/{brokerId}/reviews', [BrokerReviewController::class, 'index']);
+Route::get('/brokers/{brokerId}/reviews/{reviewId}', [BrokerReviewController::class, 'show']);
+
+// Industry Review System - Public Restaurant Endpoints
+Route::get('/restaurants', [RestaurantController::class, 'index']);
+Route::get('/restaurants/{slug}', [RestaurantController::class, 'show']);
+Route::get('/restaurants/{restaurantId}/reviews', [RestaurantReviewController::class, 'index']);
+Route::get('/restaurants/{restaurantId}/reviews/{reviewId}', [RestaurantReviewController::class, 'show']);
 
 // Optional token refresh route
 Route::middleware('jwt.refresh')->get('/token/refresh', function () {
