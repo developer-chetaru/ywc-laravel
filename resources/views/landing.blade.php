@@ -434,8 +434,10 @@
         });
 
         // Form submission handling with AJAX (optional enhancement)
+        const waitlistForm = document.getElementById('waitlist-form');
         if (waitlistForm) {
             waitlistForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
                 const submitBtn = document.getElementById('submit-btn');
                 const formData = new FormData(waitlistForm);
                 
@@ -451,7 +453,8 @@
                         body: formData,
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value
                         }
                     });
                     
@@ -495,7 +498,7 @@
                 } catch (error) {
                     console.error('Error:', error);
                     // Fall back to normal form submission
-                    return true;
+                    waitlistForm.submit();
                 } finally {
                     if (submitBtn) {
                         submitBtn.disabled = false;
