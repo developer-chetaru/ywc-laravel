@@ -15,8 +15,10 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/favicon-icon.png') }}">
 
-    <!-- Tailwind CSS (browser version) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS - Using Vite build instead of CDN for production -->
+    @if(config('app.debug'))
+        <script src="https://cdn.tailwindcss.com"></script>
+    @endif
 
     <!-- Custom Styles -->
     <style>

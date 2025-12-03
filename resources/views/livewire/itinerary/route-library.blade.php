@@ -2,29 +2,31 @@
     use Illuminate\Support\Facades\Storage;
 @endphp
 
-<div class="py-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+<div class="py-4 sm:py-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
         {{-- Header Section --}}
-        <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div class="bg-white shadow-lg rounded-xl p-4 sm:p-6 border border-gray-200">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 sm:mb-6">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Itinerary Library</h1>
-                    <p class="text-sm text-gray-600">Browse curated voyages, public itineraries, and your private drafts</p>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Itinerary Library</h1>
+                    <p class="text-xs sm:text-sm text-gray-600">Browse curated voyages, public itineraries, and your private drafts</p>
                 </div>
-                <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <a href="{{ route('itinerary.routes.planner') }}"
-                       class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-semibold rounded-lg shadow-md hover:from-indigo-700 hover:to-indigo-800 transition-all transform hover:scale-105">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-sm sm:text-base font-semibold rounded-lg shadow-md hover:from-indigo-700 hover:to-indigo-800 transition-all transform hover:scale-105">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
-                        Create Itinerary
+                        <span class="hidden sm:inline">Create Itinerary</span>
+                        <span class="sm:hidden">Create</span>
                     </a>
                     <button wire:click="clearFilters"
-                            class="inline-flex items-center justify-center px-4 py-3 border-2 border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="inline-flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all">
+                        <svg class="w-4 h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                         </svg>
-                        Reset Filters
+                        <span class="hidden sm:inline">Reset Filters</span>
+                        <span class="sm:hidden">Reset</span>
                     </button>
                 </div>
             </div>
@@ -41,15 +43,15 @@
             @endif
 
             {{-- Filters Section - Horizontal Layout --}}
-            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-4 border border-indigo-100">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-3 sm:p-4 border border-indigo-100">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-8 gap-3 sm:gap-4">
                     {{-- Search --}}
-                    <div class="lg:col-span-2">
+                    <div class="sm:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-2">
                         <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Search</label>
-                        <div class="relative flex gap-2">
+                        <div class="relative flex flex-col sm:flex-row gap-2">
                             <div class="relative flex-1">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                     </svg>
                                 </div>
@@ -57,13 +59,13 @@
                                        wire:model.live.debounce.500ms="search"
                                        wire:key="search-input"
                                        placeholder="Search..."
-                                       class="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
+                                       class="block w-full pl-9 sm:pl-10 pr-9 sm:pr-10 py-2 sm:py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
                                 @if(!empty($search))
                                     <button type="button" 
                                             wire:click="$set('search', '')"
                                             class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                                             title="Clear search">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
                                     </button>
@@ -71,10 +73,11 @@
                             </div>
                             <button type="button"
                                     wire:click="applyFilters"
-                                    class="px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="px-3 sm:px-4 py-2 sm:py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap flex items-center justify-center">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
+                                <span class="ml-1.5 sm:hidden">Search</span>
                             </button>
                         </div>
                     </div>
@@ -192,11 +195,11 @@
                     </a>
                 </div>
             @else
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     @foreach($routes as $route)
-                        <article class="group border border-gray-200 rounded-xl shadow-md bg-white flex flex-col overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                        <article class="group border border-gray-200 rounded-xl shadow-md bg-white flex flex-col overflow-hidden hover:shadow-xl transition-all duration-300">
                             {{-- Cover Image --}}
-                            <div class="relative h-48 bg-gradient-to-br from-indigo-100 to-blue-100 overflow-hidden">
+                            <div class="relative h-40 sm:h-48 bg-gradient-to-br from-indigo-100 to-blue-100 overflow-hidden">
                                 @if($route->cover_image)
                                     <img src="{{ Storage::url($route->cover_image) }}" 
                                          alt="{{ $route->title }}" 
@@ -209,32 +212,32 @@
                                     </div>
                                 @endif
                                 {{-- Status Badges --}}
-                                <div class="absolute top-3 right-3 flex flex-col gap-2">
-                                    <span class="px-2.5 py-1 text-xs font-bold uppercase tracking-wide rounded-full shadow-md {{ $route->visibility === 'public' ? 'bg-green-500 text-white' : ($route->visibility === 'crew' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-white') }}">
+                                <div class="absolute top-2 right-2 sm:top-3 sm:right-3 flex flex-col gap-1.5 sm:gap-2">
+                                    <span class="px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wide rounded-full shadow-md {{ $route->visibility === 'public' ? 'bg-green-500 text-white' : ($route->visibility === 'crew' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-white') }}">
                                         {{ ucfirst($route->visibility) }}
                                     </span>
-                                    <span class="px-2.5 py-1 text-xs font-bold uppercase tracking-wide rounded-full shadow-md {{ $route->status === 'active' ? 'bg-green-500 text-white' : ($route->status === 'completed' ? 'bg-indigo-500 text-white' : 'bg-yellow-500 text-white') }}">
+                                    <span class="px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wide rounded-full shadow-md {{ $route->status === 'active' ? 'bg-green-500 text-white' : ($route->status === 'completed' ? 'bg-indigo-500 text-white' : 'bg-yellow-500 text-white') }}">
                                         {{ ucfirst($route->status) }}
                                     </span>
                                 </div>
                             </div>
 
                             {{-- Content --}}
-                            <div class="p-5 flex-1 flex flex-col space-y-3">
-                                <h2 class="text-xl font-bold text-gray-900 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                            <div class="p-4 sm:p-5 flex-1 flex flex-col space-y-2 sm:space-y-3">
+                                <h2 class="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 group-hover:text-indigo-600 transition-colors leading-tight">
                                     <a href="{{ route('itinerary.routes.show', $route) }}">
                                         {{ $route->title }}
                                     </a>
                                 </h2>
 
                                 @if($route->description)
-                                    <p class="text-sm text-gray-600 line-clamp-2 flex-grow">{{ $route->description }}</p>
+                                    <p class="text-xs sm:text-sm text-gray-600 line-clamp-2 flex-grow">{{ $route->description }}</p>
                                 @else
-                                    <p class="text-sm text-gray-400 italic line-clamp-2">No description provided.</p>
+                                    <p class="text-xs sm:text-sm text-gray-400 italic line-clamp-2">No description provided.</p>
                                 @endif
 
                                 {{-- Route Details Grid --}}
-                                <dl class="grid grid-cols-2 gap-3 text-xs">
+                                <dl class="grid grid-cols-2 gap-2 sm:gap-3 text-[10px] sm:text-xs">
                                     <div class="bg-gray-50 rounded-lg p-2">
                                         <dt class="font-semibold text-gray-500 uppercase tracking-wide mb-1">Region</dt>
                                         <dd class="text-gray-900 font-medium">{{ $route->region ?: '—' }}</dd>
@@ -281,26 +284,24 @@
                             </div>
 
                             {{-- Action Buttons --}}
-                            <div class="border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-3">
-                                <div class="flex items-center justify-between gap-1.5">
+                            <div class="border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-2.5 sm:p-3">
+                                <div class="flex items-center justify-between gap-2">
                                     <a href="{{ route('itinerary.routes.show', $route) }}"
-                                       class="flex-1 inline-flex items-center justify-center px-2 py-2 text-xs font-medium text-indigo-700 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 hover:border-indigo-300 transition-all min-w-0"
+                                       class="flex-1 inline-flex items-center justify-center px-3 py-2.5 text-xs sm:text-sm font-medium text-indigo-700 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 hover:border-indigo-300 transition-all min-w-0"
                                        title="View Route">
                                         <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                         </svg>
-                                        <span class="hidden sm:inline truncate">View</span>
-                                        <span class="sm:hidden">V</span>
+                                        <span class="truncate">View</span>
                                     </a>
                                     <a href="{{ route('itinerary.routes.planner') }}?template={{ $route->id }}"
-                                       class="flex-1 inline-flex items-center justify-center px-2 py-2 text-xs font-medium text-white bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-sm min-w-0"
-                                       title="Customize Route">
+                                       class="flex-1 inline-flex items-center justify-center px-3 py-2.5 text-xs sm:text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-sm min-w-0"
+                                       title="Edit Route">
                                         <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
-                                        <span class="hidden sm:inline truncate">Customize</span>
-                                        <span class="sm:hidden">Edit</span>
+                                        <span class="truncate">Edit</span>
                                     </a>
                                     @php
                                         $user = Auth::user();
@@ -309,13 +310,12 @@
                                     @if($canDelete)
                                         <button wire:click="deleteRoute({{ $route->id }})"
                                                 wire:confirm="Are you sure you want to delete this route? This action cannot be undone."
-                                                class="flex-1 inline-flex items-center justify-center px-2 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all min-w-0"
+                                                class="flex-1 inline-flex items-center justify-center px-3 py-2.5 text-xs sm:text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all min-w-0"
                                                 title="Delete Route">
                                             <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
-                                            <span class="hidden sm:inline truncate">Delete</span>
-                                            <span class="sm:hidden">Del</span>
+                                            <span class="truncate">Delete</span>
                                         </button>
                                     @endif
                                 </div>

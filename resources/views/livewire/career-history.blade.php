@@ -8,7 +8,7 @@
                     <div class="bg-white p-5 rounded-lg shadow-md">
                         <h2 class="text-xl border-b border-gray-100 font-medium text-[#0053FF] pb-2">Career History</h2>
                         <div class="bg-[#F5F6FA] p-5 rounded-lg mt-6">
-                            <div class="grid grid-cols-3 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div x-data="{ showModal: @entangle('showModal'), docType: '', resetForm() { this.docType=''; } }">
                                     <!-- Add Document Card -->
                                     <div class="bg-white rounded-xl p-3 py-8 flex justify-center items-center flex-col cursor-pointer"
@@ -43,7 +43,7 @@
                                             }
                                         }"
                                     >
-                                        <div class="bg-white rounded-lg shadow-lg w-[90%] h-[90%] max-w-6xl p-6 relative overflow-y-auto">
+                                        <div class="bg-white rounded-lg shadow-lg w-[95%] sm:w-[90%] h-[95%] sm:h-[90%] max-w-6xl p-4 sm:p-6 relative overflow-y-auto">
 
                                             <!-- Close Button -->
                                             <button @click="resetForm(); showModal = false" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">
@@ -52,7 +52,7 @@
 
                                             <h2 class="text-2xl font-bold text-[#0053FF] mb-6">Add Document</h2>
 
-                                            <div class="grid grid-cols-2 gap-6">
+                                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                                                 <!-- Left side: Upload area -->
                                                 <div class="border-dashed border-2 border-gray-300 rounded-lg p-6 flex items-center justify-center text-center cursor-pointer relative overflow-hidden"
                                                     x-data="{
@@ -134,7 +134,7 @@
                                                             </div>
 
                                                             <!-- Issue & Expiry Dates -->
-                                                            <div class="grid grid-cols-2 gap-4">
+                                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                 <div>
                                                                     <label class="block">Issue Date</label>
                                                                     <input type="date" wire:model.defer="issue_date"
@@ -214,7 +214,7 @@
                                                             </div>
 
                                                             <!-- Issue / Expiry Dates -->
-                                                            <div class="grid grid-cols-2 gap-4">
+                                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                 <div>
                                                                     <label class="block font-medium">Issue Date</label>
                                                                     <input 
@@ -339,7 +339,7 @@
                                                                         </div>
 
                                                                         <!-- Issue & Expiry Dates -->
-                                                                        <div class="grid grid-cols-2 gap-4">
+                                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                             <div>
                                                                                 <label class="block text-sm">Issue Date</label>
                                                                                 <input type="date" x-model="row.issue" class="w-full border p-2 rounded-md">
@@ -422,7 +422,7 @@
                                                                 @error('doc_number') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                                             </div>
 
-                                                            <div class="grid grid-cols-2 gap-4">
+                                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                 <!-- Issue Date -->
                                                                 <div>
                                                                     <label class="block text-sm font-medium text-gray-700">Issue Date</label>
@@ -505,7 +505,7 @@
                             
                             <div class=" flex w-full flex-wrap mt-10">
                                 <h3 class="text-lg font-medium w-full text">1 Documents</h3>
-                                <div class="grid grid-cols-2 gap-4 w-full mt-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mt-3">
                                     <div class="bg-white rounded-xl p-4 flex relative cursor-pointer border border-gray-200 flex items-center " title="Edit Organisation"> 
                                         <div class="flex flex-wrap justify-center w-[80px] h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md ">
                                             <img src="images/passport-img.png" alt="passport" class="">
@@ -534,9 +534,9 @@
     <div class="flex-1 flex flex-col overflow-hidden">
         <div class="flex min-h-screen bg-gray-100">
             <div class="flex-1 transition-all duration-300">
-                <main class="p-6 flex-1 overflow-y-auto">
-                    <div class="w-full h-screen ">
-                        <div class="bg-white p-5 rounded-lg shadow-md">
+                <main class="p-3 sm:p-6 flex-1 overflow-y-auto">
+                    <div class="w-full min-h-screen">
+                        <div class="bg-white p-4 sm:p-5 rounded-lg shadow-md">
                             <h2 class="text-xl border-b border-gray-100 font-medium text-[#0053FF] pb-2">Career History</h2>
                             <div class="flex items-center justify-center h-40">
                                 <p class="text-gray-500 text-lg font-medium">Career History Coming Soon...</p>

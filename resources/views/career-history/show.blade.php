@@ -6,15 +6,22 @@
         <div class="p-4 bg-[#F5F6FA]">
             {{-- Back Button --}}
             <div class="flex gap-4 mb-6">
-                <a href="{{ route('documents') }}" class="cursor-pointer bg-white border border-[#808080] flex gap-2 justify-center items-center px-4 py-2 rounded-md text-[#808080]">
-                    <img class="h-3" src="{{ asset('images/left-arr.svg') }}" alt="">Back to career list
+                <a href="{{ route('documents') }}" class="cursor-pointer bg-white border border-[#808080] flex gap-2 justify-center items-center px-4 py-2 rounded-md text-[#808080] text-sm sm:text-base">
+                    <img class="h-3" src="{{ asset('images/left-arr.svg') }}" alt="">
+                    <span>Back to Documents</span>
                 </a>
             </div>
 
-            <div class="rounded-lg bg-white p-6">
+            <div class="rounded-lg bg-white p-4 sm:p-6">
+                {{-- Page Title --}}
+                <div class="mb-4 sm:mb-6">
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">User Documents</h1>
+                    <p class="text-sm text-gray-600 mt-1">View and manage documents for {{ $user->first_name }} {{ $user->last_name }}</p>
+                </div>
+
                 {{-- Header & Stats --}}
-                <div class="flex gap-[16px] mb-8">
-                    <div class="flex flex-wrap justify-between items-center bg-[#F5F6FA] p-5 py-6 rounded-lg w-[35%]">
+                <div class="flex flex-col lg:flex-row gap-4 sm:gap-[16px] mb-6 sm:mb-8">
+                    <div class="flex flex-wrap justify-between items-center bg-[#F5F6FA] p-4 sm:p-5 py-4 sm:py-6 rounded-lg w-full lg:w-[35%]">
                         <div class="flex items-center gap-[16px]">
                             <img src="{{ $user->profile_photo_path ? asset('storage/'.$user->profile_photo_path) : 'https://ui-avatars.com/api/?name='.$user->first_name.'+'.$user->last_name }}" 
                              class="w-8 h-8 rounded-full object-cover" alt="">
@@ -30,29 +37,29 @@
                     </div>
 
                     {{-- Stats Cards --}}
-                    <div class="flex flex-1 gap-[16px]">
+                    <div class="flex flex-1 flex-wrap gap-3 sm:gap-[16px]">
                         @php
                             $totalDocs = $documentsByStatus['pending']->count() + $documentsByStatus['approved']->count() + $documentsByStatus['rejected']->count();
                         @endphp
-                        <div class="bg-[#F5F6FA] flex-1 p-4 py-5 rounded-lg text-center">
-                            <p class="text-[#020202] text-sm mb-5 font-semibold">Total Documents</p>
-                            <p class="font-semibold leading-[20px] text-[#FF7700] text-xl">{{ $totalDocs }}</p>
+                        <div class="bg-[#F5F6FA] flex-1 min-w-[120px] p-3 sm:p-4 py-3 sm:py-5 rounded-lg text-center">
+                            <p class="text-[#020202] text-xs sm:text-sm mb-3 sm:mb-5 font-semibold">Total Documents</p>
+                            <p class="font-semibold leading-[20px] text-[#FF7700] text-lg sm:text-xl">{{ $totalDocs }}</p>
                         </div>
-                        <div class="bg-[#F5F6FA] flex-1 p-4 py-5 rounded-lg text-center">
-                            <p class="text-[#020202] text-sm mb-5 font-semibold">Pending</p>
-                            <p class="font-semibold leading-[20px] text-[#E07911] text-xl">{{ $documentsByStatus['pending']->count() }}</p>
+                        <div class="bg-[#F5F6FA] flex-1 min-w-[120px] p-3 sm:p-4 py-3 sm:py-5 rounded-lg text-center">
+                            <p class="text-[#020202] text-xs sm:text-sm mb-3 sm:mb-5 font-semibold">Pending</p>
+                            <p class="font-semibold leading-[20px] text-[#E07911] text-lg sm:text-xl">{{ $documentsByStatus['pending']->count() }}</p>
                         </div>
-                        <div class="bg-[#F5F6FA] flex-1 p-4 py-5 rounded-lg text-center">
-                            <p class="text-[#020202] text-sm mb-5 font-semibold">Approved</p>
-                            <p class="font-semibold leading-[20px] text-[#0C7B24] text-xl">{{ $documentsByStatus['approved']->count() }}</p>
+                        <div class="bg-[#F5F6FA] flex-1 min-w-[120px] p-3 sm:p-4 py-3 sm:py-5 rounded-lg text-center">
+                            <p class="text-[#020202] text-xs sm:text-sm mb-3 sm:mb-5 font-semibold">Approved</p>
+                            <p class="font-semibold leading-[20px] text-[#0C7B24] text-lg sm:text-xl">{{ $documentsByStatus['approved']->count() }}</p>
                         </div>
-                        <div class="bg-[#F5F6FA] flex-1 p-4 py-5 rounded-lg text-center">
-                            <p class="text-[#020202] text-sm mb-5 font-semibold">Rejected</p>
-                            <p class="font-semibold leading-[20px] text-[#EB1C24] text-xl">{{ $documentsByStatus['rejected']->count() }}</p>
+                        <div class="bg-[#F5F6FA] flex-1 min-w-[120px] p-3 sm:p-4 py-3 sm:py-5 rounded-lg text-center">
+                            <p class="text-[#020202] text-xs sm:text-sm mb-3 sm:mb-5 font-semibold">Rejected</p>
+                            <p class="font-semibold leading-[20px] text-[#EB1C24] text-lg sm:text-xl">{{ $documentsByStatus['rejected']->count() }}</p>
                         </div>
-                        <div class="bg-[#F5F6FA] flex-1 p-4 py-5 rounded-lg text-center">
-                            <p class="text-[#020202] text-sm mb-5 font-semibold">Expired</p>
-                            <p class="font-semibold leading-[20px] text-[#616161] text-xl">0</p>
+                        <div class="bg-[#F5F6FA] flex-1 min-w-[120px] p-3 sm:p-4 py-3 sm:py-5 rounded-lg text-center">
+                            <p class="text-[#020202] text-xs sm:text-sm mb-3 sm:mb-5 font-semibold">Expired</p>
+                            <p class="font-semibold leading-[20px] text-[#616161] text-lg sm:text-xl">0</p>
                         </div>
                     </div>
                 </div>

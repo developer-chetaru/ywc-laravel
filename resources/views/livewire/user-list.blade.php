@@ -1,22 +1,25 @@
 @role('super_admin')
 
-    <div>
+    <div class="space-y-4">
         <h2 class="text-xl border-b border-gray-100 font-medium text-[#0053FF] pb-2">User List</h2>
             
         <div class="h-[calc(100vh-100px)] bg-gray-100">
 
             <!-- Filters -->
-            <div class="flex gap-4 mb-4">
+            <div class="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
 
                 <!-- Search -->
-                <div class="relative w-[40%]">
+                <div class="relative w-full md:w-[40%]">
                     <input type="search" wire:model.live="search" placeholder="Search by name, email, or ID"
                         class="text-[#616161] placeholder-[#616161] w-full py-3 px-4 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-200 text-sm pl-10 bg-white font-medium">
                     <img src="{{ asset('images/search.svg') }}" alt="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4">
                 </div>
 
+                <!-- Filter row (wrap on mobile) -->
+                <div class="flex flex-wrap gap-3">
+
                 <!-- Status Filter -->
-                <div class="relative">
+                <div class="relative w-full sm:w-auto">
                     <select wire:model.live="status"
                         class="appearance-none text-[#616161] py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-200 text-sm font-medium bg-white cursor-pointer px-3 pr-12">
                         <option value="">Status</option>
@@ -28,7 +31,7 @@
                 </div>
 
                 <!-- Membership Filter -->
-                <div class="relative">
+                <div class="relative w-full sm:w-auto">
                     <select wire:model.live="membership"
                         class="appearance-none text-[#616161] py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-200 text-sm font-medium bg-white cursor-pointer px-3 pr-12">
                         <option value="">Membership</option>
@@ -40,7 +43,7 @@
                 </div>
 
                 <!-- Role Filter -->
-                <div class="relative">
+                <div class="relative w-full sm:w-auto">
                     <select wire:model.live="role"
                         class="appearance-none text-[#616161] py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-200 text-sm font-medium bg-white cursor-pointer px-3 pr-12">
                         <option value="">Role</option>
@@ -53,7 +56,7 @@
                 </div>
 
                 <!-- Sort Filter -->
-                <div class="relative">
+                <div class="relative w-full sm:w-auto">
                     <select wire:model.live="sort"
                         class="appearance-none text-[#616161] py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-200 text-sm font-medium bg-white cursor-pointer pr-4 pl-9">
                         <option value="desc">Sort by: New to Old</option>
@@ -63,96 +66,171 @@
                         src="{{ asset('images/sorting-01.svg') }}" alt="">
                 </div>
 
+                </div> <!-- end filter row -->
+
             </div>
 
 
-            <!-- User Table -->
+            <!-- User Table / Cards -->
             <div>
                 <div class="bg-white rounded-lg shadow-sm w-full overflow-hidden">
-                    <table class="w-full text-left border-separate border-spacing-y-0">
-                        <thead>
-                            <tr class="text-sm border-b bg-gray-50">
-                                <th class="px-4 py-6"><input type="checkbox" /></th>
-                                <th class="px-4 py-6 font-medium text-[#020202]">User Name</th>
-                                <th class="px-4 py-6 font-medium text-[#020202]">Email</th>
-                                <th class="px-4 py-6 font-medium text-[#020202]">Role</th>
-                                <th class="px-4 py-6 font-medium text-[#020202]">Status</th>
-                                <th class="px-4 py-6 font-medium text-[#020202]">Membership</th>
-                                <th class="px-4 py-6 font-medium text-[#020202]">Last Login</th>
-                                <th class="px-4 py-6 font-medium text-[#020202]">First Login</th>
-                                <th class="px-4 py-6"></th>
-                            </tr>
-                        </thead>
+                    <!-- Desktop table -->
+                    <div class="hidden md:block">
+                        <table class="w-full text-left border-separate border-spacing-y-0">
+                            <thead>
+                                <tr class="text-sm border-b bg-gray-50">
+                                    <th class="px-4 py-6"><input type="checkbox" /></th>
+                                    <th class="px-4 py-6 font-medium text-[#020202]">User Name</th>
+                                    <th class="px-4 py-6 font-medium text-[#020202]">Email</th>
+                                    <th class="px-4 py-6 font-medium text-[#020202]">Role</th>
+                                    <th class="px-4 py-6 font-medium text-[#020202]">Status</th>
+                                    <th class="px-4 py-6 font-medium text-[#020202]">Membership</th>
+                                    <th class="px-4 py-6 font-medium text-[#020202]">Last Login</th>
+                                    <th class="px-4 py-6 font-medium text-[#020202]">First Login</th>
+                                    <th class="px-4 py-6"></th>
+                                </tr>
+                            </thead>
 
-                        <tbody class="text-gray-700 text-sm">
-                            @forelse($users as $user)
-                                <tr class="odd:bg-gray-50 hover:bg-gray-100">
-                                    <td class="px-4 py-6"><input type="checkbox" /></td>
+                            <tbody class="text-gray-700 text-sm">
+                                @forelse($users as $user)
+                                    <tr class="odd:bg-gray-50 hover:bg-gray-100">
+                                        <td class="px-4 py-6"><input type="checkbox" /></td>
 
-                                    <!-- User info -->
-                                    <td class="flex items-center gap-3 px-4 py-6 cursor-pointer"
-                                        wire:click="showProfileDetails({{ $user->id }})">
+                                        <!-- User info -->
+                                        <td class="flex items-center gap-3 px-4 py-6 cursor-pointer"
+                                            wire:click="showProfileDetails({{ $user->id }})">
+                                            @if($user->profile_photo_path)
+                                                <img src="{{ asset('storage/'.$user->profile_photo_path) }}"
+                                                    class="w-8 h-8 rounded-full object-cover" alt="">
+                                            @else
+                                                <div class="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 font-medium rounded-full">
+                                                    {{ strtoupper(substr($user->first_name,0,1).substr($user->last_name,0,1)) }}
+                                                </div>
+                                            @endif
+                                            <span class="text-[#1B1B1B] font-medium">
+                                                {{ $user->first_name }} {{ $user->last_name }}
+                                            </span>
+                                        </td>
+
+                                        <td class="px-4 py-6 text-[#616161]">{{ $user->email }}</td>
+
+                                        <!-- Role -->
+                                        <td class="px-4 py-6">
+                                            @if(count($user->user_roles) > 0)
+                                                <div class="flex flex-wrap gap-1">
+                                                    @foreach($user->user_roles as $roleName)
+                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                            {{ $roleName }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <span class="text-[#616161]">–</span>
+                                            @endif
+                                        </td>
+
+                                        <!-- Status -->
+                                        <td class="px-4 py-6">
+                                            @if($user->is_active)
+                                                <span class="flex items-center gap-1 text-[#0C7B24]">
+                                                    <span class="w-2 h-2 bg-[#0C7B24] rounded-full"></span>
+                                                    Verified
+                                                </span>
+                                            @else
+                                                <span class="flex items-center gap-1 text-[#EB1C24]">
+                                                    <span class="w-2 h-2 bg-[#EB1C24] rounded-full"></span>
+                                                    Unverified
+                                                </span>
+                                            @endif
+                                        </td>
+                    
+                                        <td class="px-4 py-6 text-[#616161]">
+                                            {{ $user->membership_type ?? '–' }}
+                                        </td>
+                                        <td class="px-4 py-6 text-[#616161]">{{ $user->last_login ?? '–' }}</td>
+                                        <td class="px-4 py-6 text-[#616161]">{{ $user->first_login ?? '–' }}</td>
+                                        <td class="px-4 py-6 text-[#616161]">⋮</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="9" class="text-center text-gray-500 py-6">
+                                            No users found.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Mobile cards -->
+                    <div class="divide-y divide-gray-100 md:hidden">
+                        @forelse($users as $user)
+                            <div class="px-4 py-4 flex gap-3">
+                                <div class="mt-1">
+                                    <input type="checkbox" />
+                                </div>
+                                <button class="flex-1 text-left" wire:click="showProfileDetails({{ $user->id }})">
+                                    <div class="flex items-center gap-3 mb-2">
                                         @if($user->profile_photo_path)
                                             <img src="{{ asset('storage/'.$user->profile_photo_path) }}"
-                                                class="w-8 h-8 rounded-full object-cover" alt="">
+                                                class="w-10 h-10 rounded-full object-cover" alt="">
                                         @else
-                                            <div class="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 font-medium rounded-full">
+                                            <div class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 font-medium rounded-full">
                                                 {{ strtoupper(substr($user->first_name,0,1).substr($user->last_name,0,1)) }}
                                             </div>
                                         @endif
-                                        <span class="text-[#1B1B1B] font-medium">
-                                            {{ $user->first_name }} {{ $user->last_name }}
-                                        </span>
-                                    </td>
+                                        <div>
+                                            <p class="font-semibold text-[#1B1B1B] text-sm">
+                                                {{ $user->first_name }} {{ $user->last_name }}
+                                            </p>
+                                            <p class="text-xs text-[#616161] truncate">{{ $user->email }}</p>
+                                        </div>
+                                    </div>
 
-                                    <td class="px-4 py-6 text-[#616161]">{{ $user->email }}</td>
-
-                                    <!-- Role -->
-                                    <td class="px-4 py-6">
+                                    <div class="flex flex-wrap gap-2 text-xs mb-2">
                                         @if(count($user->user_roles) > 0)
-                                            <div class="flex flex-wrap gap-1">
-                                                @foreach($user->user_roles as $roleName)
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                        {{ $roleName }}
-                                                    </span>
-                                                @endforeach
-                                            </div>
-                                        @else
-                                            <span class="text-[#616161]">–</span>
+                                            @foreach($user->user_roles as $roleName)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-medium">
+                                                    {{ $roleName }}
+                                                </span>
+                                            @endforeach
                                         @endif
-                                    </td>
 
-                                    <!-- Status -->
-                                    <td class="px-4 py-6">
                                         @if($user->is_active)
-                                            <span class="flex items-center gap-1 text-[#0C7B24]">
-                                                <span class="w-2 h-2 bg-[#0C7B24] rounded-full"></span>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-[#0C7B24]">
+                                                <span class="w-1.5 h-1.5 bg-[#0C7B24] rounded-full"></span>
                                                 Verified
                                             </span>
                                         @else
-                                            <span class="flex items-center gap-1 text-[#EB1C24]">
-                                                <span class="w-2 h-2 bg-[#EB1C24] rounded-full"></span>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-[#EB1C24]">
+                                                <span class="w-1.5 h-1.5 bg-[#EB1C24] rounded-full"></span>
                                                 Unverified
                                             </span>
                                         @endif
-                                    </td>
-                    
-                                    <td class="px-4 py-6 text-[#616161]">
-                                        {{ $user->membership_type ?? '–' }}
-                                    </td>
-                                    <td class="px-4 py-6 text-[#616161]">{{ $user->last_login ?? '–' }}</td>
-                                    <td class="px-4 py-6 text-[#616161]">{{ $user->first_login ?? '–' }}</td>
-                                    <td class="px-4 py-6 text-[#616161]">⋮</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="9" class="text-center text-gray-500 py-6">
-                                        No users found.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                                    </div>
+
+                                    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-[#616161]">
+                                        <div>
+                                            <dt class="font-medium">Membership</dt>
+                                            <dd>{{ $user->membership_type ?? '–' }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt class="font-medium">Last login</dt>
+                                            <dd>{{ $user->last_login ?? '–' }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt class="font-medium">First login</dt>
+                                            <dd>{{ $user->first_login ?? '–' }}</dd>
+                                        </div>
+                                    </dl>
+                                </button>
+                            </div>
+                        @empty
+                            <div class="px-4 py-6 text-center text-gray-500 text-sm">
+                                No users found.
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
                 
                 <!-- Pagination -->
@@ -231,7 +309,7 @@
                 <div class="absolute inset-0 bg-black/60 transition-opacity duration-300" wire:click="closeProfilePopup"></div>
 
                 <!-- Popup Panel -->
-                <div class="relative bg-[#F5F6FA] h-screen overflow-y-auto shadow-xl p-7 py-10 w-[32%]">
+                <div class="relative bg-[#F5F6FA] h-screen overflow-y-auto shadow-xl p-7 py-10 w-full sm:w-[70%] md:w-[50%] lg:w-[40%] xl:w-[32%]">
 
                     <!-- Close Button -->
                     <button type="button" wire:click="closeProfilePopup" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-50">

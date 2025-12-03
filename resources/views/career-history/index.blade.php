@@ -11,9 +11,9 @@
 <div class="flex-1 flex flex-col overflow-hidden">
     <div class="flex min-h-screen bg-gray-100">
         <div class="flex-1 transition-all duration-300">
-            <main class="p-6 flex-1">
-                <div class="w-full h-full">
-                    <div class="bg-white p-5 rounded-lg shadow-md">
+            <main class="p-3 sm:p-6 flex-1">
+                <div class="w-full min-h-full">
+                    <div class="bg-white p-4 sm:p-5 rounded-lg shadow-md">
                         <h2 class="text-xl border-b border-gray-100 font-medium text-[#0053FF] pb-2">Documents</h2>
 
                         <!-- Success Popup -->
@@ -58,7 +58,7 @@
                       
                       	<!-- Delete Confirmation Modal -->
                         <div id="deleteConfirmModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                            <div class="bg-white rounded-xl shadow-xl w-96 p-6 text-center">
+                            <div class="bg-white rounded-xl shadow-xl w-[90%] sm:w-96 p-4 sm:p-6 text-center">
                                 <h3 class="text-lg font-semibold text-gray-700 mb-4">Confirm Delete</h3>
                                 <p class="text-gray-500 mb-6">Are you sure you want to delete this document?</p>
                                 <div class="flex justify-center gap-4">
@@ -77,9 +77,9 @@
                             </div>
                         </div>
 
-                        <div class="bg-[#F5F6FA] p-5 rounded-lg mt-6">
+                        <div class="bg-[#F5F6FA] p-4 sm:p-5 rounded-lg mt-6">
                             <!-- Top cards -->
-                            <div class="grid grid-cols-3 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <!-- Add Document Card -->
                                 <div id="addDocumentCard" data-popup-target="#addDocumentModal" class="bg-white rounded-xl p-3 py-8 flex justify-center items-center flex-col cursor-pointer">
                                     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -150,12 +150,12 @@
                                 	<h2 class="text-lg font-bold border-gray-300 mb-3">Expiring Within 6 Months</h2>
                               	
                                     <div class="w-full mt-5">
-                                        <div class="grid grid-cols-2 gap-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             @foreach($priorityDocs as $doc)
-                                                <div class="bg-white rounded-xl p-4 flex relative border border-gray-200 items-center">
+                                                <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row relative border border-gray-200 items-center gap-3 sm:gap-0">
 
                                                     <!-- Document Image -->
-                                                    <div class="flex flex-wrap justify-center w-[80px] h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card" data-doc='@json($doc)'>
+                                                    <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card" data-doc='@json($doc)'>
 
                                                         @if($doc->file_path)
                                                             @php
@@ -180,7 +180,7 @@
                                                     </div>
 
                                                     <!-- Document Details -->
-                                                    <div class="w-[calc(100%-100px)] flex justify-between items-start pl-3 mb-1">
+                                                    <div class="w-full sm:w-[calc(100%-100px)] flex flex-col sm:flex-row sm:justify-between items-start sm:pl-3 mb-1">
                                                         <div class="flex-1">
                                                             <h3 class="text-md font-semibold mb-1 text-left">{{ $doc->name }}</h3>
                                                             <p class="text-sm font-semibold text-gray-800 mb-1">
@@ -285,12 +285,12 @@
         @if(count($docs) > 0)
             <div class="w-full mt-3">
                 <h4 class="text-md font-semibold mb-3">{{ $categoryName }}</h4>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     @foreach($docs as $doc)
-                        <div class="bg-white rounded-xl p-4 flex relative border border-gray-200 items-center">
+                        <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row relative border border-gray-200 items-center gap-3 sm:gap-0">
 
                             <!-- Document Image -->
-                            <div class="flex flex-wrap justify-center w-[80px] h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card" data-doc='@json($doc)'>
+                            <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card" data-doc='@json($doc)'>
                                 @if($doc->file_path)
                                     @php
                                         $filePath = asset('storage/' . $doc->file_path);
@@ -312,7 +312,7 @@
                             </div>
 
                             <!-- Document Details -->
-                            <div class="w-[calc(100%-100px)] flex justify-between items-start pl-3 mb-1">
+                            <div class="w-full sm:w-[calc(100%-100px)] flex flex-col sm:flex-row sm:justify-between items-start sm:pl-3 mb-1">
                                 <div class="flex-1">
                                     <h3 class="text-md font-semibold mb-1 text-left">{{ $doc->name }}</h3>
                                     <p class="text-sm font-semibold text-gray-800 mb-1">
@@ -422,19 +422,19 @@
 
 <!-- Add Document Modal -->
 <div id="addDocumentModal" class="popup hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-lg shadow-lg w-[95%] h-[90%] max-w-6xl flex flex-col relative">
+    <div class="bg-white rounded-lg shadow-lg w-[95%] sm:w-[90%] h-[95%] sm:h-[90%] max-w-6xl flex flex-col relative">
 
         <!-- Top header: Left text + Right close -->
-        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-300">
-            <h2 class="text-2xl font-bold">Add Document</h2>
-            <button class="closePopup text-gray-600 hover:text-gray-800 text-3xl font-bold">&times;</button>
+        <div class="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-300">
+            <h2 class="text-xl sm:text-2xl font-bold">Add Document</h2>
+            <button class="closePopup text-gray-600 hover:text-gray-800 text-2xl sm:text-3xl font-bold">&times;</button>
         </div>
 
         <!-- Main content: Left + Right -->
-        <div class="flex flex-1 overflow-hidden">
+        <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
             <!-- LEFT SIDE: Upload + Preview -->
-            <div class="w-1/2 border-r p-6 flex flex-col items-center relative">
+            <div class="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r p-4 sm:p-6 flex flex-col items-center relative">
                 <!-- Hidden file input -->
                 <input type="file" id="docFile" class="hidden" accept="image/*,application/pdf">
 
@@ -471,7 +471,7 @@
             </div>
 
             <!-- RIGHT SIDE: Dynamic Form -->
-            <div class="w-1/2 p-6 overflow-y-auto">
+            <div class="w-full lg:w-1/2 p-4 sm:p-6 overflow-y-auto">
 
                 <form id="documentForm" class="flex flex-col h-full mb-0">
                     @csrf
@@ -519,7 +519,7 @@
 
 <!-- View Document Modal -->
 <div id="viewDocumentModal" class="popup hidden fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300">
-    <div class="bg-white rounded-2xl shadow-2xl w-[95%] h-[90%] max-w-6xl flex flex-col relative overflow-hidden transform scale-95 transition-transform duration-300">
+    <div class="bg-white rounded-2xl shadow-2xl w-[95%] sm:w-[90%] h-[95%] sm:h-[90%] max-w-6xl flex flex-col relative overflow-hidden transform scale-95 transition-transform duration-300">
 
         <!-- Header -->
         <div class="flex justify-between items-center px-6 py-4 border-b border-gray-300 bg-gray-50">
@@ -531,7 +531,7 @@
         <div class="flex flex-1 overflow-hidden">
 
             <!-- LEFT: Preview -->
-            <div class="w-1/2 border-r p-6 flex flex-col items-center justify-center relative bg-gray-50">
+            <div class="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r p-4 sm:p-6 flex flex-col items-center justify-center relative bg-gray-50">
                 <div id="viewPreviewBox" class="w-full h-[450px] border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center text-gray-500 overflow-hidden px-4 text-center bg-white shadow-sm">
                     <img id="viewDocImage" src="" alt="Document Preview" class="max-w-full max-h-full hidden rounded shadow-md">
                     <embed id="viewDocPDF" src="" type="application/pdf" class="w-full h-full hidden">
@@ -2060,64 +2060,75 @@ function showResultPopup(title, message, type) {
     //     $(this).closest(".popup").addClass("hidden").removeClass("flex");
     // });
 
-    // Share profile
+    // Share profile - Only initialize if elements exist
     const card = document.getElementById('shareProfileCard');
-const modal = document.getElementById('shareProfileModal');
-const img = document.getElementById('qrcodeImage');
-const profileLink = document.getElementById('profileLink');
-const visitProfileBtn = document.getElementById('visitProfileBtn');
-const loader = document.getElementById('loader');
-const closeButtons = modal.querySelectorAll('.closePopup');
+    const modal = document.getElementById('shareProfileModal');
+    
+    if (card && modal) {
+        const img = document.getElementById('qrcodeImage');
+        const profileLink = document.getElementById('profileLink');
+        const visitProfileBtn = document.getElementById('visitProfileBtn');
+        const loader = document.getElementById('loader');
+        const closeButtons = modal.querySelectorAll('.closePopup');
 
-// Values from database
-const qrCodePath = "{{ asset(auth()->user()->qrcode) }}";
-const profileUrlDB = "{{ auth()->user()->profile_url }}";
+        // Values from database
+        const qrCodePath = "{{ asset(auth()->user()->qrcode ?? '') }}";
+        const profileUrlDB = "{{ auth()->user()->profile_url ?? '' }}";
 
-// Open Modal
-card.addEventListener('click', () => {
-    modal.classList.remove('hidden');
-    loader.classList.remove('hidden');
+        // Open Modal
+        card.addEventListener('click', () => {
+            if (modal) modal.classList.remove('hidden');
+            if (loader) loader.classList.remove('hidden');
 
-    img.style.opacity = '0';
+            if (img) img.style.opacity = '0';
 
-    // Set Profile URL
-    profileLink.value = profileUrlDB;
-    visitProfileBtn.href = profileUrlDB;
+            // Set Profile URL
+            if (profileLink) profileLink.value = profileUrlDB;
+            if (visitProfileBtn) visitProfileBtn.href = profileUrlDB;
 
-    // Load QR Image
-    img.src = qrCodePath;
-    img.onload = () => {
-        loader.classList.add('hidden');
-        img.style.opacity = '1';
-    };
-});
+            // Load QR Image
+            if (img && qrCodePath) {
+                img.src = qrCodePath;
+                img.onload = () => {
+                    if (loader) loader.classList.add('hidden');
+                    if (img) img.style.opacity = '1';
+                };
+            }
+        });
 
-// Close Modal
-closeButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        modal.classList.add('hidden');
-    });
-});
+        // Close Modal
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (modal) modal.classList.add('hidden');
+            });
+        });
 
-// Close by clicking background
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) modal.classList.add('hidden');
-});
+        // Close by clicking background
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.add('hidden');
+        });
 
-// Copy Link
-document.getElementById('copyBtn').addEventListener('click', () => {
-    navigator.clipboard.writeText(profileLink.value);
-});
+        // Copy Link
+        const copyBtn = document.getElementById('copyBtn');
+        if (copyBtn && profileLink) {
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(profileLink.value);
+            });
+        }
 
-// Download QR Image
-document.getElementById('downloadBtn').addEventListener('click', function() {
-    const link = document.createElement('a');
-    link.href = qrCodePath;
-    link.download = 'profile-qrcode.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-});
+        // Download QR Image
+        const downloadBtn = document.getElementById('downloadBtn');
+        if (downloadBtn && qrCodePath) {
+            downloadBtn.addEventListener('click', function() {
+                const link = document.createElement('a');
+                link.href = qrCodePath;
+                link.download = 'profile-qrcode.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        }
+    }
     
 
 });

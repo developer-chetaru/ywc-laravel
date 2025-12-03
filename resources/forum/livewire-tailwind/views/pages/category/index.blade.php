@@ -10,32 +10,32 @@
     @role('super_admin')
     <div class="flex-1">
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" id="forumTabs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6" id="forumTabs">
             <!-- Tab 1 -->
             <div data-tab="forums" 
                 class="tab-btn cursor-pointer relative flex flex-col justify-center border border-[#BDBDBD] 
-                bg-white rounded-lg py-5 px-6 pr-12 hover:bg-[#F8F9FA] hover:border-blue-500 transition-all shadow-sm">
-                <p class="font-normal text-[#808080] text-sm mb-1">Total Forums</p>
-                <span class="font-semibold text-[#1B1B1B] text-2xl">{{ $totalForums }}</span>
-                <img src="{{ asset('images/message-multiple-01.svg') }}" alt="" class="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8">
+                bg-white rounded-lg py-4 sm:py-5 px-4 sm:px-6 pr-10 sm:pr-12 hover:bg-[#F8F9FA] hover:border-blue-500 transition-all shadow-sm">
+                <p class="font-normal text-[#808080] text-xs sm:text-sm mb-1">Total Forums</p>
+                <span class="font-semibold text-[#1B1B1B] text-xl sm:text-2xl">{{ $totalForums }}</span>
+                <img src="{{ asset('images/message-multiple-01.svg') }}" alt="" class="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8">
             </div>
 
             <!-- Tab 2 -->
             <div data-tab="threads"
                 class="tab-btn cursor-pointer relative flex flex-col justify-center border border-[#BDBDBD] 
-                bg-white rounded-lg py-5 px-6 pr-12 hover:bg-[#F8F9FA] hover:border-blue-500 transition-all shadow-sm">
-                <p class="font-normal text-[#808080] text-sm mb-1">Total Threads</p>
-                <span class="font-semibold text-[#1B1B1B] text-2xl">{{ $totalThreads }}</span>
-                <img src="{{ asset('images/wechat.svg') }}" alt="" class="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8">
+                bg-white rounded-lg py-4 sm:py-5 px-4 sm:px-6 pr-10 sm:pr-12 hover:bg-[#F8F9FA] hover:border-blue-500 transition-all shadow-sm">
+                <p class="font-normal text-[#808080] text-xs sm:text-sm mb-1">Total Threads</p>
+                <span class="font-semibold text-[#1B1B1B] text-xl sm:text-2xl">{{ $totalThreads }}</span>
+                <img src="{{ asset('images/wechat.svg') }}" alt="" class="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8">
             </div>
 
             <!-- Tab 3 -->
             <div data-tab="create-forum"
                 class="tab-btn cursor-pointer relative flex flex-col justify-center border border-[#BDBDBD] 
-                bg-white rounded-lg py-5 px-6 pr-12 hover:bg-[#F8F9FA] hover:border-blue-500 transition-all shadow-sm">
-                <p class="font-normal text-[#808080] text-sm mb-1">Create New Forum</p>
-                <span class="font-semibold text-[#1B1B1B] text-sm">Click to create</span>
-                <img src="{{ asset('images/add-circle-blue.svg') }}" alt="" class="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8">
+                bg-white rounded-lg py-4 sm:py-5 px-4 sm:px-6 pr-10 sm:pr-12 hover:bg-[#F8F9FA] hover:border-blue-500 transition-all shadow-sm">
+                <p class="font-normal text-[#808080] text-xs sm:text-sm mb-1">Create New Forum</p>
+                <span class="font-semibold text-[#1B1B1B] text-xs sm:text-sm">Click to create</span>
+                <img src="{{ asset('images/add-circle-blue.svg') }}" alt="" class="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8">
             </div>
         </div>
 
@@ -58,10 +58,10 @@
         </div>
 
         <!-- 🔹 Chat Layout (Left + Right Side) -->
-        <div id="chatLayout" class="flex h-[calc(100vh-200px)] gap-x-[24px] bg-gray-100 mt-4">
+        <div id="chatLayout" class="flex flex-col lg:flex-row h-[calc(100vh-200px)] gap-4 lg:gap-x-[24px] bg-gray-100 mt-4">
 
             <!-- Left Sidebar -->
-            <div class="w-100 bg-white rounded-xl flex flex-col overflow-hidden shadow-sm">
+            <div class="w-full lg:w-100 bg-white rounded-xl flex flex-col overflow-hidden shadow-sm">
                 <div class="p-4 border-b border-gray-100">
                     <div class="flex items-center gap-2">
                         <div class="relative flex-1">
@@ -154,7 +154,7 @@
             </div>
 
             <!-- Right Content -->
-            <section id="main-content" class="flex-1 flex flex-col bg-white rounded-xl shadow-sm p-6 md:p-8">
+            <section id="main-content" class="flex-1 flex flex-col bg-white rounded-xl shadow-sm p-4 sm:p-6 md:p-8">
                 @if($showDirectChat)
                     <!-- Direct Chat Section -->
                     <div class="flex flex-col h-full">
@@ -244,14 +244,14 @@
                 @elseif(isset($selectedThread) && $selectedThread)
                     @livewire('forum::categories.thread-view', ['threadId' => $selectedThread->id], key('thread-' . $selectedThread->id))
                 @else
-                    <div id="welcome-section" class="flex flex-col items-center justify-center min-h-[400px] h-full text-center py-12">
-                        <div class="bg-blue-600 rounded-full p-4 mb-6 shadow-lg flex items-center justify-center">
-                            <img src="{{ asset('images/department-forums-image-02-blue.svg') }}" class="w-[80px] h-[80px]" alt="WeChat Icon" />
+                    <div id="welcome-section" class="flex flex-col items-center justify-center min-h-[300px] sm:min-h-[400px] h-full text-center py-6 sm:py-12 px-4">
+                        <div class="bg-blue-600 rounded-full p-3 sm:p-4 mb-4 sm:mb-6 shadow-lg flex items-center justify-center">
+                            <img src="{{ asset('images/department-forums-image-02-blue.svg') }}" class="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px]" alt="WeChat Icon" />
                         </div>
-                        <h1 class="text-3xl md:text-4xl font-semibold text-blue-600 mb-4">Welcome to Department Forums</h1>
-                        <p class="text-gray-600 text-lg max-w-md mb-6">Select a forum category from the left to view and participate in discussions.</p>
+                        <h1 class="text-2xl sm:text-3xl md:text-4xl font-semibold text-blue-600 mb-3 sm:mb-4">Welcome to Department Forums</h1>
+                        <p class="text-gray-600 text-base sm:text-lg max-w-md mb-4 sm:mb-6">Select a forum category from the left to view and participate in discussions.</p>
                         <button wire:click="toggleDirectChat" 
-                            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                            class="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm sm:text-base">
                             <i class="fa-solid fa-comments mr-2"></i>Start Direct Chat
                         </button>
                     </div>
@@ -264,10 +264,10 @@
     
     @if(!auth()->user() || !auth()->user()->hasRole('super_admin'))
     <div class="flex-1">
-    <div class="flex user-forum h-[calc(100vh-100px)] gap-x-[24px] bg-gray-100">
+    <div class="flex flex-col lg:flex-row user-forum h-[calc(100vh-100px)] gap-4 lg:gap-x-[24px] bg-gray-100">
 
         <!-- Left Sidebar -->
-        <div class="w-90 bg-white rounded-xl flex flex-col">
+        <div class="w-full lg:w-90 bg-white rounded-xl flex flex-col">
             <div class="p-4">
                 <!-- Search -->
                 <div class="flex items-center gap-2 mb-4">
@@ -454,16 +454,16 @@
                     {{-- Livewire Thread View --}}
                     @livewire('forum::categories.thread-view', ['threadId' => $selectedThread->id], key('thread-' . $selectedThread->id))
             @else
-                <div id="welcome-section" class="flex flex-col items-center justify-center min-h-[400px] h-full text-center py-12">
-                    <div class="bg-blue-600 rounded-full p-4 mb-6 shadow-lg flex items-center justify-center">
-                        <img src="{{ asset('images/department-forums-image-02-blue.svg') }}" class="w-[80px] h-[80px]" alt="WeChat Icon" />
+                <div id="welcome-section" class="flex flex-col items-center justify-center min-h-[300px] sm:min-h-[400px] h-full text-center py-6 sm:py-12 px-4">
+                    <div class="bg-blue-600 rounded-full p-3 sm:p-4 mb-4 sm:mb-6 shadow-lg flex items-center justify-center">
+                        <img src="{{ asset('images/department-forums-image-02-blue.svg') }}" class="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px]" alt="WeChat Icon" />
                     </div>
-                    <h1 class="text-3xl md:text-4xl font-semibold text-blue-600 mb-4">
+                    <h1 class="text-2xl sm:text-3xl md:text-4xl font-semibold text-blue-600 mb-3 sm:mb-4">
                         Welcome to Department Forums
                     </h1>
-                    <p class="text-gray-600 text-lg max-w-md mb-6">Select a forum category from the left to view and participate in discussions.</p>
+                    <p class="text-gray-600 text-base sm:text-lg max-w-md mb-4 sm:mb-6">Select a forum category from the left to view and participate in discussions.</p>
                     <button wire:click="toggleDirectChat" 
-                        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                        class="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm sm:text-base">
                         <i class="fa-solid fa-comments mr-2"></i>Start Direct Chat
                     </button>
                 </div>
@@ -476,9 +476,9 @@
 
     <!-- Messaging Modal for Direct Chat -->
     @if($showMessageModal)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" 
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4" 
             wire:click="closeMessageModal">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl h-[600px] flex flex-col mx-4" wire:click.stop>
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl h-[90vh] sm:h-[600px] flex flex-col mx-2 sm:mx-4" wire:click.stop>
                 <div class="flex justify-between items-center p-4 border-b border-gray-200">
                     <div class="flex items-center gap-3">
                         <img src="{{ $messageUserId ? \App\Models\User::find($messageUserId)->profile_photo_url ?? '/default-avatar.png' : '/default-avatar.png' }}" 

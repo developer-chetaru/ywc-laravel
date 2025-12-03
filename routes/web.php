@@ -135,13 +135,18 @@ Route::middleware([
     //Route::get('/career-history', CareerHistory::class)->name('career-history');
   
   	Route::get('/documents', [CareerHistoryController::class, 'index'])->name('documents');
+  	// Documents show route - must come before career-history route to avoid conflict
+  	Route::get('/documents/{id}', [CareerHistoryController::class, 'show'])->name('documents.show');
   	Route::get('/career-history/{userId?}', \App\Livewire\CareerHistoryView::class)->name('career-history');
     Route::get('/certificate-type/{id}/issuers', [CareerHistoryController::class, 'getIssuersByType']);
     Route::post('/documents/scan', [CareerHistoryController::class, 'scan'])->name('documents.scan');
     Route::post('/career-history', [CareerHistoryController::class, 'store'])->name('career-history.store');
   	Route::post('/documents/toggle-share', [CareerHistoryController::class, 'toggleShare'])->name('documents.toggleShare');
 	
-  	Route::get('/career-history/{id}', [CareerHistoryController::class, 'show'])->name('career-history.show');
+  	// Legacy route - kept for backward compatibility but redirects to documents.show
+  	Route::get('/career-history/{id}', function($id) {
+  		return redirect()->route('documents.show', $id);
+  	})->name('career-history.show');
   	Route::patch('/admin/documents/{document}/status', [CareerHistoryController::class, 'updateStatus']);
     // Route::post('/career-history/docs/{doc}/toggle', [CareerHistoryController::class, 'toggleDoc'])->name('career-history.docs.toggle');
 
