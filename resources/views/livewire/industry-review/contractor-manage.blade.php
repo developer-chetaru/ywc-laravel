@@ -69,8 +69,13 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
-                                        @if($contractor->logo_url)
-                                            <img src="{{ $contractor->logo_url }}" alt="{{ $contractor->name }}" class="w-10 h-10 rounded object-cover">
+                                        @if($contractor->logo)
+                                            @php
+                                                $logoUrl = str_starts_with($contractor->logo, 'http') 
+                                                    ? $contractor->logo 
+                                                    : asset('storage/' . $contractor->logo);
+                                            @endphp
+                                            <img src="{{ $logoUrl }}" alt="{{ $contractor->name }}" class="w-10 h-10 rounded object-cover" onerror="this.style.display='none'">
                                         @endif
                                         <span class="text-sm font-medium text-gray-900">{{ $contractor->name }}</span>
                                     </div>

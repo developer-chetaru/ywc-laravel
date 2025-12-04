@@ -22,7 +22,7 @@ class MarinaReviewShow extends Component
 
     public function mount($slug)
     {
-        $this->marina = Marina::where('slug', $slug)->firstOrFail();
+        $this->marina = Marina::with('gallery')->where('slug', $slug)->firstOrFail();
     }
 
     public function updating($name, $value): void

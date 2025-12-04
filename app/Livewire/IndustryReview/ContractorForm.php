@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Contractor;
+use App\Models\ContractorGallery;
 use Illuminate\Support\Str;
 
 #[Layout('layouts.app')]
@@ -33,10 +34,18 @@ class ContractorForm extends Component
     public $emergency_service = false;
     public $response_time = '';
     public $service_area = '';
-    public $price_range = '';
+    public $price_range = null;
     public $logo;
     public $logo_preview = null;
     public $existing_logo = null;
+
+    // Gallery images
+    public $gallery_images = [];
+    public $gallery_previews = [];
+    public $gallery_captions = []; // Captions for new images
+    public $existing_gallery = [];
+    public $existing_gallery_captions = []; // Captions for existing images
+    public $gallery_to_delete = [];
 
     public $loading = false;
     public $error = '';
@@ -64,7 +73,7 @@ class ContractorForm extends Component
     {
         $this->loading = true;
         try {
-            $contractor = Contractor::findOrFail($contractorId);
+            $contractor = Contractor::with('gallery')->findOrFail($contractorId);
             
             $this->name = $contractor->name;
             $this->business_name = $contractor->business_name;
@@ -83,10 +92,41 @@ class ContractorForm extends Component
             $this->service_area = $contractor->service_area;
             $this->price_range = $contractor->price_range;
             
-            if ($contractor->logo && !str_starts_with($contractor->logo, 'http')) {
-                $this->existing_logo = Storage::disk('public')->url($contractor->logo);
-            } elseif ($contractor->logo) {
-                $this->existing_logo = $contractor->logo;
+            if ($contractor->logo) {
+                if (str_starts_with($contractor->logo, 'http')) {
+                    $this->existing_logo = $contractor->logo;
+                } else {
+                    $this->existing_logo = asset('storage/' . $contractor->logo);
+                }
+            }
+
+            // Load existing gallery - filter out images without valid paths
+            $this->existing_gallery = $contractor->gallery->filter(function ($item) {
+                return !empty($item->image_path);
+            })->map(function ($item) {
+                // Generate URL manually to ensure it works
+                $url = null;
+                if ($item->image_path) {
+                    if (str_starts_with($item->image_path, 'http')) {
+                        $url = $item->image_path;
+                    } else {
+                        $url = asset('storage/' . $item->image_path);
+                    }
+                }
+                
+                return [
+                    'id' => $item->id,
+                    'url' => $url,
+                    'caption' => $item->caption ?? '',
+                    'category' => $item->category ?? 'other',
+                ];
+            })->filter(function ($item) {
+                return !empty($item['url']);
+            })->values()->toArray();
+            
+            // Load existing gallery captions
+            foreach ($this->existing_gallery as $item) {
+                $this->existing_gallery_captions[$item['id']] = $item['caption'] ?? '';
             }
         } catch (\Exception $e) {
             $this->error = 'Error: ' . $e->getMessage();
@@ -100,6 +140,44 @@ class ContractorForm extends Component
         if ($this->logo) {
             $this->logo_preview = $this->logo->temporaryUrl();
         }
+    }
+
+    public function updatedGalleryImages()
+    {
+        $this->gallery_previews = [];
+        foreach ($this->gallery_images as $index => $image) {
+            if ($image) {
+                $this->gallery_previews[$index] = $image->temporaryUrl();
+                // Initialize caption if not set
+                if (!isset($this->gallery_captions[$index])) {
+                    $this->gallery_captions[$index] = '';
+                }
+            }
+        }
+    }
+
+    public function removeGalleryImage($index)
+    {
+        if (isset($this->gallery_images[$index])) {
+            unset($this->gallery_images[$index]);
+            $this->gallery_images = array_values($this->gallery_images);
+        }
+        if (isset($this->gallery_previews[$index])) {
+            unset($this->gallery_previews[$index]);
+            $this->gallery_previews = array_values($this->gallery_previews);
+        }
+        if (isset($this->gallery_captions[$index])) {
+            unset($this->gallery_captions[$index]);
+            $this->gallery_captions = array_values($this->gallery_captions);
+        }
+    }
+
+    public function removeExistingGalleryImage($galleryId)
+    {
+        $this->gallery_to_delete[] = $galleryId;
+        $this->existing_gallery = array_filter($this->existing_gallery, function ($item) use ($galleryId) {
+            return $item['id'] != $galleryId;
+        });
     }
 
     public function save()
@@ -148,11 +226,19 @@ class ContractorForm extends Component
             if ($this->isEditMode) {
                 $contractor = Contractor::findOrFail($this->contractorId);
                 $contractor->update($data);
+                
+                // Handle gallery images
+                $this->saveGalleryImages($contractor);
+                
                 session()->flash('success', 'Contractor updated successfully!');
                 return redirect()->route('industryreview.contractors.manage');
             } else {
                 $data['slug'] = Str::slug($this->name);
-                Contractor::create($data);
+                $contractor = Contractor::create($data);
+                
+                // Handle gallery images
+                $this->saveGalleryImages($contractor);
+                
                 session()->flash('success', 'Contractor created successfully!');
                 return redirect()->route('industryreview.contractors.manage');
             }
@@ -162,6 +248,48 @@ class ContractorForm extends Component
             $this->error = 'Error: ' . $e->getMessage();
         } finally {
             $this->loading = false;
+        }
+    }
+
+    protected function saveGalleryImages($contractor)
+    {
+        // Update existing gallery captions
+        foreach ($this->existing_gallery as $item) {
+            $galleryItem = ContractorGallery::find($item['id']);
+            if ($galleryItem && $galleryItem->contractor_id == $contractor->id) {
+                $caption = $this->existing_gallery_captions[$item['id']] ?? '';
+                $galleryItem->update(['caption' => $caption]);
+            }
+        }
+
+        // Delete marked gallery images
+        foreach ($this->gallery_to_delete as $galleryId) {
+            $galleryItem = ContractorGallery::find($galleryId);
+            if ($galleryItem && $galleryItem->contractor_id == $contractor->id) {
+                if ($galleryItem->image_path && Storage::disk('public')->exists($galleryItem->image_path)) {
+                    Storage::disk('public')->delete($galleryItem->image_path);
+                }
+                $galleryItem->delete();
+            }
+        }
+
+        // Get current max order
+        $maxOrder = $contractor->gallery()->max('order') ?? 0;
+
+        // Save new gallery images
+        foreach ($this->gallery_images as $index => $image) {
+            if ($image) {
+                $path = $image->store('contractors/gallery', 'public');
+                $caption = $this->gallery_captions[$index] ?? '';
+                ContractorGallery::create([
+                    'contractor_id' => $contractor->id,
+                    'image_path' => $path,
+                    'caption' => $caption,
+                    'category' => 'other',
+                    'order' => $maxOrder + $index + 1,
+                    'is_primary' => false,
+                ]);
+            }
         }
     }
 

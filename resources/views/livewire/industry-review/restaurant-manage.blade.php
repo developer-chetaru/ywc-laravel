@@ -69,8 +69,13 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
-                                        @if($restaurant->cover_image_url)
-                                            <img src="{{ $restaurant->cover_image_url }}" alt="{{ $restaurant->name }}" class="w-10 h-10 rounded object-cover">
+                                        @if($restaurant->cover_image)
+                                            @php
+                                                $coverImageUrl = str_starts_with($restaurant->cover_image, 'http') 
+                                                    ? $restaurant->cover_image 
+                                                    : asset('storage/' . $restaurant->cover_image);
+                                            @endphp
+                                            <img src="{{ $coverImageUrl }}" alt="{{ $restaurant->name }}" class="w-10 h-10 rounded object-cover" onerror="this.style.display='none'">
                                         @endif
                                         <span class="text-sm font-medium text-gray-900">{{ $restaurant->name }}</span>
                                     </div>

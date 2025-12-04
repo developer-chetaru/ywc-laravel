@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Broker;
+use App\Models\BrokerGallery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BrokerController extends Controller
 {
@@ -34,7 +36,16 @@ class BrokerController extends Controller
     {
         $broker = Broker::where('slug', $slug)
             ->withCount('reviews')
+            ->with('gallery')
             ->firstOrFail();
+
+        // Add image URLs to gallery items
+        if ($broker->gallery) {
+            $broker->gallery->transform(function ($item) {
+                $item->image_url = $item->image_url;
+                return $item;
+            });
+        }
 
         return response()->json(['data' => $broker]);
     }
@@ -115,6 +126,69 @@ class BrokerController extends Controller
         $broker->delete();
 
         return response()->json(['message' => 'Broker deleted successfully.']);
+    }
+
+    // Gallery endpoints
+    public function addGalleryImage(Request $request, $brokerId): JsonResponse
+    {
+        $request->validate([
+            'image' => 'required|image|max:5120',
+            'caption' => 'nullable|string|max:255',
+            'category' => 'nullable|in:office,team,events,certifications,other',
+            'order' => 'nullable|integer|min:0',
+        ]);
+
+        $broker = Broker::findOrFail($brokerId);
+
+        $currentCount = $broker->gallery()->count();
+        if ($currentCount >= 20) {
+            return response()->json(['error' => 'Maximum 20 images allowed per broker.'], 422);
+        }
+
+        $path = $request->file('image')->store('brokers/gallery', 'public');
+
+        $gallery = BrokerGallery::create([
+            'broker_id' => $brokerId,
+            'image_path' => $path,
+            'caption' => $request->input('caption'),
+            'category' => $request->input('category', 'other'),
+            'order' => $request->input('order', $currentCount),
+        ]);
+
+        return response()->json([
+            'message' => 'Image added successfully.',
+            'data' => $gallery->load('broker'),
+        ], 200);
+    }
+
+    public function deleteGalleryImage($brokerId, $imageId): JsonResponse
+    {
+        $gallery = BrokerGallery::where('broker_id', $brokerId)->findOrFail($imageId);
+
+        if ($gallery->image_path && Storage::disk('public')->exists($gallery->image_path)) {
+            Storage::disk('public')->delete($gallery->image_path);
+        }
+
+        $gallery->delete();
+
+        return response()->json(['message' => 'Image deleted successfully.']);
+    }
+
+    public function updateGalleryImageOrder(Request $request, $brokerId): JsonResponse
+    {
+        $request->validate([
+            'images' => 'required|array',
+            'images.*.id' => 'required|exists:broker_galleries,id',
+            'images.*.order' => 'required|integer|min:0',
+        ]);
+
+        foreach ($request->input('images') as $imageData) {
+            BrokerGallery::where('broker_id', $brokerId)
+                ->where('id', $imageData['id'])
+                ->update(['order' => $imageData['order']]);
+        }
+
+        return response()->json(['message' => 'Image order updated successfully.']);
     }
 }
 

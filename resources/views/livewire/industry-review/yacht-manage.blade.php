@@ -185,8 +185,13 @@
                                 <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{ $yachts->firstItem() + $loop->index }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3 min-w-0">
-                                        @if(!empty($yacht->cover_image_url))
-                                            <img src="{{ $yacht->cover_image_url }}" alt="{{ $yacht->name }}" class="w-10 h-10 rounded object-cover flex-shrink-0" onerror="this.style.display='none';">
+                                        @if($yacht->cover_image)
+                                            @php
+                                                $coverImageUrl = str_starts_with($yacht->cover_image, 'http') 
+                                                    ? $yacht->cover_image 
+                                                    : asset('storage/' . $yacht->cover_image);
+                                            @endphp
+                                            <img src="{{ $coverImageUrl }}" alt="{{ $yacht->name }}" class="w-10 h-10 rounded object-cover flex-shrink-0" onerror="this.style.display='none';">
                                         @endif
                                         <span class="text-sm font-medium text-gray-900 truncate" style="max-width: 250px;" title="{{ $yacht->name }}">{{ $yacht->name }}</span>
                                     </div>

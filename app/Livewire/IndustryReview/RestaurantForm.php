@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Restaurant;
+use App\Models\RestaurantGallery;
 use Illuminate\Support\Str;
 
 #[Layout('layouts.app')]
@@ -30,7 +31,7 @@ class RestaurantForm extends Component
     public $email = '';
     public $website = '';
     public $cuisine_typeInput = '';
-    public $price_range = '';
+    public $price_range = null;
     public $opening_hoursInput = '';
     public $crew_friendly = false;
     public $crew_discount = false;
@@ -38,6 +39,14 @@ class RestaurantForm extends Component
     public $cover_image;
     public $cover_image_preview = null;
     public $existing_cover_image = null;
+
+    // Gallery images
+    public $gallery_images = [];
+    public $gallery_previews = [];
+    public $gallery_captions = []; // Captions for new images
+    public $existing_gallery = [];
+    public $existing_gallery_captions = []; // Captions for existing images
+    public $gallery_to_delete = [];
 
     public $loading = false;
     public $error = '';
@@ -65,7 +74,7 @@ class RestaurantForm extends Component
     {
         $this->loading = true;
         try {
-            $restaurant = Restaurant::findOrFail($restaurantId);
+            $restaurant = Restaurant::with('gallery')->findOrFail($restaurantId);
             
             $this->name = $restaurant->name;
             $this->type = $restaurant->type;
@@ -85,10 +94,41 @@ class RestaurantForm extends Component
             $this->crew_discount = $restaurant->crew_discount;
             $this->crew_discount_details = $restaurant->crew_discount_details;
             
-            if ($restaurant->cover_image && !str_starts_with($restaurant->cover_image, 'http')) {
-                $this->existing_cover_image = Storage::disk('public')->url($restaurant->cover_image);
-            } elseif ($restaurant->cover_image) {
-                $this->existing_cover_image = $restaurant->cover_image;
+            if ($restaurant->cover_image) {
+                if (str_starts_with($restaurant->cover_image, 'http')) {
+                    $this->existing_cover_image = $restaurant->cover_image;
+                } else {
+                    $this->existing_cover_image = asset('storage/' . $restaurant->cover_image);
+                }
+            }
+
+            // Load existing gallery - filter out images without valid paths
+            $this->existing_gallery = $restaurant->gallery->filter(function ($item) {
+                return !empty($item->image_path);
+            })->map(function ($item) {
+                // Generate URL manually to ensure it works
+                $url = null;
+                if ($item->image_path) {
+                    if (str_starts_with($item->image_path, 'http')) {
+                        $url = $item->image_path;
+                    } else {
+                        $url = asset('storage/' . $item->image_path);
+                    }
+                }
+                
+                return [
+                    'id' => $item->id,
+                    'url' => $url,
+                    'caption' => $item->caption ?? '',
+                    'category' => $item->category ?? 'other',
+                ];
+            })->filter(function ($item) {
+                return !empty($item['url']);
+            })->values()->toArray();
+            
+            // Load existing gallery captions
+            foreach ($this->existing_gallery as $item) {
+                $this->existing_gallery_captions[$item['id']] = $item['caption'] ?? '';
             }
         } catch (\Exception $e) {
             $this->error = 'Error: ' . $e->getMessage();
@@ -102,6 +142,44 @@ class RestaurantForm extends Component
         if ($this->cover_image) {
             $this->cover_image_preview = $this->cover_image->temporaryUrl();
         }
+    }
+
+    public function updatedGalleryImages()
+    {
+        $this->gallery_previews = [];
+        foreach ($this->gallery_images as $index => $image) {
+            if ($image) {
+                $this->gallery_previews[$index] = $image->temporaryUrl();
+                // Initialize caption if not set
+                if (!isset($this->gallery_captions[$index])) {
+                    $this->gallery_captions[$index] = '';
+                }
+            }
+        }
+    }
+
+    public function removeGalleryImage($index)
+    {
+        if (isset($this->gallery_images[$index])) {
+            unset($this->gallery_images[$index]);
+            $this->gallery_images = array_values($this->gallery_images);
+        }
+        if (isset($this->gallery_previews[$index])) {
+            unset($this->gallery_previews[$index]);
+            $this->gallery_previews = array_values($this->gallery_previews);
+        }
+        if (isset($this->gallery_captions[$index])) {
+            unset($this->gallery_captions[$index]);
+            $this->gallery_captions = array_values($this->gallery_captions);
+        }
+    }
+
+    public function removeExistingGalleryImage($galleryId)
+    {
+        $this->gallery_to_delete[] = $galleryId;
+        $this->existing_gallery = array_filter($this->existing_gallery, function ($item) use ($galleryId) {
+            return $item['id'] != $galleryId;
+        });
     }
 
     public function save()
@@ -151,11 +229,19 @@ class RestaurantForm extends Component
             if ($this->isEditMode) {
                 $restaurant = Restaurant::findOrFail($this->restaurantId);
                 $restaurant->update($data);
+                
+                // Handle gallery images
+                $this->saveGalleryImages($restaurant);
+                
                 session()->flash('success', 'Restaurant updated successfully!');
                 return redirect()->route('industryreview.restaurants.manage');
             } else {
                 $data['slug'] = Str::slug($this->name);
-                Restaurant::create($data);
+                $restaurant = Restaurant::create($data);
+                
+                // Handle gallery images
+                $this->saveGalleryImages($restaurant);
+                
                 session()->flash('success', 'Restaurant created successfully!');
                 return redirect()->route('industryreview.restaurants.manage');
             }
@@ -165,6 +251,48 @@ class RestaurantForm extends Component
             $this->error = 'Error: ' . $e->getMessage();
         } finally {
             $this->loading = false;
+        }
+    }
+
+    protected function saveGalleryImages($restaurant)
+    {
+        // Update existing gallery captions
+        foreach ($this->existing_gallery as $item) {
+            $galleryItem = RestaurantGallery::find($item['id']);
+            if ($galleryItem && $galleryItem->restaurant_id == $restaurant->id) {
+                $caption = $this->existing_gallery_captions[$item['id']] ?? '';
+                $galleryItem->update(['caption' => $caption]);
+            }
+        }
+
+        // Delete marked gallery images
+        foreach ($this->gallery_to_delete as $galleryId) {
+            $galleryItem = RestaurantGallery::find($galleryId);
+            if ($galleryItem && $galleryItem->restaurant_id == $restaurant->id) {
+                if ($galleryItem->image_path && Storage::disk('public')->exists($galleryItem->image_path)) {
+                    Storage::disk('public')->delete($galleryItem->image_path);
+                }
+                $galleryItem->delete();
+            }
+        }
+
+        // Get current max order
+        $maxOrder = $restaurant->gallery()->max('order') ?? 0;
+
+        // Save new gallery images
+        foreach ($this->gallery_images as $index => $image) {
+            if ($image) {
+                $path = $image->store('restaurants/gallery', 'public');
+                $caption = $this->gallery_captions[$index] ?? '';
+                RestaurantGallery::create([
+                    'restaurant_id' => $restaurant->id,
+                    'image_path' => $path,
+                    'caption' => $caption,
+                    'category' => 'other',
+                    'order' => $maxOrder + $index + 1,
+                    'is_primary' => false,
+                ]);
+            }
         }
     }
 

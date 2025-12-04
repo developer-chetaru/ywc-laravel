@@ -22,7 +22,7 @@ class BrokerReviewShow extends Component
 
     public function mount($slug)
     {
-        $this->broker = Broker::where('slug', $slug)->firstOrFail();
+        $this->broker = Broker::with('gallery')->where('slug', $slug)->firstOrFail();
     }
 
     public function updating($name, $value): void

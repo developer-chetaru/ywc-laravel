@@ -22,7 +22,7 @@ class ContractorReviewShow extends Component
 
     public function mount($slug)
     {
-        $this->contractor = Contractor::where('slug', $slug)->firstOrFail();
+        $this->contractor = Contractor::with('gallery')->where('slug', $slug)->firstOrFail();
     }
 
     public function updating($name, $value): void

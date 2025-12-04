@@ -66,10 +66,13 @@
                                 @if($restaurant->cover_image)
                                     @if(str_starts_with($restaurant->cover_image, 'http'))
                                         <img src="{{ $restaurant->cover_image }}" alt="{{ $restaurant->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                                    @elseif(isset($restaurant->cover_image_url))
-                                        <img src="{{ $restaurant->cover_image_url }}" alt="{{ $restaurant->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                                    @else
-                                        <img src="{{ asset('storage/' . $restaurant->cover_image) }}" alt="{{ $restaurant->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                    @elseif($restaurant->cover_image)
+                                        @php
+                                            $coverImageUrl = str_starts_with($restaurant->cover_image, 'http') 
+                                                ? $restaurant->cover_image 
+                                                : asset('storage/' . $restaurant->cover_image);
+                                        @endphp
+                                        <img src="{{ $coverImageUrl }}" alt="{{ $restaurant->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'">
                                     @endif
                                 @else
                                     <div class="w-full h-full flex items-center justify-center">

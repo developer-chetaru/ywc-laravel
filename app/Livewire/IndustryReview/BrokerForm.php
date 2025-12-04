@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Broker;
+use App\Models\BrokerGallery;
 use Illuminate\Support\Str;
 
 #[Layout('layouts.app')]
@@ -28,7 +29,7 @@ class BrokerForm extends Component
     public $email = '';
     public $website = '';
     public $specialtiesInput = '';
-    public $fee_structure = '';
+    public $fee_structure = null;
     public $regions_servedInput = '';
     public $years_in_business = '';
     public $is_myba_member = false;
@@ -37,6 +38,14 @@ class BrokerForm extends Component
     public $logo;
     public $logo_preview = null;
     public $existing_logo = null;
+
+    // Gallery images
+    public $gallery_images = [];
+    public $gallery_previews = [];
+    public $gallery_captions = []; // Captions for new images
+    public $existing_gallery = [];
+    public $existing_gallery_captions = []; // Captions for existing images
+    public $gallery_to_delete = [];
 
     public $loading = false;
     public $error = '';
@@ -67,7 +76,7 @@ class BrokerForm extends Component
     {
         $this->loading = true;
         try {
-            $broker = Broker::findOrFail($brokerId);
+            $broker = Broker::with('gallery')->findOrFail($brokerId);
             
             $this->name = $broker->name;
             $this->business_name = $broker->business_name;
@@ -86,10 +95,41 @@ class BrokerForm extends Component
             $this->is_licensed = $broker->is_licensed;
             $this->certificationsInput = is_array($broker->certifications) ? implode(', ', $broker->certifications) : '';
             
-            if ($broker->logo && !str_starts_with($broker->logo, 'http')) {
-                $this->existing_logo = Storage::disk('public')->url($broker->logo);
-            } elseif ($broker->logo) {
-                $this->existing_logo = $broker->logo;
+            if ($broker->logo) {
+                if (str_starts_with($broker->logo, 'http')) {
+                    $this->existing_logo = $broker->logo;
+                } else {
+                    $this->existing_logo = asset('storage/' . $broker->logo);
+                }
+            }
+
+            // Load existing gallery - filter out images without valid paths
+            $this->existing_gallery = $broker->gallery->filter(function ($item) {
+                return !empty($item->image_path);
+            })->map(function ($item) {
+                // Generate URL manually to ensure it works
+                $url = null;
+                if ($item->image_path) {
+                    if (str_starts_with($item->image_path, 'http')) {
+                        $url = $item->image_path;
+                    } else {
+                        $url = asset('storage/' . $item->image_path);
+                    }
+                }
+                
+                return [
+                    'id' => $item->id,
+                    'url' => $url,
+                    'caption' => $item->caption ?? '',
+                    'category' => $item->category ?? 'other',
+                ];
+            })->filter(function ($item) {
+                return !empty($item['url']);
+            })->values()->toArray();
+            
+            // Load existing gallery captions
+            foreach ($this->existing_gallery as $item) {
+                $this->existing_gallery_captions[$item['id']] = $item['caption'] ?? '';
             }
         } catch (\Exception $e) {
             $this->error = 'Error: ' . $e->getMessage();
@@ -103,6 +143,44 @@ class BrokerForm extends Component
         if ($this->logo) {
             $this->logo_preview = $this->logo->temporaryUrl();
         }
+    }
+
+    public function updatedGalleryImages()
+    {
+        $this->gallery_previews = [];
+        foreach ($this->gallery_images as $index => $image) {
+            if ($image) {
+                $this->gallery_previews[$index] = $image->temporaryUrl();
+                // Initialize caption if not set
+                if (!isset($this->gallery_captions[$index])) {
+                    $this->gallery_captions[$index] = '';
+                }
+            }
+        }
+    }
+
+    public function removeGalleryImage($index)
+    {
+        if (isset($this->gallery_images[$index])) {
+            unset($this->gallery_images[$index]);
+            $this->gallery_images = array_values($this->gallery_images);
+        }
+        if (isset($this->gallery_previews[$index])) {
+            unset($this->gallery_previews[$index]);
+            $this->gallery_previews = array_values($this->gallery_previews);
+        }
+        if (isset($this->gallery_captions[$index])) {
+            unset($this->gallery_captions[$index]);
+            $this->gallery_captions = array_values($this->gallery_captions);
+        }
+    }
+
+    public function removeExistingGalleryImage($galleryId)
+    {
+        $this->gallery_to_delete[] = $galleryId;
+        $this->existing_gallery = array_filter($this->existing_gallery, function ($item) use ($galleryId) {
+            return $item['id'] != $galleryId;
+        });
     }
 
     public function save()
@@ -128,7 +206,7 @@ class BrokerForm extends Component
                 'email' => $this->email,
                 'website' => $this->website,
                 'specialties' => !empty($this->specialtiesInput) ? array_map('trim', explode(',', $this->specialtiesInput)) : [],
-                'fee_structure' => $this->fee_structure,
+                'fee_structure' => !empty($this->fee_structure) ? $this->fee_structure : null,
                 'regions_served' => !empty($this->regions_servedInput) ? array_map('trim', explode(',', $this->regions_servedInput)) : [],
                 'years_in_business' => $this->years_in_business,
                 'is_myba_member' => $this->is_myba_member,
@@ -151,11 +229,19 @@ class BrokerForm extends Component
             if ($this->isEditMode) {
                 $broker = Broker::findOrFail($this->brokerId);
                 $broker->update($data);
+                
+                // Handle gallery images
+                $this->saveGalleryImages($broker);
+                
                 session()->flash('success', 'Broker updated successfully!');
                 return redirect()->route('industryreview.brokers.manage');
             } else {
                 $data['slug'] = Str::slug($this->name);
-                Broker::create($data);
+                $broker = Broker::create($data);
+                
+                // Handle gallery images
+                $this->saveGalleryImages($broker);
+                
                 session()->flash('success', 'Broker created successfully!');
                 return redirect()->route('industryreview.brokers.manage');
             }
@@ -165,6 +251,48 @@ class BrokerForm extends Component
             $this->error = 'Error: ' . $e->getMessage();
         } finally {
             $this->loading = false;
+        }
+    }
+
+    protected function saveGalleryImages($broker)
+    {
+        // Update existing gallery captions
+        foreach ($this->existing_gallery as $item) {
+            $galleryItem = BrokerGallery::find($item['id']);
+            if ($galleryItem && $galleryItem->broker_id == $broker->id) {
+                $caption = $this->existing_gallery_captions[$item['id']] ?? '';
+                $galleryItem->update(['caption' => $caption]);
+            }
+        }
+
+        // Delete marked gallery images
+        foreach ($this->gallery_to_delete as $galleryId) {
+            $galleryItem = BrokerGallery::find($galleryId);
+            if ($galleryItem && $galleryItem->broker_id == $broker->id) {
+                if ($galleryItem->image_path && Storage::disk('public')->exists($galleryItem->image_path)) {
+                    Storage::disk('public')->delete($galleryItem->image_path);
+                }
+                $galleryItem->delete();
+            }
+        }
+
+        // Get current max order
+        $maxOrder = $broker->gallery()->max('order') ?? 0;
+
+        // Save new gallery images
+        foreach ($this->gallery_images as $index => $image) {
+            if ($image) {
+                $path = $image->store('brokers/gallery', 'public');
+                $caption = $this->gallery_captions[$index] ?? '';
+                BrokerGallery::create([
+                    'broker_id' => $broker->id,
+                    'image_path' => $path,
+                    'caption' => $caption,
+                    'category' => 'other',
+                    'order' => $maxOrder + $index + 1,
+                    'is_primary' => false,
+                ]);
+            }
         }
     }
 

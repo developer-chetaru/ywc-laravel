@@ -67,10 +67,13 @@
                                 @if($broker->logo)
                                     @if(str_starts_with($broker->logo, 'http'))
                                         <img src="{{ $broker->logo }}" alt="{{ $broker->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                                    @elseif(isset($broker->logo_url))
-                                        <img src="{{ $broker->logo_url }}" alt="{{ $broker->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                                    @else
-                                        <img src="{{ asset('storage/' . $broker->logo) }}" alt="{{ $broker->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                    @elseif($broker->logo)
+                                        @php
+                                            $logoUrl = str_starts_with($broker->logo, 'http') 
+                                                ? $broker->logo 
+                                                : asset('storage/' . $broker->logo);
+                                        @endphp
+                                        <img src="{{ $logoUrl }}" alt="{{ $broker->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'">
                                     @endif
                                 @else
                                     <div class="w-full h-full flex items-center justify-center">

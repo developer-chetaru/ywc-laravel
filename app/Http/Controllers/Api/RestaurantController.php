@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Restaurant;
+use App\Models\RestaurantGallery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class RestaurantController extends Controller
 {
@@ -35,7 +37,16 @@ class RestaurantController extends Controller
     {
         $restaurant = Restaurant::where('slug', $slug)
             ->withCount('reviews')
+            ->with('gallery')
             ->firstOrFail();
+
+        // Add image URLs to gallery items
+        if ($restaurant->gallery) {
+            $restaurant->gallery->transform(function ($item) {
+                $item->image_url = $item->image_url;
+                return $item;
+            });
+        }
 
         return response()->json(['data' => $restaurant]);
     }
@@ -112,6 +123,69 @@ class RestaurantController extends Controller
         $restaurant->delete();
 
         return response()->json(['message' => 'Restaurant deleted successfully.']);
+    }
+
+    // Gallery endpoints
+    public function addGalleryImage(Request $request, $restaurantId): JsonResponse
+    {
+        $request->validate([
+            'image' => 'required|image|max:5120',
+            'caption' => 'nullable|string|max:255',
+            'category' => 'nullable|in:interior,exterior,food,menu,atmosphere,other',
+            'order' => 'nullable|integer|min:0',
+        ]);
+
+        $restaurant = Restaurant::findOrFail($restaurantId);
+
+        $currentCount = $restaurant->gallery()->count();
+        if ($currentCount >= 20) {
+            return response()->json(['error' => 'Maximum 20 images allowed per restaurant.'], 422);
+        }
+
+        $path = $request->file('image')->store('restaurants/gallery', 'public');
+
+        $gallery = RestaurantGallery::create([
+            'restaurant_id' => $restaurantId,
+            'image_path' => $path,
+            'caption' => $request->input('caption'),
+            'category' => $request->input('category', 'other'),
+            'order' => $request->input('order', $currentCount),
+        ]);
+
+        return response()->json([
+            'message' => 'Image added successfully.',
+            'data' => $gallery->load('restaurant'),
+        ], 200);
+    }
+
+    public function deleteGalleryImage($restaurantId, $imageId): JsonResponse
+    {
+        $gallery = RestaurantGallery::where('restaurant_id', $restaurantId)->findOrFail($imageId);
+
+        if ($gallery->image_path && Storage::disk('public')->exists($gallery->image_path)) {
+            Storage::disk('public')->delete($gallery->image_path);
+        }
+
+        $gallery->delete();
+
+        return response()->json(['message' => 'Image deleted successfully.']);
+    }
+
+    public function updateGalleryImageOrder(Request $request, $restaurantId): JsonResponse
+    {
+        $request->validate([
+            'images' => 'required|array',
+            'images.*.id' => 'required|exists:restaurant_galleries,id',
+            'images.*.order' => 'required|integer|min:0',
+        ]);
+
+        foreach ($request->input('images') as $imageData) {
+            RestaurantGallery::where('restaurant_id', $restaurantId)
+                ->where('id', $imageData['id'])
+                ->update(['order' => $imageData['order']]);
+        }
+
+        return response()->json(['message' => 'Image order updated successfully.']);
     }
 }
 

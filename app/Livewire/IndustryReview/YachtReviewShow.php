@@ -22,7 +22,7 @@ class YachtReviewShow extends Component
 
     public function mount($slug)
     {
-        $this->yacht = Yacht::where('slug', $slug)->firstOrFail();
+        $this->yacht = Yacht::with('gallery')->where('slug', $slug)->firstOrFail();
     }
 
     public function updating($name, $value): void

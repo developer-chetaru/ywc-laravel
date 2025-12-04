@@ -105,6 +105,11 @@ class Marina extends Model
         return $this->hasMany(MarinaReview::class);
     }
 
+    public function gallery()
+    {
+        return $this->hasMany(MarinaGallery::class)->orderBy('order')->orderBy('id');
+    }
+
     public function updateRatingStats()
     {
         $approvedReviews = $this->allReviews()->where('is_approved', true)->get();

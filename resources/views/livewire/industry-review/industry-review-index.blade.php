@@ -108,13 +108,28 @@
                             <div class="inline-block animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-2 border-blue-200 border-t-blue-600"></div>
                             <p class="mt-4 text-sm sm:text-base text-gray-600 font-medium">Loading yachts...</p>
                         </div>
-                    @elseif(count($yachts) > 0)
+                    @elseif(($showAll && isset($yachtsPaginated) && $yachtsPaginated && $yachtsPaginated->total() > 0) || (!$showAll && !empty($yachts) && count($yachts) > 0))
+                        @php
+                            $yachtsToDisplay = $showAll && isset($yachtsPaginated) ? $yachtsPaginated : collect($yachts);
+                        @endphp
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-                            @foreach($yachts as $yacht)
-                                <div wire:key="yacht-{{ $yacht['id'] }}" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden group">
+                            @foreach($yachtsToDisplay as $yacht)
+                                @php
+                                    if (is_object($yacht)) {
+                                        $yachtData = $yacht->toArray();
+                                        if ($yacht->cover_image) {
+                                            $yachtData['cover_image_url'] = str_starts_with($yacht->cover_image, 'http') 
+                                                ? $yacht->cover_image 
+                                                : asset('storage/' . $yacht->cover_image);
+                                        }
+                                    } else {
+                                        $yachtData = $yacht;
+                                    }
+                                @endphp
+                                <div wire:key="yacht-{{ $yachtData['id'] }}" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden group">
                                     <div class="relative h-44 sm:h-48 lg:h-52 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden">
-                                        @if(isset($yacht['cover_image_url']))
-                                            <img src="{{ $yacht['cover_image_url'] }}" alt="{{ $yacht['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                        @if(!empty($yachtData['cover_image_url']))
+                                            <img src="{{ $yachtData['cover_image_url'] }}" alt="{{ $yachtData['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-20 h-20 text-white opacity-50\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'></path></svg></div>';">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center">
                                                 <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,29 +137,29 @@
                                                 </svg>
                                             </div>
                                         @endif
-                                        @if(isset($yacht['rating_avg']) && $yacht['rating_avg'] > 0)
+                                        @if(isset($yachtData['rating_avg']) && $yachtData['rating_avg'] > 0)
                                             <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md">
                                                 <svg class="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" viewBox="0 0 20 20">
                                                     <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
                                                 </svg>
-                                                <span class="text-sm font-bold text-gray-900">{{ number_format($yacht['rating_avg'], 1) }}</span>
+                                                <span class="text-sm font-bold text-gray-900">{{ number_format($yachtData['rating_avg'] ?? 0, 1) }}</span>
                                             </div>
                                         @endif
                                     </div>
                                     <div class="p-4 sm:p-5 flex-1 flex flex-col space-y-3">
-                                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 leading-tight">{{ $yacht['name'] ?? 'Unknown Yacht' }}</h2>
+                                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 leading-tight">{{ $yachtData['name'] ?? 'Unknown Yacht' }}</h2>
                                         <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
                                             <div class="bg-blue-50 rounded-xl p-2.5 sm:p-3 border border-blue-100">
                                                 <dt class="text-[10px] sm:text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">Type</dt>
-                                                <dd class="text-sm sm:text-base text-gray-900 font-semibold">{{ isset($yacht['type']) ? ucfirst(str_replace('_', ' ', $yacht['type'])) : '—' }}</dd>
+                                                <dd class="text-sm sm:text-base text-gray-900 font-semibold">{{ isset($yachtData['type']) ? ucfirst(str_replace('_', ' ', $yachtData['type'])) : '—' }}</dd>
                                             </div>
                                             <div class="bg-green-50 rounded-xl p-2.5 sm:p-3 border border-green-100">
                                                 <dt class="text-[10px] sm:text-xs font-semibold text-green-600 uppercase tracking-wide mb-1">Length</dt>
                                                 <dd class="text-sm sm:text-base text-gray-900 font-semibold">
-                                                    @if(isset($yacht['length_meters']))
-                                                        {{ number_format($yacht['length_meters'], 1) }}m
-                                                    @elseif(isset($yacht['length_feet']))
-                                                        {{ number_format($yacht['length_feet'], 0) }}ft
+                                                    @if(isset($yachtData['length_meters']))
+                                                        {{ number_format($yachtData['length_meters'], 1) }}m
+                                                    @elseif(isset($yachtData['length_feet']))
+                                                        {{ number_format($yachtData['length_feet'], 0) }}ft
                                                     @else
                                                         —
                                                     @endif
@@ -156,13 +171,13 @@
                                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
                                                 </svg>
-                                                <span class="font-semibold">{{ $yacht['reviews_count'] ?? 0 }} {{ ($yacht['reviews_count'] ?? 0) == 1 ? 'review' : 'reviews' }}</span>
+                                                <span class="font-semibold">{{ $yachtData['reviews_count'] ?? 0 }} {{ ($yachtData['reviews_count'] ?? 0) == 1 ? 'review' : 'reviews' }}</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
                                         @php
-                                            $yachtSlug = $yacht['slug'] ?? $yacht['id'];
+                                            $yachtSlug = $yachtData['slug'] ?? $yachtData['id'];
                                         @endphp
                                         <a 
                                             href="{{ route('yacht-reviews.show', $yachtSlug) }}"
@@ -176,6 +191,24 @@
                                 </div>
                             @endforeach
                         </div>
+                        
+                        {{-- See All / Show Less Button and Pagination --}}
+                        @if(!$showAll && $yachtsTotalCount > 12)
+                            <div class="mt-6 flex justify-center">
+                                <button wire:click="toggleShowAll" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all">
+                                    See All Yachts ({{ $yachtsTotalCount }} total)
+                                </button>
+                            </div>
+                        @elseif($showAll && isset($yachtsPaginated) && $yachtsPaginated)
+                            <div class="mt-6 flex flex-col items-center gap-4">
+                                <div class="w-full">
+                                    {{ $yachtsPaginated->links() }}
+                                </div>
+                                <button wire:click="toggleShowAll" class="px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition-all">
+                                    Show Less
+                                </button>
+                            </div>
+                        @endif
                     @else
                         <div class="bg-white rounded-xl shadow-lg p-6 sm:p-12 text-center">
                             <svg class="w-16 h-16 sm:w-24 sm:h-24 text-gray-300 mx-auto mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,8 +229,8 @@
                             @foreach($marinas as $marina)
                                 <div wire:key="marina-{{ $marina['id'] }}" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden group">
                                     <div class="relative h-44 sm:h-48 lg:h-52 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden">
-                                        @if(isset($marina['cover_image_url']))
-                                            <img src="{{ $marina['cover_image_url'] }}" alt="{{ $marina['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                        @if(!empty($marina['cover_image_url']))
+                                            <img src="{{ $marina['cover_image_url'] }}" alt="{{ $marina['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-20 h-20 text-white opacity-50\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'></path></svg></div>';">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center">
                                                 <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,8 +311,8 @@
                             @foreach($contractors as $contractor)
                                 <div wire:key="contractor-{{ $contractor['id'] }}" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden group">
                                     <div class="relative h-44 sm:h-48 lg:h-52 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden">
-                                        @if(isset($contractor['logo_url']))
-                                            <img src="{{ $contractor['logo_url'] }}" alt="{{ $contractor['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                        @if(!empty($contractor['logo_url']))
+                                            <img src="{{ $contractor['logo_url'] }}" alt="{{ $contractor['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-20 h-20 text-white opacity-50\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'></path></svg></div>';">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center">
                                                 <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -356,8 +389,8 @@
                             @foreach($brokers as $broker)
                                 <div wire:key="broker-{{ $broker['id'] }}" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden group">
                                     <div class="relative h-44 sm:h-48 lg:h-52 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden">
-                                        @if(isset($broker['logo_url']))
-                                            <img src="{{ $broker['logo_url'] }}" alt="{{ $broker['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                        @if(!empty($broker['logo_url']))
+                                            <img src="{{ $broker['logo_url'] }}" alt="{{ $broker['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-20 h-20 text-white opacity-50\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'></path></svg></div>';">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center">
                                                 <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -425,8 +458,8 @@
                             @foreach($restaurants as $restaurant)
                                 <div wire:key="restaurant-{{ $restaurant['id'] }}" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden group">
                                     <div class="relative h-44 sm:h-48 lg:h-52 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden">
-                                        @if(isset($restaurant['cover_image_url']))
-                                            <img src="{{ $restaurant['cover_image_url'] }}" alt="{{ $restaurant['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                        @if(!empty($restaurant['cover_image_url']))
+                                            <img src="{{ $restaurant['cover_image_url'] }}" alt="{{ $restaurant['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-20 h-20 text-white opacity-50\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'></path></svg></div>';">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center">
                                                 <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">

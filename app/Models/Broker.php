@@ -115,6 +115,11 @@ class Broker extends Model
         $this->save();
     }
 
+    public function gallery()
+    {
+        return $this->hasMany(BrokerGallery::class)->orderBy('order')->orderBy('id');
+    }
+
     public function getRedFlagsAttribute()
     {
         $flags = [];

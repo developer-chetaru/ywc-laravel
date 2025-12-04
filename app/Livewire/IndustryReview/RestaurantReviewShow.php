@@ -22,7 +22,7 @@ class RestaurantReviewShow extends Component
 
     public function mount($slug)
     {
-        $this->restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+        $this->restaurant = Restaurant::with('gallery')->where('slug', $slug)->firstOrFail();
     }
 
     public function updating($name, $value): void

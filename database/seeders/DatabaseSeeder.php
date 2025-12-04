@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ContractorSeeder::class,
             BrokerSeeder::class,
             RestaurantSeeder::class,
+            IndustryReviewGallerySeeder::class,
         ]);
         
     }

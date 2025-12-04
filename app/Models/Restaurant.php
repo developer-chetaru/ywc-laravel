@@ -68,6 +68,11 @@ class Restaurant extends Model
         return $this->hasMany(RestaurantReview::class);
     }
 
+    public function gallery()
+    {
+        return $this->hasMany(RestaurantGallery::class)->orderBy('order')->orderBy('id');
+    }
+
     public function updateRatingStats()
     {
         $approvedReviews = $this->allReviews()->where('is_approved', true)->get();

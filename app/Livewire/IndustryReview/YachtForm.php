@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Yacht;
+use App\Models\YachtGallery;
 use App\Models\MasterData;
 use App\Services\YachtService;
 
@@ -34,6 +35,14 @@ class YachtForm extends Component
     public $cover_image;
     public $cover_image_preview = null;
     public $existing_cover_image = null;
+
+    // Gallery images
+    public $gallery_images = [];
+    public $gallery_previews = [];
+    public $gallery_captions = []; // Captions for new images
+    public $existing_gallery = [];
+    public $existing_gallery_captions = []; // Captions for existing images
+    public $gallery_to_delete = [];
 
     public $loading = false;
     public $message = '';
@@ -75,7 +84,7 @@ class YachtForm extends Component
     {
         $this->loading = true;
         try {
-            $yacht = Yacht::findOrFail($yachtId);
+            $yacht = Yacht::with('gallery')->findOrFail($yachtId);
             
             if (!Gate::allows('update', $yacht)) {
                 session()->flash('error', 'You do not have permission to edit this yacht.');
@@ -94,7 +103,40 @@ class YachtForm extends Component
             $this->status = $yacht->status;
             
             if ($yacht->cover_image) {
-                $this->existing_cover_image = Storage::disk('public')->url($yacht->cover_image);
+                if (str_starts_with($yacht->cover_image, 'http')) {
+                    $this->existing_cover_image = $yacht->cover_image;
+                } else {
+                    $this->existing_cover_image = asset('storage/' . $yacht->cover_image);
+                }
+            }
+
+            // Load existing gallery - filter out images without valid paths
+            $this->existing_gallery = $yacht->gallery->filter(function ($item) {
+                return !empty($item->image_path);
+            })->map(function ($item) {
+                // Generate URL manually to ensure it works
+                $url = null;
+                if ($item->image_path) {
+                    if (str_starts_with($item->image_path, 'http')) {
+                        $url = $item->image_path;
+                    } else {
+                        $url = asset('storage/' . $item->image_path);
+                    }
+                }
+                
+                return [
+                    'id' => $item->id,
+                    'url' => $url,
+                    'caption' => $item->caption ?? '',
+                    'category' => $item->category ?? 'other',
+                ];
+            })->filter(function ($item) {
+                return !empty($item['url']);
+            })->values()->toArray();
+            
+            // Load existing gallery captions
+            foreach ($this->existing_gallery as $item) {
+                $this->existing_gallery_captions[$item['id']] = $item['caption'] ?? '';
             }
         } catch (\Exception $e) {
             $this->error = 'Error: ' . $e->getMessage();
@@ -108,6 +150,44 @@ class YachtForm extends Component
         if ($this->cover_image) {
             $this->cover_image_preview = $this->cover_image->temporaryUrl();
         }
+    }
+
+    public function updatedGalleryImages()
+    {
+        $this->gallery_previews = [];
+        foreach ($this->gallery_images as $index => $image) {
+            if ($image) {
+                $this->gallery_previews[$index] = $image->temporaryUrl();
+                // Initialize caption if not set
+                if (!isset($this->gallery_captions[$index])) {
+                    $this->gallery_captions[$index] = '';
+                }
+            }
+        }
+    }
+
+    public function removeGalleryImage($index)
+    {
+        if (isset($this->gallery_images[$index])) {
+            unset($this->gallery_images[$index]);
+            $this->gallery_images = array_values($this->gallery_images);
+        }
+        if (isset($this->gallery_previews[$index])) {
+            unset($this->gallery_previews[$index]);
+            $this->gallery_previews = array_values($this->gallery_previews);
+        }
+        if (isset($this->gallery_captions[$index])) {
+            unset($this->gallery_captions[$index]);
+            $this->gallery_captions = array_values($this->gallery_captions);
+        }
+    }
+
+    public function removeExistingGalleryImage($galleryId)
+    {
+        $this->gallery_to_delete[] = $galleryId;
+        $this->existing_gallery = array_filter($this->existing_gallery, function ($item) use ($galleryId) {
+            return $item['id'] != $galleryId;
+        });
     }
 
     public function save()
@@ -151,6 +231,10 @@ class YachtForm extends Component
                 }
                 
                 $service->update($yacht, $data, $this->cover_image);
+                
+                // Handle gallery images
+                $this->saveGalleryImages($yacht);
+                
                 session()->flash('success', 'Yacht updated successfully!');
                 return redirect()->route('industryreview.yachts.manage');
             } else {
@@ -168,7 +252,11 @@ class YachtForm extends Component
                     }
                 }
 
-                $service->create($data, $this->cover_image, $user);
+                $yacht = $service->create($data, $this->cover_image, $user);
+                
+                // Handle gallery images
+                $this->saveGalleryImages($yacht);
+                
                 session()->flash('success', 'Yacht created successfully!');
                 return redirect()->route('industryreview.yachts.manage');
             }
@@ -178,6 +266,48 @@ class YachtForm extends Component
             $this->error = 'Error: ' . $e->getMessage();
         } finally {
             $this->loading = false;
+        }
+    }
+
+    protected function saveGalleryImages($yacht)
+    {
+        // Update existing gallery captions
+        foreach ($this->existing_gallery as $item) {
+            $galleryItem = YachtGallery::find($item['id']);
+            if ($galleryItem && $galleryItem->yacht_id == $yacht->id) {
+                $caption = $this->existing_gallery_captions[$item['id']] ?? '';
+                $galleryItem->update(['caption' => $caption]);
+            }
+        }
+
+        // Delete marked gallery images
+        foreach ($this->gallery_to_delete as $galleryId) {
+            $galleryItem = YachtGallery::find($galleryId);
+            if ($galleryItem && $galleryItem->yacht_id == $yacht->id) {
+                if ($galleryItem->image_path && Storage::disk('public')->exists($galleryItem->image_path)) {
+                    Storage::disk('public')->delete($galleryItem->image_path);
+                }
+                $galleryItem->delete();
+            }
+        }
+
+        // Get current max order
+        $maxOrder = $yacht->gallery()->max('order') ?? 0;
+
+        // Save new gallery images
+        foreach ($this->gallery_images as $index => $image) {
+            if ($image) {
+                $path = $image->store('yachts/gallery', 'public');
+                $caption = $this->gallery_captions[$index] ?? '';
+                YachtGallery::create([
+                    'yacht_id' => $yacht->id,
+                    'image_path' => $path,
+                    'caption' => $caption,
+                    'category' => 'other',
+                    'order' => $maxOrder + $index + 1,
+                    'is_primary' => false,
+                ]);
+            }
         }
     }
 

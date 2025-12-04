@@ -5,6 +5,7 @@ namespace App\Livewire\IndustryReview;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 use App\Models\Yacht;
 use App\Models\Marina;
 use App\Models\Contractor;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\Validator;
 #[Layout('layouts.app')]
 class IndustryReviewIndex extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     public $activeTab = 'yachts';
     public $yachts = [];
@@ -30,9 +31,15 @@ class IndustryReviewIndex extends Component
     public $contractors = [];
     public $brokers = [];
     public $restaurants = [];
+    public $yachtsTotalCount = 0;
+    public $marinasTotalCount = 0;
+    public $contractorsTotalCount = 0;
+    public $brokersTotalCount = 0;
+    public $restaurantsTotalCount = 0;
     public $loading = false;
     public $showYachtModal = false;
     public $searchQuery = '';
+    public $showAll = false; // Toggle to show all items with pagination
     
     // Yacht form fields
     public $name = '';
@@ -92,7 +99,22 @@ class IndustryReviewIndex extends Component
     public function setTab($tab)
     {
         $this->activeTab = $tab;
+        $this->showAll = false; // Reset showAll when switching tabs
+        $this->resetPage(); // Reset pagination
+        // Reset total counts
+        $this->yachtsTotalCount = 0;
+        $this->marinasTotalCount = 0;
+        $this->contractorsTotalCount = 0;
+        $this->brokersTotalCount = 0;
+        $this->restaurantsTotalCount = 0;
         $this->loadTabData($tab);
+    }
+
+    public function toggleShowAll()
+    {
+        $this->showAll = !$this->showAll;
+        $this->resetPage(); // Reset pagination when toggling
+        $this->loadTabData($this->activeTab);
     }
 
     public function loadTabData($tab)
@@ -150,21 +172,27 @@ class IndustryReviewIndex extends Component
                 });
             }
             
-            $yachts = $query->orderByDesc('rating_avg')
+            $query->orderByDesc('created_at') // Latest first
+                ->orderByDesc('rating_avg')
                 ->orderByDesc('reviews_count')
-                ->orderBy('name')
-                ->limit(12)
-                ->get();
-
-            $this->yachts = $yachts->map(function ($yacht) {
-                $yachtArray = $yacht->toArray();
-                if ($yacht->cover_image) {
-                    $yachtArray['cover_image_url'] = asset('storage/' . $yacht->cover_image);
-                }
-                return $yachtArray;
-            })->toArray();
+                ->orderBy('name');
+            
+            // Don't store paginated collection - return from render() instead
+            if ($this->showAll) {
+                $this->yachts = [];
+            } else {
+                $totalCount = $query->count(); // Get total count before limiting
+                $yachts = $query->limit(12)->get();
+                $this->yachts = $yachts->map(function ($yacht) {
+                    return $this->formatYachtData($yacht);
+                })->toArray();
+                // Store total count for "See All" button display
+                $this->yachtsTotalCount = $totalCount;
+            }
         } catch (\Exception $e) {
+            \Log::error('Error loading yachts: ' . $e->getMessage());
             $this->yachts = [];
+            $this->yachtsTotalCount = 0;
         } finally {
             $this->loading = false;
         }
@@ -187,19 +215,21 @@ class IndustryReviewIndex extends Component
                 });
             }
             
-            $marinas = $query->orderByDesc('rating_avg')
+            $query->orderByDesc('created_at') // Latest first
+                ->orderByDesc('rating_avg')
                 ->orderByDesc('reviews_count')
-                ->orderBy('name')
-                ->limit(12)
-                ->get();
-
-            $this->marinas = $marinas->map(function ($marina) {
-                $marinaArray = $marina->toArray();
-                if ($marina->cover_image) {
-                    $marinaArray['cover_image_url'] = asset('storage/' . $marina->cover_image);
-                }
-                return $marinaArray;
-            })->toArray();
+                ->orderBy('name');
+            
+            if ($this->showAll) {
+                $this->marinas = [];
+            } else {
+                $totalCount = $query->count();
+                $marinas = $query->limit(12)->get();
+                $this->marinas = $marinas->map(function ($marina) {
+                    return $this->formatMarinaData($marina);
+                })->toArray();
+                $this->marinasTotalCount = $totalCount;
+            }
         } catch (\Exception $e) {
             $this->marinas = [];
         } finally {
@@ -223,21 +253,21 @@ class IndustryReviewIndex extends Component
                 });
             }
             
-            $contractors = $query->orderByDesc('rating_avg')
+            $query->orderByDesc('created_at') // Latest first
+                ->orderByDesc('rating_avg')
                 ->orderByDesc('reviews_count')
-                ->orderBy('name')
-                ->limit(12)
-                ->get();
-
-            $this->contractors = $contractors->map(function ($contractor) {
-                $contractorArray = $contractor->toArray();
-                if ($contractor->logo && !str_starts_with($contractor->logo, 'http')) {
-                    $contractorArray['logo_url'] = asset('storage/' . $contractor->logo);
-                } elseif ($contractor->logo) {
-                    $contractorArray['logo_url'] = $contractor->logo;
-                }
-                return $contractorArray;
-            })->toArray();
+                ->orderBy('name');
+            
+            if ($this->showAll) {
+                $this->contractors = [];
+            } else {
+                $totalCount = $query->count();
+                $contractors = $query->limit(12)->get();
+                $this->contractors = $contractors->map(function ($contractor) {
+                    return $this->formatContractorData($contractor);
+                })->toArray();
+                $this->contractorsTotalCount = $totalCount;
+            }
         } catch (\Exception $e) {
             $this->contractors = [];
         } finally {
@@ -260,21 +290,21 @@ class IndustryReviewIndex extends Component
                 });
             }
             
-            $brokers = $query->orderByDesc('rating_avg')
+            $query->orderByDesc('created_at') // Latest first
+                ->orderByDesc('rating_avg')
                 ->orderByDesc('reviews_count')
-                ->orderBy('name')
-                ->limit(12)
-                ->get();
-
-            $this->brokers = $brokers->map(function ($broker) {
-                $brokerArray = $broker->toArray();
-                if ($broker->logo && !str_starts_with($broker->logo, 'http')) {
-                    $brokerArray['logo_url'] = asset('storage/' . $broker->logo);
-                } elseif ($broker->logo) {
-                    $brokerArray['logo_url'] = $broker->logo;
-                }
-                return $brokerArray;
-            })->toArray();
+                ->orderBy('name');
+            
+            if ($this->showAll) {
+                $this->brokers = [];
+            } else {
+                $totalCount = $query->count();
+                $brokers = $query->limit(12)->get();
+                $this->brokers = $brokers->map(function ($broker) {
+                    return $this->formatBrokerData($broker);
+                })->toArray();
+                $this->brokersTotalCount = $totalCount;
+            }
         } catch (\Exception $e) {
             $this->brokers = [];
         } finally {
@@ -298,21 +328,21 @@ class IndustryReviewIndex extends Component
                 });
             }
             
-            $restaurants = $query->orderByDesc('rating_avg')
+            $query->orderByDesc('created_at') // Latest first
+                ->orderByDesc('rating_avg')
                 ->orderByDesc('reviews_count')
-                ->orderBy('name')
-                ->limit(12)
-                ->get();
-
-            $this->restaurants = $restaurants->map(function ($restaurant) {
-                $restaurantArray = $restaurant->toArray();
-                if ($restaurant->cover_image && !str_starts_with($restaurant->cover_image, 'http')) {
-                    $restaurantArray['cover_image_url'] = asset('storage/' . $restaurant->cover_image);
-                } elseif ($restaurant->cover_image) {
-                    $restaurantArray['cover_image_url'] = $restaurant->cover_image;
-                }
-                return $restaurantArray;
-            })->toArray();
+                ->orderBy('name');
+            
+            if ($this->showAll) {
+                $this->restaurants = [];
+            } else {
+                $totalCount = $query->count();
+                $restaurants = $query->limit(12)->get();
+                $this->restaurants = $restaurants->map(function ($restaurant) {
+                    return $this->formatRestaurantData($restaurant);
+                })->toArray();
+                $this->restaurantsTotalCount = $totalCount;
+            }
         } catch (\Exception $e) {
             $this->restaurants = [];
         } finally {
@@ -650,12 +680,167 @@ class IndustryReviewIndex extends Component
         }
     }
 
+    protected function formatYachtData($yacht)
+    {
+        $yachtArray = $yacht->toArray();
+        if ($yacht->cover_image) {
+            if (str_starts_with($yacht->cover_image, 'http')) {
+                $yachtArray['cover_image_url'] = $yacht->cover_image;
+            } else {
+                $yachtArray['cover_image_url'] = asset('storage/' . $yacht->cover_image);
+            }
+        }
+        return $yachtArray;
+    }
+
+    protected function formatMarinaData($marina)
+    {
+        $marinaArray = $marina->toArray();
+        if ($marina->cover_image) {
+            if (str_starts_with($marina->cover_image, 'http')) {
+                $marinaArray['cover_image_url'] = $marina->cover_image;
+            } else {
+                $marinaArray['cover_image_url'] = asset('storage/' . $marina->cover_image);
+            }
+        }
+        return $marinaArray;
+    }
+
+    protected function formatContractorData($contractor)
+    {
+        $contractorArray = $contractor->toArray();
+        if ($contractor->logo && !str_starts_with($contractor->logo, 'http')) {
+            $contractorArray['logo_url'] = asset('storage/' . $contractor->logo);
+        } elseif ($contractor->logo) {
+            $contractorArray['logo_url'] = $contractor->logo;
+        }
+        return $contractorArray;
+    }
+
+    protected function formatBrokerData($broker)
+    {
+        $brokerArray = $broker->toArray();
+        if ($broker->logo && !str_starts_with($broker->logo, 'http')) {
+            $brokerArray['logo_url'] = asset('storage/' . $broker->logo);
+        } elseif ($broker->logo) {
+            $brokerArray['logo_url'] = $broker->logo;
+        }
+        return $brokerArray;
+    }
+
+    protected function formatRestaurantData($restaurant)
+    {
+        $restaurantArray = $restaurant->toArray();
+        if ($restaurant->cover_image && !str_starts_with($restaurant->cover_image, 'http')) {
+            $restaurantArray['cover_image_url'] = asset('storage/' . $restaurant->cover_image);
+        } elseif ($restaurant->cover_image) {
+            $restaurantArray['cover_image_url'] = $restaurant->cover_image;
+        }
+        return $restaurantArray;
+    }
+
     public function render()
     {
         $yachtTypes = MasterData::getYachtTypes();
         
+        // Get paginated data if showAll is true
+        $yachtsPaginated = null;
+        $marinasPaginated = null;
+        $contractorsPaginated = null;
+        $brokersPaginated = null;
+        $restaurantsPaginated = null;
+        
+        if ($this->showAll) {
+            switch ($this->activeTab) {
+                case 'yachts':
+                    $query = Yacht::query()->withCount('reviews');
+                    if (!empty($this->searchQuery)) {
+                        $query->where(function($q) {
+                            $q->where('name', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('type', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('home_port', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('flag_registry', 'like', '%' . $this->searchQuery . '%');
+                        });
+                    }
+                    $yachtsPaginated = $query->orderByDesc('created_at')
+                        ->orderByDesc('rating_avg')
+                        ->orderByDesc('reviews_count')
+                        ->orderBy('name')
+                        ->paginate(12);
+                    break;
+                case 'marinas':
+                    $query = Marina::query()->withCount('reviews');
+                    if (!empty($this->searchQuery)) {
+                        $query->where(function($q) {
+                            $q->where('name', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('city', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('country', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('type', 'like', '%' . $this->searchQuery . '%');
+                        });
+                    }
+                    $marinasPaginated = $query->orderByDesc('created_at')
+                        ->orderByDesc('rating_avg')
+                        ->orderByDesc('reviews_count')
+                        ->orderBy('name')
+                        ->paginate(12);
+                    break;
+                case 'contractors':
+                    $query = Contractor::query()->withCount('reviews');
+                    if (!empty($this->searchQuery)) {
+                        $query->where(function($q) {
+                            $q->where('name', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('business_name', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('city', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('country', 'like', '%' . $this->searchQuery . '%');
+                        });
+                    }
+                    $contractorsPaginated = $query->orderByDesc('created_at')
+                        ->orderByDesc('rating_avg')
+                        ->orderByDesc('reviews_count')
+                        ->orderBy('name')
+                        ->paginate(12);
+                    break;
+                case 'brokers':
+                    $query = Broker::query()->withCount('reviews');
+                    if (!empty($this->searchQuery)) {
+                        $query->where(function($q) {
+                            $q->where('name', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('business_name', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('primary_location', 'like', '%' . $this->searchQuery . '%');
+                        });
+                    }
+                    $brokersPaginated = $query->orderByDesc('created_at')
+                        ->orderByDesc('rating_avg')
+                        ->orderByDesc('reviews_count')
+                        ->orderBy('name')
+                        ->paginate(12);
+                    break;
+                case 'restaurants':
+                    $query = Restaurant::query()->withCount('reviews');
+                    if (!empty($this->searchQuery)) {
+                        $query->where(function($q) {
+                            $q->where('name', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('city', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('country', 'like', '%' . $this->searchQuery . '%')
+                              ->orWhere('type', 'like', '%' . $this->searchQuery . '%');
+                        });
+                    }
+                    $restaurantsPaginated = $query->orderByDesc('created_at')
+                        ->orderByDesc('rating_avg')
+                        ->orderByDesc('reviews_count')
+                        ->orderBy('name')
+                        ->paginate(12);
+                    break;
+            }
+        }
+        
         return view('livewire.industry-review.industry-review-index', [
             'yachtTypes' => $yachtTypes,
+            'yachtsPaginated' => $yachtsPaginated,
+            'marinasPaginated' => $marinasPaginated,
+            'contractorsPaginated' => $contractorsPaginated,
+            'brokersPaginated' => $brokersPaginated,
+            'restaurantsPaginated' => $restaurantsPaginated,
         ]);
     }
 }

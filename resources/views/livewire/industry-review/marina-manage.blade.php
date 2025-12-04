@@ -149,8 +149,13 @@
                                 <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{ $marinas->firstItem() + $loop->index }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3 min-w-0">
-                                        @if(!empty($marina->cover_image_url))
-                                            <img src="{{ $marina->cover_image_url }}" alt="{{ $marina->name }}" class="w-10 h-10 rounded object-cover flex-shrink-0" onerror="this.style.display='none';">
+                                        @if($marina->cover_image)
+                                            @php
+                                                $coverImageUrl = str_starts_with($marina->cover_image, 'http') 
+                                                    ? $marina->cover_image 
+                                                    : asset('storage/' . $marina->cover_image);
+                                            @endphp
+                                            <img src="{{ $coverImageUrl }}" alt="{{ $marina->name }}" class="w-10 h-10 rounded object-cover flex-shrink-0" onerror="this.style.display='none';">
                                         @endif
                                         <span class="text-sm font-medium text-gray-900 truncate" style="max-width: 250px;" title="{{ $marina->name }}">{{ $marina->name }}</span>
                                     </div>

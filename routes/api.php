@@ -138,6 +138,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/contractors', [ContractorController::class, 'store']);
     Route::put('/contractors/{id}', [ContractorController::class, 'update']);
     Route::delete('/contractors/{id}', [ContractorController::class, 'destroy']);
+    
+    // Contractor Gallery
+    Route::post('/contractors/{contractorId}/gallery', [ContractorController::class, 'addGalleryImage']);
+    Route::delete('/contractors/{contractorId}/gallery/{imageId}', [ContractorController::class, 'deleteGalleryImage']);
+    Route::put('/contractors/{contractorId}/gallery/order', [ContractorController::class, 'updateGalleryImageOrder']);
 
     Route::post('/contractors/{contractorId}/reviews', [ContractorReviewController::class, 'store']);
     Route::put('/contractors/{contractorId}/reviews/{reviewId}', [ContractorReviewController::class, 'update']);
@@ -148,6 +153,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/brokers', [BrokerController::class, 'store']);
     Route::put('/brokers/{id}', [BrokerController::class, 'update']);
     Route::delete('/brokers/{id}', [BrokerController::class, 'destroy']);
+    
+    // Broker Gallery
+    Route::post('/brokers/{brokerId}/gallery', [BrokerController::class, 'addGalleryImage']);
+    Route::delete('/brokers/{brokerId}/gallery/{imageId}', [BrokerController::class, 'deleteGalleryImage']);
+    Route::put('/brokers/{brokerId}/gallery/order', [BrokerController::class, 'updateGalleryImageOrder']);
 
     Route::post('/brokers/{brokerId}/reviews', [BrokerReviewController::class, 'store']);
     Route::put('/brokers/{brokerId}/reviews/{reviewId}', [BrokerReviewController::class, 'update']);
@@ -158,6 +168,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/restaurants', [RestaurantController::class, 'store']);
     Route::put('/restaurants/{id}', [RestaurantController::class, 'update']);
     Route::delete('/restaurants/{id}', [RestaurantController::class, 'destroy']);
+    
+    // Restaurant Gallery
+    Route::post('/restaurants/{restaurantId}/gallery', [RestaurantController::class, 'addGalleryImage']);
+    Route::delete('/restaurants/{restaurantId}/gallery/{imageId}', [RestaurantController::class, 'deleteGalleryImage']);
+    Route::put('/restaurants/{restaurantId}/gallery/order', [RestaurantController::class, 'updateGalleryImageOrder']);
 
     Route::post('/restaurants/{restaurantId}/reviews', [RestaurantReviewController::class, 'store']);
     Route::put('/restaurants/{restaurantId}/reviews/{reviewId}', [RestaurantReviewController::class, 'update']);
@@ -177,6 +192,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/marinas', [MarinaController::class, 'store']);
     Route::put('/marinas/{id}', [MarinaController::class, 'update']);
     Route::delete('/marinas/{id}', [MarinaController::class, 'destroy']);
+    
+    // Marina Gallery
+    Route::post('/marinas/{marinaId}/gallery', [MarinaController::class, 'addGalleryImage']);
+    Route::delete('/marinas/{marinaId}/gallery/{imageId}', [MarinaController::class, 'deleteGalleryImage']);
+    Route::put('/marinas/{marinaId}/gallery/order', [MarinaController::class, 'updateGalleryImageOrder']);
 
     // Crew Profile & Privacy
     Route::prefix('crew-profile')->group(function () {
