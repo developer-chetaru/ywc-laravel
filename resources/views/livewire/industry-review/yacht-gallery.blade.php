@@ -38,19 +38,75 @@
             <h1 class="text-3xl font-bold text-gray-900 mb-6">Photo Gallery - {{ $yacht->name }}</h1>
             
             @if($galleryImages->count() > 0)
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    @foreach($galleryImages as $index => $image)
-                        <div class="group cursor-pointer" @click="selectedImage = {{ $index }}; currentIndex = {{ $index }}">
-                            <img src="{{ $image['url'] }}" 
-                                 alt="{{ $image['caption'] ?? 'Gallery image' }}" 
-                                 class="w-full h-64 object-cover rounded-lg group-hover:opacity-90 transition-opacity"
-                                 onerror="this.style.display='none'">
-                            @if($image['caption'])
-                                <p class="mt-2 text-sm text-gray-600 font-medium">{{ $image['caption'] }}</p>
-                            @endif
+                {{-- Main Gallery Layout: Large image on left, smaller images on right --}}
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                    {{-- Large Main Image (Left) --}}
+                    @if($galleryImages->count() > 0)
+                        <div class="lg:col-span-2 relative group cursor-pointer" @click="selectedImage = 0; currentIndex = 0">
+                            <div class="relative w-full h-[400px] sm:h-[500px] lg:h-[600px] rounded-lg overflow-hidden shadow-lg">
+                                <img src="{{ $galleryImages[0]['url'] }}" 
+                                     alt="{{ $galleryImages[0]['caption'] ?? 'Gallery image' }}" 
+                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                     onerror="this.style.display='none'">
+                                <div class="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-lg shadow-xl">
+                                    <p class="text-sm font-semibold text-gray-900">
+                                        +{{ $galleryImages->count() }} {{ $galleryImages->count() === 1 ? 'Photo' : 'Photos' }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    @endforeach
+                    @endif
+
+                    {{-- Smaller Images Stacked (Right) --}}
+                    <div class="lg:col-span-1 space-y-4">
+                        @if($galleryImages->count() > 1)
+                            <div class="relative group cursor-pointer" @click="selectedImage = 1; currentIndex = 1">
+                                <div class="relative w-full h-[240px] sm:h-[280px] lg:h-[290px] rounded-lg overflow-hidden shadow-md">
+                                    <img src="{{ $galleryImages[1]['url'] }}" 
+                                         alt="{{ $galleryImages[1]['caption'] ?? 'Gallery image' }}" 
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                         onerror="this.style.display='none'">
+                                </div>
+                            </div>
+                        @endif
+                        @if($galleryImages->count() > 2)
+                            <div class="relative group cursor-pointer" @click="selectedImage = 2; currentIndex = 2">
+                                <div class="relative w-full h-[240px] sm:h-[280px] lg:h-[290px] rounded-lg overflow-hidden shadow-md">
+                                    <img src="{{ $galleryImages[2]['url'] }}" 
+                                         alt="{{ $galleryImages[2]['caption'] ?? 'Gallery image' }}" 
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                         onerror="this.style.display='none'">
+                                    @if($galleryImages->count() > 3)
+                                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg backdrop-blur-sm">
+                                            <p class="text-white text-lg font-semibold">
+                                                +{{ $galleryImages->count() - 3 }} More
+                                            </p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    </div>
                 </div>
+
+                {{-- Remaining Images Grid (if more than 3 images) --}}
+                @if($galleryImages->count() > 3)
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        @foreach($galleryImages->slice(3) as $index => $image)
+                            <div class="group cursor-pointer" @click="selectedImage = {{ $index + 3 }}; currentIndex = {{ $index + 3 }}">
+                                <div class="relative w-full h-48 rounded-lg overflow-hidden">
+                                    <img src="{{ $image['url'] }}" 
+                                         alt="{{ $image['caption'] ?? 'Gallery image' }}" 
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                         onerror="this.style.display='none'">
+                                </div>
+                                @if($image['caption'])
+                                    <p class="mt-2 text-sm text-gray-600 font-medium">{{ $image['caption'] }}</p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
             @else
                 <div class="text-center py-12">
                     <p class="text-gray-500">No gallery images available.</p>

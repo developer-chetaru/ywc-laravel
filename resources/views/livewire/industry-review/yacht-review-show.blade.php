@@ -41,26 +41,39 @@
                             </div>
                         @endif
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                            <span class="text-gray-500">Type:</span>
-                            <span class="font-semibold ml-2">{{ ucfirst(str_replace('_', ' ', $yacht->type)) }}</span>
+                    @php
+                        $hasHeaderInfo = $yacht->type || $yacht->length_meters || $yacht->length_feet || $yacht->year_built || $yacht->crew_capacity || $yacht->current_crew_size;
+                    @endphp
+                    @if($hasHeaderInfo)
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            @if($yacht->type)
+                                <div>
+                                    <span class="text-gray-500">Type:</span>
+                                    <span class="font-semibold ml-2">{{ ucfirst(str_replace('_', ' ', $yacht->type)) }}</span>
+                                </div>
+                            @endif
+                            @if($yacht->length_meters || $yacht->length_feet)
+                                <div>
+                                    <span class="text-gray-500">Length:</span>
+                                    <span class="font-semibold ml-2">
+                                        @if($yacht->length_meters) {{ number_format($yacht->length_meters, 1) }}m @elseif($yacht->length_feet) {{ number_format($yacht->length_feet, 0) }}ft @endif
+                                    </span>
+                                </div>
+                            @endif
+                            @if($yacht->year_built)
+                                <div>
+                                    <span class="text-gray-500">Built:</span>
+                                    <span class="font-semibold ml-2">{{ $yacht->year_built }}</span>
+                                </div>
+                            @endif
+                            @if($yacht->crew_capacity || $yacht->current_crew_size)
+                                <div>
+                                    <span class="text-gray-500">Crew:</span>
+                                    <span class="font-semibold ml-2">{{ $yacht->current_crew_size ?: $yacht->crew_capacity }}</span>
+                                </div>
+                            @endif
                         </div>
-                        <div>
-                            <span class="text-gray-500">Length:</span>
-                            <span class="font-semibold ml-2">
-                                @if($yacht->length_meters) {{ number_format($yacht->length_meters, 1) }}m @elseif($yacht->length_feet) {{ number_format($yacht->length_feet, 0) }}ft @else — @endif
-                            </span>
-                        </div>
-                        <div>
-                            <span class="text-gray-500">Built:</span>
-                            <span class="font-semibold ml-2">{{ $yacht->year_built ?: '—' }}</span>
-                        </div>
-                        <div>
-                            <span class="text-gray-500">Crew:</span>
-                            <span class="font-semibold ml-2">{{ $yacht->crew_capacity ?: '—' }}</span>
-                        </div>
-                    </div>
+                    @endif
                     <div class="mt-4 flex gap-3">
                         <a href="{{ route('yacht-reviews.create', $yacht->id) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,6 +92,171 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        {{-- Detailed Information Sections --}}
+        <div class="space-y-6">
+            {{-- Gallery Section --}}
+            @if($yacht->gallery && $yacht->gallery->count() > 0)
+                <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-bold text-gray-900">📸 GALLERY</h2>
+                        <a href="{{ route('yacht-reviews.gallery', $yacht->slug) }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+                            View {{ $yacht->gallery->count() }} {{ $yacht->gallery->count() === 1 ? 'photo' : 'photos' }} →
+                        </a>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">Main exterior</span>
+                        <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">Interior salon</span>
+                        <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">Crew areas</span>
+                        <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">More...</span>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Basic Info Section --}}
+            @php
+                $hasBasicInfo = $yacht->type || $yacht->length_meters || $yacht->length_feet || $yacht->year_built || $yacht->flag_registry || $yacht->home_port || $yacht->builder;
+            @endphp
+            @if($hasBasicInfo)
+                <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">ℹ️ BASIC INFO</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @if($yacht->type)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[120px]">Type:</span>
+                                <span class="text-gray-900 font-semibold">{{ ucfirst(str_replace('_', ' ', $yacht->type)) }}</span>
+                            </div>
+                        @endif
+                        @if($yacht->length_meters || $yacht->length_feet)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[120px]">Length:</span>
+                                <span class="text-gray-900 font-semibold">
+                                    @if($yacht->length_meters && $yacht->length_feet)
+                                        {{ number_format($yacht->length_meters, 1) }}m / {{ number_format($yacht->length_feet, 0) }}ft
+                                    @elseif($yacht->length_meters)
+                                        {{ number_format($yacht->length_meters, 1) }}m
+                                    @elseif($yacht->length_feet)
+                                        {{ number_format($yacht->length_feet, 0) }}ft
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+                        @if($yacht->year_built)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[120px]">Year Built:</span>
+                                <span class="text-gray-900 font-semibold">{{ $yacht->year_built }}</span>
+                            </div>
+                        @endif
+                        @if($yacht->flag_registry)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[120px]">Flag:</span>
+                                <span class="text-gray-900 font-semibold">{{ $yacht->flag_registry }}</span>
+                            </div>
+                        @endif
+                        @if($yacht->home_port)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[120px]">Home Port:</span>
+                                <span class="text-gray-900 font-semibold">{{ $yacht->home_port }}</span>
+                            </div>
+                        @endif
+                        @if($yacht->builder)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[120px]">Builder:</span>
+                                <span class="text-gray-900 font-semibold">{{ $yacht->builder }}</span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+            {{-- Ownership & Management Section --}}
+            @php
+                $hasOwnershipInfo = $yacht->owner_name || $yacht->ownership_type || $yacht->captain_name || $yacht->management_company || ($yacht->is_charter_available && $yacht->charter_rate);
+            @endphp
+            @if($hasOwnershipInfo)
+                <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">👔 OWNERSHIP & MANAGEMENT</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @if($yacht->owner_name || $yacht->ownership_type)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[140px]">Owner:</span>
+                                <span class="text-gray-900 font-semibold">
+                                    @if($yacht->owner_name)
+                                        {{ $yacht->owner_name }}
+                                        @if($yacht->ownership_type === 'private')
+                                            (Private Owner)
+                                        @elseif($yacht->ownership_type === 'company')
+                                            (Company)
+                                        @elseif($yacht->ownership_type === 'charter_management')
+                                            (Charter Management)
+                                        @endif
+                                    @elseif($yacht->ownership_type === 'private')
+                                        Private Owner (Confidential)
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+                        @if($yacht->captain_name)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[140px]">Captain:</span>
+                                <span class="text-gray-900 font-semibold">{{ $yacht->captain_name }}</span>
+                            </div>
+                        @endif
+                        @if($yacht->management_company)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[140px]">Management:</span>
+                                <span class="text-gray-900 font-semibold">{{ $yacht->management_company }}</span>
+                            </div>
+                        @endif
+                        @if($yacht->is_charter_available)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[140px]">Charter:</span>
+                                <span class="text-gray-900 font-semibold">
+                                    Yes
+                                    @if($yacht->charter_rate)
+                                        ({{ $yacht->charter_rate }})
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+            {{-- Crew Section --}}
+            @php
+                $hasCrewInfo = $yacht->current_crew_size || $yacht->crew_capacity || $yacht->crew_structure || $yacht->rotation_schedule;
+            @endphp
+            @if($hasCrewInfo)
+                <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">👥 CREW</h2>
+                    <div class="space-y-4">
+                        @if($yacht->current_crew_size || $yacht->crew_capacity)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[160px]">Total Positions:</span>
+                                <span class="text-gray-900 font-semibold">
+                                    {{ $yacht->current_crew_size ?: $yacht->crew_capacity }}
+                                </span>
+                            </div>
+                        @endif
+                        @if($yacht->crew_structure)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[160px]">Structure:</span>
+                                <div class="text-gray-900 font-semibold">
+                                    <p class="whitespace-pre-line">{{ $yacht->crew_structure }}</p>
+                                </div>
+                            </div>
+                        @endif
+                        @if($yacht->rotation_schedule)
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-500 font-medium min-w-[160px]">Rotation:</span>
+                                <span class="text-gray-900 font-semibold">{{ $yacht->rotation_schedule }}</span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
 
         {{-- Filters and Sort --}}
