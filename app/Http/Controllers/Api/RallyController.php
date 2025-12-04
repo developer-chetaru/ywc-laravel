@@ -44,7 +44,14 @@ class RallyController extends Controller
             ], 422);
         }
 
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         $rally = Rally::create([
             'organizer_id' => $user->id,
@@ -103,7 +110,14 @@ class RallyController extends Controller
             ], 422);
         }
 
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
         $query = Rally::where('status', 'published')
             ->where('privacy', 'public')
             ->where('start_date', '>=', now());
@@ -175,9 +189,16 @@ class RallyController extends Controller
     /**
      * Get rally details
      */
-    public function show(Rally $rally): JsonResponse
+    public function show(Request $request, Rally $rally): JsonResponse
     {
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         // Check privacy
         if ($rally->privacy === 'private' && $rally->organizer_id !== $user->id) {
@@ -234,7 +255,14 @@ class RallyController extends Controller
             ], 422);
         }
 
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         // Check max participants if going
         if ($request->rsvp_status === 'going' && $rally->max_participants) {
@@ -286,7 +314,14 @@ class RallyController extends Controller
             ], 422);
         }
 
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         $comment = RallyComment::create([
             'rally_id' => $rally->id,

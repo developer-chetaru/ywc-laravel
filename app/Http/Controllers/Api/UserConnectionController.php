@@ -29,7 +29,14 @@ class UserConnectionController extends Controller
             ], 422);
         }
 
-        $sender = auth('api')->user();
+        $sender = $request->user();
+        
+        if (!$sender) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
         $receiver = User::findOrFail($request->user_id);
 
         // Check if already connected
@@ -69,7 +76,14 @@ class UserConnectionController extends Controller
      */
     public function acceptRequest(Request $request, UserConnection $connection): JsonResponse
     {
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         // Verify the connection request is for this user
         if ($connection->connected_user_id !== $user->id) {
@@ -103,7 +117,14 @@ class UserConnectionController extends Controller
      */
     public function declineRequest(Request $request, UserConnection $connection): JsonResponse
     {
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         if ($connection->connected_user_id !== $user->id) {
             return response()->json([
@@ -125,7 +146,14 @@ class UserConnectionController extends Controller
      */
     public function getRequests(Request $request): JsonResponse
     {
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         $requests = UserConnection::where('connected_user_id', $user->id)
             ->where('status', 'pending')
@@ -145,7 +173,14 @@ class UserConnectionController extends Controller
      */
     public function getConnections(Request $request): JsonResponse
     {
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         $connections = UserConnection::where(function ($q) use ($user) {
             $q->where('user_id', $user->id)
@@ -182,7 +217,14 @@ class UserConnectionController extends Controller
      */
     public function removeConnection(Request $request, UserConnection $connection): JsonResponse
     {
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         if ($connection->user_id !== $user->id && $connection->connected_user_id !== $user->id) {
             return response()->json([
@@ -215,7 +257,14 @@ class UserConnectionController extends Controller
             ], 422);
         }
 
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
         $blockedUser = User::findOrFail($request->user_id);
 
         // Delete existing connection if any
