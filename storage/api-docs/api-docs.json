@@ -6340,6 +6340,802 @@
                     }
                 ]
             }
+        },
+        "/api/crew-discovery/location/update": {
+            "post": {
+                "tags": [
+                    "Crew Discovery"
+                ],
+                "summary": "Update user's current location",
+                "description": "Updates the authenticated user's latitude, longitude, and location name. Automatically enables location sharing and discovery visibility when location is set.",
+                "operationId": "updateCrewLocation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "latitude",
+                                    "longitude"
+                                ],
+                                "properties": {
+                                    "latitude": {
+                                        "type": "number",
+                                        "minimum": -90,
+                                        "maximum": 90,
+                                        "description": "Latitude coordinate (-90 to 90)",
+                                        "example": 25.7617
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "minimum": -180,
+                                        "maximum": 180,
+                                        "description": "Longitude coordinate (-180 to 180)",
+                                        "example": -80.1918
+                                    },
+                                    "location_name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "description": "Optional human-readable location name",
+                                        "example": "Miami Beach, FL"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Location updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Location updated successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "latitude": {
+                                                    "type": "number",
+                                                    "example": 25.7617
+                                                },
+                                                "longitude": {
+                                                    "type": "number",
+                                                    "example": -80.1918
+                                                },
+                                                "location_name": {
+                                                    "type": "string",
+                                                    "example": "Miami Beach, FL"
+                                                },
+                                                "location_updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/crew-discovery/online-status": {
+            "post": {
+                "tags": [
+                    "Crew Discovery"
+                ],
+                "summary": "Update user's online status",
+                "description": "Sets the user's online/offline status and updates the last_seen_at timestamp.",
+                "operationId": "updateCrewOnlineStatus",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_online"
+                                ],
+                                "properties": {
+                                    "is_online": {
+                                        "type": "boolean",
+                                        "description": "True to set user online, false to set offline",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Online status updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Online status updated"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "is_online": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "last_seen_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/crew-discovery/discover": {
+            "post": {
+                "tags": [
+                    "Crew Discovery"
+                ],
+                "summary": "Discover nearby crew members",
+                "description": "Finds crew members within a specified radius from given coordinates. Supports filtering by position, experience level, status, languages, and interests. Results are ordered by distance (nearest first).",
+                "operationId": "discoverNearbyCrew",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "latitude",
+                                    "longitude"
+                                ],
+                                "properties": {
+                                    "latitude": {
+                                        "type": "number",
+                                        "minimum": -90,
+                                        "maximum": 90,
+                                        "description": "Center point latitude for search",
+                                        "example": 25.7617
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "minimum": -180,
+                                        "maximum": 180,
+                                        "description": "Center point longitude for search",
+                                        "example": -80.1918
+                                    },
+                                    "radius": {
+                                        "type": "number",
+                                        "minimum": 0.1,
+                                        "maximum": 1000,
+                                        "description": "Search radius in kilometers (alternative to distance preset)",
+                                        "example": 10
+                                    },
+                                    "distance": {
+                                        "type": "integer",
+                                        "enum": [
+                                            1,
+                                            5,
+                                            10,
+                                            50,
+                                            100,
+                                            1000
+                                        ],
+                                        "description": "Distance preset in kilometers (overrides radius if provided)",
+                                        "example": 10
+                                    },
+                                    "position": {
+                                        "type": "string",
+                                        "description": "Filter by position/role name (partial match)",
+                                        "example": "captain"
+                                    },
+                                    "experience_level": {
+                                        "type": "string",
+                                        "enum": [
+                                            "new",
+                                            "intermediate",
+                                            "experienced",
+                                            "senior"
+                                        ],
+                                        "description": "Filter by experience level: new (0-2 years), intermediate (2-5), experienced (5-10), senior (10+ years)",
+                                        "example": "experienced"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "online",
+                                            "available",
+                                            "looking_for_work"
+                                        ],
+                                        "description": "Filter by status: online (currently online), available (available or looking to meet), looking_for_work (actively seeking work)",
+                                        "example": "available"
+                                    },
+                                    "languages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "Filter by spoken languages (array of language names)",
+                                        "example": [
+                                            "English",
+                                            "Spanish"
+                                        ]
+                                    },
+                                    "interests": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "Filter by interests (array of interest names)",
+                                        "example": [
+                                            "Sailing",
+                                            "Diving"
+                                        ]
+                                    },
+                                    "limit": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 100,
+                                        "default": 50,
+                                        "description": "Maximum number of results to return",
+                                        "example": 50
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Nearby crew found successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nearby crew found"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "count": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "radius": {
+                                                    "type": "number",
+                                                    "example": 10
+                                                },
+                                                "crew": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 123
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "John Doe"
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "John"
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Doe"
+                                                            },
+                                                            "email": {
+                                                                "type": "string",
+                                                                "example": "john@example.com"
+                                                            },
+                                                            "profile_photo_url": {
+                                                                "type": "string",
+                                                                "format": "uri",
+                                                                "nullable": true
+                                                            },
+                                                            "position": {
+                                                                "type": "string",
+                                                                "nullable": true,
+                                                                "example": "Captain"
+                                                            },
+                                                            "years_experience": {
+                                                                "type": "integer",
+                                                                "nullable": true,
+                                                                "example": 8
+                                                            },
+                                                            "current_yacht": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "languages": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                },
+                                                                "example": [
+                                                                    "English",
+                                                                    "Spanish"
+                                                                ]
+                                                            },
+                                                            "nationality": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "availability_status": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "availability_message": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "looking_to_meet": {
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            },
+                                                            "looking_for_work": {
+                                                                "type": "boolean",
+                                                                "example": false
+                                                            },
+                                                            "is_online": {
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            },
+                                                            "last_seen_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "nullable": true
+                                                            },
+                                                            "rating": {
+                                                                "type": "number",
+                                                                "nullable": true,
+                                                                "example": 4.5
+                                                            },
+                                                            "total_reviews": {
+                                                                "type": "integer",
+                                                                "nullable": true,
+                                                                "example": 12
+                                                            },
+                                                            "distance": {
+                                                                "type": "number",
+                                                                "description": "Distance in kilometers",
+                                                                "example": 5.23
+                                                            },
+                                                            "location_name": {
+                                                                "type": "string",
+                                                                "nullable": true,
+                                                                "example": "Miami Beach, FL"
+                                                            },
+                                                            "connection_status": {
+                                                                "type": "string",
+                                                                "nullable": true,
+                                                                "description": "Connection status: pending, accepted, or null if not connected",
+                                                                "enum": [
+                                                                    "pending",
+                                                                    "accepted",
+                                                                    null
+                                                                ]
+                                                            },
+                                                            "latitude": {
+                                                                "type": "number",
+                                                                "nullable": true,
+                                                                "description": "Only returned if user's location_privacy is 'exact'",
+                                                                "example": 25.7617
+                                                            },
+                                                            "longitude": {
+                                                                "type": "number",
+                                                                "nullable": true,
+                                                                "description": "Only returned if user's location_privacy is 'exact'",
+                                                                "example": -80.1918
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/crew-discovery/online": {
+            "get": {
+                "tags": [
+                    "Crew Discovery"
+                ],
+                "summary": "Get all online crew members",
+                "description": "Returns a list of all crew members who are currently online, have location sharing enabled, and are visible in discovery. Results are limited to 50 members.",
+                "operationId": "getOnlineCrew",
+                "responses": {
+                    "200": {
+                        "description": "Online crew retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Online crew retrieved"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 123
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "position": {
+                                                        "type": "string",
+                                                        "nullable": true,
+                                                        "example": "Captain"
+                                                    },
+                                                    "distance": {
+                                                        "type": "number",
+                                                        "nullable": true,
+                                                        "description": "Distance in kilometers from requesting user (if user has location set)",
+                                                        "example": 5.23
+                                                    },
+                                                    "location_name": {
+                                                        "type": "string",
+                                                        "nullable": true,
+                                                        "example": "Miami Beach, FL"
+                                                    },
+                                                    "availability_message": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/crew-discovery/all-locations": {
+            "get": {
+                "tags": [
+                    "Crew Discovery"
+                ],
+                "summary": "Get all crew locations for map view",
+                "description": "Retrieves all crew members with shared locations for displaying on a map. Supports filtering by position, experience level, status, and search. Can filter by radius if center coordinates are provided. Returns up to 500 results. Coordinates are returned based on user's location_privacy setting (exact, approximate, or null).",
+                "operationId": "getAllCrewLocations",
+                "parameters": [
+                    {
+                        "name": "latitude",
+                        "in": "query",
+                        "description": "Center point latitude for distance calculation and filtering (optional, uses user's location if not provided)",
+                        "schema": {
+                            "type": "number",
+                            "minimum": -90,
+                            "maximum": 90
+                        }
+                    },
+                    {
+                        "name": "longitude",
+                        "in": "query",
+                        "description": "Center point longitude for distance calculation and filtering (optional, uses user's location if not provided)",
+                        "schema": {
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                        }
+                    },
+                    {
+                        "name": "radius",
+                        "in": "query",
+                        "description": "Filter results within radius (kilometers) from center point",
+                        "schema": {
+                            "type": "number",
+                            "minimum": 0.1,
+                            "maximum": 1000
+                        }
+                    },
+                    {
+                        "name": "position",
+                        "in": "query",
+                        "description": "Filter by position/role name (partial match)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "experience_level",
+                        "in": "query",
+                        "description": "Filter by experience level",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "new",
+                                "intermediate",
+                                "experienced",
+                                "senior"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "online",
+                                "available",
+                                "looking_for_work"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by name, email, or location name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Crew locations retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Crew locations retrieved"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "count": {
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "crew": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string"
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string"
+                                                            },
+                                                            "email": {
+                                                                "type": "string"
+                                                            },
+                                                            "profile_photo_url": {
+                                                                "type": "string",
+                                                                "format": "uri",
+                                                                "nullable": true
+                                                            },
+                                                            "position": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "years_experience": {
+                                                                "type": "integer",
+                                                                "nullable": true
+                                                            },
+                                                            "current_yacht": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "languages": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "nationality": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "availability_status": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "availability_message": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "looking_to_meet": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "looking_for_work": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "is_online": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "last_seen_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "nullable": true
+                                                            },
+                                                            "rating": {
+                                                                "type": "number",
+                                                                "nullable": true
+                                                            },
+                                                            "total_reviews": {
+                                                                "type": "integer",
+                                                                "nullable": true
+                                                            },
+                                                            "distance": {
+                                                                "type": "number",
+                                                                "nullable": true,
+                                                                "description": "Distance in kilometers from center point (if coordinates provided)"
+                                                            },
+                                                            "location_name": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "location_updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "nullable": true
+                                                            },
+                                                            "connection_status": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "is_self": {
+                                                                "type": "boolean",
+                                                                "description": "True if this is the requesting user"
+                                                            },
+                                                            "latitude": {
+                                                                "type": "number",
+                                                                "nullable": true,
+                                                                "description": "Coordinate based on location_privacy: exact (actual), approximate (offset), or null (hidden)"
+                                                            },
+                                                            "longitude": {
+                                                                "type": "number",
+                                                                "nullable": true,
+                                                                "description": "Coordinate based on location_privacy: exact (actual), approximate (offset), or null (hidden)"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -6420,6 +7216,10 @@
         {
             "name": "Industry Review - Restaurant Reviews",
             "description": "Restaurant review endpoints"
+        },
+        {
+            "name": "Crew Discovery",
+            "description": "Crew discovery and location-based networking endpoints. Allows users to share their location, discover nearby crew members, and manage online status. Supports filtering by position, experience level, availability status, languages, and interests. Respects user privacy settings (visibility, location_privacy)."
         }
     ]
 }

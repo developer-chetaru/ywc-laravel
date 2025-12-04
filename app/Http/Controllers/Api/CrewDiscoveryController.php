@@ -30,10 +30,18 @@ class CrewDiscoveryController extends Controller
             ], 422);
         }
 
-        $user = auth('api')->user();
+        $user = $request->user();
         
-        // Automatically enable location sharing when user sets location
-        $user->update([
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+        
+        try {
+            // Automatically enable location sharing when user sets location
+            $user->update([
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'location_name' => $request->location_name,
@@ -42,16 +50,22 @@ class CrewDiscoveryController extends Controller
             'show_in_discovery' => true, // Auto-enable discovery
         ]);
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Location updated successfully',
-            'data' => [
-                'latitude' => $user->latitude,
-                'longitude' => $user->longitude,
-                'location_name' => $user->location_name,
-                'location_updated_at' => $user->location_updated_at,
-            ],
-        ], 200);
+            return response()->json([
+                'status' => true,
+                'message' => 'Location updated successfully',
+                'data' => [
+                    'latitude' => $user->latitude,
+                    'longitude' => $user->longitude,
+                    'location_name' => $user->location_name,
+                    'location_updated_at' => $user->location_updated_at,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to update location: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -79,10 +93,19 @@ class CrewDiscoveryController extends Controller
             ], 422);
         }
 
-        $user = auth('api')->user();
-        $latitude = $request->latitude;
-        $longitude = $request->longitude;
-        $radius = $request->distance ?? $request->radius ?? 10; // Default 10km
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+        
+        try {
+            $latitude = $request->latitude;
+            $longitude = $request->longitude;
+            $radius = $request->distance ?? $request->radius ?? 10; // Default 10km
 
         // Convert distance preset to radius
         $distanceMap = [1 => 1, 5 => 5, 10 => 10, 50 => 50, 100 => 100, 1000 => 1000];
@@ -213,15 +236,21 @@ class CrewDiscoveryController extends Controller
             ];
         });
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Nearby crew found',
-            'data' => [
-                'count' => $formattedCrew->count(),
-                'radius' => $radius,
-                'crew' => $formattedCrew,
-            ],
-        ], 200);
+            return response()->json([
+                'status' => true,
+                'message' => 'Nearby crew found',
+                'data' => [
+                    'count' => $formattedCrew->count(),
+                    'radius' => $radius,
+                    'crew' => $formattedCrew,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to discover nearby crew: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -229,9 +258,17 @@ class CrewDiscoveryController extends Controller
      */
     public function getOnlineCrew(Request $request): JsonResponse
     {
-        $user = auth('api')->user();
+        $user = $request->user();
         
-        $onlineCrew = User::where('id', '!=', $user->id)
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+        
+        try {
+            $onlineCrew = User::where('id', '!=', $user->id)
             ->where('is_online', true)
             ->where('show_in_discovery', true)
             ->where('share_location', true)
@@ -255,11 +292,17 @@ class CrewDiscoveryController extends Controller
                 ];
             });
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Online crew retrieved',
-            'data' => $onlineCrew,
-        ], 200);
+            return response()->json([
+                'status' => true,
+                'message' => 'Online crew retrieved',
+                'data' => $onlineCrew,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve online crew: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -267,7 +310,14 @@ class CrewDiscoveryController extends Controller
      */
     public function getAllCrewLocations(Request $request): JsonResponse
     {
-        $user = auth('api')->user();
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
         
         $validator = Validator::make($request->all(), [
             'latitude' => 'nullable|numeric|between:-90,90',
@@ -286,9 +336,10 @@ class CrewDiscoveryController extends Controller
             ], 422);
         }
 
-        $latitude = $request->latitude ?? $user->latitude;
-        $longitude = $request->longitude ?? $user->longitude;
-        $radius = $request->radius;
+        try {
+            $latitude = $request->latitude ?? $user->latitude;
+            $longitude = $request->longitude ?? $user->longitude;
+            $radius = $request->radius;
 
         $query = User::where(function ($q) use ($user) {
                 // Include all users with shared locations OR current user (even without share_location enabled)
@@ -442,14 +493,20 @@ class CrewDiscoveryController extends Controller
                 ];
             });
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Crew locations retrieved',
-            'data' => [
-                'count' => $crew->count(),
-                'crew' => $crew,
-            ],
-        ], 200);
+            return response()->json([
+                'status' => true,
+                'message' => 'Crew locations retrieved',
+                'data' => [
+                    'count' => $crew->count(),
+                    'crew' => $crew,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve crew locations: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -468,21 +525,35 @@ class CrewDiscoveryController extends Controller
             ], 422);
         }
 
-        $user = auth('api')->user();
+        $user = $request->user();
         
-        if ($request->is_online) {
-            $user->setOnline();
-        } else {
-            $user->setOffline();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
         }
+        
+        try {
+            if ($request->is_online) {
+                $user->setOnline();
+            } else {
+                $user->setOffline();
+            }
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Online status updated',
-            'data' => [
-                'is_online' => $user->is_online,
-                'last_seen_at' => $user->last_seen_at,
-            ],
-        ], 200);
+            return response()->json([
+                'status' => true,
+                'message' => 'Online status updated',
+                'data' => [
+                    'is_online' => $user->is_online,
+                    'last_seen_at' => $user->last_seen_at,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to update online status: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
