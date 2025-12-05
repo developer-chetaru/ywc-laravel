@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -477,6 +478,15 @@ class RoutePlanner extends Component
             'stops.*.latitude' => 'latitude',
             'stops.*.longitude' => 'longitude',
         ];
+    }
+
+    #[On('update-stop-coordinates')]
+    public function updateStopCoordinates(int $index, string $latitude, string $longitude): void
+    {
+        if (isset($this->stops[$index])) {
+            $this->stops[$index]['latitude'] = $latitude;
+            $this->stops[$index]['longitude'] = $longitude;
+        }
     }
 }
 
