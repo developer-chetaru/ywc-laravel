@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\CrewProfileController;
 use App\Http\Controllers\Api\MasterDataController;
 use App\Http\Controllers\Api\WorkLogController;
+use App\Http\Controllers\Api\ScheduleController;
 
 // Master Data API - Public endpoints for mobile developers
 Route::get('/master-data', [MasterDataController::class, 'index']);
@@ -259,6 +260,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/rest-periods', [WorkLogController::class, 'addRestPeriod']);
         Route::put('/{id}/rest-periods/{restPeriodId}', [WorkLogController::class, 'updateRestPeriod']);
         Route::delete('/{id}/rest-periods/{restPeriodId}', [WorkLogController::class, 'deleteRestPeriod']);
+    });
+
+    // Work Schedules
+    Route::prefix('work-schedules')->group(function () {
+        Route::get('/', [ScheduleController::class, 'index']);
+        Route::get('/pending', [ScheduleController::class, 'pending']);
+        Route::get('/templates', [ScheduleController::class, 'templates']);
+        Route::get('/captain-summary', [ScheduleController::class, 'captainSummary']);
+        Route::post('/', [ScheduleController::class, 'store']);
+        Route::get('/{id}', [ScheduleController::class, 'show']);
+        Route::put('/{id}', [ScheduleController::class, 'update']);
+        Route::delete('/{id}', [ScheduleController::class, 'destroy']);
+        Route::post('/{id}/confirm', [ScheduleController::class, 'confirm']);
+        Route::post('/{id}/modify', [ScheduleController::class, 'modify']);
     });
 });
 

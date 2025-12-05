@@ -39,6 +39,46 @@
         <!-- Dashboard View -->
         @if($viewMode === 'dashboard')
             <div class="space-y-6">
+                <!-- Quick Schedule Confirmation Card -->
+                @if($todaySchedule)
+                    <div class="bg-blue-50 border-2 border-blue-200 rounded-lg shadow p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">📅 Schedule Ready for Confirmation</h3>
+                                <div class="space-y-2 text-sm text-gray-700">
+                                    <div class="flex justify-between">
+                                        <span>Time:</span>
+                                        <span class="font-medium">
+                                            {{ $todaySchedule->start_time->format('H:i') }} - {{ $todaySchedule->end_time->format('H:i') }}
+                                        </span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Planned Hours:</span>
+                                        <span class="font-medium">{{ number_format($todaySchedule->planned_hours, 1) }}h</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Location:</span>
+                                        <span class="font-medium">{{ ucfirst(str_replace('_', ' ', $todaySchedule->location_status)) }}</span>
+                                    </div>
+                                    @if($todaySchedule->work_type)
+                                        <div class="flex justify-between">
+                                            <span>Work Type:</span>
+                                            <span class="font-medium">{{ $todaySchedule->work_type_label }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <button wire:click="quickConfirmSchedule" 
+                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg transform hover:scale-105 transition">
+                                    ✓ Confirm Schedule
+                                </button>
+                                <p class="text-xs text-gray-500 mt-2 text-center">One-click confirmation</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Compliance Status Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                     <!-- Today's Status -->
@@ -73,9 +113,11 @@
                             </div>
                         @else
                             <p class="text-gray-500 text-sm">No entry for today yet</p>
-                            <button wire:click="newEntry" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                Log Today's Hours →
-                            </button>
+                            @if(!$todaySchedule)
+                                <button wire:click="newEntry" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                    Log Today's Hours →
+                                </button>
+                            @endif
                         @endif
                     </div>
 

@@ -14,10 +14,16 @@ class WorkLog extends Model
 
     protected $fillable = [
         'user_id',
+        'schedule_id',
         'work_date',
         'start_time',
         'end_time',
         'total_hours_worked',
+        'scheduled_hours',
+        'hours_variance',
+        'variance_type',
+        'was_modified',
+        'modification_reason',
         'overtime_hours',
         'break_minutes',
         'total_rest_hours',
@@ -52,6 +58,8 @@ class WorkLog extends Model
         'is_verified',
         'verified_at',
         'verified_by',
+        'is_schedule_confirmed',
+        'schedule_confirmed_at',
     ];
 
     protected $casts = [
@@ -59,6 +67,8 @@ class WorkLog extends Model
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'total_hours_worked' => 'decimal:2',
+        'scheduled_hours' => 'decimal:2',
+        'hours_variance' => 'decimal:2',
         'overtime_hours' => 'decimal:2',
         'total_rest_hours' => 'decimal:2',
         'latitude' => 'decimal:7',
@@ -72,6 +82,9 @@ class WorkLog extends Model
         'is_day_off' => 'boolean',
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
+        'was_modified' => 'boolean',
+        'is_schedule_confirmed' => 'boolean',
+        'schedule_confirmed_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -87,6 +100,11 @@ class WorkLog extends Model
     public function restPeriods(): HasMany
     {
         return $this->hasMany(WorkLogRestPeriod::class);
+    }
+
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(WorkSchedule::class, 'schedule_id');
     }
 
     public function scopeForUser($query, $userId)

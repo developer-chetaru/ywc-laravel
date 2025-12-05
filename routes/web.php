@@ -22,6 +22,8 @@ use App\Livewire\Certificate\CertificateIssuerIndex;
 use App\Livewire\Marketplace\ItineraryIndex;
 use App\Livewire\Marketplace\MarketplaceIndex;
 use App\Livewire\WorkLog\WorkLogIndex;
+use App\Livewire\WorkLog\ScheduleManager;
+use App\Livewire\WorkLog\CaptainDashboard;
 use App\Livewire\IndustryReview\IndustryReviewIndex;
 
 use App\Livewire\Roles\RoleIndex;
@@ -283,6 +285,8 @@ Route::middleware([
 	    return view('itinerary.route-show', ['route' => $route]);
 	})->name('itinerary.routes.show');
     Route::get('/work-log', WorkLogIndex::class)->name('worklog.index');
+    Route::get('/work-schedules', ScheduleManager::class)->name('work-schedules.index');
+    Route::get('/captain-dashboard', CaptainDashboard::class)->name('captain-dashboard.index');
     Route::get('/industry-review', IndustryReviewIndex::class)->name('industryreview.index');
 
     // Industry Review Create Pages (must come before show pages to avoid conflicts)

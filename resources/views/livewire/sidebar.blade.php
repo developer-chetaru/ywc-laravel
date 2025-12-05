@@ -618,6 +618,44 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             </li>
             @endhasanyrole
 
+            {{-- WORK SCHEDULES --}}
+            @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
+            <li>
+                <a href="{{ route('work-schedules.index') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                            {{ request()->is('work-schedules*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+
+                    <span x-show="isOpen"
+                        class="text-base font-medium {{ request()->is('work-schedules*') ? 'text-black' : 'text-white' }}">
+                        Work Schedules
+                    </span>
+                </a>
+            </li>
+            @endhasanyrole
+
+            {{-- CAPTAIN DASHBOARD --}}
+            @hasanyrole('super_admin|captain')
+            <li>
+                <a href="{{ route('captain-dashboard.index') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                            {{ request()->is('captain-dashboard*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+
+                    <span x-show="isOpen"
+                        class="text-base font-medium {{ request()->is('captain-dashboard*') ? 'text-black' : 'text-white' }}">
+                        Captain Dashboard
+                    </span>
+                </a>
+            </li>
+            @endhasanyrole
+
             {{-- CREW DISCOVERY & NETWORKING --}}
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             <li>

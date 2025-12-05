@@ -5,6 +5,7 @@ namespace App\Livewire\WorkLog;
 use Livewire\Component;
 use App\Models\WorkLog;
 use App\Models\WorkLogRestPeriod;
+use App\Models\WorkSchedule;
 use App\Models\Yacht;
 use App\Services\WorkLog\ComplianceService;
 use Carbon\Carbon;
@@ -71,6 +72,7 @@ class WorkLogIndex extends Component
     }
 
     public $isEditing = false; // Track if we're editing an existing entry
+    public $todaySchedule = null; // Today's schedule for quick confirmation
     
     public function mount()
     {
@@ -78,6 +80,68 @@ class WorkLogIndex extends Component
         // Don't auto-load entry on mount - show blank form
         $this->resetForm();
         $this->loadComplianceData();
+        $this->loadTodaySchedule();
+    }
+    
+    public function loadTodaySchedule()
+    {
+        $this->todaySchedule = WorkSchedule::where('user_id', Auth::id())
+            ->where('schedule_date', $this->selectedDate)
+            ->where('status', 'pending')
+            ->first();
+    }
+    
+    public function quickConfirmSchedule()
+    {
+        if (!$this->todaySchedule) {
+            return;
+        }
+        
+        // Confirm the schedule
+        $this->todaySchedule->confirm();
+        
+        // Create work log from schedule
+        $start = Carbon::parse($this->todaySchedule->schedule_date->format('Y-m-d') . ' ' . $this->todaySchedule->start_time->format('H:i'));
+        $end = Carbon::parse($this->todaySchedule->schedule_date->format('Y-m-d') . ' ' . $this->todaySchedule->end_time->format('H:i'));
+        if ($end->lessThanOrEqualTo($start)) {
+            $end->addDay();
+        }
+        $totalHours = round(($end->diffInMinutes($start) - $this->todaySchedule->break_minutes) / 60, 2);
+        
+        $workLog = WorkLog::updateOrCreate(
+            [
+                'user_id' => Auth::id(),
+                'work_date' => $this->todaySchedule->schedule_date,
+            ],
+            [
+                'schedule_id' => $this->todaySchedule->id,
+                'start_time' => $this->todaySchedule->start_time,
+                'end_time' => $this->todaySchedule->end_time,
+                'total_hours_worked' => $totalHours,
+                'scheduled_hours' => $this->todaySchedule->planned_hours,
+                'hours_variance' => 0,
+                'variance_type' => 'none',
+                'break_minutes' => $this->todaySchedule->break_minutes,
+                'location_status' => $this->todaySchedule->location_status,
+                'location_name' => $this->todaySchedule->location_name,
+                'department' => $this->todaySchedule->department,
+                'is_schedule_confirmed' => true,
+                'schedule_confirmed_at' => now(),
+                'was_modified' => false,
+            ]
+        );
+        
+        // Check compliance
+        $compliance = $this->complianceService->checkDailyCompliance($workLog);
+        $workLog->update([
+            'is_compliant' => $compliance['is_compliant'],
+            'compliance_status' => $compliance['status'],
+            'compliance_notes' => json_encode($compliance),
+        ]);
+        
+        $this->loadTodaySchedule();
+        $this->loadComplianceData();
+        session()->flash('message', 'Schedule confirmed and logged successfully!');
     }
 
     public function loadTodayEntry()
