@@ -3310,6 +3310,1637 @@
                     }
                 ]
             }
+        },
+        "/api/work-logs": {
+            "get": {
+                "tags": ["Work Logs"],
+                "summary": "Get work logs",
+                "description": "Retrieve paginated work logs for the authenticated user. Super admins can filter by user_id.",
+                "operationId": "getWorkLogs",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "Filter by user ID (super admin only)",
+                        "required": false,
+                        "schema": {"type": "integer"}
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Start date filter (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {"type": "string", "format": "date"}
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "End date filter (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {"type": "string", "format": "date"}
+                    },
+                    {
+                        "name": "location_status",
+                        "in": "query",
+                        "description": "Filter by location status",
+                        "required": false,
+                        "schema": {"type": "string", "enum": ["at_sea", "in_port", "in_yard", "on_leave", "shore_leave"]}
+                    },
+                    {
+                        "name": "compliance_status",
+                        "in": "query",
+                        "description": "Filter by compliance status",
+                        "required": false,
+                        "schema": {"type": "string"}
+                    },
+                    {
+                        "name": "is_compliant",
+                        "in": "query",
+                        "description": "Filter by compliance (true/false)",
+                        "required": false,
+                        "schema": {"type": "boolean"}
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {"type": "integer", "default": 15}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Work logs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {"type": "object"}
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "post": {
+                "tags": ["Work Logs"],
+                "summary": "Create a work log entry",
+                "description": "Create a new work log entry with rest periods and compliance checking.",
+                "operationId": "createWorkLog",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["work_date"],
+                                "properties": {
+                                    "work_date": {"type": "string", "format": "date", "example": "2025-12-06"},
+                                    "start_time": {"type": "string", "format": "time", "example": "08:00:00"},
+                                    "end_time": {"type": "string", "format": "time", "example": "18:00:00"},
+                                    "total_hours_worked": {"type": "number", "example": 10},
+                                    "overtime_hours": {"type": "number", "example": 2},
+                                    "break_minutes": {"type": "integer", "example": 60},
+                                    "total_rest_hours": {"type": "number", "example": 8},
+                                    "sleep_hours": {"type": "number", "example": 7},
+                                    "rest_uninterrupted": {"type": "boolean", "example": true},
+                                    "location_status": {"type": "string", "enum": ["at_sea", "in_port", "in_yard", "on_leave", "shore_leave"]},
+                                    "location_name": {"type": "string", "example": "Monaco"},
+                                    "port_name": {"type": "string", "example": "Port Hercules"},
+                                    "latitude": {"type": "number", "example": 43.7384},
+                                    "longitude": {"type": "number", "example": 7.4246},
+                                    "yacht_id": {"type": "integer"},
+                                    "yacht_name": {"type": "string"},
+                                    "yacht_type": {"type": "string"},
+                                    "yacht_length": {"type": "string"},
+                                    "yacht_flag": {"type": "string"},
+                                    "position_rank": {"type": "string"},
+                                    "department": {"type": "string"},
+                                    "weather_conditions": {"type": "string"},
+                                    "sea_state": {"type": "string"},
+                                    "visibility": {"type": "string"},
+                                    "activities": {"type": "array", "items": {"type": "string"}},
+                                    "notes": {"type": "string"},
+                                    "comments": {"type": "string"},
+                                    "is_day_off": {"type": "boolean"},
+                                    "rest_periods": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "start_time": {"type": "string", "format": "time"},
+                                                "end_time": {"type": "string", "format": "time"},
+                                                "duration_hours": {"type": "number"},
+                                                "type": {"type": "string", "enum": ["night_sleep", "day_rest", "break", "other"]},
+                                                "is_uninterrupted": {"type": "boolean"},
+                                                "location": {"type": "string"},
+                                                "notes": {"type": "string"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Work log created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {"type": "string", "example": "Work log entry created successfully."},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/work-logs/{id}": {
+            "get": {
+                "tags": ["Work Logs"],
+                "summary": "Get a specific work log",
+                "operationId": "getWorkLog",
+                "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Work log details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Access denied"},
+                    "404": {"description": "Work log not found"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "put": {
+                "tags": ["Work Logs"],
+                "summary": "Update a work log entry",
+                "operationId": "updateWorkLog",
+                "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "work_date": {"type": "string", "format": "date"},
+                                    "start_time": {"type": "string", "format": "time"},
+                                    "end_time": {"type": "string", "format": "time"},
+                                    "total_hours_worked": {"type": "number"},
+                                    "rest_periods": {"type": "array"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Work log updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {"type": "string", "example": "Work log entry updated successfully."},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Access denied"},
+                    "422": {"description": "Validation error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "delete": {
+                "tags": ["Work Logs"],
+                "summary": "Delete a work log entry",
+                "operationId": "deleteWorkLog",
+                "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Work log deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {"type": "string", "example": "Work log entry deleted successfully."}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Access denied"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/work-logs/statistics": {
+            "get": {
+                "tags": ["Work Logs"],
+                "summary": "Get work log statistics",
+                "description": "Get aggregated statistics for work logs (total hours, days, compliance, etc.)",
+                "operationId": "getWorkLogStatistics",
+                "parameters": [
+                    {"name": "user_id", "in": "query", "description": "Filter by user ID (super admin only)", "required": false, "schema": {"type": "integer"}},
+                    {"name": "start_date", "in": "query", "description": "Start date (YYYY-MM-DD)", "required": false, "schema": {"type": "string", "format": "date"}},
+                    {"name": "end_date", "in": "query", "description": "End date (YYYY-MM-DD)", "required": false, "schema": {"type": "string", "format": "date"}},
+                    {"name": "date_filter", "in": "query", "description": "Quick date filter", "required": false, "schema": {"type": "string", "enum": ["today", "week", "month"]}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistics retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "total_days": {"type": "integer", "example": 30},
+                                                "total_hours_worked": {"type": "number", "example": 300.5},
+                                                "total_rest_hours": {"type": "number", "example": 240},
+                                                "average_hours_per_day": {"type": "number", "example": 10.02},
+                                                "days_at_sea": {"type": "integer", "example": 15},
+                                                "days_in_port": {"type": "integer", "example": 10},
+                                                "days_on_leave": {"type": "integer", "example": 5},
+                                                "compliant_days": {"type": "integer", "example": 28},
+                                                "violation_days": {"type": "integer", "example": 2}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/work-logs/compliance": {
+            "get": {
+                "tags": ["Work Logs"],
+                "summary": "Get compliance summary",
+                "description": "Get detailed compliance analysis including weekly compliance checks",
+                "operationId": "getWorkLogCompliance",
+                "parameters": [
+                    {"name": "user_id", "in": "query", "description": "Filter by user ID (super admin only)", "required": false, "schema": {"type": "integer"}},
+                    {"name": "start_date", "in": "query", "description": "Start date (YYYY-MM-DD)", "required": false, "schema": {"type": "string", "format": "date"}},
+                    {"name": "end_date", "in": "query", "description": "End date (YYYY-MM-DD)", "required": false, "schema": {"type": "string", "format": "date"}},
+                    {"name": "date_filter", "in": "query", "description": "Quick date filter", "required": false, "schema": {"type": "string", "enum": ["today", "week", "month"]}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Compliance summary retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/work-logs/{id}/rest-periods": {
+            "post": {
+                "tags": ["Work Logs"],
+                "summary": "Add a rest period to a work log",
+                "operationId": "addRestPeriod",
+                "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["start_time", "end_time"],
+                                "properties": {
+                                    "start_time": {"type": "string", "format": "time", "example": "22:00:00"},
+                                    "end_time": {"type": "string", "format": "time", "example": "06:00:00"},
+                                    "duration_hours": {"type": "number", "example": 8},
+                                    "type": {"type": "string", "enum": ["night_sleep", "day_rest", "break", "other"]},
+                                    "is_uninterrupted": {"type": "boolean", "example": true},
+                                    "location": {"type": "string"},
+                                    "notes": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rest period added successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {"type": "string", "example": "Rest period added successfully."},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Access denied"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/work-logs/{id}/rest-periods/{restPeriodId}": {
+            "put": {
+                "tags": ["Work Logs"],
+                "summary": "Update a rest period",
+                "operationId": "updateRestPeriod",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}},
+                    {"name": "restPeriodId", "in": "path", "required": true, "schema": {"type": "integer"}}
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "start_time": {"type": "string", "format": "time"},
+                                    "end_time": {"type": "string", "format": "time"},
+                                    "duration_hours": {"type": "number"},
+                                    "type": {"type": "string", "enum": ["night_sleep", "day_rest", "break", "other"]},
+                                    "is_uninterrupted": {"type": "boolean"},
+                                    "location": {"type": "string"},
+                                    "notes": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rest period updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {"type": "string", "example": "Rest period updated successfully."},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Access denied"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "delete": {
+                "tags": ["Work Logs"],
+                "summary": "Delete a rest period",
+                "operationId": "deleteRestPeriod",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}},
+                    {"name": "restPeriodId", "in": "path", "required": true, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rest period deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {"type": "string", "example": "Rest period deleted successfully."}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Access denied"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/work-schedules/templates": {
+            "get": {
+                "tags": ["Work Schedules"],
+                "summary": "Get work schedule templates",
+                "description": "Retrieve available work schedule templates",
+                "operationId": "getScheduleTemplates",
+                "responses": {
+                    "200": {
+                        "description": "Templates retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {"type": "array", "items": {"type": "object"}}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/work-schedules/captain-summary": {
+            "get": {
+                "tags": ["Work Schedules"],
+                "summary": "Get captain dashboard summary",
+                "description": "Get comprehensive dashboard data for captains including today's overview and crew compliance summary",
+                "operationId": "getCaptainSummary",
+                "parameters": [
+                    {"name": "start_date", "in": "query", "description": "Start date (YYYY-MM-DD)", "required": false, "schema": {"type": "string", "format": "date"}},
+                    {"name": "end_date", "in": "query", "description": "End date (YYYY-MM-DD)", "required": false, "schema": {"type": "string", "format": "date"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Summary retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {
+                                            "properties": {
+                                                "today_overview": {"type": "object"},
+                                                "compliance_summary": {"type": "array", "items": {"type": "object"}}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized - Only captains can access"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/work-schedules/{id}": {
+            "get": {
+                "tags": ["Work Schedules"],
+                "summary": "Get a specific work schedule",
+                "operationId": "getWorkSchedule",
+                "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Schedule details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "put": {
+                "tags": ["Work Schedules"],
+                "summary": "Update a work schedule",
+                "operationId": "updateWorkSchedule",
+                "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "schedule_date": {"type": "string", "format": "date"},
+                                    "start_time": {"type": "string", "format": "time"},
+                                    "end_time": {"type": "string", "format": "time"},
+                                    "break_minutes": {"type": "integer"},
+                                    "location_status": {"type": "string", "enum": ["in_port", "at_sea", "in_shipyard", "at_anchor"]},
+                                    "work_type": {"type": "string", "enum": ["regular_duties", "maintenance", "guest_service", "emergency_standby", "shore_leave", "rest_period"]},
+                                    "yacht_id": {"type": "integer"},
+                                    "location_name": {"type": "string"},
+                                    "department": {"type": "string"},
+                                    "notes": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Schedule updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Schedule updated successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized"},
+                    "422": {"description": "Validation error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "delete": {
+                "tags": ["Work Schedules"],
+                "summary": "Delete a work schedule",
+                "operationId": "deleteWorkSchedule",
+                "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Schedule deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Schedule deleted successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/profile": {
+            "get": {
+                "tags": ["Profile"],
+                "summary": "Get authenticated user's profile",
+                "description": "Retrieve the complete profile information for the authenticated user",
+                "operationId": "getProfile",
+                "responses": {
+                    "200": {
+                        "description": "Profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "first_name": {"type": "string", "example": "John"},
+                                        "last_name": {"type": "string", "example": "Doe"},
+                                        "email": {"type": "string", "example": "john.doe@example.com"},
+                                        "dob": {"type": "string", "example": "01/01/1990"},
+                                        "phone": {"type": "string"},
+                                        "gender": {"type": "string"},
+                                        "nationality": {"type": "string"},
+                                        "marital_status": {"type": "string"},
+                                        "birth_country": {"type": "string"},
+                                        "birth_province": {"type": "string"},
+                                        "user_id": {"type": "integer"},
+                                        "image": {"type": "string", "format": "uri"},
+                                        "years_experience": {"type": "integer"},
+                                        "current_yacht": {"type": "string"},
+                                        "current_yacht_start_date": {"type": "string"},
+                                        "sea_service_time_months": {"type": "integer"},
+                                        "availability_status": {"type": "string"},
+                                        "availability_message": {"type": "string"},
+                                        "looking_to_meet": {"type": "boolean"},
+                                        "looking_for_work": {"type": "boolean"},
+                                        "languages": {"type": "array", "items": {"type": "string"}},
+                                        "certifications": {"type": "array", "items": {"type": "string"}},
+                                        "specializations": {"type": "array", "items": {"type": "string"}},
+                                        "interests": {"type": "array", "items": {"type": "string"}},
+                                        "previous_yachts": {"type": "array", "items": {"type": "object"}}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {"description": "Failed to fetch profile"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "post": {
+                "tags": ["Profile"],
+                "summary": "Update user profile",
+                "description": "Update the authenticated user's profile information and optionally upload a profile image",
+                "operationId": "updateProfile",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {"type": "string", "maxLength": 255},
+                                    "last_name": {"type": "string", "maxLength": 255},
+                                    "email": {"type": "string", "format": "email"},
+                                    "dob": {"type": "string", "example": "01/01/1990"},
+                                    "phone": {"type": "string"},
+                                    "gender": {"type": "string"},
+                                    "nationality": {"type": "string"},
+                                    "marital_status": {"type": "string"},
+                                    "birth_country": {"type": "string"},
+                                    "birth_province": {"type": "string"},
+                                    "years_experience": {"type": "integer", "minimum": 0, "maximum": 100},
+                                    "current_yacht": {"type": "string"},
+                                    "current_yacht_start_date": {"type": "string", "example": "01/01/2024"},
+                                    "sea_service_time_months": {"type": "integer", "minimum": 0},
+                                    "availability_status": {"type": "string", "enum": ["available", "busy", "looking_for_work", "on_leave"]},
+                                    "availability_message": {"type": "string", "maxLength": 500},
+                                    "looking_to_meet": {"type": "boolean"},
+                                    "looking_for_work": {"type": "boolean"},
+                                    "languages": {"type": "array", "items": {"type": "string"}},
+                                    "certifications": {"type": "array", "items": {"type": "string"}},
+                                    "specializations": {"type": "array", "items": {"type": "string"}},
+                                    "interests": {"type": "array", "items": {"type": "string"}},
+                                    "previous_yachts": {"type": "array", "items": {"type": "object"}},
+                                    "image": {"type": "string", "format": "binary", "description": "Profile image file"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Profile updated successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"},
+                    "500": {"description": "Update failed"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/change-password": {
+            "post": {
+                "tags": ["Profile"],
+                "summary": "Change user password",
+                "description": "Change the authenticated user's password",
+                "operationId": "changePassword",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["current_password", "password", "password_confirmation"],
+                                "properties": {
+                                    "current_password": {"type": "string", "format": "password"},
+                                    "password": {"type": "string", "format": "password", "minLength": 8},
+                                    "password_confirmation": {"type": "string", "format": "password"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password changed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Password changed successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"},
+                    "401": {"description": "Current password is incorrect"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/crew-profile": {
+            "get": {
+                "tags": ["Crew Profile"],
+                "summary": "Get crew profile",
+                "description": "Get the authenticated user's crew profile with privacy settings",
+                "operationId": "getCrewProfile",
+                "responses": {
+                    "200": {
+                        "description": "Profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Profile retrieved"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthorized"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/crew-profile/update": {
+            "post": {
+                "tags": ["Crew Profile"],
+                "summary": "Update crew profile",
+                "description": "Update crew-specific profile information",
+                "operationId": "updateCrewProfile",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "years_experience": {"type": "integer", "minimum": 0, "maximum": 100},
+                                    "current_yacht": {"type": "string"},
+                                    "languages": {"type": "array", "items": {"type": "string"}},
+                                    "certifications": {"type": "array", "items": {"type": "string"}},
+                                    "specializations": {"type": "array", "items": {"type": "string"}},
+                                    "interests": {"type": "array", "items": {"type": "string"}},
+                                    "availability_status": {"type": "string", "enum": ["available", "busy", "looking_for_work", "on_leave"]},
+                                    "availability_message": {"type": "string", "maxLength": 500},
+                                    "looking_to_meet": {"type": "boolean"},
+                                    "looking_for_work": {"type": "boolean"},
+                                    "sea_service_time_months": {"type": "integer", "minimum": 0},
+                                    "previous_yachts": {"type": "array", "items": {"type": "object"}}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Profile updated successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthorized"},
+                    "422": {"description": "Validation error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/crew-profile/privacy": {
+            "post": {
+                "tags": ["Crew Profile"],
+                "summary": "Update privacy settings",
+                "description": "Update privacy and visibility settings for crew discovery",
+                "operationId": "updatePrivacySettings",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "location_privacy": {"type": "string", "enum": ["exact", "approximate", "city_only", "hidden"]},
+                                    "share_location": {"type": "boolean"},
+                                    "auto_hide_at_sea": {"type": "boolean"},
+                                    "visibility": {"type": "string", "enum": ["everyone", "connections_only", "verified_only", "invisible"]},
+                                    "show_in_discovery": {"type": "boolean"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Privacy settings updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Privacy settings updated"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthorized"},
+                    "422": {"description": "Validation error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/crew-profile/{user}": {
+            "get": {
+                "tags": ["Crew Profile"],
+                "summary": "Get public crew profile",
+                "description": "Get another user's public crew profile (respects privacy settings)",
+                "operationId": "getPublicCrewProfile",
+                "parameters": [{"name": "user", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Profile retrieved"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Profile not available or access denied"},
+                    "404": {"description": "Profile not found"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/messages/send": {
+            "post": {
+                "tags": ["Messages"],
+                "summary": "Send a message",
+                "description": "Send a message to a connected user",
+                "operationId": "sendMessage",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["receiver_id", "message"],
+                                "properties": {
+                                    "receiver_id": {"type": "integer", "example": 2},
+                                    "message": {"type": "string", "maxLength": 5000, "example": "Hello, how are you?"},
+                                    "message_type": {"type": "string", "enum": ["text", "image", "location"], "example": "text"},
+                                    "metadata": {"type": "object"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Message sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Message sent"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Users must be connected to send messages"},
+                    "422": {"description": "Validation error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/messages/conversations": {
+            "get": {
+                "tags": ["Messages"],
+                "summary": "Get all conversations",
+                "description": "Get list of all conversations with last message and unread count",
+                "operationId": "getConversations",
+                "responses": {
+                    "200": {
+                        "description": "Conversations retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Conversations retrieved"},
+                                        "data": {"type": "array", "items": {"type": "object"}}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/messages/conversation/{user}": {
+            "get": {
+                "tags": ["Messages"],
+                "summary": "Get conversation with a user",
+                "description": "Get all messages in a conversation with a specific user",
+                "operationId": "getConversation",
+                "parameters": [{"name": "user", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Conversation retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Conversation retrieved"},
+                                        "data": {"type": "array", "items": {"type": "object"}}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/messages/{user}/read": {
+            "post": {
+                "tags": ["Messages"],
+                "summary": "Mark messages as read",
+                "description": "Mark all messages from a user as read",
+                "operationId": "markMessagesAsRead",
+                "parameters": [{"name": "user", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Messages marked as read",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Messages marked as read"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/messages/unread-count": {
+            "get": {
+                "tags": ["Messages"],
+                "summary": "Get unread message count",
+                "description": "Get total count of unread messages",
+                "operationId": "getUnreadCount",
+                "responses": {
+                    "200": {
+                        "description": "Unread count retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Unread count retrieved"},
+                                        "data": {
+                                            "properties": {
+                                                "unread_count": {"type": "integer", "example": 5}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/career-history/upload": {
+            "post": {
+                "tags": ["Career History"],
+                "summary": "Upload a document",
+                "description": "Upload a document (passport, certificate, ID/Visa, or other) with OCR scanning support",
+                "operationId": "uploadDocument",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": ["document_type", "file", "dob"],
+                                "properties": {
+                                    "document_type": {"type": "string", "enum": ["passport", "certificate", "idvisa", "other"]},
+                                    "file": {"type": "string", "format": "binary", "description": "Document file (jpg, jpeg, png, pdf, max 5MB)"},
+                                    "dob": {"type": "string", "format": "date", "description": "Date of birth"},
+                                    "passport_number": {"type": "string", "description": "Required for passport type"},
+                                    "issue_country": {"type": "string", "description": "Required for passport/idvisa"},
+                                    "issue_date": {"type": "string", "format": "date"},
+                                    "expiry_date": {"type": "string", "format": "date"},
+                                    "certificate_issuer_id": {"type": "integer", "description": "Required for certificate type"},
+                                    "certificateRows": {"type": "array", "description": "Required for certificate type"},
+                                    "document_name": {"type": "string", "description": "Required for idvisa type"},
+                                    "document_number": {"type": "string", "description": "Required for idvisa type"},
+                                    "doc_name": {"type": "string", "description": "Required for other type"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Document uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Passport uploaded successfully!"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"},
+                    "500": {"description": "Upload failed"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/career-history/documents": {
+            "get": {
+                "tags": ["Career History"],
+                "summary": "List documents",
+                "description": "Get paginated list of user's documents with optional filters",
+                "operationId": "listDocuments",
+                "parameters": [
+                    {"name": "type", "in": "query", "description": "Filter by document type", "required": false, "schema": {"type": "string", "enum": ["passport", "certificate", "idvisa", "other"]}},
+                    {"name": "status", "in": "query", "description": "Filter by status", "required": false, "schema": {"type": "string"}},
+                    {"name": "expiring_within_6_months", "in": "query", "description": "Filter expiring/expired documents", "required": false, "schema": {"type": "boolean"}},
+                    {"name": "search", "in": "query", "description": "Search in file type/path", "required": false, "schema": {"type": "string"}},
+                    {"name": "per_page", "in": "query", "description": "Items per page", "required": false, "schema": {"type": "integer", "default": 10}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Documents retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {"type": "object"}
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/career-history/documents/{id}": {
+            "get": {
+                "tags": ["Career History"],
+                "summary": "Get a specific document",
+                "operationId": "showDocument",
+                "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Document details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "document": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Document not found"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/career-history/documents/share": {
+            "post": {
+                "tags": ["Career History"],
+                "summary": "Share documents via email",
+                "description": "Share multiple documents via email to specified recipients",
+                "operationId": "shareDocument",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["emails", "documents"],
+                                "properties": {
+                                    "emails": {"type": "string", "description": "Comma-separated email addresses"},
+                                    "documents": {"type": "array", "items": {"type": "integer"}, "description": "Array of document IDs"},
+                                    "message": {"type": "string", "maxLength": 2000, "description": "Optional message"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Documents shared successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Documents shared successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"},
+                    "404": {"description": "No valid documents found"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/career-history/documents/{id}/toggle-share": {
+            "post": {
+                "tags": ["Career History"],
+                "summary": "Toggle document share status",
+                "description": "Toggle the is_active status of a document",
+                "operationId": "toggleShare",
+                "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Share status toggled",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "is_active": {"type": "boolean", "example": true}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Document not found"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/career-history/documents/{id}/toggle-preview": {
+            "post": {
+                "tags": ["Career History"],
+                "summary": "Toggle document preview status",
+                "description": "Toggle the is_preview status of a document",
+                "operationId": "togglePreview",
+                "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Preview status toggled",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "is_preview": {"type": "boolean", "example": true}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Document not found"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/career-history/share-profile": {
+            "get": {
+                "tags": ["Career History"],
+                "summary": "Get share profile data",
+                "description": "Get QR code and profile link for sharing",
+                "operationId": "shareProfile",
+                "responses": {
+                    "200": {
+                        "description": "Profile share data retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Share Profile Data"},
+                                        "data": {
+                                            "properties": {
+                                                "user_name": {"type": "string"},
+                                                "profile_link": {"type": "string", "format": "uri"},
+                                                "qr_code_url": {"type": "string", "format": "uri"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "QR Code not generated"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/career-history/scan": {
+            "post": {
+                "tags": ["Career History"],
+                "summary": "Scan document with OCR",
+                "description": "Perform OCR scanning on a document image to extract text",
+                "operationId": "scanDocument",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": ["docFile"],
+                                "properties": {
+                                    "docFile": {"type": "string", "format": "binary", "description": "Image file (jpeg, jpg, png, bmp, tiff, webp, pdf, max 10MB)"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Document scanned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "text": {"type": "string", "example": "Extracted text from document"},
+                                        "detected_type": {"type": "string", "example": "passport"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error or OCR failed"},
+                    "500": {"description": "OCR scanning failed"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/career-history/issue-countries": {
+            "get": {
+                "tags": ["Career History"],
+                "summary": "Get issue countries list",
+                "description": "Get list of countries for document issue country selection",
+                "operationId": "getIssueCountries",
+                "responses": {
+                    "200": {
+                        "description": "Countries retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "countries": {"type": "array", "items": {"type": "string"}}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/career-history/certificate-types": {
+            "get": {
+                "tags": ["Career History"],
+                "summary": "Get certificate types",
+                "description": "Get list of certificate types with their issuers",
+                "operationId": "getCertificateTypes",
+                "parameters": [{"name": "type_id", "in": "query", "description": "Filter by certificate type ID", "required": false, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Certificate types retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {"type": "array", "items": {"type": "object"}}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Certificate type not found"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/career-history/public/certificate-issuers/{typeId}": {
+            "get": {
+                "tags": ["Career History"],
+                "summary": "Get certificate issuers by type",
+                "description": "Public endpoint to get certificate issuers for a specific certificate type",
+                "operationId": "getIssuersByType",
+                "parameters": [{"name": "typeId", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                "responses": {
+                    "200": {
+                        "description": "Issuers retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {"type": "object"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/master-data": {
+            "get": {
+                "tags": ["Master Data"],
+                "summary": "Get master data",
+                "description": "Get all master data or filter by type. Returns grouped data by type if no type specified.",
+                "operationId": "getMasterData",
+                "parameters": [{"name": "type", "in": "query", "description": "Filter by master data type", "required": false, "schema": {"type": "string"}}],
+                "responses": {
+                    "200": {
+                        "description": "Master data retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/master-data/all": {
+            "get": {
+                "tags": ["Master Data"],
+                "summary": "Get all master data types",
+                "description": "Get all master data types in a single response (for mobile app initialization)",
+                "operationId": "getAllMasterData",
+                "responses": {
+                    "200": {
+                        "description": "All master data retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {
+                                            "properties": {
+                                                "route_visibility": {"type": "array"},
+                                                "route_status": {"type": "array"},
+                                                "marina_types": {"type": "array"},
+                                                "yacht_types": {"type": "array"},
+                                                "countries": {"type": "array"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/master-data/route-visibility": {
+            "get": {
+                "tags": ["Master Data"],
+                "summary": "Get route visibility options",
+                "operationId": "getRouteVisibility",
+                "responses": {
+                    "200": {
+                        "description": "Route visibility options retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {"type": "array"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/master-data/route-status": {
+            "get": {
+                "tags": ["Master Data"],
+                "summary": "Get route status options",
+                "operationId": "getRouteStatus",
+                "responses": {
+                    "200": {
+                        "description": "Route status options retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {"type": "array"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/master-data/marina-types": {
+            "get": {
+                "tags": ["Master Data"],
+                "summary": "Get marina types",
+                "operationId": "getMarinaTypes",
+                "responses": {
+                    "200": {
+                        "description": "Marina types retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {"type": "array"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/master-data/yacht-types": {
+            "get": {
+                "tags": ["Master Data"],
+                "summary": "Get yacht types",
+                "operationId": "getYachtTypes",
+                "responses": {
+                    "200": {
+                        "description": "Yacht types retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {"type": "array"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/master-data/countries": {
+            "get": {
+                "tags": ["Master Data"],
+                "summary": "Get countries list",
+                "operationId": "getCountries",
+                "responses": {
+                    "200": {
+                        "description": "Countries retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {"type": "array"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/waitlist/join": {
+            "post": {
+                "tags": ["Waitlist"],
+                "summary": "Join waitlist",
+                "description": "Public endpoint to join the waitlist",
+                "operationId": "joinWaitlist",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["email"],
+                                "properties": {
+                                    "email": {"type": "string", "format": "email", "example": "user@example.com"},
+                                    "name": {"type": "string", "example": "John Doe"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully joined waitlist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Successfully joined waitlist"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"}
+                }
+            }
+        },
+        "/api/auth/send-otp": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Send OTP",
+                "description": "Send OTP to user's email or phone",
+                "operationId": "sendOtp",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["email"],
+                                "properties": {
+                                    "email": {"type": "string", "format": "email", "example": "user@example.com"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "OTP sent successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"}
+                }
+            }
+        },
+        "/api/auth/verify-otp": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Verify OTP",
+                "description": "Verify OTP code",
+                "operationId": "verifyOtp",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["email", "otp"],
+                                "properties": {
+                                    "email": {"type": "string", "format": "email", "example": "user@example.com"},
+                                    "otp": {"type": "string", "example": "123456"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP verified successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "OTP verified successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"},
+                    "400": {"description": "Invalid or expired OTP"}
+                }
+            }
         }
     },
     "components": {
@@ -3354,6 +4985,34 @@
         {
             "name": "Itinerary",
             "description": "Itinerary"
+        },
+        {
+            "name": "Work Logs",
+            "description": "Work Logs - Track and manage work hours, rest periods, and compliance"
+        },
+        {
+            "name": "Profile",
+            "description": "User Profile Management"
+        },
+        {
+            "name": "Crew Profile",
+            "description": "Crew Profile and Privacy Settings"
+        },
+        {
+            "name": "Messages",
+            "description": "Direct Messaging between connected users"
+        },
+        {
+            "name": "Career History",
+            "description": "Career History and Document Management"
+        },
+        {
+            "name": "Master Data",
+            "description": "Master Data - Reference data for the application"
+        },
+        {
+            "name": "Waitlist",
+            "description": "Waitlist Management"
         }
     ]
 }
