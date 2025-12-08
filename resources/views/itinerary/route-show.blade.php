@@ -591,8 +591,30 @@
         </div>
     </div>
 
+    @push('styles')
+        <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
+        <style>
+            #route-view-map {
+                position: relative;
+                width: 100%;
+                height: 600px;
+                min-height: 600px;
+            }
+            #route-view-map .mapboxgl-canvas {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100% !important;
+                height: 100% !important;
+            }
+            .mapboxgl-popup-content {
+                padding: 12px;
+                min-width: 200px;
+            }
+        </style>
+    @endpush
     @push('scripts')
-        <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.api_key') }}&libraries=places,geometry,marker&callback=initViewMap" async defer></script>
+        <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
         <script>
             document.addEventListener('alpine:init', () => {
                 Alpine.data('imageGallery', () => ({
@@ -617,7 +639,7 @@
                 }));
             });
             
-            // Marine Map for Route View
+            // Marine Map for Route View - Mapbox GL JS
             let viewMap = null;
             let viewMarkers = [];
             let viewDepthContours = [];
@@ -637,149 +659,161 @@
                     return;
                 }
                 
-                if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                if (typeof mapboxgl === 'undefined') {
                     setTimeout(initViewMap, 100);
                     return;
                 }
                 
                 const loadingEl = document.getElementById('map-view-loading');
                 
-                const mapConfig = {
-                    center: { lat: 20, lng: 0 },
-                    zoom: 2,
-                    mapTypeId: 'roadmap',
-                    zoomControl: true,
-                    mapTypeControl: true,
-                    scaleControl: true,
-                    streetViewControl: false,
-                    rotateControl: false,
-                    fullscreenControl: true,
-                    styles: [
-                        {
-                            featureType: 'water',
-                            elementType: 'geometry',
-                            stylers: [{ color: '#4a90e2' }, { lightness: -10 }, { saturation: 20 }]
-                        },
-                        {
-                            featureType: 'water',
-                            elementType: 'labels',
-                            stylers: [{ visibility: 'on' }, { color: '#1a56db' }, { lightness: -20 }]
-                        },
-                        {
-                            featureType: 'landscape',
-                            elementType: 'geometry',
-                            stylers: [{ color: '#e8f5e9' }, { lightness: 30 }]
-                        },
-                        {
-                            featureType: 'landscape.natural',
-                            elementType: 'geometry',
-                            stylers: [{ color: '#c8e6c9' }]
-                        },
-                        {
-                            featureType: 'road',
-                            elementType: 'geometry',
-                            stylers: [{ visibility: 'simplified' }, { color: '#ffffff' }, { lightness: 50 }]
-                        },
-                        {
-                            featureType: 'poi',
-                            elementType: 'labels',
-                            stylers: [{ visibility: 'off' }]
-                        },
-                        {
-                            featureType: 'transit',
-                            elementType: 'all',
-                            stylers: [{ visibility: 'off' }]
-                        }
-                    ]
-                };
-                
-                const mapId = @json(config('services.google_maps.map_id', null));
-                if (mapId) {
-                    mapConfig.mapId = mapId;
+                // Get Mapbox access token
+                @php
+                    $tokenValue = config('services.mapbox.access_token');
+                    if ($tokenValue) {
+                        $tokenJson = json_encode($tokenValue, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+                    } else {
+                        $tokenJson = 'null';
+                    }
+                @endphp
+                var mapboxTokenRaw = {!! $tokenJson !!};
+                var mapboxToken = '';
+                if (mapboxTokenRaw && mapboxTokenRaw !== null) {
+                    mapboxToken = String(mapboxTokenRaw);
+                    if (mapboxToken === 'null' || mapboxToken === '') {
+                        mapboxToken = '';
+                    }
                 }
                 
-                viewMap = new google.maps.Map(mapEl, mapConfig);
+                if (!mapboxToken) {
+                    if (loadingEl) {
+                        loadingEl.innerHTML = '<div class="text-center p-4"><p class="text-red-600 font-medium mb-2">Mapbox Access Token Required</p><p class="text-sm text-gray-600">Please configure MAPBOX_ACCESS_TOKEN in .env file</p></div>';
+                    }
+                    return;
+                }
+                
+                mapboxgl.accessToken = mapboxToken;
+                
+                // Initialize Mapbox map with marine navigation style
+                viewMap = new mapboxgl.Map({
+                    container: mapEl,
+                    style: 'mapbox://styles/mapbox/navigation-day-v1', // Marine-friendly style
+                    center: [0, 20], // [longitude, latitude]
+                    zoom: 2,
+                    minZoom: 1,
+                    maxZoom: 20
+                });
                 
                 // Hide loading overlay once map is ready
-                google.maps.event.addListenerOnce(viewMap, 'idle', function() {
-                    console.log('Map is ready, initializing route and marine features');
+                viewMap.once('load', function() {
+                    console.log('[MAP] Mapbox map loaded, initializing route and marine features');
                     if (loadingEl) {
                         loadingEl.style.display = 'none';
                     }
+                    
+                    // Ensure map container has proper dimensions
+                    mapEl.style.height = '600px';
+                    mapEl.style.width = '100%';
+                    viewMap.resize();
                     
                     // Draw route stops and marine features
                     setTimeout(() => {
                         drawViewRoute();
                         setupViewMarineToggles();
+                        
+                        // Ensure bounds are fitted after everything is drawn
+                        setTimeout(() => {
+                            if (viewMarkers.length > 0) {
+                                const coords = viewMarkers.map(m => {
+                                    const lngLat = m.getLngLat();
+                                    return [lngLat.lng, lngLat.lat];
+                                });
+                                
+                                if (coords.length > 0) {
+                                    const bounds = coords.reduce(function(bounds, coord) {
+                                        return bounds.extend(coord);
+                                    }, new mapboxgl.LngLatBounds(coords[0], coords[0]));
+                                    
+                                    if (bounds && bounds.getNorth() !== bounds.getSouth() && bounds.getEast() !== bounds.getWest()) {
+                                        viewMap.fitBounds(bounds, {
+                                            padding: {top: 100, bottom: 100, left: 100, right: 400},
+                                            maxZoom: 15,
+                                            duration: 1000
+                                        });
+                                        console.log('[MAP VIEW] Final bounds fitted to show all', coords.length, 'stops');
+                                    }
+                                }
+                            }
+                        }, 1000);
                     }, 200);
+                });
+                
+                // Handle style errors
+                viewMap.on('style.error', function(e) {
+                    console.error('[MAP] Style error, trying fallback:', e);
+                    viewMap.setStyle('mapbox://styles/mapbox/streets-v12');
                 });
             }
             
             function drawViewRoute() {
                 if (!viewMap || routeStops.length === 0) return;
                 
-                const latLngs = [];
+                // Clear existing markers
+                viewMarkers.forEach(marker => {
+                    if (marker && marker.remove) marker.remove();
+                });
+                viewMarkers = [];
+                
+                // Remove existing polyline layer
+                if (viewMap.getLayer('route-line')) {
+                    viewMap.removeLayer('route-line');
+                }
+                if (viewMap.getSource('route-line')) {
+                    viewMap.removeSource('route-line');
+                }
+                
+                const coordinates = [];
                 const distances = [];
+                let validStopsCount = 0;
                 
                 routeStops.forEach((stop, index) => {
                     if (stop.latitude && stop.longitude) {
                         const lat = parseFloat(stop.latitude);
                         const lng = parseFloat(stop.longitude);
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            const position = { lat: lat, lng: lng };
+                        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                            validStopsCount++;
+                            console.log('[MAP VIEW] Adding stop', index + 1, ':', stop.name, 'at', lat, lng);
                             const markerColor = index === 0 ? '#10b981' : (index === routeStops.length - 1 ? '#ef4444' : '#4f46e5');
+                            const stopNumber = stop.sequence || index + 1;
                             
-                            // Create marker
-                            const hasMapId = viewMap && viewMap.mapId;
-                            let marker;
+                            // Create custom marker element
+                            const el = document.createElement('div');
+                            el.className = 'custom-stop-marker';
+                            el.style.width = '35px';
+                            el.style.height = '35px';
+                            el.style.borderRadius = '50%';
+                            el.style.backgroundColor = markerColor;
+                            el.style.border = '3px solid white';
+                            el.style.display = 'flex';
+                            el.style.alignItems = 'center';
+                            el.style.justifyContent = 'center';
+                            el.style.color = 'white';
+                            el.style.fontWeight = 'bold';
+                            el.style.fontSize = '14px';
+                            el.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
+                            el.style.cursor = 'pointer';
+                            el.textContent = stopNumber;
                             
-                            if (typeof google.maps.marker !== 'undefined' && 
-                                google.maps.marker.AdvancedMarkerElement && 
-                                hasMapId) {
-                                const pinElement = new google.maps.marker.PinElement({
-                                    background: markerColor,
-                                    borderColor: '#ffffff',
-                                    scale: 1.2,
-                                    glyphText: String(stop.sequence || index + 1),
-                                    glyphColor: '#ffffff'
-                                });
-                                
-                                marker = new google.maps.marker.AdvancedMarkerElement({
-                                    position: position,
-                                    map: viewMap,
-                                    content: pinElement.element,
-                                    title: stop.name,
-                                    zIndex: 1000 - index
-                                });
-                            } else {
-                                marker = new google.maps.Marker({
-                                    position: position,
-                                    map: viewMap,
-                                    title: stop.name,
-                                    label: {
-                                        text: String(stop.sequence || index + 1),
-                                        color: 'white',
-                                        fontWeight: 'bold',
-                                        fontSize: '12px'
-                                    },
-                                    icon: {
-                                        path: google.maps.SymbolPath.CIRCLE,
-                                        scale: 12,
-                                        fillColor: markerColor,
-                                        fillOpacity: 1,
-                                        strokeColor: '#ffffff',
-                                        strokeWeight: 3
-                                    },
-                                    zIndex: 1000 - index
-                                });
-                            }
+                            // Create Mapbox marker
+                            const marker = new mapboxgl.Marker(el)
+                                .setLngLat([lng, lat])
+                                .addTo(viewMap);
                             
-                            // Info window
-                            const infoContent = `
+                            // Create popup
+                            const popupContent = `
                                 <div style="padding: 12px; min-width: 200px;">
                                     <div class="flex items-center mb-2">
                                         <div style="width: 8px; height: 8px; background: ${markerColor}; border-radius: 50%; margin-right: 8px;"></div>
-                                        <strong style="font-size: 14px; color: #111827;">${stop.name || 'Stop ' + (index + 1)}</strong>
+                                        <strong style="font-size: 14px; color: #111827;">${stop.name || 'Stop ' + stopNumber}</strong>
                                     </div>
                                     ${stop.location_label ? `<div class="text-xs text-gray-600 mb-1">📍 ${stop.location_label}</div>` : ''}
                                     ${stop.stay_duration_hours ? `<div class="text-xs text-gray-500 mb-1">⏱️ Stay: ${stop.stay_duration_hours} hours</div>` : ''}
@@ -787,128 +821,248 @@
                                 </div>
                             `;
                             
-                            const infoWindow = new google.maps.InfoWindow({ content: infoContent });
+                            const popup = new mapboxgl.Popup({ offset: 25 })
+                                .setHTML(popupContent);
                             
-                            marker.addListener('click', () => {
-                                viewMarkers.forEach(m => {
-                                    if (m.infoWindow) m.infoWindow.close();
-                                });
-                                marker.infoWindow = infoWindow;
-                                if (marker.position) {
-                                    infoWindow.open({ anchor: marker, map: viewMap });
-                                } else {
-                                    infoWindow.open(viewMap, marker);
-                                }
-                            });
+                            marker.setPopup(popup);
                             
                             viewMarkers.push(marker);
-                            latLngs.push(position);
+                            coordinates.push([lng, lat]);
                             
-                            // Calculate distance
-                            if (latLngs.length > 1 && typeof google.maps.geometry !== 'undefined') {
-                                const prevPosition = latLngs[latLngs.length - 2];
-                                const distance = google.maps.geometry.spherical.computeDistanceBetween(
-                                    new google.maps.LatLng(prevPosition.lat, prevPosition.lng),
-                                    new google.maps.LatLng(position.lat, position.lng)
-                                );
-                                distances.push(distance / 1852); // Convert to NM
+                            // Calculate distance (nautical miles)
+                            if (coordinates.length > 1) {
+                                const prevCoord = coordinates[coordinates.length - 2];
+                                const currCoord = coordinates[coordinates.length - 1];
+                                const distance = calculateDistanceNM(prevCoord[1], prevCoord[0], currCoord[1], currCoord[0]);
+                                distances.push(distance);
                             }
+                        } else {
+                            console.warn('[MAP VIEW] Invalid coordinates for stop', index + 1, ':', lat, lng);
                         }
+                    } else {
+                        console.warn('[MAP VIEW] Missing coordinates for stop', index + 1, ':', stop.name);
                     }
                 });
                 
-                // Draw polyline
-                if (latLngs.length > 1) {
-                    const path = latLngs.map(pos => new google.maps.LatLng(pos.lat, pos.lng));
-                    viewPolyline = new google.maps.Polyline({
-                        path: path,
-                        geodesic: true,
-                        strokeColor: '#1e40af',
-                        strokeOpacity: 0.8,
-                        strokeWeight: 4,
-                        icons: [{
-                            icon: {
-                                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                                scale: 5,
-                                strokeColor: '#1e40af',
-                                fillColor: '#1e40af',
-                                fillOpacity: 1
-                            },
-                            offset: '100%',
-                            repeat: '80px'
-                        }],
-                        zIndex: 200
+                console.log('[MAP VIEW] Total valid stops added:', validStopsCount, 'out of', routeStops.length);
+                
+                // Draw polyline using GeoJSON
+                if (coordinates.length > 1) {
+                    const geojson = {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: coordinates
+                        }
+                    };
+                    
+                    viewMap.addSource('route-line', {
+                        type: 'geojson',
+                        data: geojson
                     });
-                    viewPolyline.setMap(viewMap);
+                    
+                    viewMap.addLayer({
+                        id: 'route-line',
+                        type: 'line',
+                        source: 'route-line',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': '#1e40af',
+                            'line-width': 4,
+                            'line-opacity': 0.8
+                        }
+                    });
                 }
                 
-                // Draw marine features after a short delay to ensure markers are ready
+                // Draw marine features after a short delay
                 setTimeout(() => {
-                    console.log('Drawing marine features for', viewMarkers.length, 'stops');
+                    console.log('[MAP VIEW] Drawing marine features for', viewMarkers.length, 'stops');
                     if (viewMarkers.length > 0) {
                         drawViewDepthContours();
                         drawViewNavigationAids();
                         drawViewSeaRoutes();
                         updateMarineFeaturesSummary();
                     } else {
-                        console.warn('No markers available for marine features');
+                        console.warn('[MAP VIEW] No markers available for marine features');
                     }
                 }, 500);
                 
-                // Fit bounds
-                if (latLngs.length > 0) {
-                    const bounds = new google.maps.LatLngBounds();
-                    latLngs.forEach(latLng => bounds.extend(latLng));
-                    viewMap.fitBounds(bounds, { padding: 50 });
+                // Update legend with actual stop count
+                const legendStopsEl = document.getElementById('view-legend-stops');
+                if (legendStopsEl) {
+                    legendStopsEl.textContent = validStopsCount || coordinates.length;
                 }
+                
+                // Fit bounds to show all stops - defer to allow markers to render first
+                setTimeout(() => {
+                    if (coordinates.length > 0) {
+                        console.log('[MAP VIEW] Fitting bounds for', coordinates.length, 'stops');
+                        const bounds = coordinates.reduce(function(bounds, coord) {
+                            return bounds.extend(coord);
+                        }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+                        
+                        // Ensure bounds are valid
+                        if (bounds && bounds.getNorth() !== bounds.getSouth() && bounds.getEast() !== bounds.getWest()) {
+                            viewMap.fitBounds(bounds, {
+                                padding: {top: 100, bottom: 100, left: 100, right: 400}, // Extra right padding for info panel
+                                maxZoom: 15, // Prevent zooming in too much
+                                duration: 1000 // Smooth animation
+                            });
+                            console.log('[MAP VIEW] Bounds fitted successfully for', coordinates.length, 'stops');
+                        } else {
+                            // If bounds are invalid (same point), just center on first stop
+                            console.warn('[MAP VIEW] Invalid bounds, centering on first stop');
+                            viewMap.setCenter(coordinates[0]);
+                            viewMap.setZoom(10);
+                        }
+                    } else {
+                        console.warn('[MAP VIEW] No coordinates to fit bounds');
+                    }
+                }, 300);
+            }
+            
+            // Helper function to calculate distance in nautical miles
+            function calculateDistanceNM(lat1, lon1, lat2, lon2) {
+                const R = 3440.065; // Earth radius in nautical miles
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
             }
             
             function drawViewDepthContours() {
-                viewDepthContours.forEach(contour => {
-                    if (contour && contour.setMap) contour.setMap(null);
-                });
-                viewDepthContours = [];
+                // Remove existing depth contour layers
+                if (viewMap.getLayer('depth-contours-shallow')) {
+                    viewMap.removeLayer('depth-contours-shallow');
+                }
+                if (viewMap.getLayer('depth-contours-deep')) {
+                    viewMap.removeLayer('depth-contours-deep');
+                }
+                if (viewMap.getSource('depth-contours-shallow')) {
+                    viewMap.removeSource('depth-contours-shallow');
+                }
+                if (viewMap.getSource('depth-contours-deep')) {
+                    viewMap.removeSource('depth-contours-deep');
+                }
                 
                 if (!viewMap || !showViewDepthContours || viewMarkers.length === 0) return;
                 
+                const shallowFeatures = [];
+                const deepFeatures = [];
+                
                 viewMarkers.forEach((marker, index) => {
                     if (!marker) return;
-                    const position = marker.position || marker.getPosition();
-                    if (!position) return;
-                    const lat = typeof position.lat === 'function' ? position.lat() : position.lat;
-                    const lng = typeof position.lng === 'function' ? position.lng() : position.lng;
+                    const lngLat = marker.getLngLat();
+                    if (!lngLat) return;
                     
-                    const shallowCircle = new google.maps.Circle({
-                        strokeColor: '#60a5fa',
-                        strokeOpacity: 0.4,
-                        strokeWeight: 2,
-                        fillColor: '#93c5fd',
-                        fillOpacity: 0.15,
-                        map: showViewDepthContours ? viewMap : null,
-                        center: { lat: lat, lng: lng },
-                        radius: 5000,
-                        zIndex: 1
-                    });
+                    const lat = lngLat.lat;
+                    const lng = lngLat.lng;
                     
-                    const deepCircle = new google.maps.Circle({
-                        strokeColor: '#3b82f6',
-                        strokeOpacity: 0.3,
-                        strokeWeight: 1,
-                        fillColor: '#60a5fa',
-                        fillOpacity: 0.1,
-                        map: showViewDepthContours ? viewMap : null,
-                        center: { lat: lat, lng: lng },
-                        radius: 15000,
-                        zIndex: 0
-                    });
+                    // Create circle GeoJSON features (approximate circles using polygons)
+                    const shallowCircle = createCircleGeoJSON(lng, lat, 5000); // 5km radius
+                    const deepCircle = createCircleGeoJSON(lng, lat, 15000); // 15km radius
                     
-                    viewDepthContours.push(shallowCircle, deepCircle);
+                    shallowFeatures.push(shallowCircle);
+                    deepFeatures.push(deepCircle);
                 });
+                
+                if (shallowFeatures.length > 0) {
+                    viewMap.addSource('depth-contours-shallow', {
+                        type: 'geojson',
+                        data: {
+                            type: 'FeatureCollection',
+                            features: shallowFeatures
+                        }
+                    });
+                    
+                    viewMap.addLayer({
+                        id: 'depth-contours-shallow',
+                        type: 'fill',
+                        source: 'depth-contours-shallow',
+                        paint: {
+                            'fill-color': '#93c5fd',
+                            'fill-opacity': 0.15
+                        }
+                    });
+                    
+                    viewMap.addLayer({
+                        id: 'depth-contours-shallow-outline',
+                        type: 'line',
+                        source: 'depth-contours-shallow',
+                        paint: {
+                            'line-color': '#60a5fa',
+                            'line-opacity': 0.4,
+                            'line-width': 2
+                        }
+                    });
+                }
+                
+                if (deepFeatures.length > 0) {
+                    viewMap.addSource('depth-contours-deep', {
+                        type: 'geojson',
+                        data: {
+                            type: 'FeatureCollection',
+                            features: deepFeatures
+                        }
+                    });
+                    
+                    viewMap.addLayer({
+                        id: 'depth-contours-deep',
+                        type: 'fill',
+                        source: 'depth-contours-deep',
+                        paint: {
+                            'fill-color': '#60a5fa',
+                            'fill-opacity': 0.1
+                        }
+                    });
+                    
+                    viewMap.addLayer({
+                        id: 'depth-contours-deep-outline',
+                        type: 'line',
+                        source: 'depth-contours-deep',
+                        paint: {
+                            'line-color': '#3b82f6',
+                            'line-opacity': 0.3,
+                            'line-width': 1
+                        }
+                    });
+                }
+            }
+            
+            // Helper function to create circle GeoJSON
+            function createCircleGeoJSON(lng, lat, radiusMeters) {
+                const points = 64;
+                const coordinates = [];
+                for (let i = 0; i < points; i++) {
+                    const angle = (i * 360) / points;
+                    const dx = radiusMeters * Math.cos(angle * Math.PI / 180);
+                    const dy = radiusMeters * Math.sin(angle * Math.PI / 180);
+                    const latOffset = dy / 111320; // meters to degrees (approximate)
+                    const lngOffset = dx / (111320 * Math.cos(lat * Math.PI / 180));
+                    coordinates.push([lng + lngOffset, lat + latOffset]);
+                }
+                coordinates.push(coordinates[0]); // Close the circle
+                
+                return {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [coordinates]
+                    }
+                };
             }
             
             function drawViewNavigationAids() {
+                // Remove existing navigation aid markers
                 viewNavigationAids.forEach(aid => {
-                    if (aid && aid.setMap) aid.setMap(null);
+                    if (aid && aid.remove) aid.remove();
                 });
                 viewNavigationAids = [];
                 
@@ -921,96 +1075,63 @@
                 
                 viewMarkers.forEach((marker, index) => {
                     if (!marker) return;
-                    const position = marker.position || marker.getPosition();
-                    if (!position) return;
-                    const lat = typeof position.lat === 'function' ? position.lat() : position.lat;
-                    const lng = typeof position.lng === 'function' ? position.lng() : position.lng;
+                    const lngLat = marker.getLngLat();
+                    if (!lngLat) return;
+                    
+                    const lat = lngLat.lat;
+                    const lng = lngLat.lng;
                     
                     if (index === 0) {
-                        const lighthousePos = { lat: lat + 0.01, lng: lng + 0.01 };
-                        const hasMapId = viewMap && viewMap.mapId;
+                        // Lighthouse at first stop
+                        const lighthousePos = [lng + 0.01, lat + 0.01];
+                        const lighthouseIcon = document.createElement('div');
+                        lighthouseIcon.innerHTML = '🏭';
+                        lighthouseIcon.style.fontSize = '24px';
+                        lighthouseIcon.style.textAlign = 'center';
+                        lighthouseIcon.style.cursor = 'pointer';
                         
-                        if (typeof google.maps.marker !== 'undefined' && 
-                            google.maps.marker.AdvancedMarkerElement && 
-                            hasMapId) {
-                            const lighthouseIcon = document.createElement('div');
-                            lighthouseIcon.innerHTML = '🏭';
-                            lighthouseIcon.style.fontSize = '24px';
-                            lighthouseIcon.style.textAlign = 'center';
-                            
-                            const lighthouse = new google.maps.marker.AdvancedMarkerElement({
-                                position: lighthousePos,
-                                map: showViewNavigationAids ? viewMap : null,
-                                content: lighthouseIcon,
-                                title: 'Lighthouse',
-                                zIndex: 500
-                            });
-                            viewNavigationAids.push(lighthouse);
-                        } else {
-                            const lighthouse = new google.maps.Marker({
-                                position: lighthousePos,
-                                map: showViewNavigationAids ? viewMap : null,
-                                icon: {
-                                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23fbbf24" d="M12 2L2 7v2h2v11h2V9h4v11h2V9h2V9h2V7L12 2zm0 2.18l6 2.22v1.4H6v-1.4l6-2.22z"/></svg>'),
-                                    scaledSize: new google.maps.Size(24, 24),
-                                    anchor: new google.maps.Point(12, 24)
-                                },
-                                title: 'Lighthouse',
-                                zIndex: 500
-                            });
-                            viewNavigationAids.push(lighthouse);
-                        }
+                        const lighthouse = new mapboxgl.Marker(lighthouseIcon)
+                            .setLngLat(lighthousePos)
+                            .setPopup(new mapboxgl.Popup().setText('Lighthouse'))
+                            .addTo(showViewNavigationAids ? viewMap : null);
+                        
+                        viewNavigationAids.push(lighthouse);
                     }
                     
                     if (index > 0 && index < viewMarkers.length - 1) {
-                        const buoyPos = {
-                            lat: lat + (Math.random() - 0.5) * 0.02,
-                            lng: lng + (Math.random() - 0.5) * 0.02
-                        };
-                        const hasMapId = viewMap && viewMap.mapId;
+                        // Buoy at intermediate stops
+                        const buoyPos = [
+                            lng + (Math.random() - 0.5) * 0.02,
+                            lat + (Math.random() - 0.5) * 0.02
+                        ];
                         
-                        if (typeof google.maps.marker !== 'undefined' && 
-                            google.maps.marker.AdvancedMarkerElement && 
-                            hasMapId) {
-                            const buoyIcon = document.createElement('div');
-                            buoyIcon.innerHTML = '🔴';
-                            buoyIcon.style.fontSize = '20px';
-                            buoyIcon.style.textAlign = 'center';
-                            
-                            const buoy = new google.maps.marker.AdvancedMarkerElement({
-                                position: buoyPos,
-                                map: showViewNavigationAids ? viewMap : null,
-                                content: buoyIcon,
-                                title: 'Navigation Buoy',
-                                zIndex: 400
-                            });
-                            viewNavigationAids.push(buoy);
-                        } else {
-                            const buoy = new google.maps.Marker({
-                                position: buoyPos,
-                                map: showViewNavigationAids ? viewMap : null,
-                                icon: {
-                                    path: google.maps.SymbolPath.CIRCLE,
-                                    scale: 8,
-                                    fillColor: '#ef4444',
-                                    fillOpacity: 1,
-                                    strokeColor: '#ffffff',
-                                    strokeWeight: 2
-                                },
-                                title: 'Navigation Buoy',
-                                zIndex: 400
-                            });
-                            viewNavigationAids.push(buoy);
-                        }
+                        const buoyIcon = document.createElement('div');
+                        buoyIcon.style.width = '16px';
+                        buoyIcon.style.height = '16px';
+                        buoyIcon.style.borderRadius = '50%';
+                        buoyIcon.style.backgroundColor = '#ef4444';
+                        buoyIcon.style.border = '2px solid white';
+                        buoyIcon.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+                        buoyIcon.style.cursor = 'pointer';
+                        
+                        const buoy = new mapboxgl.Marker(buoyIcon)
+                            .setLngLat(buoyPos)
+                            .setPopup(new mapboxgl.Popup().setText('Navigation Buoy'))
+                            .addTo(showViewNavigationAids ? viewMap : null);
+                        
+                        viewNavigationAids.push(buoy);
                     }
                 });
             }
             
             function drawViewSeaRoutes() {
-                viewSeaRoutes.forEach(route => {
-                    if (route && route.setMap) route.setMap(null);
-                });
-                viewSeaRoutes = [];
+                // Remove existing sea route layers
+                if (viewMap.getLayer('sea-routes')) {
+                    viewMap.removeLayer('sea-routes');
+                }
+                if (viewMap.getSource('sea-routes')) {
+                    viewMap.removeSource('sea-routes');
+                }
                 
                 if (!viewMap || !showViewSeaRoutes || viewMarkers.length < 2) {
                     console.log('drawViewSeaRoutes: Skipping - map:', !!viewMap, 'enabled:', showViewSeaRoutes, 'markers:', viewMarkers.length);
@@ -1019,42 +1140,52 @@
                 
                 console.log('drawViewSeaRoutes: Drawing routes for', viewMarkers.length, 'markers');
                 
+                const routeFeatures = [];
+                
                 for (let i = 0; i < viewMarkers.length - 1; i++) {
                     const marker1 = viewMarkers[i];
                     const marker2 = viewMarkers[i + 1];
                     if (!marker1 || !marker2) continue;
                     
-                    const pos1 = marker1.position || marker1.getPosition();
-                    const pos2 = marker2.position || marker2.getPosition();
-                    if (!pos1 || !pos2) continue;
+                    const lngLat1 = marker1.getLngLat();
+                    const lngLat2 = marker2.getLngLat();
+                    if (!lngLat1 || !lngLat2) continue;
                     
-                    const lat1 = typeof pos1.lat === 'function' ? pos1.lat() : pos1.lat;
-                    const lng1 = typeof pos1.lng === 'function' ? pos1.lng() : pos1.lng;
-                    const lat2 = typeof pos2.lat === 'function' ? pos2.lat() : pos2.lat;
-                    const lng2 = typeof pos2.lng === 'function' ? pos2.lng() : pos2.lng;
-                    
-                    const seaRoute = new google.maps.Polyline({
-                        path: [{ lat: lat1, lng: lng1 }, { lat: lat2, lng: lng2 }],
-                        geodesic: true,
-                        strokeColor: '#1e40af',
-                        strokeOpacity: 0.6,
-                        strokeWeight: 3,
-                        map: showViewSeaRoutes ? viewMap : null,
-                        icons: [{
-                            icon: {
-                                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                                scale: 5,
-                                strokeColor: '#1e40af',
-                                fillColor: '#1e40af',
-                                fillOpacity: 1
-                            },
-                            offset: '100%',
-                            repeat: '50px'
-                        }],
-                        zIndex: 100
+                    routeFeatures.push({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [lngLat1.lng, lngLat1.lat],
+                                [lngLat2.lng, lngLat2.lat]
+                            ]
+                        }
+                    });
+                }
+                
+                if (routeFeatures.length > 0) {
+                    viewMap.addSource('sea-routes', {
+                        type: 'geojson',
+                        data: {
+                            type: 'FeatureCollection',
+                            features: routeFeatures
+                        }
                     });
                     
-                    viewSeaRoutes.push(seaRoute);
+                    viewMap.addLayer({
+                        id: 'sea-routes',
+                        type: 'line',
+                        source: 'sea-routes',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': '#1e40af',
+                            'line-width': 3,
+                            'line-opacity': 0.6
+                        }
+                    });
                 }
             }
             
@@ -1066,7 +1197,7 @@
                 if (depthToggle) {
                     depthToggle.addEventListener('change', function(e) {
                         showViewDepthContours = e.target.checked;
-                        drawViewDepthContours();
+                        drawViewDepthContours(); // Redraw to add/remove layers
                         updateMarineFeaturesSummary();
                     });
                 }
@@ -1074,7 +1205,7 @@
                 if (aidsToggle) {
                     aidsToggle.addEventListener('change', function(e) {
                         showViewNavigationAids = e.target.checked;
-                        drawViewNavigationAids();
+                        drawViewNavigationAids(); // Redraw to add/remove markers
                         updateMarineFeaturesSummary();
                     });
                 }
@@ -1082,14 +1213,58 @@
                 if (routesToggle) {
                     routesToggle.addEventListener('change', function(e) {
                         showViewSeaRoutes = e.target.checked;
-                        drawViewSeaRoutes();
+                        drawViewSeaRoutes(); // Redraw to add/remove layers
                         updateMarineFeaturesSummary();
                     });
                 }
             }
             
+            function updateMarineFeaturesSummary() {
+                const summaryEl = document.getElementById('marine-features-summary');
+                if (!summaryEl) return;
+                
+                const activeFeatures = [];
+                if (showViewDepthContours) activeFeatures.push('Depth Contours');
+                if (showViewNavigationAids) activeFeatures.push('Navigation Aids');
+                if (showViewSeaRoutes) activeFeatures.push('Sea Routes');
+                
+                if (activeFeatures.length === 0) {
+                    summaryEl.textContent = 'No features active';
+                } else {
+                    summaryEl.textContent = activeFeatures.join(', ');
+                }
+            }
+            
             window.initViewMap = initViewMap;
+            
+            // Initialize map when Mapbox is ready
+            function startMapInit() {
+                if (typeof mapboxgl !== 'undefined') {
+                    console.log('[MAP VIEW] Mapbox GL JS available, initializing...');
+                    initViewMap();
+                } else {
+                    console.log('[MAP VIEW] Waiting for Mapbox GL JS...');
+                    setTimeout(startMapInit, 100);
+                }
+            }
+            
+            // Start initialization when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', startMapInit);
+            } else {
+                // DOM already loaded, start immediately
+                setTimeout(startMapInit, 500); // Give a moment for scripts to load
+            }
+            
+            // Also try on window load as fallback
+            window.addEventListener('load', function() {
+                if (!viewMap) {
+                    console.log('[MAP VIEW] Window loaded, trying to initialize map...');
+                    setTimeout(startMapInit, 500);
+                }
+            });
         </script>
     @endpush
 </x-app-layout>
+
 
