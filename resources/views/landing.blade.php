@@ -135,11 +135,11 @@
                 </a>
                 <a href="#" class="features-box">
                     <div class="features-img">
-                        <img src="{{ asset('assets/images/features2.jpg') }}" alt="Captain Dashboard">
+                        <img src="{{ asset('assets/images/features2.jpg') }}" alt="Industry Review System">
                     </div>
                     <div class="features-content">
-                        <h4>Captain Dashboard</h4>
-                        <p>Track crew certificates and work hours in one view with instant compliance alerts.</p>
+                        <h4>Industry Review System</h4>
+                        <p>Get honest reviews about contractors, marinas, yachts, suppliers, and service providers from verified crew members.</p>
                     </div>
                 </a>
                 <a href="#" class="features-box">
@@ -154,11 +154,11 @@
                 </a>
                 <a href="#" class="features-box">
                     <div class="features-img">
-                        <img src="{{ asset('assets/images/features4.jpg') }}" alt="Weather-aware Route Builder">
+                        <img src="{{ asset('assets/images/features4.jpg') }}" alt="Find Training Providers">
                     </div>
                     <div class="features-content">
-                        <h4>Weather-aware Route Builder</h4>
-                        <p>Design routes with real-time forecasts, marina intel, and export to PDF, CSV, or GPX.</p>
+                        <h4>Find Training Providers</h4>
+                        <p>Discover verified training providers, compare courses, and access approved certification programs all in one place.</p>
                     </div>
                 </a>
             </div>
