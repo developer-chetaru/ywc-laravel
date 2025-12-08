@@ -43,6 +43,11 @@ return [
         'id' => env('GOOGLE_ANALYTICS_ID'),
     ],
 
+    'mapbox' => [
+        'access_token' => env('MAPBOX_ACCESS_TOKEN'),
+        'api_key' => env('MAPBOX_ACCESS_TOKEN'), // Alias for consistency
+    ],
+
     'google_maps' => [
         'api_key' => env('GOOGLE_MAPS_API_KEY'),
         'map_id' => env('GOOGLE_MAPS_MAP_ID'),

@@ -137,14 +137,15 @@ class RoutePlanner extends Component
 
     public function blankStop(): array
     {
+        $nextSequence = count($this->stops) + 1;
         return [
             'id' => null,
             'name' => '',
             'location_label' => '',
             'latitude' => null,
             'longitude' => null,
-            'day_number' => count($this->stops) + 1,
-            'sequence' => count($this->stops) + 1,
+            'day_number' => $nextSequence,
+            'sequence' => $nextSequence,
             'stay_duration_hours' => null,
             'notes' => '',
             'photos' => [],
@@ -153,8 +154,16 @@ class RoutePlanner extends Component
 
     public function addStop(): void
     {
-        $this->stops[] = $this->blankStop();
-        $this->dispatchMapUpdate();
+        try {
+            $newStop = $this->blankStop();
+            $this->stops[] = $newStop;
+            // Log for debugging
+            \Log::info('Stop added', ['stops_count' => count($this->stops)]);
+            // Don't dispatch here - Livewire will automatically re-render
+        } catch (\Exception $e) {
+            \Log::error('Error adding stop', ['error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     public function removeStop(int $index): void
@@ -175,7 +184,8 @@ class RoutePlanner extends Component
 
     public function updatedStops($value, $key): void
     {
-        $this->dispatchMapUpdate();
+        // Only dispatch if not triggered by addStop (which doesn't need it)
+        // $this->dispatchMapUpdate();
     }
 
     protected function dispatchMapUpdate(): void
