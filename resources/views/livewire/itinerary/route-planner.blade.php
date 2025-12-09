@@ -125,10 +125,11 @@
                             <h2 class="text-lg font-semibold text-gray-800">Stops</h2>
                             <button type="button" 
                                 wire:click="addStop"
-                                id="add-stop-btn"
+                                wire:loading.attr="disabled"
+                                wire:target="addStop"
                                 class="inline-flex items-center px-3 py-2 bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-md hover:bg-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                                <span id="add-stop-text">+ Add Stop</span>
-                                <span id="add-stop-loading" class="hidden flex items-center">
+                                <span wire:loading.remove wire:target="addStop">+ Add Stop</span>
+                                <span wire:loading wire:target="addStop" class="flex items-center">
                                     <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -160,8 +161,8 @@
                                     }
                                 };
                             </script>
-                            <div class="relative" style="height: 500px;" id="route-map">
-                                <div class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm z-10 bg-gray-50" id="map-loading" style="z-index: 10;">
+                            <div class="relative" style="height: 500px;" id="route-map" wire:ignore>
+                                <div class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm z-10 bg-gray-50" id="map-loading" style="z-index: 10;" wire:ignore>
                                     <div class="text-center">
                                         <svg class="animate-spin h-10 w-10 text-indigo-600 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -436,6 +437,39 @@
             visibility: hidden !important;
         }
         
+        /* Force hide loading overlay if map is ready - ULTRA AGGRESSIVE */
+        #route-map:has(.mapboxgl-canvas) #map-loading,
+        body:has(.mapboxgl-canvas) #map-loading,
+        #route-map:has(.mapboxgl-canvas) > #map-loading {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            width: 0 !important;
+            pointer-events: none !important;
+            z-index: -9999 !important;
+            position: absolute !important;
+        }
+        
+        /* Hide loading overlay permanently once map canvas exists */
+        #route-map .mapboxgl-canvas ~ #map-loading,
+        #route-map:has(.mapboxgl-canvas) > #map-loading,
+        #route-map:has(.mapboxgl-canvas) #map-loading {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            width: 0 !important;
+        }
+        
+        /* Hide overlay if mapReady class exists on body */
+        body.map-ready #map-loading,
+        body[data-map-ready="true"] #map-loading {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+        
         /* Mapbox GL JS Custom Styling */
         .mapboxgl-ctrl {
             font-family: inherit;
@@ -601,8 +635,15 @@
             const loadingEl = document.getElementById('map-loading');
             if (loadingEl) {
                 console.log('[MAP] forceHideMapLoading called - hiding overlay');
-                // Multiple aggressive methods
-                loadingEl.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; width: 0 !important; pointer-events: none !important; z-index: -9999 !important; position: absolute !important;';
+                // Multiple aggressive methods - use !important inline styles
+                loadingEl.style.setProperty('display', 'none', 'important');
+                loadingEl.style.setProperty('visibility', 'hidden', 'important');
+                loadingEl.style.setProperty('opacity', '0', 'important');
+                loadingEl.style.setProperty('height', '0', 'important');
+                loadingEl.style.setProperty('width', '0', 'important');
+                loadingEl.style.setProperty('pointer-events', 'none', 'important');
+                loadingEl.style.setProperty('z-index', '-9999', 'important');
+                loadingEl.style.setProperty('position', 'absolute', 'important');
                 loadingEl.classList.add('hidden');
                 loadingEl.setAttribute('hidden', 'true');
                 loadingEl.setAttribute('aria-hidden', 'true');
@@ -619,6 +660,170 @@
             }
             return false;
         };
+        
+        // Also hide loading overlay when map canvas is detected - make it globally accessible
+        window.checkAndHideLoading = function() {
+            const mapContainer = document.getElementById('route-map');
+            const loadingEl = document.getElementById('map-loading');
+            
+            if (!mapContainer) return false;
+            
+            // Check if map canvas exists and is visible
+            const canvas = mapContainer.querySelector('.mapboxgl-canvas');
+            if (canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0) {
+                console.log('[MAP] Canvas detected, hiding loading overlay');
+                window.forceHideMapLoading();
+                return true;
+            }
+            
+            // Also check if plannerMap exists and is ready
+            if (typeof mapReady !== 'undefined' && mapReady && typeof plannerMap !== 'undefined' && plannerMap) {
+                console.log('[MAP] Map is ready, hiding loading overlay');
+                window.forceHideMapLoading();
+                return true;
+            }
+            
+            return false;
+        };
+        
+        const checkAndHideLoading = window.checkAndHideLoading; // Local reference
+        
+        // Run check periodically until overlay is hidden
+        const loadingCheckInterval = setInterval(() => {
+            const loadingEl = document.getElementById('map-loading');
+            if (loadingEl) {
+                // Check multiple conditions to see if overlay should be hidden
+                const isHidden = loadingEl.style.display === 'none' || 
+                               loadingEl.classList.contains('hidden') ||
+                               loadingEl.hasAttribute('hidden') ||
+                               loadingEl.offsetHeight === 0 ||
+                               loadingEl.style.visibility === 'hidden';
+                
+                if (!isHidden) {
+                    const hidden = checkAndHideLoading();
+                    if (hidden) {
+                        clearInterval(loadingCheckInterval);
+                    }
+                } else {
+                    clearInterval(loadingCheckInterval);
+                }
+            } else {
+                // Element doesn't exist, stop checking
+                clearInterval(loadingCheckInterval);
+            }
+        }, 300); // Check more frequently
+        
+        // Stop checking after 30 seconds
+        setTimeout(() => clearInterval(loadingCheckInterval), 30000);
+        
+        // Periodic check to ensure buttons stay enabled if map is ready
+        const buttonEnableCheckInterval = setInterval(() => {
+            if (typeof mapReady !== 'undefined' && mapReady && typeof plannerMap !== 'undefined' && plannerMap) {
+                document.querySelectorAll('.select-stop-btn').forEach(btn => {
+                    // Only enable if it's currently disabled but map is ready
+                    if (btn.disabled || btn.hasAttribute('disabled')) {
+                        btn.disabled = false;
+                        btn.removeAttribute('disabled');
+                        btn.style.cursor = 'pointer';
+                        btn.style.opacity = '1';
+                        btn.style.pointerEvents = 'auto';
+                        btn.title = 'Click to select this stop on the map';
+                    }
+                });
+            }
+        }, 1000); // Check every second
+        
+        // Stop checking after 5 minutes (should be enough time)
+        setTimeout(() => clearInterval(buttonEnableCheckInterval), 300000);
+        
+        // MutationObserver to watch for overlay being added/recreated and immediately hide it
+        const overlayObserver = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) { // Element node
+                            // Check if the added node is the loading overlay
+                            if (node.id === 'map-loading' || (node.querySelector && node.querySelector('#map-loading'))) {
+                                console.log('[MAP] Loading overlay detected via MutationObserver, hiding immediately');
+                                // Hide immediately, no timeout
+                                window.forceHideMapLoading();
+                                window.checkAndHideLoading();
+                                // Also add CSS class to ensure it stays hidden
+                                const el = node.id === 'map-loading' ? node : node.querySelector('#map-loading');
+                                if (el) {
+                                    el.style.setProperty('display', 'none', 'important');
+                                    el.style.setProperty('visibility', 'hidden', 'important');
+                                }
+                            }
+                            // Also check if any child is the loading overlay
+                            const loadingEl = node.querySelector ? node.querySelector('#map-loading') : null;
+                            if (loadingEl) {
+                                console.log('[MAP] Loading overlay child detected, hiding immediately');
+                                window.forceHideMapLoading();
+                                window.checkAndHideLoading();
+                                loadingEl.style.setProperty('display', 'none', 'important');
+                                loadingEl.style.setProperty('visibility', 'hidden', 'important');
+                            }
+                        }
+                    });
+                }
+                // Also check for attribute changes that might make it visible
+                if (mutation.type === 'attributes' && mutation.target.id === 'map-loading') {
+                    const el = mutation.target;
+                    const isVisible = el.style.display !== 'none' && 
+                                     !el.classList.contains('hidden') && 
+                                     !el.hasAttribute('hidden') &&
+                                     el.offsetHeight > 0;
+                    if (isVisible) {
+                        console.log('[MAP] Loading overlay became visible, hiding immediately');
+                        window.forceHideMapLoading();
+                        window.checkAndHideLoading();
+                    }
+                }
+            });
+        });
+        
+        // Start observing the map container for changes
+        const mapContainer = document.getElementById('route-map');
+        if (mapContainer) {
+            overlayObserver.observe(mapContainer, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['style', 'class', 'hidden']
+            });
+            console.log('[MAP] MutationObserver started to watch for loading overlay');
+        }
+        
+        // Also observe the document body in case overlay is added elsewhere
+        overlayObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+            // Immediately hide overlay if map is already ready
+            setTimeout(() => {
+                if (typeof mapReady !== 'undefined' && mapReady) {
+                    console.log('[MAP] Map already ready, hiding overlay immediately');
+                    window.forceHideMapLoading();
+                    window.checkAndHideLoading();
+                    // Also refresh stops if map is ready
+                    if (typeof window.refreshMapStops === 'function') {
+                        setTimeout(() => window.refreshMapStops(), 500);
+                    }
+                }
+            }, 100);
+            
+            // Also refresh stops after a delay when page loads (for editing routes) - multiple attempts
+            const refreshStopsAttempts = [1000, 2000, 3000, 5000];
+            refreshStopsAttempts.forEach((delay, index) => {
+                setTimeout(() => {
+                    if (typeof window.refreshMapStops === 'function' && typeof mapReady !== 'undefined' && mapReady) {
+                        console.log('[MAP] Auto-refreshing stops on page load (attempt', index + 1, ')');
+                        window.refreshMapStops();
+                    }
+                }, delay);
+            });
         
         // Define updateStopCoordinates globally EARLY so it's available when map initializes
         window.updateStopCoordinates = window.updateStopCoordinates || function(index, lat, lng) {
@@ -697,6 +902,10 @@
                 console.log('[STOP] Map is functional - hiding loading overlay');
                 if (typeof window.forceHideMapLoading === 'function') {
                     window.forceHideMapLoading();
+                }
+                // Also trigger the periodic check
+                if (typeof checkAndHideLoading === 'function') {
+                    checkAndHideLoading();
                 }
                 
                 // Update marker immediately (visual feedback)
@@ -1041,6 +1250,406 @@
             }
         };
         
+        // Define drawPlannerStops as a working implementation (not just a stub)
+        // This will be the actual implementation that draws stops on the map
+        window.drawPlannerStops = window.drawPlannerStops || function(stops = [], showLoading = true) {
+            console.log('[MAP] ========================================');
+            console.log('[MAP] ===== drawPlannerStops CALLED =====');
+            console.log('[MAP] ========================================');
+            console.log('[MAP] Stops count:', stops.length);
+            console.log('[MAP] Stops data:', JSON.stringify(stops, null, 2));
+            console.log('[MAP] showLoading:', showLoading);
+            console.log('[MAP] plannerMap exists:', !!plannerMap);
+            console.log('[MAP] plannerMap type:', typeof plannerMap);
+            console.log('[MAP] mapboxgl exists:', typeof mapboxgl !== 'undefined');
+            
+            if (!plannerMap || typeof mapboxgl === 'undefined') {
+                console.warn('[MAP] ✗ Map or Mapbox GL JS not initialized, cannot draw stops');
+                console.warn('[MAP] plannerMap:', plannerMap);
+                console.warn('[MAP] mapboxgl:', typeof mapboxgl);
+                // Retry after a short delay if map is not ready
+                if (typeof plannerMap === 'undefined' || !plannerMap) {
+                    setTimeout(() => {
+                        if (plannerMap && typeof mapboxgl !== 'undefined' && stops.length > 0) {
+                            console.log('[MAP] Retrying to draw stops after map initialization');
+                            window.drawPlannerStops(stops, showLoading);
+                        }
+                    }, 1000);
+                }
+                return;
+            }
+            
+            // Check if map is loaded
+            try {
+                const isLoaded = plannerMap.loaded();
+                console.log('[MAP] Map loaded status:', isLoaded);
+                if (!isLoaded) {
+                    console.warn('[MAP] Map not loaded yet, waiting for load event');
+                    plannerMap.once('load', () => {
+                        console.log('[MAP] Map loaded, retrying drawPlannerStops');
+                        window.drawPlannerStops(stops, showLoading);
+                    });
+                    return;
+                }
+            } catch (loadError) {
+                console.error('[MAP] Error checking map loaded status:', loadError);
+                // Continue anyway - map might be ready
+            }
+
+            // Skip redrawing if we just manually updated coordinates via map click
+            if (typeof window !== 'undefined' && window.skipLivewireRedraw) {
+                console.log('[MAP] Skipping drawPlannerStops - manual coordinate update in progress');
+                return;
+            }
+            
+            console.log('[MAP] ✓ All checks passed, proceeding to draw stops');
+
+            // Helper functions for showing/hiding map updating indicator
+            function showMapUpdating() {
+                const updatingEl = document.getElementById('map-updating');
+                if (updatingEl) {
+                    updatingEl.classList.remove('hidden');
+                }
+            }
+
+            function hideMapUpdating() {
+                const updatingEl = document.getElementById('map-updating');
+                if (updatingEl) {
+                    updatingEl.classList.add('hidden');
+                }
+            }
+
+            if (showLoading) {
+                showMapUpdating();
+            }
+
+            setTimeout(() => {
+                // Remove ALL existing markers completely before creating new ones
+                plannerMarkers.forEach((marker, idx) => {
+                    if (marker) {
+                        try {
+                            marker.remove();
+                        } catch(e) {
+                            console.error('Error removing marker:', e);
+                        }
+                    }
+                    plannerMarkers[idx] = null;
+                });
+                plannerMarkers = [];
+                
+                // Remove existing polyline
+                if (plannerMap.getSource('route-line')) {
+                    if (plannerMap.getLayer('route-line')) {
+                        plannerMap.removeLayer('route-line');
+                    }
+                    plannerMap.removeSource('route-line');
+                    plannerPolyline = null;
+                }
+
+                const coordinates = [];
+                const distances = [];
+                
+                // Helper function to calculate distance between two coordinates (Haversine formula)
+                function calculateDistance(lat1, lng1, lat2, lng2) {
+                    const R = 6371000; // Earth radius in meters
+                    const dLat = (lat2 - lat1) * Math.PI / 180;
+                    const dLng = (lng2 - lng1) * Math.PI / 180;
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                            Math.sin(dLng/2) * Math.sin(dLng/2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    return R * c; // Distance in meters
+                }
+                
+                console.log('[MAP] Processing', stops.length, 'stops to draw markers');
+                let validStopsCount = 0;
+                
+                stops.forEach((stop, index) => {
+                    console.log('[MAP] Processing stop', index, ':', stop);
+                    
+                    if (stop.latitude && stop.longitude) {
+                        const lat = parseFloat(stop.latitude);
+                        const lng = parseFloat(stop.longitude);
+                        console.log('[MAP] Stop', index, '- Parsed coordinates: lat=', lat, 'lng=', lng);
+                        
+                        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                            validStopsCount++;
+                            console.log('[MAP] ✓ Stop', index, 'has valid coordinates, creating marker');
+                            
+                            // Calculate distance from previous stop (nautical miles)
+                            let distanceText = '';
+                            if (coordinates.length > 0) {
+                                const prevPosition = coordinates[coordinates.length - 1];
+                                // prevPosition is [lng, lat] in Mapbox format, calculateDistance expects (lat, lng)
+                                const distanceMeters = calculateDistance(prevPosition[1], prevPosition[0], lat, lng);
+                                const distanceNm = (distanceMeters / 1852).toFixed(2); // Convert to nautical miles
+                                distances.push(parseFloat(distanceNm));
+                                distanceText = `<div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Distance from previous: ${distanceNm} NM</div>`;
+                            }
+                            
+                            // Create Mapbox marker with custom icon
+                            const stopName = stop.name || 'Stop ' + (index + 1);
+                            const markerColor = getStopColor(index);
+                            const stopNumber = index + 1;
+                            
+                            // Create custom marker element
+                            const el = document.createElement('div');
+                            el.className = 'custom-stop-marker';
+                            el.style.backgroundColor = markerColor;
+                            el.style.width = '35px';
+                            el.style.height = '35px';
+                            el.style.borderRadius = '50%';
+                            el.style.border = '3px solid white';
+                            el.style.display = 'flex';
+                            el.style.alignItems = 'center';
+                            el.style.justifyContent = 'center';
+                            el.style.color = 'white';
+                            el.style.fontWeight = 'bold';
+                            el.style.fontSize = '16px';
+                            el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.4)';
+                            el.style.cursor = 'pointer';
+                            el.textContent = stopNumber;
+                            
+                            // Create popup content
+                            const stayDuration = stop.stay_duration_hours ? `${stop.stay_duration_hours} hours` : 'Not specified';
+                            const popupContent = `
+                                <div style="padding: 8px; min-width: 200px;">
+                                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                        <div style="width: 12px; height: 12px; background: ${markerColor}; border-radius: 50%; margin-right: 8px;"></div>
+                                        <strong style="font-size: 14px; color: #111827;">${stop.name || 'Stop ' + (index + 1)}</strong>
+                                    </div>
+                                    ${stop.location_label ? `<div style="font-size: 12px; color: #4b5563; margin-bottom: 4px;">📍 ${stop.location_label}</div>` : ''}
+                                    <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">⏱️ Stay: ${stayDuration}</div>
+                                    ${distanceText}
+                                    ${stop.notes ? `<div style="font-size: 12px; color: #4b5563; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">${stop.notes}</div>` : ''}
+                                    <div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}</div>
+                                </div>
+                            `;
+                            
+                            // Create Mapbox marker
+                            try {
+                                const marker = new mapboxgl.Marker(el)
+                                    .setLngLat([lng, lat])
+                                    .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
+                                    .addTo(plannerMap);
+                                
+                                console.log('[MAP] ✓ Marker object created for stop', index + 1);
+
+                                // Store marker at index position
+                                while (plannerMarkers.length <= index) {
+                                    plannerMarkers.push(null);
+                                }
+                                
+                                // Remove old marker if exists
+                                if (plannerMarkers[index] && plannerMarkers[index] !== null) {
+                                    try {
+                                        plannerMarkers[index].remove();
+                                    } catch(e) {
+                                        console.error('[MAP] Error removing old marker:', e);
+                                    }
+                                }
+                                
+                                plannerMarkers[index] = marker;
+                                marker.index = index; // Store index for identification
+                                // Mapbox format: [longitude, latitude]
+                                coordinates.push([lng, lat]);
+                                console.log('[MAP] ✓ Marker created and added for stop', index + 1, 'at', lat, ',', lng);
+                                console.log('[MAP] Marker element:', el);
+                                console.log('[MAP] Marker position:', marker.getLngLat());
+                            } catch (markerError) {
+                                console.error('[MAP] ✗ Error creating marker for stop', index + 1, ':', markerError);
+                            }
+                        } else {
+                            console.warn('[MAP] ✗ Stop', index, 'has invalid coordinates (NaN or out of range):', lat, lng);
+                        }
+                    } else {
+                        console.warn('[MAP] ✗ Stop', index, 'missing latitude or longitude. Stop data:', stop);
+                    }
+                });
+                
+                console.log('[MAP] ===== Marker creation complete =====');
+                console.log('[MAP] Created', validStopsCount, 'valid markers out of', stops.length, 'total stops');
+                console.log('[MAP] Coordinates array length:', coordinates.length);
+                console.log('[MAP] plannerMarkers array:', plannerMarkers);
+                console.log('[MAP] plannerMarkers length:', plannerMarkers.length);
+                
+                // Fit map bounds to show all markers
+                if (coordinates.length > 0 && plannerMap && plannerMap.loaded()) {
+                    try {
+                        const bounds = new mapboxgl.LngLatBounds();
+                        coordinates.forEach(coord => {
+                            bounds.extend(coord); // coord is [lng, lat]
+                        });
+                        
+                        // Fit bounds with padding
+                        plannerMap.fitBounds(bounds, {
+                            padding: { top: 100, bottom: 100, left: 100, right: 100 },
+                            maxZoom: 15,
+                            duration: 1000
+                        });
+                        
+                        console.log('[MAP] ✓ Map bounds fitted to show all markers');
+                    } catch (boundsError) {
+                        console.error('[MAP] ✗ Error fitting map bounds:', boundsError);
+                    }
+                }
+
+                // Draw polyline if we have multiple stops - Mapbox version
+                if (coordinates.length > 1 && plannerMap.loaded()) {
+                    const geojson = {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: coordinates
+                        }
+                    };
+                    
+                    // Check if source exists
+                    if (plannerMap.getSource('route-line')) {
+                        plannerMap.getSource('route-line').setData(geojson);
+                    } else {
+                        plannerMap.addSource('route-line', {
+                            type: 'geojson',
+                            data: geojson
+                        });
+                        
+                        plannerMap.addLayer({
+                            id: 'route-line',
+                            type: 'line',
+                            source: 'route-line',
+                            layout: {
+                                'line-join': 'round',
+                                'line-cap': 'round'
+                            },
+                            paint: {
+                                'line-color': '#4f46e5',
+                                'line-width': 4,
+                                'line-opacity': 0.7
+                            }
+                        });
+                    }
+                    plannerPolyline = true;
+                }
+
+                // Calculate total distance
+                let totalDistance = 0;
+                if (distances.length > 0) {
+                    totalDistance = distances.reduce((a, b) => a + b, 0);
+                }
+
+                // Update legend
+                const legendEl = document.getElementById('map-legend');
+                const legendStopsEl = document.getElementById('legend-stops');
+                const legendDistanceEl = document.getElementById('legend-distance');
+                
+                if (legendEl && coordinates.length > 0) {
+                    legendEl.style.display = 'block';
+                    if (legendStopsEl) legendStopsEl.textContent = coordinates.length;
+                    if (legendDistanceEl) {
+                        if (coordinates.length < 2) {
+                            legendDistanceEl.textContent = '-';
+                        } else if (totalDistance > 0) {
+                            legendDistanceEl.textContent = totalDistance.toFixed(2) + ' NM';
+                        } else {
+                            legendDistanceEl.textContent = 'Calculating...';
+                        }
+                    }
+                } else if (legendEl) {
+                    legendEl.style.display = 'none';
+                }
+
+                if (showLoading) {
+                    hideMapUpdating();
+                }
+                
+                console.log('[MAP] ===== drawPlannerStops COMPLETE =====');
+            }, 100);
+        };
+        
+        // Define refreshMapStops as a working implementation (not just a stub)
+        // This will be the actual implementation that reads stops from DOM and draws them
+        window.refreshMapStops = window.refreshMapStops || function() {
+            console.log('[MAP] ========================================');
+            console.log('[MAP] refreshMapStops called - reading stops from DOM');
+            console.log('[MAP] ========================================');
+            
+            if (!plannerMap || typeof mapboxgl === 'undefined') {
+                console.warn('[MAP] Map not ready, cannot refresh stops. plannerMap:', !!plannerMap, 'mapboxgl:', typeof mapboxgl);
+                setTimeout(() => {
+                    if (plannerMap && typeof mapboxgl !== 'undefined') {
+                        console.log('[MAP] Retrying refreshMapStops after map is ready');
+                        window.refreshMapStops();
+                    }
+                }, 1000);
+                return;
+            }
+            
+            if (!plannerMap.loaded()) {
+                console.warn('[MAP] Map not loaded yet, waiting...');
+                plannerMap.once('load', () => {
+                    console.log('[MAP] Map loaded, retrying refreshMapStops');
+                    window.refreshMapStops();
+                });
+                return;
+            }
+            
+            const stops = [];
+            const stopContainers = document.querySelectorAll('.stop-container');
+            console.log('[MAP] Found', stopContainers.length, 'stop containers in DOM');
+            
+            stopContainers.forEach((container, idx) => {
+                try {
+                    const latInput = document.getElementById('stop-latitude-' + idx);
+                    const lngInput = document.getElementById('stop-longitude-' + idx);
+                    const nameInput = document.getElementById('stop-name-' + idx);
+                    
+                    const lat = latInput?.value?.trim() || '';
+                    const lng = lngInput?.value?.trim() || '';
+                    const name = nameInput?.value?.trim() || `Stop ${idx + 1}`;
+                    
+                    if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+                        const latNum = parseFloat(lat);
+                        const lngNum = parseFloat(lng);
+                        
+                        if (latNum >= -90 && latNum <= 90 && lngNum >= -180 && lngNum <= 180) {
+                            const locationLabel = container.querySelector('input[wire\\:model*="location_label"]')?.value || '';
+                            const stayDuration = container.querySelector('input[wire\\:model*="stay_duration_hours"]')?.value || '';
+                            const notes = container.querySelector('textarea[wire\\:model*="notes"]')?.value || '';
+                            
+                            stops.push({
+                                latitude: latNum,
+                                longitude: lngNum,
+                                name: name,
+                                location_label: locationLabel,
+                                stay_duration_hours: stayDuration,
+                                notes: notes
+                            });
+                            
+                            console.log('[MAP] ✓ Added stop', idx + 1, ':', name, 'at', latNum, ',', lngNum);
+                        }
+                    }
+                } catch (err) {
+                    console.error('[MAP] Error reading stop', idx, ':', err);
+                }
+            });
+            
+            console.log('[MAP] Total stops collected:', stops.length);
+            
+            if (stops.length > 0) {
+                console.log('[MAP] Refreshing map with', stops.length, 'stops');
+                if (typeof window.drawPlannerStops === 'function') {
+                    window.drawPlannerStops(stops, false);
+                } else {
+                    console.error('[MAP] ✗ drawPlannerStops function not available');
+                }
+            } else {
+                console.warn('[MAP] ⚠ No stops with valid coordinates found in DOM');
+            }
+        };
+        
+        console.log('[MAP] Function stubs defined - drawPlannerStops:', typeof window.drawPlannerStops, 'refreshMapStops:', typeof window.refreshMapStops);
+        
         // Global callback for Mapbox map initialization - marine/nautical map
         // Initialize Mapbox GL JS with marine layers
         window.initPlannerMap = function(retryCount = 0) {
@@ -1290,6 +1899,10 @@
                     mapReady = true;
                     console.log('[MAP] mapReady set to true');
                     
+                    // Mark body as map-ready for CSS
+                    document.body.classList.add('map-ready');
+                    document.body.setAttribute('data-map-ready', 'true');
+                    
                     // Hide loading overlay immediately - use multiple methods
                     const loadingElToHide = document.getElementById('map-loading');
                     if (loadingElToHide) {
@@ -1307,6 +1920,73 @@
                         console.log('[MAP] ✓ Loading overlay hidden and removed');
                     } else {
                         console.warn('[MAP] Loading element not found');
+                    }
+                    
+                    // Also trigger the periodic check to ensure overlay is hidden
+                    if (typeof window.checkAndHideLoading === 'function') {
+                        setTimeout(() => window.checkAndHideLoading(), 100);
+                    }
+                    
+                    // IMMEDIATELY draw stops from PHP data when map is ready
+                    @php
+                        $stopsJson = json_encode($stops ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+                    @endphp
+                    var initialStopsData = {!! $stopsJson !!};
+                    console.log('[MAP] ===== Map ready - attempting to draw stops =====');
+                    console.log('[MAP] Initial stops data from PHP:', initialStopsData);
+                    console.log('[MAP] Number of stops:', initialStopsData.length);
+                    
+                    if (initialStopsData && initialStopsData.length > 0) {
+                        const stopsWithCoords = initialStopsData.filter(s => {
+                            const hasLat = s.latitude !== null && s.latitude !== undefined && s.latitude !== '';
+                            const hasLng = s.longitude !== null && s.longitude !== undefined && s.longitude !== '';
+                            const latValid = hasLat && !isNaN(parseFloat(s.latitude)) && parseFloat(s.latitude) >= -90 && parseFloat(s.latitude) <= 90;
+                            const lngValid = hasLng && !isNaN(parseFloat(s.longitude)) && parseFloat(s.longitude) >= -180 && parseFloat(s.longitude) <= 180;
+                            const isValid = latValid && lngValid;
+                            if (!isValid) {
+                                console.warn('[MAP] Stop filtered out - lat:', s.latitude, 'lng:', s.longitude, 'valid:', latValid, lngValid);
+                            }
+                            return isValid;
+                        });
+                        
+                        console.log('[MAP] Found', stopsWithCoords.length, 'stops with valid coordinates out of', initialStopsData.length);
+                        console.log('[MAP] Valid stops:', stopsWithCoords);
+                        
+                        if (stopsWithCoords.length > 0) {
+                            // Wait for drawPlannerStops to be available, then draw
+                            const waitAndDraw = (attempt = 0, maxAttempts = 10) => {
+                                if (typeof window.drawPlannerStops === 'function') {
+                                    console.log('[MAP] drawPlannerStops is now available, drawing stops');
+                                    // Try multiple times to ensure it works
+                                    [500, 1000, 2000].forEach((delay, idx) => {
+                                        setTimeout(() => {
+                                            console.log('[MAP] Attempt', idx + 1, '- Drawing stops after', delay, 'ms');
+                                            window.drawPlannerStops(stopsWithCoords, false);
+                                        }, delay);
+                                    });
+                                } else if (attempt < maxAttempts) {
+                                    console.log('[MAP] Waiting for drawPlannerStops function (attempt', attempt + 1, '/', maxAttempts, ')');
+                                    setTimeout(() => waitAndDraw(attempt + 1, maxAttempts), 200);
+                                } else {
+                                    console.error('[MAP] ✗ drawPlannerStops function not available after', maxAttempts, 'attempts');
+                                }
+                            };
+                            waitAndDraw();
+                        } else {
+                            console.warn('[MAP] No stops with valid coordinates to draw');
+                        }
+                    } else {
+                        console.warn('[MAP] No stops data from PHP or empty array');
+                    }
+                    
+                    // Also refresh stops from DOM after delays (in case PHP data wasn't complete)
+                    if (typeof window.refreshMapStops === 'function') {
+                        [1500, 3000, 5000].forEach((delay, idx) => {
+                            setTimeout(() => {
+                                console.log('[MAP] DOM refresh attempt', idx + 1, 'after', delay, 'ms');
+                                window.refreshMapStops();
+                            }, delay);
+                        });
                     }
                     
                     // Ensure map container is visible and has proper dimensions
@@ -1328,13 +2008,18 @@
                         }
                     }, 300);
                     
-                    // Enable all "Select on Map" buttons
-                    document.querySelectorAll('.select-stop-btn').forEach(btn => {
-                        btn.disabled = false;
-                        btn.style.cursor = 'pointer';
-                        btn.style.opacity = '1';
-                        btn.title = 'Click to select this stop on the map';
-                    });
+                    // Update button states using the centralized function
+                    if (typeof window.updateButtonStates === 'function') {
+                        window.updateButtonStates();
+                    } else {
+                        // Fallback: Enable all "Select on Map" buttons manually
+                        document.querySelectorAll('.select-stop-btn').forEach(btn => {
+                            btn.disabled = false;
+                            btn.style.cursor = 'pointer';
+                            btn.style.opacity = '1';
+                            btn.title = 'Click to select this stop on the map';
+                        });
+                    }
                     
                     // Setup button handlers
                     if (typeof window.setupSelectButtonHandlers === 'function') {
@@ -1343,22 +2028,128 @@
                         }, 300);
                     }
                     
-                    // Draw stops after map is ready
-                    setTimeout(() => {
-                        if (typeof window.drawPlannerStops === 'function') {
+                    // Draw stops after map is ready - with multiple retries
+                    const drawStopsOnInit = () => {
+                        if (typeof window.drawPlannerStops === 'function' && plannerMap && plannerMap.loaded()) {
+                            // First try using PHP data
                             @php
                                 $stopsJson = json_encode($stops ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
                             @endphp
                             var stopsData = {!! $stopsJson !!};
-                            window.drawPlannerStops(stopsData, false);
+                            console.log('[MAP] Drawing stops on map initialization:', stopsData.length, 'stops');
+                            // Filter stops that have coordinates
+                            const stopsWithCoords = stopsData.filter(s => s.latitude && s.longitude && 
+                                !isNaN(parseFloat(s.latitude)) && !isNaN(parseFloat(s.longitude)));
+                            if (stopsWithCoords.length > 0) {
+                                console.log('[MAP] Drawing', stopsWithCoords.length, 'stops with coordinates from PHP data');
+                                window.drawPlannerStops(stopsWithCoords, false);
+                            } else {
+                                // If no stops from PHP data, try reading from DOM
+                                console.log('[MAP] No stops from PHP data, trying to read from DOM');
+                                if (typeof window.refreshMapStops === 'function') {
+                                    setTimeout(() => window.refreshMapStops(), 500);
+                                }
+                            }
+                            return true;
                         }
-                    }, 500);
+                        return false;
+                    };
+                    
+                    // Try immediately
+                    setTimeout(() => {
+                        if (!drawStopsOnInit()) {
+                            // Retry after 1 second
+                            setTimeout(() => {
+                                if (!drawStopsOnInit()) {
+                                    // Final retry after 2 seconds, and also try reading from DOM
+                                    setTimeout(() => {
+                                        drawStopsOnInit();
+                                        // Also try reading from DOM as fallback
+                                        if (typeof window.refreshMapStops === 'function') {
+                                            setTimeout(() => window.refreshMapStops(), 500);
+                                        }
+                                    }, 2000);
+                                }
+                            }, 1000);
+                        }
+                    }, 800);
                 }
                 
                 // Map ready callback - primary
                 plannerMap.once('load', function() {
                     console.log('[MAP] ✓ Map "load" event fired');
                     completeMapInit();
+                    
+                    // Also try to draw stops immediately when map loads
+                    setTimeout(() => {
+                        @php
+                            $stopsJson = json_encode($stops ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+                        @endphp
+                        var loadEventStops = {!! $stopsJson !!};
+                        console.log('[MAP] Map load event - trying to draw', loadEventStops.length, 'stops');
+                        console.log('[MAP] Stops data:', JSON.stringify(loadEventStops, null, 2));
+                        console.log('[MAP] drawPlannerStops function exists:', typeof window.drawPlannerStops === 'function');
+                        console.log('[MAP] plannerMap exists:', !!plannerMap);
+                        console.log('[MAP] plannerMap.loaded():', plannerMap ? plannerMap.loaded() : 'N/A');
+                        
+                        if (loadEventStops && loadEventStops.length > 0) {
+                            const validStops = loadEventStops.filter(s => {
+                                const lat = parseFloat(s.latitude);
+                                const lng = parseFloat(s.longitude);
+                                const isValid = !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+                                if (!isValid) {
+                                    console.warn('[MAP] Filtered out stop:', s, 'lat:', lat, 'lng:', lng);
+                                }
+                                return isValid;
+                            });
+                            console.log('[MAP] Valid stops after filtering:', validStops.length, 'out of', loadEventStops.length);
+                            console.log('[MAP] Valid stops data:', JSON.stringify(validStops, null, 2));
+                            
+                            if (validStops.length > 0) {
+                                // Wait for drawPlannerStops to be available
+                                const waitAndDraw = (attempt = 0, maxAttempts = 10) => {
+                                    if (typeof window.drawPlannerStops === 'function') {
+                                        console.log('[MAP] drawPlannerStops is now available, calling with', validStops.length, 'stops');
+                                        try {
+                                            window.drawPlannerStops(validStops, false);
+                                            console.log('[MAP] drawPlannerStops call completed');
+                                        } catch (error) {
+                                            console.error('[MAP] ✗ Error calling drawPlannerStops:', error);
+                                            console.error('[MAP] Error stack:', error.stack);
+                                        }
+                                    } else if (attempt < maxAttempts) {
+                                        console.log('[MAP] Waiting for drawPlannerStops function (attempt', attempt + 1, '/', maxAttempts, ')');
+                                        setTimeout(() => waitAndDraw(attempt + 1, maxAttempts), 200);
+                                    } else {
+                                        console.error('[MAP] ✗ drawPlannerStops function not available after', maxAttempts, 'attempts');
+                                    }
+                                };
+                                waitAndDraw();
+                            } else {
+                                console.warn('[MAP] ⚠ No valid stops to draw');
+                            }
+                        } else {
+                            console.warn('[MAP] ⚠ No stops data or empty array');
+                        }
+                        
+                        // Also try reading from DOM - wait for function to be available
+                        const waitAndRefresh = (attempt = 0, maxAttempts = 10) => {
+                            if (typeof window.refreshMapStops === 'function') {
+                                console.log('[MAP] refreshMapStops is now available, calling from DOM');
+                                try {
+                                    window.refreshMapStops();
+                                } catch (error) {
+                                    console.error('[MAP] ✗ Error calling refreshMapStops:', error);
+                                }
+                            } else if (attempt < maxAttempts) {
+                                console.log('[MAP] Waiting for refreshMapStops function (attempt', attempt + 1, '/', maxAttempts, ')');
+                                setTimeout(() => waitAndRefresh(attempt + 1, maxAttempts), 200);
+                            } else {
+                                console.warn('[MAP] ⚠ refreshMapStops function not available after', maxAttempts, 'attempts');
+                            }
+                        };
+                        waitAndRefresh();
+                    }, 1000);
                 });
                 
                 // Fallback: Also listen for style.load event
@@ -1412,13 +2203,20 @@
                     const loadingElFinal = document.getElementById('map-loading');
                     if (loadingElFinal && loadingElFinal.style.display !== 'none') {
                         console.warn('[MAP] ⚠ Absolute timeout: Hiding loading overlay after 5 seconds');
-                        if (typeof window.hideMapLoadingOverlay === 'function') {
-                            window.hideMapLoadingOverlay();
+                        if (typeof window.forceHideMapLoading === 'function') {
+                            window.forceHideMapLoading();
                         } else {
                             loadingElFinal.style.display = 'none';
                             loadingElFinal.style.visibility = 'hidden';
                             loadingElFinal.classList.add('hidden');
                             loadingElFinal.setAttribute('style', 'display: none !important; visibility: hidden !important;');
+                            try {
+                                if (loadingElFinal.parentNode) {
+                                    loadingElFinal.remove();
+                                }
+                            } catch(e) {
+                                console.warn('[MAP] Could not remove loading element:', e);
+                            }
                         }
                     }
                 }, 5000);
@@ -1449,35 +2247,52 @@
                         console.warn('[MAP] Loading element (#map-loading) not found on click');
                     }
                     
+                    // Hide loading overlay immediately when map is clicked (map is definitely functional)
+                    if (typeof window.forceHideMapLoading === 'function') {
+                        window.forceHideMapLoading();
+                    }
+                    // Also trigger the periodic check
+                    if (typeof checkAndHideLoading === 'function') {
+                        checkAndHideLoading();
+                    }
+                    
                     if (selectedStopIndex !== null) {
                         const lat = e.lngLat.lat;
                         const lng = e.lngLat.lng;
                         
                         console.log('[MAP] Updating stop', selectedStopIndex, 'with coordinates:', lat, lng);
                         
-                        // Update the selected stop's coordinates
+                        // Store the selected index before clearing
+                        const stopIndexToUpdate = selectedStopIndex;
+                        
+                        // Update the selected stop's coordinates (this will also update the marker)
                         if (typeof window.updateStopCoordinates === 'function') {
-                            console.log('[MAP] Calling updateStopCoordinates...');
-                            window.updateStopCoordinates(selectedStopIndex, lat, lng);
+                            console.log('[MAP] Calling updateStopCoordinates for stop', stopIndexToUpdate);
+                            window.updateStopCoordinates(stopIndexToUpdate, lat, lng);
                         } else if (typeof updateStopCoordinates === 'function') {
-                            updateStopCoordinates(selectedStopIndex, lat, lng);
+                            updateStopCoordinates(stopIndexToUpdate, lat, lng);
                         } else {
                             console.error('[MAP] ✗ updateStopCoordinates function not found!');
                         }
                         
-                        // Remove temporary click marker
+                        // Remove any existing temporary click marker
                         if (clickMarker) {
-                            clickMarker.remove();
+                            try {
+                                clickMarker.remove();
+                            } catch(e) {
+                                console.warn('[MAP] Error removing click marker:', e);
+                            }
                             clickMarker = null;
                         }
                         
-                        // Add temporary marker to show where user clicked
-                        const stopColor = getStopColor(selectedStopIndex);
-                        const stopNumber = selectedStopIndex + 1;
+                        // Add a temporary visual feedback marker to show where user clicked
+                        // This will be removed after the actual stop marker is created
+                        const stopColor = getStopColor(stopIndexToUpdate);
+                        const stopNumber = stopIndexToUpdate + 1;
                         
-                        // Create custom marker element
+                        // Create custom marker element for temporary feedback
                         const el = document.createElement('div');
-                        el.className = 'custom-stop-marker';
+                        el.className = 'custom-stop-marker-temp';
                         el.style.backgroundColor = stopColor;
                         el.style.width = '30px';
                         el.style.height = '30px';
@@ -1491,29 +2306,27 @@
                         el.style.fontSize = '14px';
                         el.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
                         el.style.cursor = 'pointer';
+                        el.style.opacity = '0.7'; // Make it slightly transparent to indicate it's temporary
                         el.textContent = stopNumber;
                         
                         clickMarker = new mapboxgl.Marker(el)
                             .setLngLat([lng, lat])
                             .addTo(plannerMap);
                         
-                        // Remove after 3 seconds
+                        // Remove temporary marker after 2 seconds (actual marker should be created by then)
                         setTimeout(() => {
                             if (clickMarker) {
-                                clickMarker.remove();
+                                try {
+                                    clickMarker.remove();
+                                } catch(e) {
+                                    console.warn('[MAP] Error removing temporary click marker:', e);
+                                }
                                 clickMarker = null;
                             }
-                        }, 3000);
+                        }, 2000);
                         
-                        // Clear selection
+                        // Clear selection immediately
                         selectedStopIndex = null;
-                        
-                        // Update button states
-                        document.querySelectorAll('.select-stop-btn').forEach(btn => {
-                            btn.textContent = 'Select on Map';
-                            btn.classList.remove('bg-indigo-600', 'text-white');
-                            btn.classList.add('bg-indigo-50', 'text-indigo-700');
-                        });
                         
                         // Hide selected stop indicator
                         const indicator = document.getElementById('selected-stop-indicator');
@@ -1521,10 +2334,39 @@
                             indicator.classList.add('hidden');
                         }
                         
-                        // Remove highlight
+                        // Remove highlight from all stop containers
                         document.querySelectorAll('.stop-container').forEach(container => {
                             container.classList.remove('ring-2', 'ring-indigo-500');
                         });
+                        
+                        // Reset button states - do this immediately and also after delays
+                        const resetButtonStates = () => {
+                            document.querySelectorAll('.select-stop-btn').forEach(btn => {
+                                // Reset button text and styling if in selected state
+                                if (btn.classList.contains('bg-indigo-600') || btn.textContent.includes('Selected')) {
+                                    btn.textContent = 'Select on Map';
+                                    btn.classList.remove('bg-indigo-600', 'text-white');
+                                    btn.classList.add('bg-indigo-50', 'text-indigo-700');
+                                }
+                                // Always ensure button is enabled if map is ready
+                                if (mapReady && plannerMap) {
+                                    btn.disabled = false;
+                                    btn.style.cursor = 'pointer';
+                                    btn.style.opacity = '1';
+                                }
+                            });
+                        };
+                        
+                        // Reset immediately
+                        resetButtonStates();
+                        
+                        // Reset again after a short delay (in case Livewire updates reset them)
+                        setTimeout(resetButtonStates, 300);
+                        
+                        // Reset again after Livewire typically finishes updating
+                        setTimeout(resetButtonStates, 1500);
+                        
+                        console.log('[MAP] ✓ Selection cleared and button states reset');
                     }
                 });
                 
@@ -1824,7 +2666,24 @@
             document.querySelectorAll('.select-stop-btn').forEach(button => {
                 // Skip if handler already attached
                 if (buttonHandlers.has(button)) {
+                    // But still enable the button in case it was disabled
+                    if (typeof mapReady !== 'undefined' && mapReady && typeof plannerMap !== 'undefined' && plannerMap) {
+                        button.disabled = false;
+                        button.removeAttribute('disabled');
+                        button.style.cursor = 'pointer';
+                        button.style.opacity = '1';
+                    }
                     return;
+                }
+
+                // Enable button if map is ready BEFORE attaching handler
+                if (typeof mapReady !== 'undefined' && mapReady && typeof plannerMap !== 'undefined' && plannerMap) {
+                    button.disabled = false;
+                    button.removeAttribute('disabled');
+                    button.style.cursor = 'pointer';
+                    button.style.opacity = '1';
+                    button.style.pointerEvents = 'auto';
+                    button.title = 'Click to select this stop on the map';
                 }
 
                 // Create handler function
@@ -1881,16 +2740,68 @@
         if (typeof Livewire !== 'undefined') {
             document.addEventListener('livewire:init', () => {
                 Livewire.hook('morph.updated', () => {
+                    // Enable buttons immediately for newly added stops
+                    if (typeof mapReady !== 'undefined' && mapReady && typeof plannerMap !== 'undefined' && plannerMap) {
+                        document.querySelectorAll('.select-stop-btn').forEach(btn => {
+                            btn.disabled = false;
+                            btn.removeAttribute('disabled');
+                            btn.style.cursor = 'pointer';
+                            btn.style.opacity = '1';
+                        });
+                    }
                     setTimeout(setupSelectButtonHandlers, 200);
                 });
             });
             
             Livewire.hook('morph.updated', () => {
+                // Enable buttons immediately for newly added stops
+                if (typeof mapReady !== 'undefined' && mapReady && typeof plannerMap !== 'undefined' && plannerMap) {
+                    document.querySelectorAll('.select-stop-btn').forEach(btn => {
+                        btn.disabled = false;
+                        btn.removeAttribute('disabled');
+                        btn.style.cursor = 'pointer';
+                        btn.style.opacity = '1';
+                    });
+                }
                 setTimeout(setupSelectButtonHandlers, 200);
+            });
+            
+            // Also listen for Livewire commit events (when actions complete)
+            document.addEventListener('livewire:commit', () => {
+                setTimeout(() => {
+                    if (typeof mapReady !== 'undefined' && mapReady && typeof plannerMap !== 'undefined' && plannerMap) {
+                        document.querySelectorAll('.select-stop-btn').forEach(btn => {
+                            btn.disabled = false;
+                            btn.removeAttribute('disabled');
+                            btn.style.cursor = 'pointer';
+                            btn.style.opacity = '1';
+                            btn.style.pointerEvents = 'auto';
+                        });
+                        if (typeof window.setupSelectButtonHandlers === 'function') {
+                            window.setupSelectButtonHandlers();
+                        }
+                        // Also call the ensure function
+                        if (typeof window.ensureButtonsEnabled === 'function') {
+                            window.ensureButtonsEnabled();
+                        }
+                    }
+                }, 100);
+            });
+            
+            // Listen for all Livewire events that might affect buttons
+            ['livewire:update', 'livewire:message', 'livewire:commit'].forEach(eventName => {
+                document.addEventListener(eventName, () => {
+                    setTimeout(() => {
+                        if (typeof window.ensureButtonsEnabled === 'function') {
+                            window.ensureButtonsEnabled();
+                        }
+                    }, 150);
+                });
             });
         }
 
         (function() {
+            console.log('[MAP] ===== IIFE STARTING - This should define full implementations =====');
             // Use global variables defined above
             // All map functions will use plannerMap, plannerMarkers, etc.
             
@@ -2137,6 +3048,10 @@
             // updateStopCoordinates is already defined globally above (outside this IIFE)
             // No need to redefine it here - the global function is already available
             console.log('[STOP] updateStopCoordinates available (defined globally)');
+            
+            console.log('[MAP] ===== DEFINING FULL IMPLEMENTATIONS =====');
+            console.log('[MAP] Current drawPlannerStops type:', typeof window.drawPlannerStops);
+            console.log('[MAP] Current refreshMapStops type:', typeof window.refreshMapStops);
 
             function showMapUpdating() {
                 const updatingEl = document.getElementById('map-updating');
@@ -2153,17 +3068,59 @@
             }
 
             // Draw stops on Leaflet map - nautical/sea map version
+            // FORCE REPLACE the stub with full implementation
+            console.log('[MAP] Replacing drawPlannerStops stub with full implementation');
             window.drawPlannerStops = function drawStops(stops = [], showLoading = true) {
+                console.log('[MAP] ========================================');
+                console.log('[MAP] ===== drawPlannerStops CALLED =====');
+                console.log('[MAP] ========================================');
+                console.log('[MAP] Stops count:', stops.length);
+                console.log('[MAP] Stops data:', JSON.stringify(stops, null, 2));
+                console.log('[MAP] showLoading:', showLoading);
+                console.log('[MAP] plannerMap exists:', !!plannerMap);
+                console.log('[MAP] plannerMap type:', typeof plannerMap);
+                console.log('[MAP] mapboxgl exists:', typeof mapboxgl !== 'undefined');
+                
                 if (!plannerMap || typeof mapboxgl === 'undefined') {
-                    console.warn('Map or Mapbox GL JS not initialized');
+                    console.warn('[MAP] ✗ Map or Mapbox GL JS not initialized, cannot draw stops');
+                    console.warn('[MAP] plannerMap:', plannerMap);
+                    console.warn('[MAP] mapboxgl:', typeof mapboxgl);
+                    // Retry after a short delay if map is not ready
+                    if (typeof plannerMap === 'undefined' || !plannerMap) {
+                        setTimeout(() => {
+                            if (plannerMap && typeof mapboxgl !== 'undefined' && stops.length > 0) {
+                                console.log('[MAP] Retrying to draw stops after map initialization');
+                                window.drawPlannerStops(stops, showLoading);
+                            }
+                        }, 1000);
+                    }
                     return;
+                }
+                
+                // Check if map is loaded
+                try {
+                    const isLoaded = plannerMap.loaded();
+                    console.log('[MAP] Map loaded status:', isLoaded);
+                    if (!isLoaded) {
+                        console.warn('[MAP] Map not loaded yet, waiting for load event');
+                        plannerMap.once('load', () => {
+                            console.log('[MAP] Map loaded, retrying drawPlannerStops');
+                            window.drawPlannerStops(stops, showLoading);
+                        });
+                        return;
+                    }
+                } catch (loadError) {
+                    console.error('[MAP] Error checking map loaded status:', loadError);
+                    // Continue anyway - map might be ready
                 }
 
                 // Skip redrawing if we just manually updated coordinates via map click
                 if (typeof window !== 'undefined' && window.skipLivewireRedraw) {
-                    console.log('Skipping drawPlannerStops - manual coordinate update in progress');
+                    console.log('[MAP] Skipping drawPlannerStops - manual coordinate update in progress');
                     return;
                 }
+                
+                console.log('[MAP] ✓ All checks passed, proceeding to draw stops');
 
                 if (showLoading) {
                     showMapUpdating();
@@ -2207,11 +3164,20 @@
                         return R * c; // Distance in meters
                     }
                     
+                    console.log('[MAP] Processing', stops.length, 'stops to draw markers');
+                    let validStopsCount = 0;
+                    
                     stops.forEach((stop, index) => {
+                        console.log('[MAP] Processing stop', index, ':', stop);
+                        
                         if (stop.latitude && stop.longitude) {
                             const lat = parseFloat(stop.latitude);
                             const lng = parseFloat(stop.longitude);
+                            console.log('[MAP] Stop', index, '- Parsed coordinates: lat=', lat, 'lng=', lng);
+                            
                             if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                                validStopsCount++;
+                                console.log('[MAP] ✓ Stop', index, 'has valid coordinates, creating marker');
                                 const position = [lat, lng];
                                 
                                 // Calculate distance from previous stop (nautical miles)
@@ -2265,32 +3231,72 @@
                                 `;
                                 
                                 // Create Mapbox marker
-                                const marker = new mapboxgl.Marker(el)
-                                    .setLngLat([lng, lat])
-                                    .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
-                                    .addTo(plannerMap);
+                                try {
+                                    const marker = new mapboxgl.Marker(el)
+                                        .setLngLat([lng, lat])
+                                        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
+                                        .addTo(plannerMap);
+                                    
+                                    console.log('[MAP] ✓ Marker object created for stop', index + 1);
 
-                                // Store marker at index position
-                                while (plannerMarkers.length <= index) {
-                                    plannerMarkers.push(null);
-                                }
-                                
-                                // Remove old marker if exists
-                                if (plannerMarkers[index] && plannerMarkers[index] !== null) {
-                                    try {
-                                        plannerMarkers[index].remove();
-                                    } catch(e) {
-                                        console.error('Error removing old marker:', e);
+                                    // Store marker at index position
+                                    while (plannerMarkers.length <= index) {
+                                        plannerMarkers.push(null);
                                     }
+                                    
+                                    // Remove old marker if exists
+                                    if (plannerMarkers[index] && plannerMarkers[index] !== null) {
+                                        try {
+                                            plannerMarkers[index].remove();
+                                        } catch(e) {
+                                            console.error('[MAP] Error removing old marker:', e);
+                                        }
+                                    }
+                                    
+                                    plannerMarkers[index] = marker;
+                                    marker.index = index; // Store index for identification
+                                    // Mapbox format: [longitude, latitude]
+                                    coordinates.push([lng, lat]);
+                                    console.log('[MAP] ✓ Marker created and added for stop', index + 1, 'at', lat, ',', lng);
+                                    console.log('[MAP] Marker element:', el);
+                                    console.log('[MAP] Marker position:', marker.getLngLat());
+                                } catch (markerError) {
+                                    console.error('[MAP] ✗ Error creating marker for stop', index + 1, ':', markerError);
                                 }
-                                
-                                plannerMarkers[index] = marker;
-                                marker.index = index; // Store index for identification
-                                // Mapbox format: [longitude, latitude]
-                                coordinates.push([lng, lat]);
+                            } else {
+                                console.warn('[MAP] ✗ Stop', index, 'has invalid coordinates (NaN or out of range):', lat, lng);
                             }
+                        } else {
+                            console.warn('[MAP] ✗ Stop', index, 'missing latitude or longitude. Stop data:', stop);
                         }
                     });
+                    
+                    console.log('[MAP] ===== Marker creation complete =====');
+                    console.log('[MAP] Created', validStopsCount, 'valid markers out of', stops.length, 'total stops');
+                    console.log('[MAP] Coordinates array length:', coordinates.length);
+                    console.log('[MAP] plannerMarkers array:', plannerMarkers);
+                    console.log('[MAP] plannerMarkers length:', plannerMarkers.length);
+                    
+                    // Fit map bounds to show all markers
+                    if (coordinates.length > 0 && plannerMap && plannerMap.loaded()) {
+                        try {
+                            const bounds = new mapboxgl.LngLatBounds();
+                            coordinates.forEach(coord => {
+                                bounds.extend(coord); // coord is [lng, lat]
+                            });
+                            
+                            // Fit bounds with padding
+                            plannerMap.fitBounds(bounds, {
+                                padding: { top: 100, bottom: 100, left: 100, right: 100 },
+                                maxZoom: 15,
+                                duration: 1000
+                            });
+                            
+                            console.log('[MAP] ✓ Map bounds fitted to show all markers');
+                        } catch (boundsError) {
+                            console.error('[MAP] ✗ Error fitting map bounds:', boundsError);
+                        }
+                    }
 
                     // Draw polyline if we have multiple stops - Mapbox version
                     if (coordinates.length > 1 && plannerMap.loaded()) {
@@ -2372,6 +3378,39 @@
                     }
 
                     hideMapUpdating();
+                    
+                    // Final check - verify markers are actually on the map
+                    setTimeout(() => {
+                        const visibleMarkers = plannerMarkers.filter(m => m !== null && m !== undefined);
+                        console.log('[MAP] ===== Final Marker Check =====');
+                        console.log('[MAP] Visible markers count:', visibleMarkers.length);
+                        console.log('[MAP] Total plannerMarkers array length:', plannerMarkers.length);
+                        console.log('[MAP] plannerMarkers array:', plannerMarkers);
+                        
+                        visibleMarkers.forEach((marker, idx) => {
+                            try {
+                                if (marker && marker.getLngLat) {
+                                    const pos = marker.getLngLat();
+                                    console.log('[MAP] Marker', idx, 'position:', pos.lat, ',', pos.lng);
+                                }
+                            } catch(e) {
+                                console.error('[MAP] Error checking marker', idx, ':', e);
+                            }
+                        });
+                        
+                        // If no markers visible but we should have some, try refreshing
+                        if (visibleMarkers.length === 0 && stops.length > 0) {
+                            console.warn('[MAP] ⚠ No markers visible but', stops.length, 'stops exist - attempting refresh');
+                            if (typeof window.refreshMapStops === 'function') {
+                                setTimeout(() => {
+                                    console.log('[MAP] Attempting refreshMapStops as fallback');
+                                    window.refreshMapStops();
+                                }, 500);
+                            }
+                        } else if (visibleMarkers.length > 0) {
+                            console.log('[MAP] ✓ Successfully created', visibleMarkers.length, 'markers');
+                        }
+                    }, 500);
                 }, 100);
             };
 
@@ -2379,10 +3418,20 @@
             function updateButtonStates() {
                 document.querySelectorAll('.select-stop-btn').forEach(btn => {
                     if (mapReady && plannerMap) {
+                        // Aggressively enable button - remove all disabled states
                         btn.disabled = false;
+                        btn.removeAttribute('disabled');
                         btn.style.cursor = 'pointer';
                         btn.style.opacity = '1';
+                        btn.style.pointerEvents = 'auto';
                         btn.title = 'Click to select this stop on the map';
+                        
+                        // If button is in selected state but selection is cleared, reset it
+                        if (selectedStopIndex === null && (btn.classList.contains('bg-indigo-600') || btn.textContent.includes('Selected'))) {
+                            btn.textContent = 'Select on Map';
+                            btn.classList.remove('bg-indigo-600', 'text-white');
+                            btn.classList.add('bg-indigo-50', 'text-indigo-700');
+                        }
                     } else {
                         btn.disabled = true;
                         btn.style.cursor = 'not-allowed';
@@ -2392,8 +3441,125 @@
                 });
             }
             
+            // Also create a function that can be called periodically
+            window.ensureButtonsEnabled = function() {
+                if (typeof mapReady !== 'undefined' && mapReady && typeof plannerMap !== 'undefined' && plannerMap) {
+                    document.querySelectorAll('.select-stop-btn').forEach(btn => {
+                        if (btn.disabled || btn.hasAttribute('disabled')) {
+                            console.log('[BUTTON] Enabling disabled button:', btn.getAttribute('data-stop-index'));
+                            btn.disabled = false;
+                            btn.removeAttribute('disabled');
+                            btn.style.cursor = 'pointer';
+                            btn.style.opacity = '1';
+                            btn.style.pointerEvents = 'auto';
+                            btn.title = 'Click to select this stop on the map';
+                        }
+                    });
+                }
+            };
+            
             // Make updateButtonStates globally accessible
             window.updateButtonStates = updateButtonStates;
+            
+            // Function to manually refresh stops from DOM and draw on map
+            // FORCE REPLACE the stub with the full implementation
+            console.log('[MAP] ========================================');
+            console.log('[MAP] INSIDE IIFE - Replacing refreshMapStops stub');
+            console.log('[MAP] Before replacement - type:', typeof window.refreshMapStops);
+            const funcStrBefore = window.refreshMapStops ? window.refreshMapStops.toString().substring(0, 100) : 'undefined';
+            console.log('[MAP] Before replacement - function preview:', funcStrBefore);
+            
+            // Delete the stub first to ensure replacement
+            delete window.refreshMapStops;
+            
+            // Now define the full implementation
+            window.refreshMapStops = function() {
+                console.log('[MAP] ========================================');
+                console.log('[MAP] refreshMapStops FULL IMPLEMENTATION called');
+                console.log('[MAP] ========================================');
+                
+                if (!plannerMap || typeof mapboxgl === 'undefined') {
+                    console.warn('[MAP] Map not ready, cannot refresh stops. plannerMap:', !!plannerMap, 'mapboxgl:', typeof mapboxgl);
+                    // Retry after a delay
+                    setTimeout(() => {
+                        if (plannerMap && typeof mapboxgl !== 'undefined') {
+                            console.log('[MAP] Retrying refreshMapStops after map is ready');
+                            window.refreshMapStops();
+                        }
+                    }, 1000);
+                    return;
+                }
+                
+                if (!plannerMap.loaded()) {
+                    console.warn('[MAP] Map not loaded yet, waiting...');
+                    plannerMap.once('load', () => {
+                        console.log('[MAP] Map loaded, retrying refreshMapStops');
+                        window.refreshMapStops();
+                    });
+                    return;
+                }
+                
+                const stops = [];
+                const stopContainers = document.querySelectorAll('.stop-container');
+                console.log('[MAP] Found', stopContainers.length, 'stop containers in DOM');
+                
+                stopContainers.forEach((container, idx) => {
+                    try {
+                        const latInput = document.getElementById('stop-latitude-' + idx);
+                        const lngInput = document.getElementById('stop-longitude-' + idx);
+                        const nameInput = document.getElementById('stop-name-' + idx);
+                        
+                        console.log('[MAP] Stop', idx, '- latInput:', !!latInput, 'lngInput:', !!lngInput, 'nameInput:', !!nameInput);
+                        
+                        const lat = latInput?.value?.trim() || '';
+                        const lng = lngInput?.value?.trim() || '';
+                        const name = nameInput?.value?.trim() || `Stop ${idx + 1}`;
+                        
+                        console.log('[MAP] Stop', idx, '- lat:', lat, 'lng:', lng, 'name:', name);
+                        
+                        if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+                            const latNum = parseFloat(lat);
+                            const lngNum = parseFloat(lng);
+                            
+                            if (latNum >= -90 && latNum <= 90 && lngNum >= -180 && lngNum <= 180) {
+                                const locationLabel = container.querySelector('input[wire\\:model*="location_label"]')?.value || '';
+                                const stayDuration = container.querySelector('input[wire\\:model*="stay_duration_hours"]')?.value || '';
+                                const notes = container.querySelector('textarea[wire\\:model*="notes"]')?.value || '';
+                                
+                                stops.push({
+                                    latitude: latNum,
+                                    longitude: lngNum,
+                                    name: name,
+                                    location_label: locationLabel,
+                                    stay_duration_hours: stayDuration,
+                                    notes: notes
+                                });
+                                
+                                console.log('[MAP] ✓ Added stop', idx + 1, ':', name, 'at', latNum, ',', lngNum);
+                            } else {
+                                console.warn('[MAP] Stop', idx, 'has invalid coordinate range:', latNum, lngNum);
+                            }
+                        } else {
+                            console.warn('[MAP] Stop', idx, 'missing or invalid coordinates');
+                        }
+                    } catch (err) {
+                        console.error('[MAP] Error reading stop', idx, ':', err);
+                    }
+                });
+                
+                console.log('[MAP] Total stops collected:', stops.length);
+                
+                if (stops.length > 0) {
+                    console.log('[MAP] Refreshing map with', stops.length, 'stops');
+                    if (typeof window.drawPlannerStops === 'function') {
+                        window.drawPlannerStops(stops, false);
+                    } else {
+                        console.error('[MAP] ✗ drawPlannerStops function not available');
+                    }
+                } else {
+                    console.warn('[MAP] ⚠ No stops with valid coordinates found in DOM');
+                }
+            };
             
             // Make checkAndInit globally accessible for the callback - Mapbox version
             window.checkAndInit = function checkAndInit() {
@@ -2556,102 +3722,234 @@
                         // Run completely asynchronously - don't block anything
                         setTimeout(() => {
                             try {
-                                // Only update button states - minimal work
-                                if (typeof updateButtonStates === 'function') {
-                                    updateButtonStates();
-                        }
-                        
-                                // Update map if needed - but do it asynchronously with delay
-                                setTimeout(() => {
-                                    try {
-                                        if (typeof window !== 'undefined' && window.skipLivewireRedraw) {
-                            return;
-                        }
-                        
-                            const stops = [];
-                            document.querySelectorAll('.stop-container').forEach((container, idx) => {
-                                            try {
-                                const latInput = document.getElementById('stop-latitude-' + idx);
-                                const lngInput = document.getElementById('stop-longitude-' + idx);
-                                if (latInput && lngInput && latInput.value && lngInput.value) {
-                                    stops.push({
-                                        latitude: latInput.value,
-                                        longitude: lngInput.value,
-                                        name: document.getElementById('stop-name-' + idx)?.value || `Stop ${idx + 1}`,
-                                        location_label: container.querySelector('input[wire\\:model*="location_label"]')?.value || '',
-                                        stay_duration_hours: container.querySelector('input[wire\\:model*="stay_duration_hours"]')?.value || '',
-                                        notes: container.querySelector('textarea[wire\\:model*="notes"]')?.value || ''
-                                    });
-                                }
-                                            } catch (err) {
-                                                // Silently ignore errors
-                                            }
-                            });
-                                        
-                                        if (stops.length > 0 && typeof window.drawPlannerStops === 'function') {
-                                            window.drawPlannerStops(stops, false);
-                                        }
-                                    } catch (err) {
-                                        // Silently ignore errors
+                                // Hide loading overlay if map is ready
+                                if (typeof mapReady !== 'undefined' && mapReady && typeof plannerMap !== 'undefined' && plannerMap) {
+                                    if (typeof window.forceHideMapLoading === 'function') {
+                                        window.forceHideMapLoading();
                                     }
-                                }, 300); // Delay map update to not block
+                                    // Also trigger the periodic check
+                                    if (typeof checkAndHideLoading === 'function') {
+                                        checkAndHideLoading();
+                                    }
+                                }
+                                
+                                // CRITICAL: Enable all buttons immediately, especially for newly added stops
+                                // Do this BEFORE reattaching handlers to ensure buttons are enabled
+                                if (typeof mapReady !== 'undefined' && mapReady && typeof plannerMap !== 'undefined' && plannerMap) {
+                                    document.querySelectorAll('.select-stop-btn').forEach(btn => {
+                                        // Remove disabled attribute and property
+                                        btn.disabled = false;
+                                        btn.removeAttribute('disabled');
+                                        btn.style.cursor = 'pointer';
+                                        btn.style.opacity = '1';
+                                        btn.style.pointerEvents = 'auto';
+                                        btn.title = 'Click to select this stop on the map';
+                                        
+                                        // Reset to default state if it's in selected state
+                                        if (btn.classList.contains('bg-indigo-600') || btn.textContent.includes('Selected')) {
+                                            btn.textContent = 'Select on Map';
+                                            btn.classList.remove('bg-indigo-600', 'text-white');
+                                            btn.classList.add('bg-indigo-50', 'text-indigo-700');
+                                        }
+                                    });
+                                    console.log('[MAP] ✓ All Select on Map buttons enabled after Livewire update');
+                                }
+                                
+                                // Reattach button handlers for new stops (do this after enabling)
+                                if (typeof window.setupSelectButtonHandlers === 'function') {
+                                    window.setupSelectButtonHandlers();
+                                }
+                                
+                                // Update button states using centralized function (as backup)
+                                if (typeof window.updateButtonStates === 'function') {
+                                    window.updateButtonStates();
+                                }
+                        
+                                // Use the global refreshMapStops function if available, otherwise use local function
+                                const updateMapWithStops = () => {
+                                    if (typeof window.refreshMapStops === 'function') {
+                                        console.log('[MAP] Using refreshMapStops function to update map');
+                                        window.refreshMapStops();
+                                    } else {
+                                        // Fallback to local implementation
+                                        try {
+                                            if (typeof window !== 'undefined' && window.skipLivewireRedraw) {
+                                                return;
+                                            }
+                                            
+                                            const stops = [];
+                                            document.querySelectorAll('.stop-container').forEach((container, idx) => {
+                                                try {
+                                                    const latInput = document.getElementById('stop-latitude-' + idx);
+                                                    const lngInput = document.getElementById('stop-longitude-' + idx);
+                                                    const lat = latInput?.value?.trim() || '';
+                                                    const lng = lngInput?.value?.trim() || '';
+                                                    
+                                                    if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+                                                        const stopName = document.getElementById('stop-name-' + idx)?.value?.trim() || `Stop ${idx + 1}`;
+                                                        stops.push({
+                                                            latitude: parseFloat(lat),
+                                                            longitude: parseFloat(lng),
+                                                            name: stopName,
+                                                            location_label: container.querySelector('input[wire\\:model*="location_label"]')?.value || '',
+                                                            stay_duration_hours: container.querySelector('input[wire\\:model*="stay_duration_hours"]')?.value || '',
+                                                            notes: container.querySelector('textarea[wire\\:model*="notes"]')?.value || ''
+                                                        });
+                                                    }
+                                                } catch (err) {
+                                                    console.warn('[MAP] Error reading stop data:', err);
+                                                }
+                                            });
+                                            
+                                            if (stops.length > 0 && typeof window.drawPlannerStops === 'function') {
+                                                console.log('[MAP] Drawing', stops.length, 'stops on map after Livewire update');
+                                                window.drawPlannerStops(stops, false);
+                                            } else if (stops.length === 0) {
+                                                console.log('[MAP] No stops with coordinates found to draw');
+                                            }
+                                        } catch (err) {
+                                            console.error('[MAP] Error updating map after Livewire update:', err);
+                                        }
+                                    }
+                                };
+                                
+                                // Update map if needed - but do it asynchronously with delay
+                                setTimeout(updateMapWithStops, 500); // First attempt
+                                setTimeout(updateMapWithStops, 1500); // Second attempt in case DOM not ready
+                                setTimeout(updateMapWithStops, 3000); // Final attempt
                             } catch (err) {
                                 // Silently ignore errors - don't block Livewire
                             }
                         }, 0);
                     });
-                    
-                    // Manual loading state management - full control
-                    function showAddStopLoading() {
-                        const btn = document.getElementById('add-stop-btn');
-                        const text = document.getElementById('add-stop-text');
-                        const loading = document.getElementById('add-stop-loading');
-                        if (btn && text && loading) {
-                            btn.disabled = true;
-                            btn.classList.add('opacity-50');
-                            text.classList.add('hidden');
-                            loading.classList.remove('hidden');
-                            }
-                    }
-                    
-                    function hideAddStopLoading() {
-                        const btn = document.getElementById('add-stop-btn');
-                        const text = document.getElementById('add-stop-text');
-                        const loading = document.getElementById('add-stop-loading');
-                        if (btn && text && loading) {
-                            btn.disabled = false;
-                            btn.classList.remove('opacity-50');
-                            text.classList.remove('hidden');
-                            loading.classList.add('hidden');
-                        }
-                    }
-                    
-                    // Show loading when button is clicked
-                    const addStopBtn = document.getElementById('add-stop-btn');
-                    if (addStopBtn) {
-                        addStopBtn.addEventListener('click', function() {
-                            showAddStopLoading();
-                            // Force clear after 2 seconds as fallback
-                            setTimeout(hideAddStopLoading, 2000);
-                    });
-                    }
-                    
-                    // Clear loading on all Livewire completion events
-                    document.addEventListener('livewire:commit', hideAddStopLoading);
-                    document.addEventListener('livewire:message', hideAddStopLoading);
-                    document.addEventListener('livewire:update', hideAddStopLoading);
-                    
-                    // Also clear on morph completion
-                    if (typeof Livewire !== 'undefined') {
-                        document.addEventListener('livewire:init', () => {
-                            Livewire.hook('morph', ({ component }) => {
-                                setTimeout(hideAddStopLoading, 50);
-                            });
-                        });
-                    }
                 }
             }
         })();
+        
+        // CRITICAL: Define refreshMapStops OUTSIDE IIFE to ensure it's always available
+        // This MUST execute immediately
+        try {
+            console.log('[MAP] ========================================');
+            console.log('[MAP] ===== DEFINING refreshMapStops OUTSIDE IIFE =====');
+            console.log('[MAP] ========================================');
+            console.log('[MAP] Current refreshMapStops before delete:', typeof window.refreshMapStops);
+        
+        // Delete stub first to ensure clean replacement
+        if (window.refreshMapStops) {
+            const oldFunc = window.refreshMapStops.toString().substring(0, 100);
+            console.log('[MAP] Deleting old function (preview):', oldFunc);
+            delete window.refreshMapStops;
+        }
+        
+        // Define full implementation in global scope - FORCE assignment
+        window.refreshMapStops = function refreshMapStopsGlobal() {
+            console.log('[MAP] ========================================');
+            console.log('[MAP] refreshMapStops FULL IMPLEMENTATION (GLOBAL) called');
+            console.log('[MAP] ========================================');
+            
+            if (!plannerMap || typeof mapboxgl === 'undefined') {
+                console.warn('[MAP] Map not ready, cannot refresh stops. plannerMap:', !!plannerMap, 'mapboxgl:', typeof mapboxgl);
+                setTimeout(() => {
+                    if (plannerMap && typeof mapboxgl !== 'undefined') {
+                        console.log('[MAP] Retrying refreshMapStops after map is ready');
+                        window.refreshMapStops();
+                    }
+                }, 1000);
+                return;
+            }
+            
+            if (!plannerMap.loaded()) {
+                console.warn('[MAP] Map not loaded yet, waiting...');
+                plannerMap.once('load', () => {
+                    console.log('[MAP] Map loaded, retrying refreshMapStops');
+                    window.refreshMapStops();
+                });
+                return;
+            }
+            
+            const stops = [];
+            const stopContainers = document.querySelectorAll('.stop-container');
+            console.log('[MAP] Found', stopContainers.length, 'stop containers in DOM');
+            
+            stopContainers.forEach((container, idx) => {
+                try {
+                    const latInput = document.getElementById('stop-latitude-' + idx);
+                    const lngInput = document.getElementById('stop-longitude-' + idx);
+                    const nameInput = document.getElementById('stop-name-' + idx);
+                    
+                    const lat = latInput?.value?.trim() || '';
+                    const lng = lngInput?.value?.trim() || '';
+                    const name = nameInput?.value?.trim() || `Stop ${idx + 1}`;
+                    
+                    if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+                        const latNum = parseFloat(lat);
+                        const lngNum = parseFloat(lng);
+                        
+                        if (latNum >= -90 && latNum <= 90 && lngNum >= -180 && lngNum <= 180) {
+                            const locationLabel = container.querySelector('input[wire\\:model*="location_label"]')?.value || '';
+                            const stayDuration = container.querySelector('input[wire\\:model*="stay_duration_hours"]')?.value || '';
+                            const notes = container.querySelector('textarea[wire\\:model*="notes"]')?.value || '';
+                            
+                            stops.push({
+                                latitude: latNum,
+                                longitude: lngNum,
+                                name: name,
+                                location_label: locationLabel,
+                                stay_duration_hours: stayDuration,
+                                notes: notes
+                            });
+                            
+                            console.log('[MAP] ✓ Added stop', idx + 1, ':', name, 'at', latNum, ',', lngNum);
+                        }
+                    }
+                } catch (err) {
+                    console.error('[MAP] Error reading stop', idx, ':', err);
+                }
+            });
+            
+            console.log('[MAP] Total stops collected:', stops.length);
+            
+            if (stops.length > 0) {
+                console.log('[MAP] Refreshing map with', stops.length, 'stops');
+                if (typeof window.drawPlannerStops === 'function') {
+                    window.drawPlannerStops(stops, false);
+                } else {
+                    console.error('[MAP] ✗ drawPlannerStops function not available');
+                }
+            } else {
+                console.warn('[MAP] ⚠ No stops with valid coordinates found in DOM');
+            }
+        };
+        
+        console.log('[MAP] ✓ refreshMapStops defined in global scope');
+        console.log('[MAP] refreshMapStops type:', typeof window.refreshMapStops);
+        
+        // Verify it's not a stub
+        const funcStr = window.refreshMapStops.toString();
+        const isStub = funcStr.includes('stub') || funcStr.includes('placeholder') || funcStr.includes('waiting for full');
+        console.log('[MAP] refreshMapStops is stub:', isStub);
+        if (isStub) {
+            console.error('[MAP] ✗ ERROR: refreshMapStops is still a stub after definition!');
+            console.error('[MAP] Function preview:', funcStr.substring(0, 200));
+        } else {
+            console.log('[MAP] ✓ SUCCESS: refreshMapStops is the full implementation');
+        }
+        
+        // Force call after a delay to test
+        setTimeout(() => {
+            if (typeof mapReady !== 'undefined' && mapReady) {
+                console.log('[MAP] Testing refreshMapStops after 2 seconds');
+                try {
+                    window.refreshMapStops();
+                } catch(e) {
+                    console.error('[MAP] Error calling refreshMapStops:', e);
+                }
+            }
+        }, 2000);
+        } catch(e) {
+            console.error('[MAP] ✗ ERROR defining refreshMapStops outside IIFE:', e);
+            console.error('[MAP] Error stack:', e.stack);
+        }
     </script>
 @endpush
 
