@@ -2,7 +2,7 @@
     use Illuminate\Support\Facades\Storage;
 @endphp
 
-<div class="py-10">
+<div class="py-10 route-planner-component">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
         <div class="bg-white shadow rounded-lg p-6 space-y-4">
             <div class="flex items-center justify-between">
@@ -120,7 +120,7 @@
                         </div>
                     </div>
 
-                    <div class="space-y-4" wire:key="stops-list">
+                    <div class="space-y-4" wire:key="route-planner-stops-list">
                         <div class="flex items-center justify-between">
                             <h2 class="text-lg font-semibold text-gray-800">Stops</h2>
                             <button type="button" 
@@ -581,6 +581,8 @@
 @push('scripts')
     <!-- Mapbox GL JS -->
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
     <script>
         // Immediate check to verify Mapbox loaded and trigger initialization
         function triggerMapInitWhenReady() {
@@ -865,8 +867,11 @@
                 if (typeof Livewire !== 'undefined' && typeof window.Livewire !== 'undefined') {
                     try {
                         // Find the Livewire component
-                        const component = Livewire.find(latInput.closest('[wire\\:id]')?.getAttribute('wire:id') || 
-                            document.querySelector('[wire\\:id]')?.getAttribute('wire:id'));
+                        // Find the RoutePlanner component specifically (not navigation-menu)
+                        const routePlannerEl = latInput.closest('.route-planner-component');
+                        const wireId = routePlannerEl?.querySelector('[wire\\:id]')?.getAttribute('wire:id') || 
+                            routePlannerEl?.closest('[wire\\:id]')?.getAttribute('wire:id');
+                        const component = wireId ? Livewire.find(wireId) : null;
                         
                         if (component) {
                             // Use Livewire's $wire API to update values directly
@@ -938,8 +943,11 @@
                                 if (typeof Livewire !== 'undefined' && typeof window.Livewire !== 'undefined') {
                                     try {
                                         // Find the Livewire component
-                                        const component = Livewire.find(nameInput.closest('[wire\\:id]')?.getAttribute('wire:id') || 
-                                            document.querySelector('[wire\\:id]')?.getAttribute('wire:id'));
+                                        // Find the RoutePlanner component specifically (not navigation-menu)
+                                        const routePlannerEl = nameInput.closest('.route-planner-component');
+                                        const wireId = routePlannerEl?.querySelector('[wire\\:id]')?.getAttribute('wire:id') || 
+                                            routePlannerEl?.closest('[wire\\:id]')?.getAttribute('wire:id');
+                                        const component = wireId ? Livewire.find(wireId) : null;
                                         
                                         if (component) {
                                             // Use Livewire's $wire API to update name directly
@@ -972,8 +980,11 @@
                                     // Trigger Livewire updates
                                     if (typeof Livewire !== 'undefined' && typeof window.Livewire !== 'undefined') {
                                         try {
-                                            const component = Livewire.find(nameInput.closest('[wire\\:id]')?.getAttribute('wire:id') || 
-                                                document.querySelector('[wire\\:id]')?.getAttribute('wire:id'));
+                                            // Find the RoutePlanner component specifically (not navigation-menu)
+                                            const routePlannerEl = nameInput.closest('.route-planner-component');
+                                            const wireId = routePlannerEl?.querySelector('[wire\\:id]')?.getAttribute('wire:id') || 
+                                                routePlannerEl?.closest('[wire\\:id]')?.getAttribute('wire:id');
+                                            const component = wireId ? Livewire.find(wireId) : null;
                                             if (component) {
                                                 component.set(`stops.${index}.name`, defaultName);
                                             }
@@ -2079,6 +2090,106 @@
                 plannerMap.once('load', function() {
                     console.log('[MAP] ✓ Map "load" event fired');
                     completeMapInit();
+                    
+                    // Add Mapbox Geocoder search control
+                    if (typeof MapboxGeocoder !== 'undefined') {
+                        const geocoder = new MapboxGeocoder({
+                            accessToken: mapboxgl.accessToken,
+                            mapboxgl: mapboxgl,
+                            marker: false, // Don't add a marker automatically
+                            placeholder: 'Search for a location...',
+                            proximity: {
+                                longitude: plannerMap.getCenter().lng,
+                                latitude: plannerMap.getCenter().lat
+                            }
+                        });
+                        
+                        // Add geocoder to the map (top-right position)
+                        plannerMap.addControl(geocoder, 'top-right');
+                        console.log('[MAP] ✓ Geocoder search control added to top-right');
+                        
+                        // Handle geocoder result - when user selects a location
+                        geocoder.on('result', function(e) {
+                            console.log('[MAP] Geocoder result:', e.result);
+                            const result = e.result;
+                            const coordinates = result.geometry.coordinates; // [lng, lat]
+                            const placeName = result.place_name || result.text || 'Selected Location';
+                            
+                            // If a stop is currently selected, update its coordinates
+                            if (typeof selectedStopIndex !== 'undefined' && selectedStopIndex !== null) {
+                                console.log('[MAP] Updating stop', selectedStopIndex, 'with geocoder result');
+                                const latInput = document.getElementById('stop-latitude-' + selectedStopIndex);
+                                const lngInput = document.getElementById('stop-longitude-' + selectedStopIndex);
+                                const nameInput = document.getElementById('stop-name-' + selectedStopIndex);
+                                
+                                if (latInput) {
+                                    latInput.value = coordinates[1]; // latitude
+                                    if (latInput.dispatchEvent) {
+                                        latInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                        latInput.dispatchEvent(new Event('change', { bubbles: true }));
+                                    }
+                                }
+                                
+                                if (lngInput) {
+                                    lngInput.value = coordinates[0]; // longitude
+                                    if (lngInput.dispatchEvent) {
+                                        lngInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                        lngInput.dispatchEvent(new Event('change', { bubbles: true }));
+                                    }
+                                }
+                                
+                                if (nameInput) {
+                                    nameInput.value = placeName;
+                                    if (nameInput.dispatchEvent) {
+                                        nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                        nameInput.dispatchEvent(new Event('change', { bubbles: true }));
+                                    }
+                                }
+                                
+                                // Update Livewire model - target RoutePlanner component specifically
+                                if (typeof Livewire !== 'undefined' && typeof Livewire.find !== 'undefined') {
+                                    // Find the RoutePlanner component specifically (not navigation-menu)
+                                    const routePlannerEl = document.querySelector('.route-planner-component');
+                                    const wireId = routePlannerEl?.querySelector('[wire\\:id]')?.getAttribute('wire:id') || 
+                                        routePlannerEl?.closest('[wire\\:id]')?.getAttribute('wire:id');
+                                    const component = wireId ? Livewire.find(wireId) : null;
+                                    if (component) {
+                                        component.set('stops.' + selectedStopIndex + '.latitude', coordinates[1].toString());
+                                        component.set('stops.' + selectedStopIndex + '.longitude', coordinates[0].toString());
+                                        component.set('stops.' + selectedStopIndex + '.name', placeName);
+                                    }
+                                }
+                                
+                                // Move map to selected location
+                                plannerMap.flyTo({
+                                    center: coordinates,
+                                    zoom: 12,
+                                    duration: 1000
+                                });
+                                
+                                // Draw/update stops on map
+                                if (typeof window.refreshMapStops === 'function') {
+                                    setTimeout(() => {
+                                        window.refreshMapStops();
+                                    }, 300);
+                                }
+                            } else {
+                                // No stop selected - just move map to location
+                                plannerMap.flyTo({
+                                    center: coordinates,
+                                    zoom: 12,
+                                    duration: 1000
+                                });
+                            }
+                        });
+                        
+                        // Handle geocoder errors
+                        geocoder.on('error', function(e) {
+                            console.error('[MAP] Geocoder error:', e.error);
+                        });
+                    } else {
+                        console.warn('[MAP] MapboxGeocoder not available - geocoder control not added');
+                    }
                     
                     // Also try to draw stops immediately when map loads
                     setTimeout(() => {
