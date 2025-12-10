@@ -40,6 +40,9 @@
                             </button>
                         @endfor
                     </div>
+                    @if($overall_rating)
+                        <p class="text-xs text-gray-500 mt-1">{{ $overall_rating }} Star{{ $overall_rating > 1 ? 's' : '' }}</p>
+                    @endif
                     @error('overall_rating') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                 </div>
 
@@ -63,30 +66,48 @@
                 <div class="grid md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Management Rating</label>
-                        <select wire:model="management_rating" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                            <option value="">N/A</option>
+                        <div class="flex gap-1">
                             @for($i = 1; $i <= 5; $i++)
-                                <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
+                                <button type="button" wire:click="$set('management_rating', {{ $i }})" class="focus:outline-none">
+                                    <svg class="w-8 h-8 {{ ($management_rating && $i <= $management_rating) ? 'text-yellow-500 fill-current' : 'text-gray-300' }}" viewBox="0 0 20 20">
+                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
+                                    </svg>
+                                </button>
                             @endfor
-                        </select>
+                        </div>
+                        @if($management_rating)
+                            <p class="text-xs text-gray-500 mt-1">{{ $management_rating }} Star{{ $management_rating > 1 ? 's' : '' }}</p>
+                        @endif
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Working Conditions</label>
-                        <select wire:model="working_conditions_rating" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                            <option value="">N/A</option>
+                        <div class="flex gap-1">
                             @for($i = 1; $i <= 5; $i++)
-                                <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
+                                <button type="button" wire:click="$set('working_conditions_rating', {{ $i }})" class="focus:outline-none">
+                                    <svg class="w-8 h-8 {{ ($working_conditions_rating && $i <= $working_conditions_rating) ? 'text-yellow-500 fill-current' : 'text-gray-300' }}" viewBox="0 0 20 20">
+                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
+                                    </svg>
+                                </button>
                             @endfor
-                        </select>
+                        </div>
+                        @if($working_conditions_rating)
+                            <p class="text-xs text-gray-500 mt-1">{{ $working_conditions_rating }} Star{{ $working_conditions_rating > 1 ? 's' : '' }}</p>
+                        @endif
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Compensation</label>
-                        <select wire:model="compensation_rating" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                            <option value="">N/A</option>
+                        <div class="flex gap-1">
                             @for($i = 1; $i <= 5; $i++)
-                                <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
+                                <button type="button" wire:click="$set('compensation_rating', {{ $i }})" class="focus:outline-none">
+                                    <svg class="w-8 h-8 {{ ($compensation_rating && $i <= $compensation_rating) ? 'text-yellow-500 fill-current' : 'text-gray-300' }}" viewBox="0 0 20 20">
+                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
+                                    </svg>
+                                </button>
                             @endfor
-                        </select>
+                        </div>
+                        @if($compensation_rating)
+                            <p class="text-xs text-gray-500 mt-1">{{ $compensation_rating }} Star{{ $compensation_rating > 1 ? 's' : '' }}</p>
+                        @endif
                     </div>
                 </div>
 
@@ -106,11 +127,22 @@
                     <input type="text" wire:model="position_held" placeholder="e.g., Deckhand, Chef, Engineer" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <label class="flex items-center">
-                        <input type="checkbox" wire:model="would_recommend" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700">Would you recommend this yacht?</span>
-                    </label>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Would you recommend this yacht? *</label>
+                    <div class="flex gap-6">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="would_recommend" wire:model="would_recommend" value="1" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer">
+                            <span class="ml-2 text-sm text-gray-700">Yes</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="would_recommend" wire:model="would_recommend" value="0" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer">
+                            <span class="ml-2 text-sm text-gray-700">No</span>
+                        </label>
+                    </div>
+                    @error('would_recommend') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="flex items-center">
                     <label class="flex items-center">
                         <input type="checkbox" wire:model="is_anonymous" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                         <span class="ml-2 text-sm text-gray-700">Post anonymously</span>

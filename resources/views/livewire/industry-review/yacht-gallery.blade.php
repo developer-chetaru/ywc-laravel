@@ -1,8 +1,25 @@
 @php
-    // Prepare gallery images with proper URLs
-    $galleryImages = $yacht->gallery->filter(function($img) {
+    // Available category labels
+    $categoryLabels = [
+        'exterior' => 'Exterior',
+        'interior' => 'Interior',
+        'deck' => 'Deck',
+        'cabins' => 'Cabins',
+        'salon' => 'Salon',
+        'dining' => 'Dining',
+        'galley' => 'Galley',
+        'engine_room' => 'Engine Room',
+        'watersports' => 'Watersports Equipment',
+        'other' => 'Other',
+    ];
+    
+    // Prepare gallery images with proper URLs and group by category
+    $galleryByCategory = [];
+    $allImages = [];
+    
+    $yacht->gallery->filter(function($img) {
         return !empty($img->image_path);
-    })->map(function($img) {
+    })->each(function($img) use (&$galleryByCategory, &$allImages, $categoryLabels) {
         $url = null;
         if ($img->image_path) {
             if (str_starts_with($img->image_path, 'http')) {
@@ -11,19 +28,45 @@
                 $url = asset('storage/' . $img->image_path);
             }
         }
-        return [
-            'url' => $url,
-            'caption' => $img->caption ?? ''
-        ];
-    })->filter(function($img) {
-        return !empty($img['url']);
-    })->values();
+        
+        if ($url) {
+            $category = $img->category ?? 'other';
+            $categoryName = $categoryLabels[$category] ?? ucfirst($category);
+            
+            if (!isset($galleryByCategory[$category])) {
+                $galleryByCategory[$category] = [
+                    'name' => $categoryName,
+                    'images' => []
+                ];
+            }
+            
+            $imageData = [
+                'id' => $img->id,
+                'url' => $url,
+                'caption' => $img->caption ?? '',
+                'category' => $category,
+            ];
+            
+            $galleryByCategory[$category]['images'][] = $imageData;
+            $allImages[] = $imageData;
+        }
+    });
+    
+    // Sort categories by predefined order
+    $categoryOrder = array_keys($categoryLabels);
+    uksort($galleryByCategory, function($a, $b) use ($categoryOrder) {
+        $posA = array_search($a, $categoryOrder);
+        $posB = array_search($b, $categoryOrder);
+        if ($posA === false) $posA = 999;
+        if ($posB === false) $posB = 999;
+        return $posA <=> $posB;
+    });
 @endphp
 
 <div class="py-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen" x-data="{ 
     selectedImage: null,
     currentIndex: 0,
-    images: @js($galleryImages->toArray())
+    images: @js($allImages)
 }">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         {{-- Back Button --}}
@@ -37,76 +80,44 @@
         <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
             <h1 class="text-3xl font-bold text-gray-900 mb-6">Photo Gallery - {{ $yacht->name }}</h1>
             
-            @if($galleryImages->count() > 0)
-                {{-- Main Gallery Layout: Large image on left, smaller images on right --}}
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-                    {{-- Large Main Image (Left) --}}
-                    @if($galleryImages->count() > 0)
-                        <div class="lg:col-span-2 relative group cursor-pointer" @click="selectedImage = 0; currentIndex = 0">
-                            <div class="relative w-full h-[400px] sm:h-[500px] lg:h-[600px] rounded-lg overflow-hidden shadow-lg">
-                                <img src="{{ $galleryImages[0]['url'] }}" 
-                                     alt="{{ $galleryImages[0]['caption'] ?? 'Gallery image' }}" 
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                     onerror="this.style.display='none'">
-                                <div class="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-lg shadow-xl">
-                                    <p class="text-sm font-semibold text-gray-900">
-                                        +{{ $galleryImages->count() }} {{ $galleryImages->count() === 1 ? 'Photo' : 'Photos' }}
-                                    </p>
-                                </div>
-                            </div>
+            @if(count($allImages) > 0)
+                @php
+                    $imageIndex = 0;
+                @endphp
+                {{-- Display images grouped by category/label --}}
+                @foreach($galleryByCategory as $categoryKey => $categoryData)
+                    <div class="mb-8 last:mb-0">
+                        {{-- Category Header --}}
+                        <div class="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-200">
+                            <h2 class="text-xl font-semibold text-gray-800 uppercase tracking-wide">
+                                {{ $categoryData['name'] }}
+                            </h2>
+                            <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                {{ count($categoryData['images']) }} {{ count($categoryData['images']) === 1 ? 'Photo' : 'Photos' }}
+                            </span>
                         </div>
-                    @endif
-
-                    {{-- Smaller Images Stacked (Right) --}}
-                    <div class="lg:col-span-1 space-y-4">
-                        @if($galleryImages->count() > 1)
-                            <div class="relative group cursor-pointer" @click="selectedImage = 1; currentIndex = 1">
-                                <div class="relative w-full h-[240px] sm:h-[280px] lg:h-[290px] rounded-lg overflow-hidden shadow-md">
-                                    <img src="{{ $galleryImages[1]['url'] }}" 
-                                         alt="{{ $galleryImages[1]['caption'] ?? 'Gallery image' }}" 
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                         onerror="this.style.display='none'">
-                                </div>
-                            </div>
-                        @endif
-                        @if($galleryImages->count() > 2)
-                            <div class="relative group cursor-pointer" @click="selectedImage = 2; currentIndex = 2">
-                                <div class="relative w-full h-[240px] sm:h-[280px] lg:h-[290px] rounded-lg overflow-hidden shadow-md">
-                                    <img src="{{ $galleryImages[2]['url'] }}" 
-                                         alt="{{ $galleryImages[2]['caption'] ?? 'Gallery image' }}" 
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                         onerror="this.style.display='none'">
-                                    @if($galleryImages->count() > 3)
-                                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg backdrop-blur-sm">
-                                            <p class="text-white text-lg font-semibold">
-                                                +{{ $galleryImages->count() - 3 }} More
-                                            </p>
-                                        </div>
+                        
+                        {{-- Images Grid for this Category --}}
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            @foreach($categoryData['images'] as $image)
+                                <div class="group cursor-pointer relative" 
+                                     @click="selectedImage = {{ $imageIndex }}; currentIndex = {{ $imageIndex }}">
+                                    <div class="relative w-full h-48 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+                                        <img src="{{ $image['url'] }}" 
+                                             alt="{{ $image['caption'] ?? 'Gallery image' }}" 
+                                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                             onerror="this.style.display='none'">
+                                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
+                                    </div>
+                                    @if($image['caption'])
+                                        <p class="mt-2 text-xs text-gray-600 font-medium line-clamp-2">{{ $image['caption'] }}</p>
                                     @endif
                                 </div>
-                            </div>
-                        @endif
+                                @php $imageIndex++; @endphp
+                            @endforeach
+                        </div>
                     </div>
-                </div>
-
-                {{-- Remaining Images Grid (if more than 3 images) --}}
-                @if($galleryImages->count() > 3)
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        @foreach($galleryImages->slice(3) as $index => $image)
-                            <div class="group cursor-pointer" @click="selectedImage = {{ $index + 3 }}; currentIndex = {{ $index + 3 }}">
-                                <div class="relative w-full h-48 rounded-lg overflow-hidden">
-                                    <img src="{{ $image['url'] }}" 
-                                         alt="{{ $image['caption'] ?? 'Gallery image' }}" 
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                         onerror="this.style.display='none'">
-                                </div>
-                                @if($image['caption'])
-                                    <p class="mt-2 text-sm text-gray-600 font-medium">{{ $image['caption'] }}</p>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
+                @endforeach
             @else
                 <div class="text-center py-12">
                     <p class="text-gray-500">No gallery images available.</p>

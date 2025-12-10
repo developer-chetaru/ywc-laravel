@@ -40,9 +40,25 @@ class YachtForm extends Component
     public $gallery_images = [];
     public $gallery_previews = [];
     public $gallery_captions = []; // Captions for new images
+    public $gallery_labels = []; // Labels/categories for new images
     public $existing_gallery = [];
     public $existing_gallery_captions = []; // Captions for existing images
+    public $existing_gallery_labels = []; // Labels/categories for existing images
     public $gallery_to_delete = [];
+    
+    // Available gallery labels/categories
+    public $available_labels = [
+        'exterior' => 'Exterior',
+        'interior' => 'Interior',
+        'deck' => 'Deck',
+        'cabins' => 'Cabins',
+        'salon' => 'Salon',
+        'dining' => 'Dining',
+        'galley' => 'Galley',
+        'engine_room' => 'Engine Room',
+        'watersports' => 'Watersports Equipment',
+        'other' => 'Other',
+    ];
 
     public $loading = false;
     public $message = '';
@@ -134,9 +150,10 @@ class YachtForm extends Component
                 return !empty($item['url']);
             })->values()->toArray();
             
-            // Load existing gallery captions
+            // Load existing gallery captions and labels
             foreach ($this->existing_gallery as $item) {
                 $this->existing_gallery_captions[$item['id']] = $item['caption'] ?? '';
+                $this->existing_gallery_labels[$item['id']] = $item['category'] ?? 'other';
             }
         } catch (\Exception $e) {
             $this->error = 'Error: ' . $e->getMessage();
@@ -162,6 +179,10 @@ class YachtForm extends Component
                 if (!isset($this->gallery_captions[$index])) {
                     $this->gallery_captions[$index] = '';
                 }
+                // Initialize label if not set
+                if (!isset($this->gallery_labels[$index])) {
+                    $this->gallery_labels[$index] = 'other';
+                }
             }
         }
     }
@@ -179,6 +200,10 @@ class YachtForm extends Component
         if (isset($this->gallery_captions[$index])) {
             unset($this->gallery_captions[$index]);
             $this->gallery_captions = array_values($this->gallery_captions);
+        }
+        if (isset($this->gallery_labels[$index])) {
+            unset($this->gallery_labels[$index]);
+            $this->gallery_labels = array_values($this->gallery_labels);
         }
     }
 
@@ -271,12 +296,16 @@ class YachtForm extends Component
 
     protected function saveGalleryImages($yacht)
     {
-        // Update existing gallery captions
+        // Update existing gallery captions and labels
         foreach ($this->existing_gallery as $item) {
             $galleryItem = YachtGallery::find($item['id']);
             if ($galleryItem && $galleryItem->yacht_id == $yacht->id) {
                 $caption = $this->existing_gallery_captions[$item['id']] ?? '';
-                $galleryItem->update(['caption' => $caption]);
+                $category = $this->existing_gallery_labels[$item['id']] ?? 'other';
+                $galleryItem->update([
+                    'caption' => $caption,
+                    'category' => $category,
+                ]);
             }
         }
 
@@ -299,11 +328,12 @@ class YachtForm extends Component
             if ($image) {
                 $path = $image->store('yachts/gallery', 'public');
                 $caption = $this->gallery_captions[$index] ?? '';
+                $category = $this->gallery_labels[$index] ?? 'other';
                 YachtGallery::create([
                     'yacht_id' => $yacht->id,
                     'image_path' => $path,
                     'caption' => $caption,
-                    'category' => 'other',
+                    'category' => $category,
                     'order' => $maxOrder + $index + 1,
                     'is_primary' => false,
                 ]);

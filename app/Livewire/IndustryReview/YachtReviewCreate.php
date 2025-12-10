@@ -36,7 +36,7 @@ class YachtReviewCreate extends Component
     public $crew_welfare_rating = null;
     public $yacht_condition_rating = null;
     public $career_development_rating = null;
-    public $would_recommend = true;
+    public $would_recommend = null; // null = not selected, 1 = yes, 0 = no
     public $is_anonymous = false;
     public $work_start_date = null;
     public $work_end_date = null;
@@ -61,7 +61,7 @@ class YachtReviewCreate extends Component
         'crew_welfare_rating' => 'nullable|integer|min:1|max:5',
         'yacht_condition_rating' => 'nullable|integer|min:1|max:5',
         'career_development_rating' => 'nullable|integer|min:1|max:5',
-        'would_recommend' => 'boolean',
+        'would_recommend' => 'required',
         'is_anonymous' => 'boolean',
         'work_start_date' => 'nullable|date',
         'work_end_date' => 'nullable|date|after_or_equal:work_start_date',
@@ -104,7 +104,7 @@ class YachtReviewCreate extends Component
         $this->crew_welfare_rating = $review->crew_welfare_rating;
         $this->yacht_condition_rating = $review->yacht_condition_rating;
         $this->career_development_rating = $review->career_development_rating;
-        $this->would_recommend = $review->would_recommend;
+        $this->would_recommend = $review->would_recommend ? 1 : 0;
         $this->is_anonymous = $review->is_anonymous;
         $this->work_start_date = $review->work_start_date?->format('Y-m-d');
         $this->work_end_date = $review->work_end_date?->format('Y-m-d');
@@ -116,6 +116,12 @@ class YachtReviewCreate extends Component
 
     public function save()
     {
+        // Custom validation for would_recommend (must be 0 or 1)
+        if ($this->would_recommend === null || (!in_array($this->would_recommend, [0, 1, '0', '1'], true))) {
+            $this->addError('would_recommend', 'Please select whether you would recommend this yacht (Yes or No).');
+            return;
+        }
+        
         $this->validate();
 
         $user = Auth::user();
@@ -150,7 +156,8 @@ class YachtReviewCreate extends Component
         $review->crew_welfare_rating = $this->crew_welfare_rating;
         $review->yacht_condition_rating = $this->yacht_condition_rating;
         $review->career_development_rating = $this->career_development_rating;
-        $review->would_recommend = $this->would_recommend;
+        // Convert to boolean: '1' or 1 = true, '0' or 0 = false
+        $review->would_recommend = $this->would_recommend === 1 || $this->would_recommend === '1';
         $review->is_anonymous = $this->is_anonymous;
         $review->work_start_date = $this->work_start_date;
         $review->work_end_date = $this->work_end_date;
