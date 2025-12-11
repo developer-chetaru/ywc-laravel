@@ -54,6 +54,143 @@ use Stripe\Checkout\Session as CheckoutSession;
 Route::get('/', [LandingPageController::class, 'index'])->name('landing');
 Route::post('/waitlist/join', [LandingPageController::class, 'joinWaitlist'])->name('waitlist.join');
 
+// Test route for financial-planning (public access - no auth required)
+Route::get('/test-financial', function () {
+    // Force session to load
+    session()->save();
+    return view('test-financial');
+})->name('test-financial');
+
+// Financial Future Planning - Public route (accessible to all)
+Route::get('/financial-future-planning', function () {
+    // Redirect logged-in users to dashboard, guests to calculators
+    if (Auth::check()) {
+        return redirect()->route('financial.dashboard');
+    }
+    return redirect()->route('financial.calculators.index');
+})->name('financial-future-planning');
+
+// Financial Planning Calculators (Public - No login required)
+use App\Livewire\FinancialPlanning\CalculatorsIndex;
+use App\Livewire\FinancialPlanning\RetirementNeedsCalculator;
+use App\Livewire\FinancialPlanning\CompoundInterestCalculator;
+use App\Livewire\FinancialPlanning\PensionGrowthCalculator;
+use App\Livewire\FinancialPlanning\FourPercentRuleCalculator;
+use App\Livewire\FinancialPlanning\CostOfWaitingCalculator;
+use App\Livewire\FinancialPlanning\FireCalculator;
+use App\Livewire\FinancialPlanning\InvestmentReturnProjector;
+use App\Livewire\FinancialPlanning\AssetAllocationAnalyzer;
+use App\Livewire\FinancialPlanning\PortfolioRiskCalculator;
+use App\Livewire\FinancialPlanning\DCASimulator;
+use App\Livewire\FinancialPlanning\DividendIncomeCalculator;
+use App\Livewire\FinancialPlanning\YachtCrewBudgetCalculator;
+use App\Livewire\FinancialPlanning\EmergencyFundCalculator;
+use App\Livewire\FinancialPlanning\SavingsRateCalculator;
+use App\Livewire\FinancialPlanning\TimeOffExpensePlanner;
+use App\Livewire\FinancialPlanning\DebtPayoffCalculator;
+use App\Livewire\FinancialPlanning\MortgageAffordabilityCalculator;
+use App\Livewire\FinancialPlanning\BuyVsRentCalculator;
+use App\Livewire\FinancialPlanning\RentalPropertyAnalyzer;
+use App\Livewire\FinancialPlanning\PropertyAppreciationCalculator;
+use App\Livewire\FinancialPlanning\RealEstateROICalculator;
+use App\Livewire\FinancialPlanning\IncomeTaxEstimator;
+use App\Livewire\FinancialPlanning\TaxEfficientWithdrawalCalculator;
+use App\Livewire\FinancialPlanning\CapitalGainsTaxCalculator;
+use App\Livewire\FinancialPlanning\FinancialDashboard;
+
+// Financial Planning Calculators - PUBLIC ACCESS (no auth required)
+// These must be registered BEFORE the auth middleware group to allow guest access
+Route::prefix('financial-planning')->name('financial.')
+    ->group(function () {
+    
+    // Calculators index - accessible to both guests and logged-in users  
+    Route::get('/calculators', CalculatorsIndex::class)->name('calculators.index');
+    
+    // Retirement & Pension
+    Route::get('/calculators/retirement-needs', RetirementNeedsCalculator::class)->name('calculators.retirement-needs');
+    Route::get('/calculators/pension-growth', PensionGrowthCalculator::class)->name('calculators.pension-growth');
+    Route::get('/calculators/four-percent-rule', FourPercentRuleCalculator::class)->name('calculators.four-percent-rule');
+    Route::get('/calculators/cost-of-waiting', CostOfWaitingCalculator::class)->name('calculators.cost-of-waiting');
+    Route::get('/calculators/fire', FireCalculator::class)->name('calculators.fire');
+    
+    // Investment
+    Route::get('/calculators/compound-interest', CompoundInterestCalculator::class)->name('calculators.compound-interest');
+    Route::get('/calculators/investment-return', InvestmentReturnProjector::class)->name('calculators.investment-return');
+    Route::get('/calculators/asset-allocation', AssetAllocationAnalyzer::class)->name('calculators.asset-allocation');
+    Route::get('/calculators/portfolio-risk', PortfolioRiskCalculator::class)->name('calculators.portfolio-risk');
+    Route::get('/calculators/dca-simulator', DCASimulator::class)->name('calculators.dca-simulator');
+    Route::get('/calculators/dividend-income', DividendIncomeCalculator::class)->name('calculators.dividend-income');
+    
+    // Savings & Budget
+    Route::get('/calculators/yacht-crew-budget', YachtCrewBudgetCalculator::class)->name('calculators.yacht-crew-budget');
+    Route::get('/calculators/emergency-fund', EmergencyFundCalculator::class)->name('calculators.emergency-fund');
+    Route::get('/calculators/savings-rate', SavingsRateCalculator::class)->name('calculators.savings-rate');
+    Route::get('/calculators/time-off-expense', TimeOffExpensePlanner::class)->name('calculators.time-off-expense');
+    
+    // Debt & Loans
+    Route::get('/calculators/debt-payoff', DebtPayoffCalculator::class)->name('calculators.debt-payoff');
+    Route::get('/calculators/mortgage-affordability', MortgageAffordabilityCalculator::class)->name('calculators.mortgage-affordability');
+    Route::get('/calculators/buy-vs-rent', BuyVsRentCalculator::class)->name('calculators.buy-vs-rent');
+    
+    // Property Investment
+    Route::get('/calculators/rental-property', RentalPropertyAnalyzer::class)->name('calculators.rental-property');
+    Route::get('/calculators/property-appreciation', PropertyAppreciationCalculator::class)->name('calculators.property-appreciation');
+    Route::get('/calculators/real-estate-roi', RealEstateROICalculator::class)->name('calculators.real-estate-roi');
+    
+    // Tax Calculators
+    Route::get('/calculators/income-tax', IncomeTaxEstimator::class)->name('calculators.income-tax');
+    Route::get('/calculators/tax-efficient-withdrawal', TaxEfficientWithdrawalCalculator::class)->name('calculators.tax-efficient-withdrawal');
+    Route::get('/calculators/capital-gains-tax', CapitalGainsTaxCalculator::class)->name('calculators.capital-gains-tax');
+});
+
+// Financial Planning routes - REQUIRES AUTHENTICATION
+// MUST be registered BEFORE the subscribed middleware group
+// to ensure they're matched correctly and bypass subscription checks
+// These routes ONLY require 'auth' middleware - NO 'subscribed' middleware
+// Use 'auth:web' explicitly to match Fortify's authentication guard
+Route::prefix('financial-planning')->name('financial.')
+    ->middleware('auth:web')
+    ->group(function () {
+    
+    // Simple test route to verify routing works
+    Route::get('/test-route', function () {
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Financial-planning route is working!',
+            'path' => request()->path(),
+            'route_name' => request()->route()->getName(),
+            'auth_check' => auth()->check(),
+            'auth_id' => auth()->id(),
+            'user_email' => auth()->user() ? auth()->user()->email : null,
+            'session_id' => session()->getId(),
+            'middleware' => request()->route()->middleware(),
+            'url' => request()->fullUrl(),
+        ]);
+    })->name('test-route');
+    
+    Route::get('/dashboard', FinancialDashboard::class)->name('dashboard'); // Route name will be 'financial.dashboard' due to prefix
+    
+    // Management pages (requires auth)
+    Route::get('/accounts', \App\Livewire\FinancialPlanning\AccountManagement::class)->middleware('auth')->name('accounts.index');
+    Route::get('/goals', \App\Livewire\FinancialPlanning\GoalManagement::class)->middleware('auth')->name('goals.index');
+    Route::get('/transactions', \App\Livewire\FinancialPlanning\TransactionManagement::class)->middleware('auth')->name('transactions.index');
+    Route::get('/budget', \App\Livewire\FinancialPlanning\BudgetManagement::class)->middleware('auth')->name('budget.index');
+    Route::get('/reports', \App\Livewire\FinancialPlanning\FinancialReports::class)->middleware('auth')->name('reports.index');
+    Route::get('/retirement-planner', \App\Livewire\FinancialPlanning\RetirementPlanner::class)->middleware('auth')->name('retirement-planner');
+    Route::get('/education', \App\Livewire\FinancialPlanning\EducationalContent::class)->middleware('auth')->name('education.index');
+    Route::get('/tax-planner', \App\Livewire\FinancialPlanning\TaxPlanner::class)->middleware('auth')->name('tax-planner');
+    Route::get('/advisory', \App\Livewire\FinancialPlanning\AdvisoryServices::class)->middleware('auth')->name('advisory.index');
+    Route::get('/success-stories', \App\Livewire\FinancialPlanning\SuccessStories::class)->name('success-stories.index');
+    Route::get('/notifications', \App\Livewire\FinancialPlanning\FinancialNotifications::class)->middleware('auth')->name('notifications.index');
+    
+    // Admin routes - Using custom middleware to check role with api guard
+    Route::get('/admin', \App\Livewire\FinancialPlanning\Admin\FinancialAdminPanel::class)
+        ->middleware(['auth', 'financial.admin'])
+        ->name('admin.index');
+    
+    // Note: Calculator routes are in the PUBLIC group above (lines 101-143) - accessible to guests
+});
+
 Route::post('/register', [RegisteredUserController::class, 'store'])->name('register');
 
 
@@ -101,9 +238,10 @@ Route::middleware([
     'subscribed',
     'setlocale',
 ])->group(function () {
+    // Renamed to main-dashboard to avoid conflict with financial.dashboard
     Route::get('/dashboard', function () {
         return view('dashboard');
-    })->name('dashboard');
+    })->name('main-dashboard');
 
     
     
@@ -120,12 +258,7 @@ Route::middleware([
     Route::get('/mental-health', function () {
         return view('coming-soon', ['title' => 'Mental Health Support']);
     })->name('mental-health');
-    Route::get('/financial-future-planning', function () {
-        return view('coming-soon', ['title' => 'Financial Future Planning']);
-    })->name('financial-future-planning');
-    Route::get('/pension-investment-advice', function () {
-        return view('coming-soon', ['title' => 'Pension & Investment Advice']);
-    })->name('pension-investment-advice');
+    Route::get('/pension-investment-advice', \App\Livewire\FinancialPlanning\PensionInvestmentAdvice::class)->middleware('auth')->name('pension-investment-advice');
     Route::get('/training', [ManageDocumentController::class, 'training'])->name('training');
     Route::get('/weather', [ManageDocumentController::class, 'weather'])->name('weather');
     Route::get('/review', [ManageDocumentController::class, 'review'])->name('review');

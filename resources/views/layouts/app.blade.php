@@ -49,14 +49,48 @@
 
     <div class="flex h-screen bg-gray-100 overflow-hidden">
 
-        {{-- Sidebar --}}
-        @include('livewire.sidebar')
+        {{-- Sidebar - Show for all logged-in users, hide only on calculator pages --}}
+        @php
+            $currentPath = request()->path();
+            // Only hide sidebar on calculator pages, keep it on dashboard and admin
+            $isCalculatorPage = str_starts_with($currentPath, 'financial-planning/calculators');
+            $showSidebar = auth()->check() && !$isCalculatorPage;
+        @endphp
+        @if($showSidebar)
+            @include('livewire.sidebar')
+        @else
+            {{-- Sidebar hidden on financial-planning pages --}}
+            <style>
+                /* Force hide sidebar on financial-planning pages */
+                div[x-data*="isOpen"][class*="bg-[#0066FF]"] {
+                    display: none !important;
+                }
+                div[class*="fixed"][class*="inset-y-0"][class*="left-0"][class*="bg-[#0066FF]"] {
+                    display: none !important;
+                }
+            </style>
+        @endif
 
         {{-- Content --}}
+        @php
+            $hasSidebar = $showSidebar;
+            $defaultMargin = $hasSidebar ? 'ml-72' : 'ml-0';
+        @endphp
         <div
-            class="flex-1 transition-all duration-300"
-            :class="{ 'ml-72': $store.sidebar?.isOpen && window.innerWidth >= 768, 'ml-16': !$store.sidebar?.isOpen && window.innerWidth >= 768 }"
-            x-data>
+            class="flex-1 transition-all duration-300 {{ $defaultMargin }}"
+            x-data
+            :class="{
+                'ml-72': {{ $hasSidebar ? 'true' : 'false' }} && $store?.sidebar?.isOpen && window.innerWidth >= 768,
+                'ml-16': {{ $hasSidebar ? 'true' : 'false' }} && !$store?.sidebar?.isOpen && window.innerWidth >= 768,
+                'ml-0': {{ !$hasSidebar ? 'true' : 'false' }}
+            }"
+            x-init="
+                $nextTick(() => {
+                    if (!$store.sidebar) {
+                        $store.sidebar = { isOpen: window.innerWidth >= 768 };
+                    }
+                });
+            ">
 
             @livewire('navigation-menu')
 

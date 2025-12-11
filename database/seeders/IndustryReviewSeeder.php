@@ -52,6 +52,7 @@ class IndustryReviewSeeder extends Seeder
         if ($users->count() < 3) {
             // Create some test users if needed
             $users = User::factory(5)->create();
+            $users = User::whereIn('id', $users->pluck('id'))->get();
         }
 
         // Get yachts and marinas
@@ -149,35 +150,51 @@ class IndustryReviewSeeder extends Seeder
 
         foreach ($yachts as $yacht) {
             $reviewsToCreate = rand(2, 4);
+            $usedUsers = [];
             for ($i = 0; $i < $reviewsToCreate; $i++) {
                 $template = $yachtReviewTemplates[array_rand($yachtReviewTemplates)];
-                $user = $users->random();
                 
-                YachtReview::create([
-                    'yacht_id' => $yacht->id,
-                    'user_id' => $user->id,
-                    'title' => $template['title'],
-                    'review' => $template['review'],
-                    'pros' => $template['pros'],
-                    'cons' => $template['cons'],
-                    'overall_rating' => $template['overall_rating'],
-                    'management_rating' => $template['management_rating'],
-                    'working_conditions_rating' => $template['working_conditions_rating'],
-                    'compensation_rating' => $template['compensation_rating'],
-                    'crew_welfare_rating' => $template['crew_welfare_rating'],
-                    'yacht_condition_rating' => $template['yacht_condition_rating'],
-                    'career_development_rating' => $template['career_development_rating'],
-                    'would_recommend' => $template['would_recommend'],
-                    'is_anonymous' => $template['is_anonymous'],
-                    'is_verified' => true,
-                    'is_approved' => true,
-                    'position_held' => $template['position_held'],
-                    'work_start_date' => now()->subMonths(rand(6, 24)),
-                    'work_end_date' => now()->subMonths(rand(0, 6)),
-                    'helpful_count' => rand(0, 15),
-                    'not_helpful_count' => rand(0, 3),
-                    'created_at' => now()->subDays(rand(1, 90)),
-                ]);
+                // Get a user that hasn't been used for this yacht yet
+                $availableUsers = $users->whereNotIn('id', $usedUsers);
+                if ($availableUsers->isEmpty()) {
+                    $availableUsers = $users; // Reset if all users used
+                    $usedUsers = [];
+                }
+                $user = $availableUsers->random();
+                $usedUsers[] = $user->id;
+                
+                // Generate unique work_start_date to avoid constraint violations
+                $workStartDate = now()->subMonths(rand(6, 24))->subDays(rand(0, 30));
+                
+                YachtReview::firstOrCreate(
+                    [
+                        'yacht_id' => $yacht->id,
+                        'user_id' => $user->id,
+                        'work_start_date' => $workStartDate,
+                    ],
+                    [
+                        'title' => $template['title'],
+                        'review' => $template['review'],
+                        'pros' => $template['pros'],
+                        'cons' => $template['cons'],
+                        'overall_rating' => $template['overall_rating'],
+                        'management_rating' => $template['management_rating'],
+                        'working_conditions_rating' => $template['working_conditions_rating'],
+                        'compensation_rating' => $template['compensation_rating'],
+                        'crew_welfare_rating' => $template['crew_welfare_rating'],
+                        'yacht_condition_rating' => $template['yacht_condition_rating'],
+                        'career_development_rating' => $template['career_development_rating'],
+                        'would_recommend' => $template['would_recommend'],
+                        'is_anonymous' => $template['is_anonymous'],
+                        'is_verified' => true,
+                        'is_approved' => true,
+                        'position_held' => $template['position_held'],
+                        'work_end_date' => now()->subMonths(rand(0, 6)),
+                        'helpful_count' => rand(0, 15),
+                        'not_helpful_count' => rand(0, 3),
+                        'created_at' => now()->subDays(rand(1, 90)),
+                    ]
+                );
             }
             
             // Update yacht rating stats
@@ -280,37 +297,53 @@ class IndustryReviewSeeder extends Seeder
 
         foreach ($marinas as $marina) {
             $reviewsToCreate = rand(2, 4);
+            $usedUsers = [];
             for ($i = 0; $i < $reviewsToCreate; $i++) {
                 $template = $marinaReviewTemplates[array_rand($marinaReviewTemplates)];
-                $user = $users->random();
                 
-                MarinaReview::create([
-                    'marina_id' => $marina->id,
-                    'user_id' => $user->id,
-                    'title' => $template['title'],
-                    'review' => $template['review'],
-                    'tips_tricks' => $template['tips_tricks'],
-                    'overall_rating' => $template['overall_rating'],
-                    'fuel_rating' => $template['fuel_rating'],
-                    'water_rating' => $template['water_rating'],
-                    'electricity_rating' => $template['electricity_rating'],
-                    'wifi_rating' => $template['wifi_rating'],
-                    'showers_rating' => $template['showers_rating'],
-                    'laundry_rating' => $template['laundry_rating'],
-                    'maintenance_rating' => $template['maintenance_rating'],
-                    'provisioning_rating' => $template['provisioning_rating'],
-                    'staff_rating' => $template['staff_rating'],
-                    'value_rating' => $template['value_rating'],
-                    'protection_rating' => $template['protection_rating'],
-                    'is_anonymous' => $template['is_anonymous'],
-                    'is_verified' => true,
-                    'is_approved' => true,
-                    'visit_date' => now()->subDays(rand(1, 180)),
-                    'yacht_length_meters' => rand(10, 50) . 'm',
-                    'helpful_count' => rand(0, 12),
-                    'not_helpful_count' => rand(0, 2),
-                    'created_at' => now()->subDays(rand(1, 90)),
-                ]);
+                // Get a user that hasn't been used for this marina yet
+                $availableUsers = $users->whereNotIn('id', $usedUsers);
+                if ($availableUsers->isEmpty()) {
+                    $availableUsers = $users; // Reset if all users used
+                    $usedUsers = [];
+                }
+                $user = $availableUsers->random();
+                $usedUsers[] = $user->id;
+                
+                // Generate unique visit_date to avoid constraint violations
+                $visitDate = now()->subDays(rand(1, 180))->subDays(rand(0, 30));
+                
+                MarinaReview::firstOrCreate(
+                    [
+                        'marina_id' => $marina->id,
+                        'user_id' => $user->id,
+                        'visit_date' => $visitDate,
+                    ],
+                    [
+                        'title' => $template['title'],
+                        'review' => $template['review'],
+                        'tips_tricks' => $template['tips_tricks'],
+                        'overall_rating' => $template['overall_rating'],
+                        'fuel_rating' => $template['fuel_rating'],
+                        'water_rating' => $template['water_rating'],
+                        'electricity_rating' => $template['electricity_rating'],
+                        'wifi_rating' => $template['wifi_rating'],
+                        'showers_rating' => $template['showers_rating'],
+                        'laundry_rating' => $template['laundry_rating'],
+                        'maintenance_rating' => $template['maintenance_rating'],
+                        'provisioning_rating' => $template['provisioning_rating'],
+                        'staff_rating' => $template['staff_rating'],
+                        'value_rating' => $template['value_rating'],
+                        'protection_rating' => $template['protection_rating'],
+                        'is_anonymous' => $template['is_anonymous'],
+                        'is_verified' => true,
+                        'is_approved' => true,
+                        'yacht_length_meters' => rand(10, 50) . 'm',
+                        'helpful_count' => rand(0, 12),
+                        'not_helpful_count' => rand(0, 2),
+                        'created_at' => now()->subDays(rand(1, 90)),
+                    ]
+                );
             }
             
             // Update marina rating stats

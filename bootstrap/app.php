@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'subscribed' => EnsureUserIsSubscribed::class,
             'setlocale' => SetLocale::class,
+            'financial.admin' => \App\Http\Middleware\EnsureFinancialAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

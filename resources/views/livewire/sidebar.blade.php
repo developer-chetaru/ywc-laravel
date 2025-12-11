@@ -122,7 +122,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             {{-- DASHBOARD --}}
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             <li>
-                <a href="/dashboard"
+                <a href="{{ route('main-dashboard') }}"
                     class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
                         {{ request()->is('dashboard') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
 
@@ -341,20 +341,49 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             <li>
-                <a href="{{ route('financial-future-planning') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                    {{ request()->is('financial-future-planning*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-                    <img src="{{ request()->is('financial-future-planning*') ? '/images/save-money-dollar.svg' : '/images/save-money-dollar-white.svg' }}" alt="Financial Future Planning" class="w-5 h-5">
-                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('financial-future-planning*') ? 'text-black' : 'text-white' }}">Financial Future Planning</span>
+                <a href="{{ url('/financial-planning/dashboard') }}" 
+                   @click.prevent.stop="window.location.href = '{{ url('/financial-planning/dashboard') }}'"
+                   class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                    {{ request()->is('financial-planning*') && !request()->is('financial-planning/admin*') && !request()->is('financial-planning/calculators*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                    <img src="{{ request()->is('financial-planning*') && !request()->is('financial-planning/admin*') && !request()->is('financial-planning/calculators*') ? '/images/save-money-dollar.svg' : '/images/save-money-dollar-white.svg' }}" alt="Financial Future Planning" class="w-5 h-5">
+                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('financial-planning*') && !request()->is('financial-planning/admin*') && !request()->is('financial-planning/calculators*') ? 'text-black' : 'text-white' }}">Financial Future Planning</span>
                 </a>
             </li>
             @endhasanyrole
 
+            {{-- FINANCIAL PLANNING ADMIN (Super Admin Only) --}}
+            @php
+                $user = auth()->user();
+                $isAdmin = $user && ($user->hasRole('super_admin', 'api') || $user->hasRole('super_admin'));
+            @endphp
+            @if($isAdmin)
+            <li>
+                <a href="{{ url('/financial-planning/admin') }}" 
+                   @click.prevent.stop="window.location.href = '{{ url('/financial-planning/admin') }}'"
+                   class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                    {{ request()->is('financial-planning/admin*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('financial-planning/admin*') ? 'text-black' : 'text-white' }}">Financial Admin</span>
+                </a>
+            </li>
+            @endif
+
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             <li>
-                <a href="{{ route('pension-investment-advice') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                <a href="{{ route('pension-investment-advice') }}" 
+                   wire:navigate
+                   class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
                     {{ request()->is('pension-investment-advice*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-                    <img src="{{ request()->is('pension-investment-advice*') ? '/images/money-bag-ywc.svg' : '/images/money-bag-white.svg' }}" alt="Pension & Investment Advice" class="w-5 h-5">
-                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('pension-investment-advice*') ? 'text-black' : 'text-white' }}">Pension & Investment Advice</span>
+                    <img src="{{ request()->is('pension-investment-advice*') ? '/images/money-bag-ywc.svg' : '/images/money-bag-white.svg' }}" 
+                         alt="Pension & Investment Advice" 
+                         class="w-5 h-5">
+                    <span x-show="isOpen" 
+                          class="text-base font-medium {{ request()->is('pension-investment-advice*') ? 'text-black' : 'text-white' }}">
+                        Pension & Investment
+                    </span>
                 </a>
             </li>
             @endhasanyrole

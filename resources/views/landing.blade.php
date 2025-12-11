@@ -258,6 +258,17 @@
                         <h4>Financial Future Planning</h4>
                         <p>Plan your long-term financial goals with tools tailored for yacht crew and international work
                             life.</p>
+                        @guest
+                            <a href="{{ route('financial.calculators.index') }}" 
+                               class="inline-block mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                Get Started →
+                            </a>
+                        @else
+                            <a href="{{ route('financial.dashboard') }}" 
+                               class="inline-block mt-3 text-blue-600 hover:text-blue-800 font-medium text-sm">
+                                Access Dashboard →
+                            </a>
+                        @endguest
                     </div>
                 </div>
 

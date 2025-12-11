@@ -31,6 +31,17 @@
         </svg>
     </button>
 
+    {{-- Left Side - Back/Home Button for Financial Planning Pages --}}
+    @if(request()->is('financial-planning*'))
+        <a href="{{ route('landing') }}" 
+           class="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <span>Back to Home</span>
+        </a>
+    @endif
+
     {{-- Right Side Navigation --}}
     <div class="flex items-center space-x-4 ml-auto">
         
@@ -40,6 +51,7 @@
         </div>
    
         {{-- Right Side Navigation (Profile Dropdown) --}}
+        @auth
         <div x-data="{ open: false }" class="relative ml-auto">
             <!-- Trigger: Profile Picture + Arrow -->
             <div @click="open = !open" class="flex items-center space-x-2">
@@ -113,5 +125,11 @@
                 <div class="h-[2px] bg-blue-500 w-full mt-2"></div>
             </div>
         </div>
+        @else {{-- Guest user --}}
+        <div class="flex items-center space-x-4">
+            <a href="{{ route('login') }}" class="text-sm font-medium text-gray-800 hover:text-blue-600 transition-colors">Log in</a>
+            <a href="{{ route('register') }}" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">Sign up</a>
+        </div>
+        @endauth
     </div>
 </nav>

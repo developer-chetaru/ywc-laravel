@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
          $this->call([
             RoleSeeder::class,
             AdminSeeder::class,
+            UserSeeder::class, // Add users seeder
             ItineraryRouteSeeder::class,
             YachtSeeder::class,
             MarinaSeeder::class,
@@ -24,6 +25,7 @@ class DatabaseSeeder extends Seeder
             BrokerSeeder::class,
             RestaurantSeeder::class,
             IndustryReviewGallerySeeder::class,
+            FinancialPlanningSeeder::class, // Financial planning dummy data
         ]);
         
     }

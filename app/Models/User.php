@@ -333,4 +333,35 @@ class User extends Authenticatable implements JWTSubject
 
         return $earthRadius * $c;
     }
+
+    // Financial Planning Relationships
+    public function financialAccounts()
+    {
+        return $this->hasMany(\App\Models\FinancialAccount::class);
+    }
+
+    public function financialGoals()
+    {
+        return $this->hasMany(\App\Models\FinancialGoal::class);
+    }
+
+    public function financialTransactions()
+    {
+        return $this->hasMany(\App\Models\FinancialTransaction::class);
+    }
+
+    public function financialCalculations()
+    {
+        return $this->hasMany(\App\Models\FinancialCalculation::class);
+    }
+
+    public function financialConsultations()
+    {
+        return $this->hasMany(\App\Models\FinancialConsultation::class);
+    }
+
+    public function financialNotifications()
+    {
+        return $this->hasMany(\App\Models\FinancialNotification::class);
+    }
 }

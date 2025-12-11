@@ -11,12 +11,12 @@
                         @php
                             // Dashboard cards: defaultImage shows on gray bg (needs colored icon), hoverImage shows on blue bg (needs white icon)
                             $dashboardItems = [
-                                ['label' => 'Career History', 'defaultImage' => '/images/career.svg', 'hoverImage' => '/images/manage-dashbaord.svg', 'url' => route('career-history', auth()->id())],
+                                ['label' => 'Career History', 'defaultImage' => '/images/career.svg', 'hoverImage' => '/images/manage-dashbaord.svg', 'url' => auth()->check() ? route('career-history', auth()->id()) : route('login')],
                                 ['label' => 'Legal Support', 'defaultImage' => '/images/justice-scale-01.svg', 'hoverImage' => '/images/justice-scale-white.svg', 'url' => route('legal-support.index')],
                                 ['label' => 'Training & Resources', 'defaultImage' => '/images/training-and-resources-active.svg', 'hoverImage' => '/images/training-and-resources-default.svg', 'url' => route('training.resources')],
                                 ['label' => 'Mental Health Support', 'defaultImage' => '/images/brain-02.svg', 'hoverImage' => '/images/brain-white.svg', 'url' => route('mental-health')],
                                 ['label' => 'Department Forums', 'defaultImage' => '/images/message-multiple-01 (1).svg', 'hoverImage' => '/images/message-multiple-white.svg', 'url' => '/forum'],
-                                ['label' => 'Financial Future Planning', 'defaultImage' => '/images/save-money-dollar.svg', 'hoverImage' => '/images/save-money-dollar-white.svg', 'url' => route('financial-future-planning')],
+                                ['label' => 'Financial Future Planning', 'defaultImage' => '/images/save-money-dollar.svg', 'hoverImage' => '/images/save-money-dollar-white.svg', 'url' => auth()->check() ? route('financial.dashboard') : route('financial.calculators.index')],
                                 ['label' => 'Pension & Investment Advice', 'defaultImage' => '/images/money-bag-ywc.svg', 'hoverImage' => '/images/money-bag-white.svg', 'url' => route('pension-investment-advice')],
                                 ['label' => 'Industry Review System', 'defaultImage' => '/images/industry-review-active.svg', 'hoverImage' => '/images/industry-review-default.svg', 'url' => route('industryreview.index')],
                                 ['label' => 'Itinerary System', 'defaultImage' => '/images/itinerarySystem.svg', 'hoverImage' => '/images/itinerarySystemWhite.svg', 'url' => route('itinerary.routes.index')],
@@ -45,26 +45,47 @@
                                 </div>
                             @else
                                 {{-- Active / clickable card --}}
-                                <a href="{{ $item['url'] }}"
-                                class="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-lg shadow-sm min-h-[140px] transition cursor-pointer group hover:bg-blue-500 hover:shadow-md">
-                                
-                                    {{-- Default icon --}}
-                                    <img src="{{ $item['defaultImage'] }}" 
-                                        alt="{{ $item['label'] }}" 
-                                        class="w-8 h-8 group-hover:hidden {{ $isActive ? 'hidden' : '' }}">
+                                <div class="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-lg shadow-sm min-h-[140px] transition cursor-pointer group hover:bg-blue-500 hover:shadow-md relative">
+                                    <a href="{{ $item['url'] }}" class="flex flex-col items-center justify-center w-full h-full">
+                                        {{-- Default icon --}}
+                                        <img src="{{ $item['defaultImage'] }}" 
+                                            alt="{{ $item['label'] }}" 
+                                            class="w-8 h-8 group-hover:hidden {{ $isActive ? 'hidden' : '' }}">
+                                        
+                                        {{-- Hover / Active icon --}}
+                                        <img src="{{ $item['hoverImage'] }}" 
+                                            alt="{{ $item['label'] }}" 
+                                            class="w-8 h-8 hidden group-hover:block {{ $isActive ? 'block' : '' }}">
+                                        
+                                        {{-- Text --}}
+                                        <div class="mt-3 text-center font-medium text-base
+                                            {{ $isActive ? 'text-white' : '' }}
+                                            group-hover:text-white">
+                                            {{ $item['label'] }}
+                                        </div>
+                                    </a>
                                     
-                                    {{-- Hover / Active icon --}}
-                                    <img src="{{ $item['hoverImage'] }}" 
-                                        alt="{{ $item['label'] }}" 
-                                        class="w-8 h-8 hidden group-hover:block {{ $isActive ? 'block' : '' }}">
-                                    
-                                    {{-- Text --}}
-                                    <div class="mt-3 text-center font-medium text-base
-                                        {{ $isActive ? 'text-white' : '' }}
-                                        group-hover:text-white">
-                                        {{ $item['label'] }}
-                                    </div>
-                                </a>
+                                    {{-- Button for guests (not logged in) --}}
+                                    @guest
+                                        @if($item['label'] === 'Financial Future Planning')
+                                            <div class="mt-3 w-full">
+                                                <a href="{{ route('financial.calculators.index') }}" 
+                                                   onclick="event.stopPropagation();"
+                                                   class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg">
+                                                    🧮 Get Started
+                                                </a>
+                                            </div>
+                                        @elseif(!in_array($item['label'], ['Department Forums', 'Pension & Investment Advice']))
+                                            <div class="mt-3 w-full">
+                                                <a href="{{ route('register') }}" 
+                                                   onclick="event.stopPropagation();"
+                                                   class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg">
+                                                    Sign Up Free
+                                                </a>
+                                            </div>
+                                        @endif
+                                    @endguest
+                                </div>
                             @endif
                         @endforeach
                     </div>

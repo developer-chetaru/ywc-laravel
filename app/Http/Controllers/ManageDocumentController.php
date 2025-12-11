@@ -12,36 +12,36 @@ class ManageDocumentController extends Controller
     }
    public function mentalHealth()
     {
-        return redirect()->route('dashboard');
+        return redirect()->route('main-dashboard');
     }
 
     public function documents()
     {
-        return redirect()->route('dashboard');
+        return redirect()->route('main-dashboard');
     }
 
     public function forums()
     {
-        return redirect()->route('dashboard');
+        return redirect()->route('main-dashboard');
     }
 
     public function training()
     {
-        return redirect()->route('dashboard');
+        return redirect()->route('main-dashboard');
     }
 
     public function weather()
     {
-        return redirect()->route('dashboard');
+        return redirect()->route('main-dashboard');
     }
 
     public function review()
     {
-        return redirect()->route('dashboard');
+        return redirect()->route('main-dashboard');
     }
 
     public function itinerarySystem()
     {
-        return redirect()->route('dashboard');
+        return redirect()->route('main-dashboard');
     }
 }
