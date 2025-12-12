@@ -364,4 +364,45 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(\App\Models\FinancialNotification::class);
     }
+
+    // Mental Health Relationships
+    public function mentalHealthTherapist()
+    {
+        return $this->hasOne(\App\Models\MentalHealthTherapist::class);
+    }
+
+    public function mentalHealthSessionBookings()
+    {
+        return $this->hasMany(\App\Models\MentalHealthSessionBooking::class);
+    }
+
+    public function mentalHealthMoodTracking()
+    {
+        return $this->hasMany(\App\Models\MentalHealthMoodTracking::class);
+    }
+
+    public function mentalHealthGoals()
+    {
+        return $this->hasMany(\App\Models\MentalHealthGoal::class);
+    }
+
+    public function mentalHealthJournals()
+    {
+        return $this->hasMany(\App\Models\MentalHealthJournal::class);
+    }
+
+    public function mentalHealthHabits()
+    {
+        return $this->hasMany(\App\Models\MentalHealthHabit::class);
+    }
+
+    public function mentalHealthCredits()
+    {
+        return $this->hasMany(\App\Models\MentalHealthCredit::class);
+    }
+
+    public function mentalHealthFavorites()
+    {
+        return $this->hasMany(\App\Models\MentalHealthFavorite::class);
+    }
 }

@@ -14,7 +14,7 @@
                                 ['label' => 'Career History', 'defaultImage' => '/images/career.svg', 'hoverImage' => '/images/manage-dashbaord.svg', 'url' => auth()->check() ? route('career-history', auth()->id()) : route('login')],
                                 ['label' => 'Legal Support', 'defaultImage' => '/images/justice-scale-01.svg', 'hoverImage' => '/images/justice-scale-white.svg', 'url' => route('legal-support.index')],
                                 ['label' => 'Training & Resources', 'defaultImage' => '/images/training-and-resources-active.svg', 'hoverImage' => '/images/training-and-resources-default.svg', 'url' => route('training.resources')],
-                                ['label' => 'Mental Health Support', 'defaultImage' => '/images/brain-02.svg', 'hoverImage' => '/images/brain-white.svg', 'url' => route('mental-health')],
+                                ['label' => 'Mental Health Support', 'defaultImage' => '/images/brain-02.svg', 'hoverImage' => '/images/brain-white.svg', 'url' => route('mental-health.dashboard')],
                                 ['label' => 'Department Forums', 'defaultImage' => '/images/message-multiple-01 (1).svg', 'hoverImage' => '/images/message-multiple-white.svg', 'url' => '/forum'],
                                 ['label' => 'Financial Future Planning', 'defaultImage' => '/images/save-money-dollar.svg', 'hoverImage' => '/images/save-money-dollar-white.svg', 'url' => auth()->check() ? route('financial.dashboard') : route('financial.calculators.index')],
                                 ['label' => 'Pension & Investment Advice', 'defaultImage' => '/images/money-bag-ywc.svg', 'hoverImage' => '/images/money-bag-white.svg', 'url' => route('pension-investment-advice')],

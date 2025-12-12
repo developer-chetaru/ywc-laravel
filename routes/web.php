@@ -255,9 +255,37 @@ Route::middleware([
   
     Route::get('/forums', [ManageDocumentController::class, 'forums'])->name('forum');
     Route::get('/documents', [ManageDocumentController::class, 'documents'])->name('documents');
-    Route::get('/mental-health', function () {
-        return view('coming-soon', ['title' => 'Mental Health Support']);
-    })->name('mental-health');
+    // Mental Health & Wellness Support Routes
+    Route::prefix('mental-health')->name('mental-health.')->group(function () {
+        Route::get('/', \App\Livewire\MentalHealth\MentalHealthDashboard::class)->name('dashboard');
+        Route::get('/therapists', \App\Livewire\MentalHealth\TherapistDirectory::class)->name('therapists');
+        Route::get('/book-session', \App\Livewire\MentalHealth\BookSession::class)->name('book-session');
+        Route::get('/book-session/{therapistId}', \App\Livewire\MentalHealth\BookSession::class)->name('book-session.therapist');
+        Route::get('/sessions', function() {
+            return redirect()->route('mental-health.dashboard');
+        })->name('sessions');
+        Route::get('/crisis-support', \App\Livewire\MentalHealth\CrisisSupport::class)->name('crisis');
+        Route::get('/mood-tracking', \App\Livewire\MentalHealth\MoodTracking::class)->name('mood-tracking');
+        Route::get('/resources', \App\Livewire\MentalHealth\ResourcesLibrary::class)->name('resources');
+        
+        // Admin Routes - Use auth middleware and check role in component
+        Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(function () {
+            Route::get('/dashboard', \App\Livewire\MentalHealth\Admin\AdminDashboard::class)->name('dashboard');
+            
+            // Therapist Management
+            Route::get('/therapists', \App\Livewire\MentalHealth\Admin\TherapistManagement::class)->name('therapists');
+            Route::get('/therapists/create', \App\Livewire\MentalHealth\Admin\TherapistForm::class)->name('therapists.create');
+            Route::get('/therapists/{id}/edit', \App\Livewire\MentalHealth\Admin\TherapistForm::class)->name('therapists.edit');
+            
+            // Resource Management
+            Route::get('/resources', \App\Livewire\MentalHealth\Admin\ResourceManagement::class)->name('resources');
+            Route::get('/resources/create', \App\Livewire\MentalHealth\Admin\ResourceForm::class)->name('resources.create');
+            Route::get('/resources/{id}/edit', \App\Livewire\MentalHealth\Admin\ResourceForm::class)->name('resources.edit');
+            
+            Route::get('/sessions', \App\Livewire\MentalHealth\Admin\UserSessionManagement::class)->name('sessions');
+            Route::get('/analytics', \App\Livewire\MentalHealth\Admin\UserAnalytics::class)->name('analytics');
+        });
+    });
     Route::get('/pension-investment-advice', \App\Livewire\FinancialPlanning\PensionInvestmentAdvice::class)->middleware('auth')->name('pension-investment-advice');
     Route::get('/training', [ManageDocumentController::class, 'training'])->name('training');
     Route::get('/weather', [ManageDocumentController::class, 'weather'])->name('weather');

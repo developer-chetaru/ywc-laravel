@@ -315,15 +315,26 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             </li>
             @endhasanyrole
 
-            @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
+            {{-- MENTAL HEALTH: Show admin menu for super_admin, regular menu for others --}}
+            @role('super_admin')
             <li>
-                <a href="{{ route('mental-health') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                <a href="{{ route('mental-health.admin.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                    {{ request()->is('mental-health*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                    <img src="{{ request()->is('mental-health*') ? '/images/brain-02.svg' : '/images/brain-white.svg' }}" alt="Mental Health Admin" class="w-5 h-5">
+                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('mental-health*') ? 'text-black' : 'text-white' }}">Mental Health Admin</span>
+                </a>
+            </li>
+            @else
+            @hasanyrole($nonAdminRoles)
+            <li>
+                <a href="{{ route('mental-health.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
                     {{ request()->is('mental-health*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
                     <img src="{{ request()->is('mental-health*') ? '/images/brain-02.svg' : '/images/brain-white.svg' }}" alt="Mental Health Support" class="w-5 h-5">
                     <span x-show="isOpen" class="text-base font-medium {{ request()->is('mental-health*') ? 'text-black' : 'text-white' }}">Mental Health Support</span>
                 </a>
             </li>
             @endhasanyrole
+            @endrole
 
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))

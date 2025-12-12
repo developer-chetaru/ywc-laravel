@@ -26,6 +26,9 @@ class DatabaseSeeder extends Seeder
             RestaurantSeeder::class,
             IndustryReviewGallerySeeder::class,
             FinancialPlanningSeeder::class, // Financial planning dummy data
+            MentalHealthTherapistSeeder::class, // Mental health therapists
+            MentalHealthResourceSeeder::class, // Mental health resources
+            MentalHealthCourseSeeder::class, // Mental health courses
         ]);
         
     }
