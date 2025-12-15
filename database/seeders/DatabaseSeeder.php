@@ -29,6 +29,11 @@ class DatabaseSeeder extends Seeder
             MentalHealthTherapistSeeder::class, // Mental health therapists
             MentalHealthResourceSeeder::class, // Mental health resources
             MentalHealthCourseSeeder::class, // Mental health courses
+            TrainingCertificationCategorySeeder::class, // Training categories
+            TrainingCertificationSeeder::class, // Training certifications
+            TrainingProviderSeeder::class, // Training providers
+            TrainingProviderCourseSeeder::class, // Sample provider courses
+            TrainingDummyDataSeeder::class, // Comprehensive dummy data
         ]);
         
     }

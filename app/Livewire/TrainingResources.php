@@ -3,21 +3,15 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Models\Training;
-use Livewire\WithPagination;
+use Illuminate\Support\Facades\Redirect;
 
 class TrainingResources extends Component
 {
-    // use WithPagination;
-
-    // public $title, $description, $resource_link, $trainingId;
-    // public $updateMode = false;
-
-    // protected $rules = [
-    //     'title' => 'required|string|max:255',
-    //     'description' => 'nullable|string',
-    //     'resource_link' => 'nullable|url',
-    // ];
+    public function mount()
+    {
+        // Redirect to the new training courses page
+        return Redirect::route('training.courses');
+    }
 
     public function render()
     {

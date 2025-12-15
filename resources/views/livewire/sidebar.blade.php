@@ -34,7 +34,8 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
         industryReviewOpen: {{ request()->is('industry-review*') ? 'true' : 'false' }},
         itineraryOpen: {{ request()->is('itinerary*') ? 'true' : 'false' }},
         crewDiscoveryOpen: {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'true' : 'false' }},
-        documentsCareerOpen: {{ request()->is('documents*') || request()->is('career-history*') ? 'true' : 'false' }}
+        documentsCareerOpen: {{ request()->is('documents*') || request()->is('career-history*') ? 'true' : 'false' }},
+        trainingOpen: {{ request()->is('training*') ? 'true' : 'false' }}
     }"
     x-init="
         // Wait for Alpine to be ready
@@ -293,14 +294,63 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
 
 
             {{-- TRAINING & RESOURCES --}}
-            @hasanyrole($nonAdminRoles)
+            @role('super_admin')
+            {{-- Admin Menu for Training --}}
+            <li>
+                <button @click="trainingOpen = !trainingOpen"
+                    class="flex items-center justify-between w-full px-4 py-3 rounded-lg transition
+                            {{ request()->is('training*') ? 'bg-[#F2F2F2] text-black' : 'hover:bg-white/10 text-white' }}">
+                    <div class="flex items-center space-x-3">
+                        <img
+                            src="{{ request()->is('training*') 
+                                    ? '/images/training-and-resources-active.svg' 
+                                    : '/images/training-and-resources-default.svg' }}"
+                            alt="Training & Resources"
+                            class="w-5 h-5">
+                        <span x-show="isOpen" class="text-base font-medium {{ request()->is('training*') ? 'text-black' : 'text-white' }}">
+                            Training & Resources
+                        </span>
+                    </div>
+                    <svg x-show="isOpen" :class="{'rotate-180': trainingOpen}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="trainingOpen && isOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                    <a href="{{ route('training.courses') }}"
+                        class="block px-4 py-2 rounded text-sm {{ request()->is('training/courses') && !request()->is('training/admin*') ? 'bg-blue-100 text-blue-800' : 'text-gray-300 hover:text-white' }}">
+                        Browse Courses
+                    </a>
+                    <a href="{{ route('training.admin.dashboard') }}"
+                        class="block px-4 py-2 rounded text-sm {{ request()->is('training/admin') ? 'bg-blue-100 text-blue-800' : 'text-gray-300 hover:text-white' }}">
+                        Admin Dashboard
+                    </a>
+                    <a href="{{ route('training.admin.certifications') }}"
+                        class="block px-4 py-2 rounded text-sm {{ request()->is('training/admin/certifications') ? 'bg-blue-100 text-blue-800' : 'text-gray-300 hover:text-white' }}">
+                        Manage Certifications
+                    </a>
+                    <a href="{{ route('training.admin.providers') }}"
+                        class="block px-4 py-2 rounded text-sm {{ request()->is('training/admin/providers') ? 'bg-blue-100 text-blue-800' : 'text-gray-300 hover:text-white' }}">
+                        Manage Providers
+                    </a>
+                    <a href="{{ route('training.admin.courses') }}"
+                        class="block px-4 py-2 rounded text-sm {{ request()->is('training/admin/courses') ? 'bg-blue-100 text-blue-800' : 'text-gray-300 hover:text-white' }}">
+                        Manage Courses
+                    </a>
+                    <a href="{{ route('training.admin.reviews') }}"
+                        class="block px-4 py-2 rounded text-sm {{ request()->is('training/admin/reviews') ? 'bg-blue-100 text-blue-800' : 'text-gray-300 hover:text-white' }}">
+                        Manage Reviews
+                    </a>
+                </div>
+            </li>
+            @else
+            {{-- Regular User Menu --}}
             <li>
                 <a href="{{ route('training.resources') }}"
                     class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                            {{ request()->is('training-resources*') ? 'bg-[#F2F2F2] text-black' : 'hover:bg-white/10 text-white' }}">
+                            {{ request()->is('training-resources*') || request()->is('training/courses*') ? 'bg-[#F2F2F2] text-black' : 'hover:bg-white/10 text-white' }}">
 
                     <img
-                        src="{{ request()->is('training-resources*') 
+                        src="{{ request()->is('training-resources*') || request()->is('training/courses*')
                                 ? '/images/training-and-resources-active.svg' 
                                 : '/images/training-and-resources-default.svg' }}"
                         alt="Training & Resources"
@@ -308,12 +358,12 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
 
                     <span
                         x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('training-resources*') ? 'text-black' : 'text-white' }}">
+                        class="text-base font-medium {{ request()->is('training-resources*') || request()->is('training/courses*') ? 'text-black' : 'text-white' }}">
                         Training & Resources
                     </span>
                 </a>
             </li>
-            @endhasanyrole
+            @endrole
 
             {{-- MENTAL HEALTH: Show admin menu for super_admin, regular menu for others --}}
             @role('super_admin')

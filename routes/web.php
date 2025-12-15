@@ -39,6 +39,17 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\WaitlistAdminController;
 use App\Livewire\TrainingResources;
+use App\Livewire\Training\CourseDiscovery;
+use App\Livewire\Training\CertificationDetail;
+use App\Livewire\Training\UserCertificationDashboard;
+use App\Livewire\Training\ProviderPortal;
+use App\Livewire\Training\Admin\TrainingAdminDashboard;
+use App\Livewire\Training\Admin\ManageCertifications;
+use App\Livewire\Training\Admin\CertificationForm;
+use App\Livewire\Training\Admin\ManageProviders;
+use App\Livewire\Training\Admin\ProviderForm;
+use App\Livewire\Training\Admin\ManageCourses;
+use App\Livewire\Training\Admin\ManageReviews;
 
 use App\Models\Order as InternalOrder;
 use App\Livewire\SubscriptionPage;
@@ -351,6 +362,38 @@ Route::middleware([
   	Route::get('/legal-support', LegalSupport::class)->name('legal-support.index');
   
   	Route::get('/training-resources', TrainingResources::class)->name('training.resources');
+  	
+ 	// Training & Resources Module Routes
+ 	Route::get('/training/courses', CourseDiscovery::class)->name('training.courses');
+ 	Route::get('/training/certification/{slug}', CertificationDetail::class)->name('training.certification.detail');
+ 	Route::get('/training/course/{courseId}', \App\Livewire\Training\CourseDetail::class)->name('training.course.detail');
+ 	Route::get('/training/my-certifications', UserCertificationDashboard::class)->name('training.my-certifications');
+ 	Route::get('/training/provider-portal', ProviderPortal::class)->name('training.provider.portal');
+ 	Route::get('/training/review/{courseId}', \App\Livewire\Training\SubmitReview::class)->name('training.review.submit');
+ 	Route::get('/training/career-pathway/{id?}', \App\Livewire\Training\CareerPathwayView::class)->name('training.career-pathway');
+ 	Route::get('/training/schedule-calendar', \App\Livewire\Training\CourseScheduleCalendar::class)->name('training.schedule.calendar');
+ 	Route::get('/training/schedule-calendar/provider/{provider}', \App\Livewire\Training\CourseScheduleCalendar::class)->name('training.schedule.calendar.provider');
+  	
+  	// Training Admin Routes (Super Admin Only)
+  	Route::middleware(['auth'])->group(function () {
+  	    Route::get('/training/admin', TrainingAdminDashboard::class)->name('training.admin.dashboard');
+  	    
+  	    // Certifications
+  	    Route::get('/training/admin/certifications', ManageCertifications::class)->name('training.admin.certifications');
+  	    Route::get('/training/admin/certifications/create', CertificationForm::class)->name('training.admin.certifications.create');
+  	    Route::get('/training/admin/certifications/{id}/edit', CertificationForm::class)->name('training.admin.certifications.edit');
+  	    
+ 	    // Providers
+ 	    Route::get('/training/admin/providers', ManageProviders::class)->name('training.admin.providers');
+ 	    Route::get('/training/admin/providers/create', ProviderForm::class)->name('training.admin.providers.create');
+ 	    Route::get('/training/admin/providers/{id}/edit', ProviderForm::class)->name('training.admin.providers.edit');
+ 	    
+ 	    // Courses
+ 	    Route::get('/training/admin/courses', ManageCourses::class)->name('training.admin.courses');
+ 	    Route::get('/training/admin/courses/create', \App\Livewire\Training\Admin\CourseForm::class)->name('training.admin.courses.create');
+ 	    Route::get('/training/admin/courses/{id}/edit', \App\Livewire\Training\Admin\CourseForm::class)->name('training.admin.courses.edit');
+ 	    Route::get('/training/admin/reviews', ManageReviews::class)->name('training.admin.reviews');
+  	});
 
 	Route::get('/roles', RoleIndex::class)->name('roles.index');
 

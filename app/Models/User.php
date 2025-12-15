@@ -147,6 +147,11 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->activeSubscription() !== null;
     }
+
+    public function trainingCertifications()
+    {
+        return $this->hasMany(\App\Models\TrainingUserCertification::class);
+    }
   
   	public function documents()
     {
