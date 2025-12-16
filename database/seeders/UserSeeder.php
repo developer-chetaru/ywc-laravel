@@ -44,29 +44,47 @@ class UserSeeder extends Seeder
         // 🔹 Delete all users except the super admin
         User::where('id', '!=', $superAdmin->id)->delete();
 
-        // 🔹 Insert 1000 fake users
-        $users = [];
-        for ($i = 0; $i < 1000; $i++) {
-            $users[] = [
-                'first_name' => $faker->firstName,
-                'last_name' => $faker->lastName,
-                'email' => $faker->unique()->safeEmail,
-                'password' => Hash::make('123456'),
-                'dob' => $faker->date('Y-m-d', '2005-01-01'),
-                'phone' => $faker->phoneNumber,
-                'gender' => $faker->randomElement(['Male', 'Female']),
-                'nationality' => 'American',
-                'marital_status' => $faker->randomElement(['Single', 'Married', 'Divorced']),
-                'birth_country' => 'USA',
-                'birth_province' => $faker->state,
-                'status' => 'active',
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+        // 🔹 Insert 1000 fake users in chunks to avoid memory issues and handle duplicates
+        $totalUsers = 1000;
+        $chunkSize = 100;
+        $inserted = 0;
+        
+        for ($chunk = 0; $chunk < ($totalUsers / $chunkSize); $chunk++) {
+            $users = [];
+            for ($i = 0; $i < $chunkSize; $i++) {
+                $users[] = [
+                    'first_name' => $faker->firstName,
+                    'last_name' => $faker->lastName,
+                    'email' => $faker->unique()->safeEmail,
+                    'password' => Hash::make('123456'),
+                    'dob' => $faker->date('Y-m-d', '2005-01-01'),
+                    'phone' => $faker->phoneNumber,
+                    'gender' => $faker->randomElement(['Male', 'Female']),
+                    'nationality' => 'American',
+                    'marital_status' => $faker->randomElement(['Single', 'Married', 'Divorced']),
+                    'birth_country' => 'USA',
+                    'birth_province' => $faker->state,
+                    'status' => 'active',
+                    'is_active' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+            
+            // Insert chunk, handling duplicates gracefully
+            foreach ($users as $user) {
+                try {
+                    DB::table('users')->insert($user);
+                    $inserted++;
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // Skip duplicates (unique constraint violations)
+                    if ($e->getCode() == 23000 || str_contains($e->getMessage(), 'Duplicate entry')) {
+                        continue;
+                    }
+                    throw $e; // Re-throw if it's a different error
+                }
+            }
         }
-
-        DB::table('users')->insert($users);
 
         // 🔹 Assign "user" role to all newly created users
         $allUsers = User::where('id', '!=', $superAdmin->id)->get();

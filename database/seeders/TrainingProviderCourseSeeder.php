@@ -29,9 +29,12 @@ class TrainingProviderCourseSeeder extends Seeder
         $stcwCert = TrainingCertification::where('slug', 'stcw-basic-safety-training')->first();
         if ($stcwCert) {
             foreach ($providers->take(3) as $provider) {
-                $course = TrainingProviderCourse::create([
-                    'certification_id' => $stcwCert->id,
-                    'provider_id' => $provider->id,
+                $course = TrainingProviderCourse::firstOrCreate(
+                    [
+                        'certification_id' => $stcwCert->id,
+                        'provider_id' => $provider->id,
+                    ],
+                    [
                     'price' => rand(500, 950),
                     'ywc_discount_percentage' => 20,
                     'duration_days' => 5,
@@ -62,7 +65,8 @@ class TrainingProviderCourseSeeder extends Seeder
                     'booking_url' => 'https://example.com/book',
                     'ywc_tracking_code' => 'YWC' . $provider->id . '-' . $stcwCert->id,
                     'is_active' => true,
-                ]);
+                    ]
+                );
 
                 // Add location
                 $location = TrainingCourseLocation::create([
@@ -94,9 +98,12 @@ class TrainingProviderCourseSeeder extends Seeder
         $eng1Cert = TrainingCertification::where('slug', 'eng1-medical-certificate')->first();
         if ($eng1Cert) {
             foreach ($providers->take(2) as $provider) {
-                TrainingProviderCourse::create([
-                    'certification_id' => $eng1Cert->id,
-                    'provider_id' => $provider->id,
+                TrainingProviderCourse::firstOrCreate(
+                    [
+                        'certification_id' => $eng1Cert->id,
+                        'provider_id' => $provider->id,
+                    ],
+                    [
                     'price' => rand(100, 200),
                     'ywc_discount_percentage' => 20,
                     'duration_days' => 1,
@@ -106,7 +113,8 @@ class TrainingProviderCourseSeeder extends Seeder
                     'materials_included' => ['Medical certificate'],
                     'booking_url' => 'https://example.com/book',
                     'is_active' => true,
-                ]);
+                    ]
+                );
             }
         }
 
@@ -114,9 +122,12 @@ class TrainingProviderCourseSeeder extends Seeder
         $ssoCert = TrainingCertification::where('slug', 'ship-security-officer-sso')->first();
         if ($ssoCert) {
             $provider = $providers->first();
-            TrainingProviderCourse::create([
-                'certification_id' => $ssoCert->id,
-                'provider_id' => $provider->id,
+            TrainingProviderCourse::firstOrCreate(
+                [
+                    'certification_id' => $ssoCert->id,
+                    'provider_id' => $provider->id,
+                ],
+                [
                 'price' => 1200,
                 'ywc_discount_percentage' => 20,
                 'duration_days' => 6,
@@ -127,7 +138,8 @@ class TrainingProviderCourseSeeder extends Seeder
                 'meals_included' => true,
                 'booking_url' => 'https://example.com/book',
                 'is_active' => true,
-            ]);
+                ]
+            );
         }
 
         $this->command->info('Sample provider courses created successfully!');

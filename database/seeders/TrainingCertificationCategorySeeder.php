@@ -72,7 +72,10 @@ class TrainingCertificationCategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            TrainingCertificationCategory::create($category);
+            TrainingCertificationCategory::firstOrCreate(
+                ['slug' => $category['slug']],
+                $category
+            );
         }
     }
 }

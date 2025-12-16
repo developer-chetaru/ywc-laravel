@@ -14,12 +14,12 @@ class MainCommunityThreadSeeder extends Seeder
     {
         // Find or create "Community Announcements" category
         $category = Category::firstOrCreate(
-            ['name' => 'Community Announcements'],
+            ['title' => 'Community Announcements'],
             [
                 'description' => 'Official announcements and updates for all crew members',
-                'color' => '#0053FF',
+                'color_light_mode' => '#0053FF',
                 'is_private' => false,
-                'enable_threads' => true,
+                'accepts_threads' => true,
                 'thread_count' => 0,
                 'post_count' => 0,
             ]
@@ -41,13 +41,8 @@ class MainCommunityThreadSeeder extends Seeder
             [
                 'category_id' => $category->id,
                 'author_id' => $author->id,
-                'first_post_id' => null,
-                'last_post_id' => null,
-                'is_locked' => false,
-                'is_pinned' => true,
-                'is_private' => false,
-                'reply_count' => 0,
-                'view_count' => 0,
+                'pinned' => true,
+                'locked' => false,
             ]
         );
 

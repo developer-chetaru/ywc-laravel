@@ -202,7 +202,7 @@ Route::prefix('financial-planning')->name('financial.')
     // Note: Calculator routes are in the PUBLIC group above (lines 101-143) - accessible to guests
 });
 
-Route::post('/register', [RegisteredUserController::class, 'store'])->name('register');
+Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
 
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'role:super_admin', 'setlocale'])
@@ -549,6 +549,44 @@ Route::middleware([
     Route::get('/industry-review/restaurants/{restaurantId?}/reviews/create', \App\Livewire\IndustryReview\RestaurantReviewCreate::class)->name('restaurant-reviews.create')->where('restaurantId', '[0-9]+');
     Route::get('/industry-review/restaurants/{slug}', \App\Livewire\IndustryReview\RestaurantReviewShow::class)->name('restaurant-reviews.show');
     Route::get('/industry-review/restaurants/{slug}/gallery', \App\Livewire\IndustryReview\RestaurantGallery::class)->name('restaurant-reviews.gallery');
+
+    // Job Board Routes
+    Route::prefix('job-board')->name('job-board.')->group(function () {
+        Route::get('/', \App\Livewire\JobBoard\JobBoardIndex::class)->name('index');
+        Route::get('/browse', \App\Livewire\JobBoard\BrowseJobs::class)->name('browse');
+        Route::get('/post', \App\Livewire\JobBoard\PostJob::class)->name('post');
+        Route::get('/post/{id}', \App\Livewire\JobBoard\PostJob::class)->name('post.edit');
+        Route::get('/jobs/{id}', \App\Livewire\JobBoard\JobDetail::class)->name('detail');
+        Route::get('/jobs/{id}/apply', \App\Livewire\JobBoard\ApplyJob::class)->name('apply');
+        Route::get('/jobs/{id}/apply-temporary', \App\Livewire\JobBoard\ApplyTemporaryWork::class)->name('apply-temporary');
+        Route::get('/applications', \App\Livewire\JobBoard\ManageApplications::class)->name('applications');
+        Route::get('/my-applications', \App\Livewire\JobBoard\MyApplications::class)->name('my-applications');
+        
+        // Temporary Work
+        Route::get('/temporary-work', \App\Livewire\JobBoard\TemporaryWorkMarketplace::class)->name('temporary-work');
+        Route::get('/post-temporary-work', \App\Livewire\JobBoard\PostTemporaryWork::class)->name('post-temporary-work');
+        
+        // Crew Availability
+        Route::get('/available-crew', \App\Livewire\JobBoard\AvailableCrewSearch::class)->name('available-crew');
+        Route::get('/availability-settings', \App\Livewire\JobBoard\CrewAvailabilitySettings::class)->name('availability-settings');
+        
+        // Vessel Verification
+        Route::get('/verify', \App\Livewire\JobBoard\VesselVerificationRequest::class)->name('verify');
+        
+        // Preferred Crew
+        Route::get('/preferred-crew', \App\Livewire\JobBoard\PreferredCrewList::class)->name('preferred-crew');
+        
+        // Ratings
+        Route::get('/ratings/{bookingId?}', \App\Livewire\JobBoard\JobRatings::class)->name('ratings');
+        
+        // Temporary Work Bookings Management
+        Route::get('/bookings', \App\Livewire\JobBoard\TemporaryWorkBookingManagement::class)->name('bookings');
+        Route::get('/book-crew/{crewUserId}', \App\Livewire\JobBoard\BookTemporaryWork::class)->name('book-crew');
+        Route::get('/book-crew/{crewUserId}/job/{jobPostId}', \App\Livewire\JobBoard\BookTemporaryWork::class)->name('book-crew-from-job');
+        
+        // Admin Panel - role check is done in component
+        Route::get('/admin', \App\Livewire\JobBoard\JobBoardAdmin::class)->name('admin');
+    });
 
 });
 

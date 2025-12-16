@@ -321,7 +321,7 @@ Route::post('auth/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('auth/verify-otp', [AuthController::class, 'verifyOtp']);
 
 Route::get('/verify-user/{id}', [VerificationController::class, 'verify'])
-    ->name('user.verify')
+    ->name('api.user.verify')
     ->middleware('signed'); 
 
 

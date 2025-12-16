@@ -117,7 +117,10 @@ class TrainingProviderSeeder extends Seeder
         ];
 
         foreach ($providers as $provider) {
-            TrainingProvider::create($provider);
+            TrainingProvider::firstOrCreate(
+                ['slug' => $provider['slug']],
+                $provider
+            );
         }
     }
 }

@@ -708,6 +708,26 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             </li>
             @endhasanyrole
 
+            {{-- JOB BOARD --}}
+            @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
+            <li>
+                <a href="{{ route('job-board.index') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                            {{ request()->is('job-board*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 7h16M4 12h16M4 17h16M7 7v10M12 7v10M17 7v10" />
+                    </svg>
+
+                    <span x-show="isOpen"
+                        class="text-base font-medium {{ request()->is('job-board*') ? 'text-black' : 'text-white' }}">
+                        Job Board
+                    </span>
+                </a>
+            </li>
+            @endhasanyrole
+
             {{-- WORK SCHEDULES --}}
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             <li>

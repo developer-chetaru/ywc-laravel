@@ -410,4 +410,65 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(\App\Models\MentalHealthFavorite::class);
     }
+
+    // Job Board Relationships
+    public function vesselVerification()
+    {
+        return $this->hasOne(\App\Models\VesselVerification::class);
+    }
+
+    public function jobPosts()
+    {
+        return $this->hasMany(\App\Models\JobPost::class);
+    }
+
+    public function jobApplications()
+    {
+        return $this->hasMany(\App\Models\JobApplication::class);
+    }
+
+    public function temporaryWorkBookings()
+    {
+        return $this->hasMany(\App\Models\TemporaryWorkBooking::class);
+    }
+
+    public function crewAvailability()
+    {
+        return $this->hasOne(\App\Models\CrewAvailability::class);
+    }
+
+    public function savedJobPosts()
+    {
+        return $this->hasMany(\App\Models\SavedJobPost::class);
+    }
+
+    public function preferredCrewList()
+    {
+        return $this->hasMany(\App\Models\PreferredCrewList::class);
+    }
+
+    public function preferredBy()
+    {
+        return $this->hasMany(\App\Models\PreferredCrewList::class, 'crew_user_id');
+    }
+
+    public function jobMessagesSent()
+    {
+        return $this->hasMany(\App\Models\JobMessage::class, 'sender_id');
+    }
+
+    public function jobMessagesReceived()
+    {
+        return $this->hasMany(\App\Models\JobMessage::class, 'receiver_id');
+    }
+
+    public function jobRatingsGiven()
+    {
+        return $this->hasMany(\App\Models\JobRating::class, 'rater_user_id');
+    }
+
+    public function jobRatingsReceived()
+    {
+        return $this->hasMany(\App\Models\JobRating::class, 'rated_user_id');
+    }
 }

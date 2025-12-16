@@ -260,7 +260,10 @@ class TrainingCertificationSeeder extends Seeder
         ];
 
         foreach ($certifications as $cert) {
-            TrainingCertification::create($cert);
+            TrainingCertification::firstOrCreate(
+                ['slug' => $cert['slug']],
+                $cert
+            );
         }
     }
 }
