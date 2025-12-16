@@ -7842,6 +7842,2922 @@
                 },
                 "security": [{"bearerAuth": []}]
             }
+        },
+        "/api/mental-health/therapists": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get list of therapists",
+                "description": "Retrieve a paginated list of available mental health therapists. You can filter by specialization, language, and minimum rating. Returns therapists that are approved and active.",
+                "operationId": "getTherapists",
+                "parameters": [
+                    {
+                        "name": "specialization",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "string"},
+                        "description": "Filter by specialization (e.g., 'anxiety', 'depression', 'trauma', 'stress-management')",
+                        "example": "anxiety"
+                    },
+                    {
+                        "name": "language",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "string"},
+                        "description": "Filter by language spoken (e.g., 'English', 'Spanish', 'French')",
+                        "example": "English"
+                    },
+                    {
+                        "name": "min_rating",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "number", "format": "float", "minimum": 0, "maximum": 5},
+                        "description": "Minimum average rating (0-5)",
+                        "example": 4.0
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "integer", "minimum": 1, "default": 1},
+                        "description": "Page number for pagination",
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Therapists retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true,
+                                            "description": "Request status"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Therapists retrieved successfully",
+                                            "description": "Response message"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1,
+                                                        "description": "Therapist ID"
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 10,
+                                                        "description": "Associated user ID"
+                                                    },
+                                                    "user": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "first_name": {"type": "string", "example": "Dr. Sarah"},
+                                                            "last_name": {"type": "string", "example": "Johnson"},
+                                                            "email": {"type": "string", "example": "sarah.johnson@example.com"}
+                                                        }
+                                                    },
+                                                    "biography": {
+                                                        "type": "string",
+                                                        "example": "I am a licensed clinical psychologist with over 10 years of experience specializing in anxiety disorders, depression, and trauma. I work with maritime professionals to help them manage the unique challenges of life at sea.",
+                                                        "description": "Therapist biography"
+                                                    },
+                                                    "specializations": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                        "example": ["anxiety", "depression", "trauma", "stress-management"],
+                                                        "description": "List of specializations"
+                                                    },
+                                                    "languages_spoken": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                        "example": ["English", "Spanish"],
+                                                        "description": "Languages the therapist speaks"
+                                                    },
+                                                    "therapeutic_approaches": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                        "example": ["CBT", "EMDR", "Mindfulness"],
+                                                        "description": "Therapeutic approaches used"
+                                                    },
+                                                    "years_experience": {
+                                                        "type": "integer",
+                                                        "example": 10,
+                                                        "description": "Years of experience"
+                                                    },
+                                                    "rating": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4.7,
+                                                        "description": "Average rating (0-5)"
+                                                    },
+                                                    "total_sessions": {
+                                                        "type": "integer",
+                                                        "example": 150,
+                                                        "description": "Total number of sessions conducted"
+                                                    },
+                                                    "total_reviews": {
+                                                        "type": "integer",
+                                                        "example": 45,
+                                                        "description": "Total number of reviews"
+                                                    },
+                                                    "base_hourly_rate": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 120.00,
+                                                        "description": "Base hourly rate in USD"
+                                                    },
+                                                    "session_type_pricing": {
+                                                        "type": "object",
+                                                        "example": {"video": 120, "phone": 100, "in-person": 150},
+                                                        "description": "Pricing by session type"
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean",
+                                                        "example": true,
+                                                        "description": "Whether therapist is currently active"
+                                                    },
+                                                    "is_featured": {
+                                                        "type": "boolean",
+                                                        "example": false,
+                                                        "description": "Whether therapist is featured"
+                                                    },
+                                                    "profile_photo_path": {
+                                                        "type": "string",
+                                                        "example": "/storage/therapists/profile_1.jpg",
+                                                        "description": "Path to profile photo"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {"type": "integer", "example": 1},
+                                                "total": {"type": "integer", "example": 25},
+                                                "per_page": {"type": "integer", "example": 15}
+                                            }
+                                        }
+                                    }
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "Therapists retrieved successfully",
+                                    "data": [
+                                        {
+                                            "id": 1,
+                                            "user_id": 10,
+                                            "user": {
+                                                "first_name": "Dr. Sarah",
+                                                "last_name": "Johnson",
+                                                "email": "sarah.johnson@example.com"
+                                            },
+                                            "biography": "I am a licensed clinical psychologist with over 10 years of experience...",
+                                            "specializations": ["anxiety", "depression", "trauma"],
+                                            "languages_spoken": ["English", "Spanish"],
+                                            "therapeutic_approaches": ["CBT", "EMDR", "Mindfulness"],
+                                            "years_experience": 10,
+                                            "rating": 4.7,
+                                            "total_sessions": 150,
+                                            "total_reviews": 45,
+                                            "base_hourly_rate": 120.00,
+                                            "session_type_pricing": {"video": 120, "phone": 100, "in-person": 150},
+                                            "is_active": true,
+                                            "is_featured": false,
+                                            "profile_photo_path": "/storage/therapists/profile_1.jpg"
+                                        }
+                                    ],
+                                    "meta": {
+                                        "current_page": 1,
+                                        "total": 25,
+                                        "per_page": 15
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "An error occurred while retrieving therapists"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mental-health/therapists/{id}": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get therapist details",
+                "description": "Retrieve comprehensive detailed information about a specific therapist including credentials, availability, pricing, and reviews summary.",
+                "operationId": "getTherapist",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {"type": "integer"},
+                        "description": "Therapist ID",
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Therapist details retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true,
+                                            "description": "Request status"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Therapist details retrieved successfully",
+                                            "description": "Response message"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {"type": "integer", "example": 1},
+                                                "user_id": {"type": "integer", "example": 10},
+                                                "user": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {"type": "integer", "example": 10},
+                                                        "first_name": {"type": "string", "example": "Dr. Sarah"},
+                                                        "last_name": {"type": "string", "example": "Johnson"},
+                                                        "email": {"type": "string", "example": "sarah.johnson@example.com"}
+                                                    }
+                                                },
+                                                "biography": {
+                                                    "type": "string",
+                                                    "example": "I am a licensed clinical psychologist with over 10 years of experience specializing in anxiety disorders, depression, and trauma. I work with maritime professionals to help them manage the unique challenges of life at sea.",
+                                                    "description": "Detailed biography"
+                                                },
+                                                "specializations": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                    "example": ["anxiety", "depression", "trauma", "stress-management", "PTSD"],
+                                                    "description": "Areas of specialization"
+                                                },
+                                                "languages_spoken": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                    "example": ["English", "Spanish", "French"],
+                                                    "description": "Languages spoken"
+                                                },
+                                                "therapeutic_approaches": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                    "example": ["Cognitive Behavioral Therapy (CBT)", "EMDR", "Mindfulness-Based Therapy"],
+                                                    "description": "Therapeutic approaches"
+                                                },
+                                                "years_experience": {
+                                                    "type": "integer",
+                                                    "example": 10,
+                                                    "description": "Years of professional experience"
+                                                },
+                                                "education_history": {
+                                                    "type": "array",
+                                                    "items": {"type": "object"},
+                                                    "example": [
+                                                        {
+                                                            "degree": "Ph.D. in Clinical Psychology",
+                                                            "institution": "University of California",
+                                                            "year": 2014
+                                                        }
+                                                    ],
+                                                    "description": "Education background"
+                                                },
+                                                "certifications": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                    "example": ["Licensed Clinical Psychologist", "EMDR Certified", "Trauma-Informed Care"],
+                                                    "description": "Professional certifications"
+                                                },
+                                                "license_numbers": {
+                                                    "type": "array",
+                                                    "items": {"type": "object"},
+                                                    "example": [
+                                                        {"state": "California", "number": "PSY12345", "expires": "2025-12-31"}
+                                                    ],
+                                                    "description": "Professional licenses"
+                                                },
+                                                "base_hourly_rate": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 120.00,
+                                                    "description": "Base hourly rate"
+                                                },
+                                                "session_type_pricing": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "video": 120.00,
+                                                        "phone": 100.00,
+                                                        "in-person": 150.00
+                                                    },
+                                                    "description": "Pricing by session type"
+                                                },
+                                                "duration_pricing": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "30": 60.00,
+                                                        "60": 120.00,
+                                                        "90": 180.00
+                                                    },
+                                                    "description": "Pricing by duration (minutes)"
+                                                },
+                                                "sliding_scale_available": {
+                                                    "type": "boolean",
+                                                    "example": true,
+                                                    "description": "Whether sliding scale pricing is available"
+                                                },
+                                                "rating": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4.7,
+                                                    "description": "Average rating"
+                                                },
+                                                "total_sessions": {
+                                                    "type": "integer",
+                                                    "example": 150,
+                                                    "description": "Total sessions conducted"
+                                                },
+                                                "total_reviews": {
+                                                    "type": "integer",
+                                                    "example": 45,
+                                                    "description": "Total number of reviews"
+                                                },
+                                                "session_completion_rate": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 95.5,
+                                                    "description": "Session completion rate percentage"
+                                                },
+                                                "average_response_time_minutes": {
+                                                    "type": "integer",
+                                                    "example": 15,
+                                                    "description": "Average response time in minutes"
+                                                },
+                                                "professional_philosophy": {
+                                                    "type": "string",
+                                                    "example": "I believe in a client-centered approach that empowers individuals to discover their own strengths and resilience.",
+                                                    "description": "Professional philosophy"
+                                                },
+                                                "areas_of_focus": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                    "example": ["Maritime professionals", "Anxiety", "Work-life balance"],
+                                                    "description": "Areas of focus"
+                                                },
+                                                "credentials": {
+                                                    "type": "array",
+                                                    "items": {"type": "object"},
+                                                    "description": "Professional credentials"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": true,
+                                                    "description": "Active status"
+                                                },
+                                                "is_featured": {
+                                                    "type": "boolean",
+                                                    "example": false,
+                                                    "description": "Featured status"
+                                                },
+                                                "profile_photo_path": {
+                                                    "type": "string",
+                                                    "example": "/storage/therapists/profile_1.jpg",
+                                                    "description": "Profile photo path"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "Therapist details retrieved successfully",
+                                    "data": {
+                                        "id": 1,
+                                        "user_id": 10,
+                                        "user": {
+                                            "id": 10,
+                                            "first_name": "Dr. Sarah",
+                                            "last_name": "Johnson",
+                                            "email": "sarah.johnson@example.com"
+                                        },
+                                        "biography": "I am a licensed clinical psychologist with over 10 years of experience...",
+                                        "specializations": ["anxiety", "depression", "trauma", "stress-management"],
+                                        "languages_spoken": ["English", "Spanish", "French"],
+                                        "therapeutic_approaches": ["CBT", "EMDR", "Mindfulness"],
+                                        "years_experience": 10,
+                                        "education_history": [
+                                            {
+                                                "degree": "Ph.D. in Clinical Psychology",
+                                                "institution": "University of California",
+                                                "year": 2014
+                                            }
+                                        ],
+                                        "certifications": ["Licensed Clinical Psychologist", "EMDR Certified"],
+                                        "base_hourly_rate": 120.00,
+                                        "session_type_pricing": {"video": 120, "phone": 100, "in-person": 150},
+                                        "rating": 4.7,
+                                        "total_sessions": 150,
+                                        "total_reviews": 45,
+                                        "is_active": true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Therapist not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "Therapist not found"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "An error occurred"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mental-health/therapists/{id}/availability": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get therapist availability",
+                "description": "Get available time slots for a therapist. If no date is provided, returns availability for the next 7 days. Time slots are returned in the therapist's timezone.",
+                "operationId": "getTherapistAvailability",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {"type": "integer"},
+                        "description": "Therapist ID",
+                        "example": 1
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "string", "format": "date"},
+                        "description": "Specific date to check availability (YYYY-MM-DD). If not provided, returns next 7 days.",
+                        "example": "2024-12-25"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "integer"},
+                        "description": "Filter by session duration in minutes (30, 60, 90)",
+                        "example": 60
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Availability retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true,
+                                            "description": "Request status"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Availability retrieved successfully",
+                                            "description": "Response message"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2024-12-25",
+                                                        "description": "Date of availability"
+                                                    },
+                                                    "day_name": {
+                                                        "type": "string",
+                                                        "example": "Wednesday",
+                                                        "description": "Day of the week"
+                                                    },
+                                                    "time_slots": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "start_time": {
+                                                                    "type": "string",
+                                                                    "format": "time",
+                                                                    "example": "09:00",
+                                                                    "description": "Start time (HH:MM format)"
+                                                                },
+                                                                "end_time": {
+                                                                    "type": "string",
+                                                                    "format": "time",
+                                                                    "example": "10:00",
+                                                                    "description": "End time (HH:MM format)"
+                                                                },
+                                                                "datetime": {
+                                                                    "type": "string",
+                                                                    "format": "date-time",
+                                                                    "example": "2024-12-25T09:00:00Z",
+                                                                    "description": "Full datetime in ISO format"
+                                                                },
+                                                                "is_available": {
+                                                                    "type": "boolean",
+                                                                    "example": true,
+                                                                    "description": "Whether the slot is available"
+                                                                },
+                                                                "session_types": {
+                                                                    "type": "array",
+                                                                    "items": {"type": "string"},
+                                                                    "example": ["video", "phone"],
+                                                                    "description": "Available session types for this slot"
+                                                                }
+                                                            }
+                                                        },
+                                                        "description": "Available time slots for this date"
+                                                    },
+                                                    "timezone": {
+                                                        "type": "string",
+                                                        "example": "America/New_York",
+                                                        "description": "Therapist's timezone"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "Availability retrieved successfully",
+                                    "data": [
+                                        {
+                                            "date": "2024-12-25",
+                                            "day_name": "Wednesday",
+                                            "timezone": "America/New_York",
+                                            "time_slots": [
+                                                {
+                                                    "start_time": "09:00",
+                                                    "end_time": "10:00",
+                                                    "datetime": "2024-12-25T09:00:00-05:00",
+                                                    "is_available": true,
+                                                    "session_types": ["video", "phone"]
+                                                },
+                                                {
+                                                    "start_time": "10:00",
+                                                    "end_time": "11:00",
+                                                    "datetime": "2024-12-25T10:00:00-05:00",
+                                                    "is_available": true,
+                                                    "session_types": ["video", "phone", "in-person"]
+                                                },
+                                                {
+                                                    "start_time": "14:00",
+                                                    "end_time": "15:00",
+                                                    "datetime": "2024-12-25T14:00:00-05:00",
+                                                    "is_available": true,
+                                                    "session_types": ["video", "phone"]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "date": "2024-12-26",
+                                            "day_name": "Thursday",
+                                            "timezone": "America/New_York",
+                                            "time_slots": [
+                                                {
+                                                    "start_time": "09:00",
+                                                    "end_time": "10:00",
+                                                    "datetime": "2024-12-26T09:00:00-05:00",
+                                                    "is_available": true,
+                                                    "session_types": ["video", "phone"]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Therapist not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "Therapist not found"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "An error occurred"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/sessions/book": {
+            "post": {
+                "tags": ["Mental Health"],
+                "summary": "Book a therapy session",
+                "description": "Book a therapy session with a therapist. You can book a single session or set up a recurring series. The system will check availability and calculate pricing based on session type and duration. Payment will be processed if credits are available, otherwise a payment link will be provided.",
+                "operationId": "bookSession",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["therapist_id", "scheduled_at", "session_type", "duration_minutes"],
+                                "properties": {
+                                    "therapist_id": {
+                                        "type": "integer",
+                                        "example": 1,
+                                        "description": "ID of the therapist to book with",
+                                        "minimum": 1
+                                    },
+                                    "scheduled_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-12-25T10:00:00-05:00",
+                                        "description": "Session date and time in ISO 8601 format with timezone. Must be a future date/time."
+                                    },
+                                    "session_type": {
+                                        "type": "string",
+                                        "example": "video",
+                                        "enum": ["video", "phone", "in-person"],
+                                        "description": "Type of session: 'video' for video call, 'phone' for phone call, 'in-person' for in-person meeting"
+                                    },
+                                    "duration_minutes": {
+                                        "type": "integer",
+                                        "example": 60,
+                                        "enum": [30, 60, 90],
+                                        "description": "Session duration in minutes. Common options: 30, 60, or 90 minutes.",
+                                        "minimum": 30,
+                                        "maximum": 120
+                                    },
+                                    "timezone": {
+                                        "type": "string",
+                                        "example": "America/New_York",
+                                        "description": "Timezone for the session (e.g., 'America/New_York', 'UTC'). If not provided, uses therapist's timezone.",
+                                        "default": "Therapist's timezone"
+                                    },
+                                    "is_recurring": {
+                                        "type": "boolean",
+                                        "example": false,
+                                        "description": "Whether this is a recurring session series",
+                                        "default": false
+                                    },
+                                    "recurring_frequency": {
+                                        "type": "string",
+                                        "example": "weekly",
+                                        "enum": ["weekly", "biweekly", "monthly"],
+                                        "description": "Frequency of recurring sessions. Required if is_recurring is true."
+                                    },
+                                    "recurring_end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-03-25",
+                                        "description": "End date for recurring sessions. Required if is_recurring is true."
+                                    },
+                                    "recurring_session_count": {
+                                        "type": "integer",
+                                        "example": 8,
+                                        "description": "Total number of sessions in the recurring series. Alternative to recurring_end_date.",
+                                        "minimum": 2,
+                                        "maximum": 52
+                                    },
+                                    "user_notes": {
+                                        "type": "string",
+                                        "example": "I'd like to focus on anxiety management and coping strategies for work-related stress.",
+                                        "description": "Optional notes for the therapist about what you'd like to discuss or focus on",
+                                        "maxLength": 1000
+                                    },
+                                    "use_credits": {
+                                        "type": "boolean",
+                                        "example": true,
+                                        "description": "Whether to use available mental health credits for payment",
+                                        "default": true
+                                    }
+                                }
+                            },
+                            "example": {
+                                "therapist_id": 1,
+                                "scheduled_at": "2024-12-25T10:00:00-05:00",
+                                "session_type": "video",
+                                "duration_minutes": 60,
+                                "timezone": "America/New_York",
+                                "is_recurring": false,
+                                "user_notes": "I'd like to focus on anxiety management and coping strategies for work-related stress."
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Session booked successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true,
+                                            "description": "Request status"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Session booked successfully",
+                                            "description": "Response message"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "booking_id": {
+                                                    "type": "integer",
+                                                    "example": 123,
+                                                    "description": "Unique booking ID"
+                                                },
+                                                "session_id": {
+                                                    "type": "integer",
+                                                    "example": 456,
+                                                    "description": "Session ID (if session was created)"
+                                                },
+                                                "therapist_id": {
+                                                    "type": "integer",
+                                                    "example": 1,
+                                                    "description": "Therapist ID"
+                                                },
+                                                "therapist_name": {
+                                                    "type": "string",
+                                                    "example": "Dr. Sarah Johnson",
+                                                    "description": "Therapist full name"
+                                                },
+                                                "scheduled_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2024-12-25T10:00:00-05:00",
+                                                    "description": "Scheduled session date and time"
+                                                },
+                                                "session_type": {
+                                                    "type": "string",
+                                                    "example": "video",
+                                                    "description": "Session type"
+                                                },
+                                                "duration_minutes": {
+                                                    "type": "integer",
+                                                    "example": 60,
+                                                    "description": "Session duration"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "confirmed",
+                                                    "enum": ["pending", "confirmed", "cancelled", "completed"],
+                                                    "description": "Booking status"
+                                                },
+                                                "session_cost": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 120.00,
+                                                    "description": "Total cost of the session in USD"
+                                                },
+                                                "credits_used": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 120.00,
+                                                    "description": "Credits used for payment"
+                                                },
+                                                "amount_paid": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0.00,
+                                                    "description": "Amount paid in cash (if any)"
+                                                },
+                                                "payment_status": {
+                                                    "type": "string",
+                                                    "example": "paid",
+                                                    "enum": ["pending", "paid", "refunded"],
+                                                    "description": "Payment status"
+                                                },
+                                                "payment_required": {
+                                                    "type": "boolean",
+                                                    "example": false,
+                                                    "description": "Whether additional payment is required"
+                                                },
+                                                "payment_link": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "description": "Payment link if payment is required"
+                                                },
+                                                "is_recurring": {
+                                                    "type": "boolean",
+                                                    "example": false,
+                                                    "description": "Whether this is part of a recurring series"
+                                                },
+                                                "recurring_series_id": {
+                                                    "type": "integer",
+                                                    "example": null,
+                                                    "description": "Recurring series ID if applicable"
+                                                },
+                                                "video_link": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "description": "Video call link (provided closer to session time)"
+                                                },
+                                                "timezone": {
+                                                    "type": "string",
+                                                    "example": "America/New_York",
+                                                    "description": "Session timezone"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "Session booked successfully",
+                                    "data": {
+                                        "booking_id": 123,
+                                        "session_id": 456,
+                                        "therapist_id": 1,
+                                        "therapist_name": "Dr. Sarah Johnson",
+                                        "scheduled_at": "2024-12-25T10:00:00-05:00",
+                                        "session_type": "video",
+                                        "duration_minutes": 60,
+                                        "status": "confirmed",
+                                        "session_cost": 120.00,
+                                        "credits_used": 120.00,
+                                        "amount_paid": 0.00,
+                                        "payment_status": "paid",
+                                        "payment_required": false,
+                                        "payment_link": null,
+                                        "is_recurring": false,
+                                        "recurring_series_id": null,
+                                        "video_link": null,
+                                        "timezone": "America/New_York"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request or slot not available",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The selected time slot is not available. Please choose another time."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "scheduled_at": ["The selected time slot is already booked."]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "402": {
+                        "description": "Payment required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "Insufficient credits. Payment required."},
+                                        "payment_link": {"type": "string", "example": "https://payment.example.com/checkout/abc123"},
+                                        "session_cost": {"type": "number", "example": 120.00},
+                                        "credits_available": {"type": "number", "example": 50.00}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "Validation failed"},
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "scheduled_at": ["The scheduled_at must be a future date and time."],
+                                                "duration_minutes": ["The duration must be 30, 60, or 90 minutes."]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "An error occurred while booking the session"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/sessions": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get user's sessions",
+                "description": "Retrieve all sessions booked by the authenticated user",
+                "operationId": "getSessions",
+                "parameters": [
+                    {"name": "status", "in": "query", "required": false, "schema": {"type": "string", "enum": ["pending", "confirmed", "completed", "cancelled"]}, "description": "Filter by status"},
+                    {"name": "page", "in": "query", "required": false, "schema": {"type": "integer"}, "description": "Page number"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sessions retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "integer"},
+                                                    "therapist_id": {"type": "integer"},
+                                                    "scheduled_at": {"type": "string", "format": "date-time"},
+                                                    "status": {"type": "string"},
+                                                    "session_type": {"type": "string"},
+                                                    "duration_minutes": {"type": "integer"}
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthenticated"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/sessions/{id}": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get session details",
+                "description": "Get detailed information about a specific session",
+                "operationId": "getSession",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Session booking ID"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session details retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Session not found"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "put": {
+                "tags": ["Mental Health"],
+                "summary": "Update session",
+                "description": "Update a booked session",
+                "operationId": "updateSession",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Session booking ID"}
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "scheduled_at": {"type": "string", "format": "date-time", "description": "New session date and time"},
+                                    "duration_minutes": {"type": "integer", "description": "New duration"},
+                                    "user_notes": {"type": "string", "description": "Updated notes"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Session updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Session updated successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Session not found"},
+                    "422": {"description": "Validation error"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "delete": {
+                "tags": ["Mental Health"],
+                "summary": "Cancel session",
+                "description": "Cancel a booked session",
+                "operationId": "cancelSession",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Session booking ID"}
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "cancellation_reason": {"type": "string", "example": "Schedule conflict", "description": "Reason for cancellation"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Session cancelled successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Session cancelled successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Session not found"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/resources": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get mental health resources",
+                "description": "Retrieve a paginated list of mental health resources including articles, videos, guides, and tools. Resources are filtered to show only published content. You can filter by category and resource type.",
+                "operationId": "getResources",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "string"},
+                        "description": "Filter by category (e.g., 'stress-management', 'anxiety', 'depression', 'wellness', 'coping-strategies', 'self-care')",
+                        "example": "stress-management"
+                    },
+                    {
+                        "name": "resource_type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "string", "enum": ["article", "video", "guide", "tool", "worksheet", "podcast"]},
+                        "description": "Filter by resource type",
+                        "example": "article"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "integer", "minimum": 1, "default": 1},
+                        "description": "Page number for pagination",
+                        "example": 1
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "integer", "minimum": 1, "maximum": 50, "default": 20},
+                        "description": "Number of resources per page",
+                        "example": 20
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "string"},
+                        "description": "Search term to filter resources by title or description",
+                        "example": "stress"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resources retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true,
+                                            "description": "Request status"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Resources retrieved successfully",
+                                            "description": "Response message"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1,
+                                                        "description": "Resource ID"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Managing Stress at Sea: A Comprehensive Guide",
+                                                        "description": "Resource title"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Learn effective strategies for managing stress while working on yachts and dealing with the unique challenges of maritime life.",
+                                                        "description": "Short description of the resource"
+                                                    },
+                                                    "category": {
+                                                        "type": "string",
+                                                        "example": "stress-management",
+                                                        "description": "Resource category"
+                                                    },
+                                                    "resource_type": {
+                                                        "type": "string",
+                                                        "example": "article",
+                                                        "enum": ["article", "video", "guide", "tool", "worksheet", "podcast"],
+                                                        "description": "Type of resource"
+                                                    },
+                                                    "thumbnail_path": {
+                                                        "type": "string",
+                                                        "example": "/storage/resources/thumbnails/stress-management.jpg",
+                                                        "description": "Path to thumbnail image"
+                                                    },
+                                                    "reading_time_minutes": {
+                                                        "type": "integer",
+                                                        "example": 8,
+                                                        "description": "Estimated reading/watching time in minutes"
+                                                    },
+                                                    "difficulty_level": {
+                                                        "type": "string",
+                                                        "example": "beginner",
+                                                        "enum": ["beginner", "intermediate", "advanced"],
+                                                        "description": "Difficulty level"
+                                                    },
+                                                    "tags": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                        "example": ["stress", "maritime", "coping", "wellness"],
+                                                        "description": "Tags associated with the resource"
+                                                    },
+                                                    "author": {
+                                                        "type": "string",
+                                                        "example": "Dr. Sarah Johnson",
+                                                        "description": "Resource author"
+                                                    },
+                                                    "publication_date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2024-11-15",
+                                                        "description": "Publication date"
+                                                    },
+                                                    "view_count": {
+                                                        "type": "integer",
+                                                        "example": 1250,
+                                                        "description": "Number of views"
+                                                    },
+                                                    "average_rating": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4.5,
+                                                        "description": "Average user rating"
+                                                    },
+                                                    "is_favorited": {
+                                                        "type": "boolean",
+                                                        "example": false,
+                                                        "description": "Whether the authenticated user has favorited this resource (only if authenticated)"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {"type": "integer", "example": 1},
+                                                "total": {"type": "integer", "example": 45},
+                                                "per_page": {"type": "integer", "example": 20},
+                                                "last_page": {"type": "integer", "example": 3}
+                                            }
+                                        }
+                                    }
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "Resources retrieved successfully",
+                                    "data": [
+                                        {
+                                            "id": 1,
+                                            "title": "Managing Stress at Sea: A Comprehensive Guide",
+                                            "description": "Learn effective strategies for managing stress while working on yachts and dealing with the unique challenges of maritime life.",
+                                            "category": "stress-management",
+                                            "resource_type": "article",
+                                            "thumbnail_path": "/storage/resources/thumbnails/stress-management.jpg",
+                                            "reading_time_minutes": 8,
+                                            "difficulty_level": "beginner",
+                                            "tags": ["stress", "maritime", "coping", "wellness"],
+                                            "author": "Dr. Sarah Johnson",
+                                            "publication_date": "2024-11-15",
+                                            "view_count": 1250,
+                                            "average_rating": 4.5,
+                                            "is_favorited": false
+                                        },
+                                        {
+                                            "id": 2,
+                                            "title": "Mindfulness Meditation for Seafarers",
+                                            "description": "A 10-minute guided meditation specifically designed for maritime professionals.",
+                                            "category": "wellness",
+                                            "resource_type": "video",
+                                            "thumbnail_path": "/storage/resources/thumbnails/meditation.jpg",
+                                            "reading_time_minutes": 10,
+                                            "difficulty_level": "beginner",
+                                            "tags": ["meditation", "mindfulness", "relaxation"],
+                                            "author": "Dr. Michael Chen",
+                                            "publication_date": "2024-10-20",
+                                            "view_count": 890,
+                                            "average_rating": 4.8,
+                                            "is_favorited": true
+                                        }
+                                    ],
+                                    "meta": {
+                                        "current_page": 1,
+                                        "total": 45,
+                                        "per_page": 20,
+                                        "last_page": 3
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "An error occurred while retrieving resources"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mental-health/resources/{id}": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get resource details",
+                "description": "Get detailed information about a mental health resource",
+                "operationId": "getResource",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Resource ID"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resource details retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {"type": "integer"},
+                                                "title": {"type": "string"},
+                                                "content": {"type": "string"},
+                                                "category": {"type": "string"},
+                                                "tags": {"type": "array", "items": {"type": "string"}}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Resource not found"},
+                    "500": {"description": "Server error"}
+                }
+            }
+        },
+        "/api/mental-health/resources/{id}/favorite": {
+            "post": {
+                "tags": ["Mental Health"],
+                "summary": "Favorite a resource",
+                "description": "Add a resource to favorites",
+                "operationId": "favoriteResource",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Resource ID"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resource favorited successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Resource added to favorites"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Resource not found"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "delete": {
+                "tags": ["Mental Health"],
+                "summary": "Unfavorite a resource",
+                "description": "Remove a resource from favorites",
+                "operationId": "unfavoriteResource",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Resource ID"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resource removed from favorites",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Resource removed from favorites"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Resource not found"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/mood-tracking": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get mood tracking entries",
+                "description": "Retrieve mood tracking entries for the authenticated user. Returns entries sorted by date (newest first). Can be filtered by date range. Useful for tracking mood trends over time.",
+                "operationId": "getMoodTracking",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "string", "format": "date"},
+                        "description": "Start date for filtering entries (YYYY-MM-DD). If not provided, defaults to 30 days ago.",
+                        "example": "2024-11-20"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "string", "format": "date"},
+                        "description": "End date for filtering entries (YYYY-MM-DD). If not provided, defaults to today.",
+                        "example": "2024-12-20"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "integer", "minimum": 1, "default": 1},
+                        "description": "Page number for pagination",
+                        "example": 1
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {"type": "integer", "minimum": 1, "maximum": 100, "default": 30},
+                        "description": "Number of entries per page",
+                        "example": 30
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mood tracking entries retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true,
+                                            "description": "Request status"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mood tracking entries retrieved successfully",
+                                            "description": "Response message"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 123,
+                                                        "description": "Entry ID"
+                                                    },
+                                                    "tracked_date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2024-12-20",
+                                                        "description": "Date when mood was tracked"
+                                                    },
+                                                    "tracked_time": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2024-12-20T14:30:00Z",
+                                                        "description": "Exact timestamp when entry was created"
+                                                    },
+                                                    "mood_rating": {
+                                                        "type": "integer",
+                                                        "example": 7,
+                                                        "minimum": 1,
+                                                        "maximum": 10,
+                                                        "description": "Overall mood rating from 1 (very poor) to 10 (excellent)"
+                                                    },
+                                                    "primary_mood": {
+                                                        "type": "string",
+                                                        "example": "calm",
+                                                        "description": "Primary mood/emotion",
+                                                        "enum": ["happy", "sad", "anxious", "calm", "angry", "excited", "tired", "energetic", "stressed", "peaceful", "frustrated", "grateful", "lonely", "content", "overwhelmed"]
+                                                    },
+                                                    "secondary_emotions": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                        "example": ["grateful", "content"],
+                                                        "description": "Additional emotions experienced"
+                                                    },
+                                                    "energy_level": {
+                                                        "type": "integer",
+                                                        "example": 6,
+                                                        "minimum": 1,
+                                                        "maximum": 10,
+                                                        "description": "Energy level from 1 (very low) to 10 (very high)"
+                                                    },
+                                                    "sleep_quality": {
+                                                        "type": "integer",
+                                                        "example": 7,
+                                                        "minimum": 1,
+                                                        "maximum": 10,
+                                                        "description": "Sleep quality from 1 (very poor) to 10 (excellent)"
+                                                    },
+                                                    "stress_level": {
+                                                        "type": "integer",
+                                                        "example": 4,
+                                                        "minimum": 1,
+                                                        "maximum": 10,
+                                                        "description": "Stress level from 1 (very low) to 10 (very high)"
+                                                    },
+                                                    "physical_symptoms": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                        "example": ["headache", "muscle tension"],
+                                                        "description": "Physical symptoms experienced"
+                                                    },
+                                                    "medications": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                        "example": ["Prozac 20mg"],
+                                                        "description": "Medications taken (if tracked)"
+                                                    },
+                                                    "trigger_notes": {
+                                                        "type": "string",
+                                                        "example": "Had a productive day at work. Completed all tasks on time. Feeling accomplished.",
+                                                        "description": "Notes about what may have influenced mood"
+                                                    },
+                                                    "is_quick_checkin": {
+                                                        "type": "boolean",
+                                                        "example": false,
+                                                        "description": "Whether this was a quick check-in (minimal data)"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {"type": "integer", "example": 1},
+                                                "total": {"type": "integer", "example": 45},
+                                                "per_page": {"type": "integer", "example": 30},
+                                                "average_mood": {"type": "number", "format": "float", "example": 6.8, "description": "Average mood rating for the period"},
+                                                "average_energy": {"type": "number", "format": "float", "example": 6.2, "description": "Average energy level"},
+                                                "average_stress": {"type": "number", "format": "float", "example": 4.5, "description": "Average stress level"}
+                                            }
+                                        }
+                                    }
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "Mood tracking entries retrieved successfully",
+                                    "data": [
+                                        {
+                                            "id": 123,
+                                            "tracked_date": "2024-12-20",
+                                            "tracked_time": "2024-12-20T14:30:00Z",
+                                            "mood_rating": 7,
+                                            "primary_mood": "calm",
+                                            "secondary_emotions": ["grateful", "content"],
+                                            "energy_level": 6,
+                                            "sleep_quality": 7,
+                                            "stress_level": 4,
+                                            "physical_symptoms": [],
+                                            "medications": [],
+                                            "trigger_notes": "Had a productive day at work. Completed all tasks on time.",
+                                            "is_quick_checkin": false
+                                        },
+                                        {
+                                            "id": 122,
+                                            "tracked_date": "2024-12-19",
+                                            "tracked_time": "2024-12-19T15:00:00Z",
+                                            "mood_rating": 6,
+                                            "primary_mood": "tired",
+                                            "secondary_emotions": ["stressed"],
+                                            "energy_level": 4,
+                                            "sleep_quality": 5,
+                                            "stress_level": 7,
+                                            "physical_symptoms": ["headache"],
+                                            "trigger_notes": "Long work day, didn't sleep well last night.",
+                                            "is_quick_checkin": false
+                                        }
+                                    ],
+                                    "meta": {
+                                        "current_page": 1,
+                                        "total": 45,
+                                        "per_page": 30,
+                                        "average_mood": 6.8,
+                                        "average_energy": 6.2,
+                                        "average_stress": 4.5
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "Unauthenticated"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "An error occurred"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "post": {
+                "tags": ["Mental Health"],
+                "summary": "Create mood tracking entry",
+                "description": "Create a new mood tracking entry. Track your daily mood, energy, sleep, and stress levels. Only mood_rating and tracked_date are required; all other fields are optional. You can create one entry per day.",
+                "operationId": "createMoodTracking",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["tracked_date", "mood_rating"],
+                                "properties": {
+                                    "tracked_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-12-20",
+                                        "description": "Date of tracking (YYYY-MM-DD). Can be today or a past date, but not future dates."
+                                    },
+                                    "mood_rating": {
+                                        "type": "integer",
+                                        "example": 7,
+                                        "minimum": 1,
+                                        "maximum": 10,
+                                        "description": "Overall mood rating from 1 (very poor) to 10 (excellent). Required field."
+                                    },
+                                    "primary_mood": {
+                                        "type": "string",
+                                        "example": "calm",
+                                        "enum": ["happy", "sad", "anxious", "calm", "angry", "excited", "tired", "energetic", "stressed", "peaceful", "frustrated", "grateful", "lonely", "content", "overwhelmed"],
+                                        "description": "Primary mood/emotion you're experiencing"
+                                    },
+                                    "secondary_emotions": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                        "example": ["grateful", "content", "hopeful"],
+                                        "description": "Additional emotions you're experiencing"
+                                    },
+                                    "energy_level": {
+                                        "type": "integer",
+                                        "example": 6,
+                                        "minimum": 1,
+                                        "maximum": 10,
+                                        "description": "Energy level from 1 (very low/exhausted) to 10 (very high/energetic)"
+                                    },
+                                    "sleep_quality": {
+                                        "type": "integer",
+                                        "example": 7,
+                                        "minimum": 1,
+                                        "maximum": 10,
+                                        "description": "Sleep quality from previous night: 1 (very poor) to 10 (excellent)"
+                                    },
+                                    "stress_level": {
+                                        "type": "integer",
+                                        "example": 4,
+                                        "minimum": 1,
+                                        "maximum": 10,
+                                        "description": "Current stress level from 1 (very low) to 10 (very high)"
+                                    },
+                                    "physical_symptoms": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                        "example": ["headache", "muscle tension", "fatigue"],
+                                        "description": "Physical symptoms you're experiencing"
+                                    },
+                                    "medications": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                        "example": ["Prozac 20mg", "Vitamin D"],
+                                        "description": "Medications taken today (if you want to track this)"
+                                    },
+                                    "trigger_notes": {
+                                        "type": "string",
+                                        "example": "Had a good day at work. Completed all tasks on time. Feeling accomplished and productive.",
+                                        "description": "Notes about what may have influenced your mood today (positive or negative triggers)",
+                                        "maxLength": 2000
+                                    },
+                                    "is_quick_checkin": {
+                                        "type": "boolean",
+                                        "example": false,
+                                        "description": "Whether this is a quick check-in with minimal data. If true, only mood_rating is required.",
+                                        "default": false
+                                    }
+                                }
+                            },
+                            "example": {
+                                "tracked_date": "2024-12-20",
+                                "mood_rating": 7,
+                                "primary_mood": "calm",
+                                "secondary_emotions": ["grateful", "content"],
+                                "energy_level": 6,
+                                "sleep_quality": 7,
+                                "stress_level": 4,
+                                "physical_symptoms": [],
+                                "trigger_notes": "Had a productive day at work. Completed all tasks on time. Feeling accomplished.",
+                                "is_quick_checkin": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mood tracking entry created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true,
+                                            "description": "Request status"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mood tracking entry created successfully",
+                                            "description": "Response message"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {"type": "integer", "example": 123},
+                                                "tracked_date": {"type": "string", "format": "date", "example": "2024-12-20"},
+                                                "mood_rating": {"type": "integer", "example": 7},
+                                                "primary_mood": {"type": "string", "example": "calm"},
+                                                "energy_level": {"type": "integer", "example": 6},
+                                                "sleep_quality": {"type": "integer", "example": 7},
+                                                "stress_level": {"type": "integer", "example": 4},
+                                                "created_at": {"type": "string", "format": "date-time", "example": "2024-12-20T14:30:00Z"}
+                                            }
+                                        }
+                                    }
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "Mood tracking entry created successfully",
+                                    "data": {
+                                        "id": 123,
+                                        "tracked_date": "2024-12-20",
+                                        "mood_rating": 7,
+                                        "primary_mood": "calm",
+                                        "secondary_emotions": ["grateful", "content"],
+                                        "energy_level": 6,
+                                        "sleep_quality": 7,
+                                        "stress_level": 4,
+                                        "trigger_notes": "Had a productive day at work.",
+                                        "created_at": "2024-12-20T14:30:00Z"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Entry already exists for this date",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "An entry already exists for this date. Use PUT to update it."}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "Validation failed"},
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "mood_rating": ["The mood rating must be between 1 and 10."],
+                                                "tracked_date": ["The tracked date cannot be in the future."]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "An error occurred while creating the entry"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/mood-tracking/{id}": {
+            "put": {
+                "tags": ["Mental Health"],
+                "summary": "Update mood tracking entry",
+                "description": "Update an existing mood tracking entry",
+                "operationId": "updateMoodTracking",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Mood tracking entry ID"}
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "mood_rating": {"type": "integer", "minimum": 1, "maximum": 10},
+                                    "primary_mood": {"type": "string"},
+                                    "energy_level": {"type": "integer", "minimum": 1, "maximum": 10},
+                                    "sleep_quality": {"type": "integer", "minimum": 1, "maximum": 10},
+                                    "stress_level": {"type": "integer", "minimum": 1, "maximum": 10},
+                                    "trigger_notes": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mood tracking entry updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Mood tracking entry updated"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Entry not found"},
+                    "422": {"description": "Validation error"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "delete": {
+                "tags": ["Mental Health"],
+                "summary": "Delete mood tracking entry",
+                "description": "Delete a mood tracking entry",
+                "operationId": "deleteMoodTracking",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Mood tracking entry ID"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mood tracking entry deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Mood tracking entry deleted"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Entry not found"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/goals": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get mental health goals",
+                "description": "Retrieve user's mental health goals",
+                "operationId": "getGoals",
+                "parameters": [
+                    {"name": "status", "in": "query", "required": false, "schema": {"type": "string", "enum": ["active", "completed", "archived"]}, "description": "Filter by status"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Goals retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {"type": "object"}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthenticated"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "post": {
+                "tags": ["Mental Health"],
+                "summary": "Create mental health goal",
+                "description": "Create a new mental health goal",
+                "operationId": "createGoal",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["title", "target_date"],
+                                "properties": {
+                                    "title": {"type": "string", "example": "Practice meditation daily", "description": "Goal title"},
+                                    "description": {"type": "string", "example": "Meditate for 10 minutes every morning", "description": "Goal description"},
+                                    "target_date": {"type": "string", "format": "date", "example": "2025-01-31", "description": "Target completion date"},
+                                    "category": {"type": "string", "example": "wellness", "description": "Goal category"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Goal created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Goal created successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/goals/{id}": {
+            "put": {
+                "tags": ["Mental Health"],
+                "summary": "Update mental health goal",
+                "description": "Update an existing mental health goal",
+                "operationId": "updateGoal",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Goal ID"}
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {"type": "string"},
+                                    "description": {"type": "string"},
+                                    "target_date": {"type": "string", "format": "date"},
+                                    "status": {"type": "string", "enum": ["active", "completed", "archived"]}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Goal updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Goal updated successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Goal not found"},
+                    "422": {"description": "Validation error"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "delete": {
+                "tags": ["Mental Health"],
+                "summary": "Delete mental health goal",
+                "description": "Delete a mental health goal",
+                "operationId": "deleteGoal",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Goal ID"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Goal deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Goal deleted successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Goal not found"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/journals": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get journal entries",
+                "description": "Retrieve user's journal entries",
+                "operationId": "getJournals",
+                "parameters": [
+                    {"name": "start_date", "in": "query", "required": false, "schema": {"type": "string", "format": "date"}, "description": "Start date"},
+                    {"name": "end_date", "in": "query", "required": false, "schema": {"type": "string", "format": "date"}, "description": "End date"},
+                    {"name": "page", "in": "query", "required": false, "schema": {"type": "integer"}, "description": "Page number"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Journal entries retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {"type": "object"}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthenticated"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "post": {
+                "tags": ["Mental Health"],
+                "summary": "Create journal entry",
+                "description": "Create a new journal entry",
+                "operationId": "createJournal",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["entry_date", "content"],
+                                "properties": {
+                                    "entry_date": {"type": "string", "format": "date", "example": "2024-12-20", "description": "Entry date"},
+                                    "content": {"type": "string", "example": "Today I felt...", "description": "Journal content"},
+                                    "mood": {"type": "string", "example": "grateful", "description": "Mood associated with entry"},
+                                    "tags": {"type": "array", "items": {"type": "string"}, "description": "Tags for the entry"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Journal entry created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Journal entry created"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/journals/{id}": {
+            "put": {
+                "tags": ["Mental Health"],
+                "summary": "Update journal entry",
+                "description": "Update an existing journal entry",
+                "operationId": "updateJournal",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Journal entry ID"}
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "content": {"type": "string"},
+                                    "mood": {"type": "string"},
+                                    "tags": {"type": "array", "items": {"type": "string"}}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Journal entry updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Journal entry updated"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Journal entry not found"},
+                    "422": {"description": "Validation error"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "delete": {
+                "tags": ["Mental Health"],
+                "summary": "Delete journal entry",
+                "description": "Delete a journal entry",
+                "operationId": "deleteJournal",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Journal entry ID"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Journal entry deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Journal entry deleted"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Journal entry not found"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/habits": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get mental health habits",
+                "description": "Retrieve user's mental health habits",
+                "operationId": "getHabits",
+                "responses": {
+                    "200": {
+                        "description": "Habits retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {"type": "object"}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthenticated"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "post": {
+                "tags": ["Mental Health"],
+                "summary": "Create mental health habit",
+                "description": "Create a new mental health habit",
+                "operationId": "createHabit",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["name", "frequency"],
+                                "properties": {
+                                    "name": {"type": "string", "example": "Morning meditation", "description": "Habit name"},
+                                    "description": {"type": "string", "example": "10 minutes of meditation", "description": "Habit description"},
+                                    "frequency": {"type": "string", "example": "daily", "enum": ["daily", "weekly", "custom"], "description": "Habit frequency"},
+                                    "reminder_time": {"type": "string", "format": "time", "example": "08:00", "description": "Reminder time"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Habit created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Habit created successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/habits/{id}": {
+            "put": {
+                "tags": ["Mental Health"],
+                "summary": "Update mental health habit",
+                "description": "Update an existing mental health habit",
+                "operationId": "updateHabit",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Habit ID"}
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "description": {"type": "string"},
+                                    "frequency": {"type": "string"},
+                                    "reminder_time": {"type": "string", "format": "time"},
+                                    "is_active": {"type": "boolean"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Habit updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Habit updated successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Habit not found"},
+                    "422": {"description": "Validation error"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            },
+            "delete": {
+                "tags": ["Mental Health"],
+                "summary": "Delete mental health habit",
+                "description": "Delete a mental health habit",
+                "operationId": "deleteHabit",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Habit ID"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Habit deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Habit deleted successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Habit not found"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/habits/{id}/track": {
+            "post": {
+                "tags": ["Mental Health"],
+                "summary": "Track habit completion",
+                "description": "Record that a habit was completed",
+                "operationId": "trackHabit",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Habit ID"}
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "completed_date": {"type": "string", "format": "date", "example": "2024-12-20", "description": "Date of completion (defaults to today)"},
+                                    "notes": {"type": "string", "description": "Optional notes"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Habit tracked successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Habit tracked successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Habit not found"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/courses": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get mental health courses",
+                "description": "Retrieve available mental health courses",
+                "operationId": "getCourses",
+                "parameters": [
+                    {"name": "category", "in": "query", "required": false, "schema": {"type": "string"}, "description": "Filter by category"},
+                    {"name": "page", "in": "query", "required": false, "schema": {"type": "integer"}, "description": "Page number"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Courses retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {"type": "object"}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {"description": "Server error"}
+                }
+            }
+        },
+        "/api/mental-health/courses/{id}": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get course details",
+                "description": "Get detailed information about a mental health course",
+                "operationId": "getCourse",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Course ID"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Course details retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Course not found"},
+                    "500": {"description": "Server error"}
+                }
+            }
+        },
+        "/api/mental-health/courses/{id}/enroll": {
+            "post": {
+                "tags": ["Mental Health"],
+                "summary": "Enroll in a course",
+                "description": "Enroll the authenticated user in a mental health course",
+                "operationId": "enrollCourse",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Course ID"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Enrolled in course successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Enrolled in course successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Course not found"},
+                    "400": {"description": "Already enrolled"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/crisis-support": {
+            "post": {
+                "tags": ["Mental Health"],
+                "summary": "Request crisis support",
+                "description": "Request immediate crisis support session",
+                "operationId": "requestCrisisSupport",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": ["urgency_level"],
+                                "properties": {
+                                    "urgency_level": {"type": "string", "example": "high", "enum": ["low", "medium", "high", "critical"], "description": "Urgency level"},
+                                    "message": {"type": "string", "example": "I need immediate support", "description": "Brief message about the crisis"},
+                                    "preferred_contact_method": {"type": "string", "example": "phone", "enum": ["phone", "video", "chat"], "description": "Preferred contact method"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Crisis support request submitted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Crisis support request submitted. A therapist will contact you shortly."},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "session_id": {"type": "integer"},
+                                                "estimated_response_time": {"type": "string", "example": "15 minutes"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"},
+                    "500": {"description": "Server error"}
+                },
+                "security": [{"bearerAuth": []}]
+            }
+        },
+        "/api/mental-health/dashboard": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get mental health dashboard",
+                "description": "Get comprehensive overview data for the mental health dashboard. Returns upcoming sessions, recent mood entries, active goals, recommended resources, mood trends, and statistics. This endpoint provides all the data needed to display a user's mental health dashboard.",
+                "operationId": "getMentalHealthDashboard",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard data retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true,
+                                            "description": "Request status"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Dashboard data retrieved successfully",
+                                            "description": "Response message"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "upcoming_sessions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 123},
+                                                            "therapist_id": {"type": "integer", "example": 1},
+                                                            "therapist_name": {"type": "string", "example": "Dr. Sarah Johnson"},
+                                                            "scheduled_at": {"type": "string", "format": "date-time", "example": "2024-12-25T10:00:00-05:00"},
+                                                            "session_type": {"type": "string", "example": "video"},
+                                                            "duration_minutes": {"type": "integer", "example": 60},
+                                                            "status": {"type": "string", "example": "confirmed"},
+                                                            "days_until": {"type": "integer", "example": 5}
+                                                        }
+                                                    },
+                                                    "description": "Upcoming therapy sessions (next 3)"
+                                                },
+                                                "recent_mood_entries": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 123},
+                                                            "tracked_date": {"type": "string", "format": "date", "example": "2024-12-20"},
+                                                            "mood_rating": {"type": "integer", "example": 7},
+                                                            "primary_mood": {"type": "string", "example": "calm"},
+                                                            "energy_level": {"type": "integer", "example": 6},
+                                                            "stress_level": {"type": "integer", "example": 4}
+                                                        }
+                                                    },
+                                                    "description": "Recent mood tracking entries (last 7 days)"
+                                                },
+                                                "active_goals": {
+                                                    "type": "integer",
+                                                    "example": 3,
+                                                    "description": "Number of active mental health goals"
+                                                },
+                                                "goals": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 1},
+                                                            "title": {"type": "string", "example": "Practice meditation daily"},
+                                                            "target_date": {"type": "string", "format": "date", "example": "2025-01-31"},
+                                                            "progress_percentage": {"type": "number", "format": "float", "example": 65.5}
+                                                        }
+                                                    },
+                                                    "description": "Active goals with progress"
+                                                },
+                                                "recent_resources": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 1},
+                                                            "title": {"type": "string", "example": "Managing Stress at Sea"},
+                                                            "category": {"type": "string", "example": "stress-management"},
+                                                            "resource_type": {"type": "string", "example": "article"},
+                                                            "reading_time_minutes": {"type": "integer", "example": 8}
+                                                        }
+                                                    },
+                                                    "description": "Recommended or recently viewed resources"
+                                                },
+                                                "mood_trend": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "average_mood_7_days": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 6.8,
+                                                            "description": "Average mood rating over last 7 days"
+                                                        },
+                                                        "average_mood_30_days": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 6.5,
+                                                            "description": "Average mood rating over last 30 days"
+                                                        },
+                                                        "trend": {
+                                                            "type": "string",
+                                                            "example": "improving",
+                                                            "enum": ["improving", "stable", "declining"],
+                                                            "description": "Mood trend direction"
+                                                        },
+                                                        "daily_entries": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "date": {"type": "string", "format": "date"},
+                                                                    "mood_rating": {"type": "integer"},
+                                                                    "energy_level": {"type": "integer"},
+                                                                    "stress_level": {"type": "integer"}
+                                                                }
+                                                            },
+                                                            "description": "Daily mood data for charting (last 30 days)"
+                                                        }
+                                                    },
+                                                    "description": "Mood trends and statistics"
+                                                },
+                                                "statistics": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "total_sessions": {
+                                                            "type": "integer",
+                                                            "example": 12,
+                                                            "description": "Total sessions booked"
+                                                        },
+                                                        "completed_sessions": {
+                                                            "type": "integer",
+                                                            "example": 10,
+                                                            "description": "Completed sessions"
+                                                        },
+                                                        "mood_entries_this_month": {
+                                                            "type": "integer",
+                                                            "example": 18,
+                                                            "description": "Mood entries logged this month"
+                                                        },
+                                                        "journal_entries_this_month": {
+                                                            "type": "integer",
+                                                            "example": 15,
+                                                            "description": "Journal entries this month"
+                                                        },
+                                                        "active_habits": {
+                                                            "type": "integer",
+                                                            "example": 4,
+                                                            "description": "Number of active habits"
+                                                        },
+                                                        "habits_completion_rate": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 75.5,
+                                                            "description": "Habit completion rate percentage"
+                                                        },
+                                                        "credits_available": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 250.00,
+                                                            "description": "Available mental health credits"
+                                                        },
+                                                        "courses_enrolled": {
+                                                            "type": "integer",
+                                                            "example": 2,
+                                                            "description": "Number of courses enrolled in"
+                                                        }
+                                                    },
+                                                    "description": "Overall statistics"
+                                                },
+                                                "recommendations": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "suggested_resources": {
+                                                            "type": "array",
+                                                            "items": {"type": "object"},
+                                                            "description": "Resources recommended based on user activity"
+                                                        },
+                                                        "suggested_therapists": {
+                                                            "type": "array",
+                                                            "items": {"type": "object"},
+                                                            "description": "Therapists recommended based on needs"
+                                                        }
+                                                    },
+                                                    "description": "Personalized recommendations"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "example": {
+                                    "status": true,
+                                    "message": "Dashboard data retrieved successfully",
+                                    "data": {
+                                        "upcoming_sessions": [
+                                            {
+                                                "id": 123,
+                                                "therapist_id": 1,
+                                                "therapist_name": "Dr. Sarah Johnson",
+                                                "scheduled_at": "2024-12-25T10:00:00-05:00",
+                                                "session_type": "video",
+                                                "duration_minutes": 60,
+                                                "status": "confirmed",
+                                                "days_until": 5
+                                            }
+                                        ],
+                                        "recent_mood_entries": [
+                                            {
+                                                "id": 123,
+                                                "tracked_date": "2024-12-20",
+                                                "mood_rating": 7,
+                                                "primary_mood": "calm",
+                                                "energy_level": 6,
+                                                "stress_level": 4
+                                            },
+                                            {
+                                                "id": 122,
+                                                "tracked_date": "2024-12-19",
+                                                "mood_rating": 6,
+                                                "primary_mood": "tired",
+                                                "energy_level": 4,
+                                                "stress_level": 7
+                                            }
+                                        ],
+                                        "active_goals": 3,
+                                        "goals": [
+                                            {
+                                                "id": 1,
+                                                "title": "Practice meditation daily",
+                                                "target_date": "2025-01-31",
+                                                "progress_percentage": 65.5
+                                            },
+                                            {
+                                                "id": 2,
+                                                "title": "Complete stress management course",
+                                                "target_date": "2025-02-15",
+                                                "progress_percentage": 40.0
+                                            }
+                                        ],
+                                        "recent_resources": [
+                                            {
+                                                "id": 1,
+                                                "title": "Managing Stress at Sea",
+                                                "category": "stress-management",
+                                                "resource_type": "article",
+                                                "reading_time_minutes": 8
+                                            }
+                                        ],
+                                        "mood_trend": {
+                                            "average_mood_7_days": 6.8,
+                                            "average_mood_30_days": 6.5,
+                                            "trend": "improving",
+                                            "daily_entries": [
+                                                {"date": "2024-12-20", "mood_rating": 7, "energy_level": 6, "stress_level": 4},
+                                                {"date": "2024-12-19", "mood_rating": 6, "energy_level": 4, "stress_level": 7}
+                                            ]
+                                        },
+                                        "statistics": {
+                                            "total_sessions": 12,
+                                            "completed_sessions": 10,
+                                            "mood_entries_this_month": 18,
+                                            "journal_entries_this_month": 15,
+                                            "active_habits": 4,
+                                            "habits_completion_rate": 75.5,
+                                            "credits_available": 250.00,
+                                            "courses_enrolled": 2
+                                        },
+                                        "recommendations": {
+                                            "suggested_resources": [],
+                                            "suggested_therapists": []
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "Unauthenticated"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "An error occurred while retrieving dashboard data"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [{"bearerAuth": []}]
+            }
         }
     },
     "components": {
@@ -7946,6 +10862,10 @@
         {
             "name": "Rallies & Events",
             "description": "Rallies and Events Management"
+        },
+        {
+            "name": "Mental Health",
+            "description": "Mental Health Support - Therapy sessions, resources, mood tracking, goals, journals, habits, and courses"
         }
     ]
 }
