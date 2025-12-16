@@ -109,90 +109,87 @@
                         <h4 class="text-base font-semibold text-gray-800">Profile Photo</h4>
                     </div>
 
-                    <!-- Flash Message -->
-                        @if (session()->has('message'))
-                            <div 
-                                x-data="{ show: true }" 
-                                x-init="setTimeout(() => show = false, 3000)" 
-                                x-show="show"
-                                x-transition
-                                class="mb-3 text-blue-600 text-md font-semibold"
-                            >
-                                {{ session('message') }}
-                            </div>
-                        @endif
+                    <!-- Flash Messages -->
+                    @if (session()->has('profile-message'))
+                        <div 
+                            x-data="{ show: true }" 
+                            x-init="setTimeout(() => show = false, 3000)" 
+                            x-show="show"
+                            x-transition
+                            class="mb-3 text-green-600 text-md font-semibold"
+                        >
+                            {{ session('profile-message') }}
+                        </div>
+                    @endif
+                    @if (session()->has('message'))
+                        <div 
+                            x-data="{ show: true }" 
+                            x-init="setTimeout(() => show = false, 3000)" 
+                            x-show="show"
+                            x-transition
+                            class="mb-3 text-blue-600 text-md font-semibold"
+                        >
+                            {{ session('message') }}
+                        </div>
+                    @endif
 
-                    <form wire:submit.prevent="updateProfile">
-                        <div x-data="{ photoPreview: null }" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <!-- Profile Photo Section - Using Standard Laravel Upload (works without tmpfile()) -->
+                    <div x-data="{ photoPreview: null }" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <!-- Profile Image Preview -->
+                        <div class="overflow-hidden rounded-full w-24 h-24 md:w-32 md:h-32 border-4 border-white shadow-lg flex-shrink-0 ring-2 ring-blue-100">
+                            {{-- Preview from Alpine (file selected) --}}
+                            <template x-if="photoPreview">
+                                <img :src="photoPreview" class="object-cover w-full h-full rounded-full" alt="New Profile Photo Preview">
+                            </template>
 
-                            <!-- Profile Image Preview -->
-                            <div class="overflow-hidden rounded-full w-24 h-24 md:w-32 md:h-32 border-4 border-white shadow-lg flex-shrink-0 ring-2 ring-blue-100">
+                            {{-- Saved Profile Photo --}}
+                            <template x-if="!photoPreview && @js($profile_photo_path)">
+                                <img src="{{ $profile_photo_path ? asset('storage/' . $profile_photo_path) : '' }}" class="object-cover w-full h-full rounded-full" alt="Profile">
+                            </template>
 
-                                {{-- New Preview from Alpine (file selected) --}}
-                                <template x-if="photoPreview">
-                                    <img :src="photoPreview" class="object-cover w-full h-full rounded-full" alt="New Profile Photo Preview">
-                                </template>
+                            {{-- Default Avatar --}}
+                            <template x-if="!photoPreview && !@js($profile_photo_path)">
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&color=7F9CF5&background=EBF4FF"
+                                    class="object-cover w-full h-full rounded-full" alt="Default">
+                            </template>
+                        </div>
 
-                                {{-- Livewire Temporary Upload --}}
-                                <template x-if="!photoPreview && @js($photo)">
-                                    <img src="{{ $photo?->temporaryUrl() }}" class="object-cover w-full h-full rounded-full" alt="Preview">
-                                </template>
-
-                                {{-- Saved Profile Photo --}}
-                                <template x-if="!photoPreview && !@js($photo) && @js($profile_photo_path)">
-                                    <img src="{{ $profile_photo_path ? asset('storage/' . $profile_photo_path) : '' }}" class="object-cover w-full h-full rounded-full" alt="Profile">
-                                </template>
-
-                                {{-- Default Avatar --}}
-                                <template x-if="!photoPreview && !@js($photo) && !@js($profile_photo_path)">
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&color=7F9CF5&background=EBF4FF"
-                                        class="object-cover w-full h-full rounded-full" alt="Default">
-                                </template>
-
-                            </div>
-
-                            <!-- Buttons -->
-                            <div class="profile-btns flex flex-wrap items-center gap-2 w-full sm:w-auto">
-
-                                @if ($profile_photo_path)
-                                    <!-- Remove Button -->
-                                    <button type="button"
-                                            wire:click="removeProfilePhoto"
-                                            class="px-4 md:px-5 py-2.5 text-sm md:text-base text-red-600 border-2 border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all duration-200 font-medium flex-1 sm:flex-initial shadow-sm">
+                        <!-- Buttons -->
+                        <div class="profile-btns flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                            @if ($profile_photo_path)
+                                <!-- Remove Button -->
+                                <form action="{{ route('profile.photo.remove') }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" class="px-4 md:px-5 py-2.5 text-sm md:text-base text-red-600 border-2 border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all duration-200 font-medium flex-1 sm:flex-initial shadow-sm">
                                         <i class="fa-solid fa-trash mr-2"></i>Remove
                                     </button>
-                                @endif
+                                </form>
+                            @endif
 
-                                <!-- Upload / Change Button -->
+                            <!-- Upload / Change Button - Standard Form Submission -->
+                            <form action="{{ route('profile.photo.upload') }}" method="POST" enctype="multipart/form-data" class="inline" x-on:submit="if (!document.getElementById('photo-input').files.length) { event.preventDefault(); alert('Please select a photo first.'); }">
+                                @csrf
                                 <label class="px-4 md:px-5 py-2.5 flex justify-center items-center text-sm md:text-base text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium flex-1 sm:flex-initial shadow-md hover:shadow-lg">
                                     <i class="fa-solid fa-upload mr-2"></i>
                                     {{ $profile_photo_path ? 'Change Photo' : 'Add Photo' }}
-                                    <input type="file" class="hidden" wire:model="photo" accept="image/*"
+                                    <input id="photo-input" type="file" name="photo" class="hidden" accept="image/*" required
                                         x-on:change="
                                             const file = $event.target.files[0];
                                             if (file) {
                                                 const reader = new FileReader();
                                                 reader.onload = (e) => { photoPreview = e.target.result };
                                                 reader.readAsDataURL(file);
+                                                // Auto-submit form when file is selected
+                                                $event.target.closest('form').submit();
                                             }
                                         ">
                                 </label>
-
-                                <!-- Save Button (only visible if new photo selected) -->
-                                @if ($photo)
-                                    <button type="button"
-                                            wire:click="updateProfilePhoto"
-                                            class="px-4 md:px-5 py-2.5 text-sm md:text-base bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 font-medium flex-1 sm:flex-initial shadow-md hover:shadow-lg">
-                                        <i class="fa-solid fa-check mr-2"></i>Save
-                                    </button>
-                                @endif
-
-                            </div>
+                            </form>
                         </div>
-                    </form>
+                    </div>
 
                     <!-- Form -->
-                    <form wire:submit.prevent="updateProfile" class="grid mt-8 relative z-10">
+                    <form wire:submit.prevent="updateProfile" class="grid mt-6 relative z-10">
                         <div x-data="{ editing: false }" class="relative max-w-[650px] space-y-6">
 
                                 <!-- Flash Message -->

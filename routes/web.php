@@ -258,6 +258,10 @@ Route::middleware([
     
     
     Route::get('/manage-document', ManageDocument::class)->name('manage-document');
+    
+    // Profile photo upload (standard Laravel upload - works without tmpfile())
+    Route::post('/profile/photo/upload', [\App\Http\Controllers\ProfilePhotoController::class, 'upload'])->name('profile.photo.upload');
+    Route::post('/profile/photo/remove', [\App\Http\Controllers\ProfilePhotoController::class, 'remove'])->name('profile.photo.remove');
   
   	Route::prefix('forum')->name('forum.')->group(function () {
         // Use our custom routes file that uses our overridden components

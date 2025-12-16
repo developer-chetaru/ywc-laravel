@@ -5,14 +5,13 @@ namespace App\Livewire;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 use App\Models\Yacht;
 
 class Profile extends Component
 {
-    use WithFileUploads;
+    // Removed WithFileUploads trait - using standard Laravel uploads instead
+    // This works on shared hosting where tmpfile() is disabled
 
-    public $photo;
     public $profile_photo_path;
     public $first_name, $last_name, $email;
     public $user;
@@ -134,50 +133,8 @@ class Profile extends Component
         session()->flash('profile-message', 'Profile updated successfully.');
     }
 
-    public function updateProfilePhoto()
-    {
-        $this->validate([
-            'photo' => 'image|max:2048', // 2MB max
-        ]);
-
-        $user = Auth::user();
-
-        // Delete old photo if exists
-        if ($user->profile_photo_path && Storage::disk('public')->exists($user->profile_photo_path)) {
-            Storage::disk('public')->delete($user->profile_photo_path);
-        }
-
-        // Store new photo
-        $path = $this->photo->store('profile-photos', 'public');
-
-        $user->update([
-            'profile_photo_path' => $path,
-        ]);
-
-        // 🔑 Update Livewire state
-        $this->profile_photo_path = $path;
-        $this->photo = null;
-
-        session()->flash('message', 'Profile photo updated successfully.');
-    }
-
-    public function removeProfilePhoto()
-    {
-        $user = Auth::user();
-
-        if ($user->profile_photo_path && Storage::disk('public')->exists($user->profile_photo_path)) {
-            Storage::disk('public')->delete($user->profile_photo_path);
-        }
-
-        $user->update([
-            'profile_photo_path' => null,
-        ]);
-
-        // 🔑 Update Livewire state
-        $this->profile_photo_path = null;
-
-        session()->flash('profile-message', 'Profile photo removed.');
-    }
+    // Photo upload/remove methods moved to ProfilePhotoController
+    // This uses standard Laravel file uploads (works without tmpfile() on shared hosting)
     
     public function updateCrewProfile()
     {
