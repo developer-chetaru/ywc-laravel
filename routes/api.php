@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\MasterDataController;
 use App\Http\Controllers\Api\WorkLogController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\MentalHealthController;
+use App\Http\Controllers\Api\TrainingController;
 
 // Master Data API - Public endpoints for mobile developers
 Route::get('/master-data', [MasterDataController::class, 'index']);
@@ -316,6 +317,18 @@ Route::prefix('mental-health')->group(function () {
     Route::get('/therapists/{id}', [MentalHealthController::class, 'getTherapist']);
     Route::get('/resources', [MentalHealthController::class, 'getResources']);
     Route::get('/filter-options', [MentalHealthController::class, 'getFilterOptions']);
+});
+
+// Training & Resources - Public Endpoints
+Route::prefix('training')->group(function () {
+    Route::get('/providers', [TrainingController::class, 'getProviders']);
+    Route::get('/providers/{slug}', [TrainingController::class, 'getProvider']);
+    Route::get('/courses', [TrainingController::class, 'getCourses']);
+    Route::get('/courses/{id}', [TrainingController::class, 'getCourse']);
+    Route::get('/certifications', [TrainingController::class, 'getCertifications']);
+    Route::get('/categories', [TrainingController::class, 'getCategories']);
+    Route::get('/schedules', [TrainingController::class, 'getSchedules']);
+    Route::get('/filter-options', [TrainingController::class, 'getFilterOptions']);
 });
 
 // Optional token refresh route

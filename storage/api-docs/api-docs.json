@@ -10803,6 +10803,356 @@
                 },
                 "security": [{"bearerAuth": []}]
             }
+        },
+        "/api/training/providers": {
+            "get": {
+                "tags": ["Training & Resources"],
+                "summary": "Get list of training providers",
+                "description": "Returns paginated list of training providers with filtering options.",
+                "operationId": "getTrainingProviders",
+                "parameters": [
+                    {"name": "country", "in": "query", "description": "Filter by country", "schema": {"type": "string"}, "example": "United Kingdom"},
+                    {"name": "certification_id", "in": "query", "description": "Filter by certification offered", "schema": {"type": "integer"}, "example": 1},
+                    {"name": "verified_only", "in": "query", "description": "Show only verified partners", "schema": {"type": "boolean"}, "example": true},
+                    {"name": "min_rating", "in": "query", "description": "Minimum rating (1-5)", "schema": {"type": "number"}, "example": 4.0},
+                    {"name": "search", "in": "query", "description": "Search by name", "schema": {"type": "string"}, "example": "Maritime Academy"},
+                    {"name": "sort_by", "in": "query", "description": "Sort by field", "schema": {"type": "string", "enum": ["rating_avg", "total_reviews", "total_students_trained", "name"]}, "example": "rating_avg"},
+                    {"name": "sort_order", "in": "query", "description": "Sort order", "schema": {"type": "string", "enum": ["asc", "desc"]}, "example": "desc"},
+                    {"name": "page", "in": "query", "description": "Page number", "schema": {"type": "integer", "default": 1}, "example": 1},
+                    {"name": "per_page", "in": "query", "description": "Items per page", "schema": {"type": "integer", "default": 15}, "example": 15}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Training providers retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Training providers retrieved successfully"},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "integer", "example": 1},
+                                                    "name": {"type": "string", "example": "Maritime Safety Academy"},
+                                                    "slug": {"type": "string", "example": "maritime-safety-academy"},
+                                                    "description": {"type": "string", "example": "Leading provider of maritime safety training"},
+                                                    "logo": {"type": "string", "example": "providers/logos/msa-logo.png"},
+                                                    "rating_avg": {"type": "number", "example": 4.8},
+                                                    "total_reviews": {"type": "integer", "example": 156},
+                                                    "total_students_trained": {"type": "integer", "example": 5200},
+                                                    "is_verified_partner": {"type": "boolean", "example": true},
+                                                    "years_in_operation": {"type": "integer", "example": 15},
+                                                    "accreditations": {"type": "array", "items": {"type": "string"}, "example": ["MCA", "RYA", "STCW"]},
+                                                    "active_courses": {"type": "array", "items": {"type": "object"}}
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {"type": "integer", "example": 1},
+                                                "last_page": {"type": "integer", "example": 5},
+                                                "per_page": {"type": "integer", "example": 15},
+                                                "total": {"type": "integer", "example": 68}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/training/providers/{slug}": {
+            "get": {
+                "tags": ["Training & Resources"],
+                "summary": "Get training provider details",
+                "description": "Returns detailed information about a training provider including courses, galleries, and schedules.",
+                "operationId": "getTrainingProvider",
+                "parameters": [
+                    {"name": "slug", "in": "path", "required": true, "description": "Provider slug", "schema": {"type": "string"}}
+                ],
+                "responses": {
+                    "200": {"description": "Provider details retrieved successfully"},
+                    "404": {"description": "Provider not found"}
+                }
+            }
+        },
+        "/api/training/courses": {
+            "get": {
+                "tags": ["Training & Resources"],
+                "summary": "Get list of training courses",
+                "description": "Returns paginated list of training courses with filtering options.",
+                "operationId": "getTrainingCourses",
+                "parameters": [
+                    {"name": "certification_id", "in": "query", "description": "Filter by certification", "schema": {"type": "integer"}, "example": 1},
+                    {"name": "category_id", "in": "query", "description": "Filter by category", "schema": {"type": "integer"}, "example": 2},
+                    {"name": "provider_id", "in": "query", "description": "Filter by provider", "schema": {"type": "integer"}, "example": 5},
+                    {"name": "country", "in": "query", "description": "Filter by country", "schema": {"type": "string"}, "example": "France"},
+                    {"name": "format", "in": "query", "description": "Filter by format", "schema": {"type": "string", "enum": ["in-person", "online", "hybrid", "blended"]}, "example": "in-person"},
+                    {"name": "max_price", "in": "query", "description": "Maximum price", "schema": {"type": "number"}, "example": 1500},
+                    {"name": "max_duration_days", "in": "query", "description": "Maximum duration in days", "schema": {"type": "integer"}, "example": 5},
+                    {"name": "search", "in": "query", "description": "Search by certification name", "schema": {"type": "string"}, "example": "STCW"},
+                    {"name": "sort_by", "in": "query", "description": "Sort by field", "schema": {"type": "string", "enum": ["price", "rating_avg", "duration_days", "review_count"]}, "example": "price"},
+                    {"name": "page", "in": "query", "description": "Page number", "schema": {"type": "integer", "default": 1}, "example": 1},
+                    {"name": "per_page", "in": "query", "description": "Items per page", "schema": {"type": "integer", "default": 15}, "example": 15}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Courses retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Courses retrieved successfully"},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "integer", "example": 1},
+                                                    "certification_id": {"type": "integer", "example": 3},
+                                                    "provider_id": {"type": "integer", "example": 1},
+                                                    "price": {"type": "number", "example": 1200.00},
+                                                    "ywc_discount_percentage": {"type": "number", "example": 10.00},
+                                                    "duration_days": {"type": "integer", "example": 5},
+                                                    "duration_hours": {"type": "integer", "example": 40},
+                                                    "format": {"type": "string", "example": "in-person"},
+                                                    "language_of_instruction": {"type": "string", "example": "English"},
+                                                    "rating_avg": {"type": "number", "example": 4.7},
+                                                    "review_count": {"type": "integer", "example": 45},
+                                                    "certification": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 3},
+                                                            "name": {"type": "string", "example": "STCW Basic Safety Training"},
+                                                            "category": {"type": "object"}
+                                                        }
+                                                    },
+                                                    "provider": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 1},
+                                                            "name": {"type": "string", "example": "Maritime Safety Academy"},
+                                                            "is_verified_partner": {"type": "boolean", "example": true}
+                                                        }
+                                                    },
+                                                    "locations": {"type": "array", "items": {"type": "object"}}
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {"type": "integer", "example": 1},
+                                                "last_page": {"type": "integer", "example": 10},
+                                                "per_page": {"type": "integer", "example": 15},
+                                                "total": {"type": "integer", "example": 142}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/training/courses/{id}": {
+            "get": {
+                "tags": ["Training & Resources"],
+                "summary": "Get course details",
+                "description": "Returns detailed information about a training course including schedules, reviews, and locations.",
+                "operationId": "getTrainingCourse",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Course ID", "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {"description": "Course details retrieved successfully"},
+                    "404": {"description": "Course not found"}
+                }
+            }
+        },
+        "/api/training/certifications": {
+            "get": {
+                "tags": ["Training & Resources"],
+                "summary": "Get list of certifications",
+                "description": "Returns list of all available certifications.",
+                "operationId": "getTrainingCertifications",
+                "parameters": [
+                    {"name": "category_id", "in": "query", "description": "Filter by category", "schema": {"type": "integer"}},
+                    {"name": "search", "in": "query", "description": "Search by name", "schema": {"type": "string"}}
+                ],
+                "responses": {
+                    "200": {"description": "Certifications retrieved successfully"}
+                }
+            }
+        },
+        "/api/training/categories": {
+            "get": {
+                "tags": ["Training & Resources"],
+                "summary": "Get certification categories",
+                "description": "Returns list of all certification categories with counts.",
+                "operationId": "getTrainingCategories",
+                "responses": {
+                    "200": {"description": "Categories retrieved successfully"}
+                }
+            }
+        },
+        "/api/training/schedules": {
+            "get": {
+                "tags": ["Training & Resources"],
+                "summary": "Get upcoming course schedules",
+                "description": "Returns upcoming course schedules with filtering options. Only shows future dates that are not cancelled or full.",
+                "operationId": "getTrainingSchedules",
+                "parameters": [
+                    {"name": "certification_id", "in": "query", "description": "Filter by certification", "schema": {"type": "integer"}, "example": 1},
+                    {"name": "country", "in": "query", "description": "Filter by country", "schema": {"type": "string"}, "example": "United Kingdom"},
+                    {"name": "month", "in": "query", "description": "Filter by month (1-12)", "schema": {"type": "integer"}, "example": 3},
+                    {"name": "year", "in": "query", "description": "Filter by year", "schema": {"type": "integer"}, "example": 2025},
+                    {"name": "page", "in": "query", "description": "Page number", "schema": {"type": "integer", "default": 1}, "example": 1}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Schedules retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Schedules retrieved successfully"},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "integer", "example": 1},
+                                                    "start_date": {"type": "string", "format": "date", "example": "2025-03-15"},
+                                                    "end_date": {"type": "string", "format": "date", "example": "2025-03-19"},
+                                                    "spots_available": {"type": "integer", "example": 8},
+                                                    "spots_total": {"type": "integer", "example": 12},
+                                                    "is_full": {"type": "boolean", "example": false},
+                                                    "provider_course": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 5},
+                                                            "price": {"type": "number", "example": 1200.00},
+                                                            "certification": {"type": "object"},
+                                                            "provider": {"type": "object"}
+                                                        }
+                                                    },
+                                                    "location": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "city": {"type": "string", "example": "Southampton"},
+                                                            "country": {"type": "string", "example": "United Kingdom"},
+                                                            "address": {"type": "string", "example": "123 Marina Way"}
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "meta": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/training/filter-options": {
+            "get": {
+                "tags": ["Training & Resources"],
+                "summary": "Get available filter options",
+                "description": "Returns all available filter options for training courses including categories, certifications, formats, countries, and price range. Use this endpoint to populate filter dropdowns in your UI.",
+                "operationId": "getTrainingFilterOptions",
+                "responses": {
+                    "200": {
+                        "description": "Filter options retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Filter options retrieved successfully"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "categories": {
+                                                    "type": "array",
+                                                    "description": "List of certification categories",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 1},
+                                                            "name": {"type": "string", "example": "Safety Certifications"}
+                                                        }
+                                                    },
+                                                    "example": [
+                                                        {"id": 1, "name": "Safety Certifications"},
+                                                        {"id": 2, "name": "Navigation & Seamanship"},
+                                                        {"id": 3, "name": "Engineering & Technical"},
+                                                        {"id": 4, "name": "Hospitality & Service"},
+                                                        {"id": 5, "name": "Medical & First Aid"}
+                                                    ]
+                                                },
+                                                "certifications": {
+                                                    "type": "array",
+                                                    "description": "List of all certifications with their category",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 1},
+                                                            "name": {"type": "string", "example": "STCW Basic Safety Training"},
+                                                            "category_id": {"type": "integer", "example": 1}
+                                                        }
+                                                    },
+                                                    "example": [
+                                                        {"id": 1, "name": "STCW Basic Safety Training", "category_id": 1},
+                                                        {"id": 2, "name": "STCW Advanced Fire Fighting", "category_id": 1},
+                                                        {"id": 3, "name": "Yachtmaster Offshore", "category_id": 2},
+                                                        {"id": 4, "name": "ENG1 Medical Certificate", "category_id": 5}
+                                                    ]
+                                                },
+                                                "formats": {
+                                                    "type": "array",
+                                                    "description": "Available course formats",
+                                                    "items": {"type": "string"},
+                                                    "example": ["in-person", "online", "hybrid", "blended"]
+                                                },
+                                                "countries": {
+                                                    "type": "array",
+                                                    "description": "Countries where courses are offered",
+                                                    "items": {"type": "string"},
+                                                    "example": ["United Kingdom", "France", "Spain", "Italy", "Greece", "United States", "Australia"]
+                                                },
+                                                "price_range": {
+                                                    "type": "object",
+                                                    "description": "Min and max price range for courses",
+                                                    "properties": {
+                                                        "min": {"type": "number", "example": 150},
+                                                        "max": {"type": "number", "example": 4500}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -10911,6 +11261,10 @@
         {
             "name": "Mental Health",
             "description": "Mental Health Support - Therapy sessions, resources, mood tracking, goals, journals, habits, and courses"
+        },
+        {
+            "name": "Training & Resources",
+            "description": "Training Providers, Courses, Certifications, and Schedules"
         }
     ]
 }
