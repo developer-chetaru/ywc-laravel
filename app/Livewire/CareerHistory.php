@@ -94,7 +94,7 @@ class CareerHistory extends Component
     public function getRules(): array
     {
         $base = [
-            'type' => 'required|in:passport,idvisa,certificate,other',
+            'type' => 'required|in:passport,idvisa,certificate,resume,other',
             'file' => 'nullable|file|max:5120', // 5MB
         ];
 
@@ -137,6 +137,13 @@ class CareerHistory extends Component
                     'certificateRows.*.type_id'   => 'required|integer|exists:certificate_type_data,id',
                     'certificateRows.*.issue'     => 'nullable|date|before_or_equal:today',
                     'certificateRows.*.expiry'    => 'nullable|date|after_or_equal:certificateRows.*.issue',
+                ]);
+
+            case 'resume':
+                return array_merge($base, [
+                    'doc_name'   => 'nullable|string|max:100',
+                    'issue_date' => 'nullable|date',
+                    'expiry_date'=> 'nullable|date|after_or_equal:issue_date',
                 ]);
 
            case 'other':
@@ -236,6 +243,14 @@ class CareerHistory extends Component
                             'expiry_date'           => $row['expiry'] ?? null,
                         ]);
                     }
+                } elseif ($this->type === 'resume') {
+                    OtherDocument::create([
+                        'document_id'    => $document->id,
+                        'doc_name'       => $this->doc_name ?? 'Resume',
+                        'doc_number'     => null,
+                        'issue_date'     => $this->issue_date ?? null,
+                        'expiry_date'    => $this->expiry_date ?? null,
+                    ]);
                 } elseif ($this->type === 'other') {
                     // $storedPath = null;
                     // if ($this->file instanceof \Livewire\TemporaryUploadedFile) {

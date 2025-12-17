@@ -95,6 +95,15 @@ class CareerHistoryApiController extends Controller
                     }
                     break;
 
+                case 'resume':
+                    $rules = array_merge($rules, [
+                        'doc_name'    => 'nullable|string|max:100',
+                        'issue_date'  => 'nullable|date',
+                        'expiry_date' => 'nullable|date|after_or_equal:issue_date',
+                        'dob'         => 'nullable|date|before_or_equal:today',
+                    ]);
+                    break;
+
                 case 'other':
                     $rules = array_merge($rules, [
                         'doc_name'    => 'required|string|max:100',
@@ -185,6 +194,17 @@ class CareerHistoryApiController extends Controller
                             'dob'                  => $validated['dob'],
                         ]);
                     }
+                    break;
+
+                case 'resume':
+                    OtherDocument::create([
+                        'document_id' => $document->id,
+                        'doc_name'    => $validated['doc_name'] ?? 'Resume',
+                        'doc_number'  => null,
+                        'issue_date'  => $validated['issue_date'] ?? null,
+                        'expiry_date' => $validated['expiry_date'] ?? null,
+                        'dob'         => $validated['dob'] ?? null,
+                    ]);
                     break;
 
                 case 'other':
@@ -313,7 +333,7 @@ class CareerHistoryApiController extends Controller
     public function uploadOLD(Request $request)
     {
         $base = [
-            'type' => 'required|in:passport,idvisa,certificate,other',
+            'type' => 'required|in:passport,idvisa,certificate,resume,other',
             'file' => 'nullable|file|max:5120', // 5MB
             'dob'  => 'nullable|date|before_or_equal:today',
         ];
@@ -331,7 +351,7 @@ class CareerHistoryApiController extends Controller
                     'dob'             => 'required|date|before_or_equal:today',
                     'type' => [
                         'required',
-                        'in:passport,idvisa,certificate,other',
+                        'in:passport,idvisa,certificate,resume,other',
                         function ($attribute, $value, $fail) {
                             $exists = Document::where('user_id', auth('api')->id())
                                 ->where('type', 'passport')
@@ -371,6 +391,15 @@ class CareerHistoryApiController extends Controller
                     'certificateRows.*.issue'   => 'nullable|sometimes|date|before_or_equal:today',
                     'certificateRows.*.expiry'  => 'nullable|date|after_or_equal:certificateRows.*.issue',
                     'dob'                       => 'required|date|before_or_equal:today',
+                ]);
+                break;
+
+            case 'resume':
+                $rules = array_merge($base, [
+                    'doc_name'   => 'nullable|string|max:100',
+                    'issue_date' => 'nullable|date',
+                    'expiry_date'=> 'nullable|date|after_or_equal:issue_date',
+                    'dob'        => 'nullable|date|before_or_equal:today',
                 ]);
                 break;
 
@@ -454,6 +483,17 @@ class CareerHistoryApiController extends Controller
                         'dob'                   => $validated['dob'] ?? null,
                     ]);
                 }
+                break;
+
+            case 'resume':
+                OtherDocument::create([
+                    'document_id' => $document->id,
+                    'doc_name'    => $validated['doc_name'] ?? 'Resume',
+                    'doc_number'  => null,
+                    'issue_date'  => $validated['issue_date'] ?? null,
+                    'expiry_date' => $validated['expiry_date'] ?? null,
+                    'dob'         => $validated['dob'] ?? null,
+                ]);
                 break;
 
             case 'other':

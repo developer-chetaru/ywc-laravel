@@ -189,6 +189,8 @@
                                                                     $typeDetail = '';
                                                                     if ($doc->type === 'certificate') {
                                                                         $typeDetail = ' - ' . ($doc->certificates->first()?->type->name ?? 'N/A');
+                                                                    } elseif ($doc->type === 'resume') {
+                                                                        $typeDetail = ' - ' . ($doc->otherDocument?->doc_name ?? 'Resume');
                                                                     } elseif ($doc->type === 'other') {
                                                                         $typeDetail = ' - ' . ($doc->otherDocument?->doc_name ?? 'N/A');
                                                                     }
@@ -321,6 +323,8 @@
                                             $typeDetail = '';
                                             if ($doc->type === 'certificate') {
                                                 $typeDetail = ' - ' . ($doc->certificates->first()?->type->name ?? 'N/A');
+                                            } elseif ($doc->type === 'resume') {
+                                                $typeDetail = ' - ' . ($doc->otherDocument?->doc_name ?? 'Resume');
                                             } elseif ($doc->type === 'other') {
                                                 $typeDetail = ' - ' . ($doc->otherDocument?->doc_name ?? 'N/A');
                                             }
@@ -484,6 +488,7 @@
                             <option value="passport">Passport</option>
                             <option value="idvisa">IDs & Visas</option>
                             <option value="certificate">Certificate</option>
+                            <option value="resume">Resume</option>
                             <option value="other">Other</option>
                         </select>
 
@@ -1254,6 +1259,16 @@ function renderDynamicFields(type, callback) {
         }, 100);
     }
 
+    if (type === "resume") {
+        fields = `
+            <div>
+                <label>Resume Name (Optional)</label>
+                <input type="text" name="doc_name" class="w-full border p-2 rounded-md" placeholder="e.g. My CV 2025">
+            </div>
+            <p class="text-sm text-gray-500">Upload your resume/CV. Supported formats: PDF, DOC, DOCX, JPG, PNG</p>
+        `;
+    }
+
     if (type === "other") {
         fields = `
             <div>
@@ -1595,6 +1610,8 @@ document.querySelectorAll('.toggle-share').forEach(span => {
             docName = capitalizeFirstLetter(doc.type);
         } else if (doc.type === 'certificate') {
             docName = doc.certificates?.[0]?.type?.name || '-';
+        } else if (doc.type === 'resume') {
+            docName = doc.other_document?.doc_name || 'Resume';
         } else if (doc.type === 'other') {
             docName = doc.other_document?.doc_name || '-';
         }

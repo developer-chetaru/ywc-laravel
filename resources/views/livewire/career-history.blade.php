@@ -115,6 +115,7 @@
                                                             <option value="passport">Passport</option>
                                                             <option value="idvisa">IDs & Visas</option>
                                                             <option value="certificate">Certificate</option>
+                                                            <option value="resume">Resume</option>
                                                             <option value="other">Other</option>
                                                         </select>
                                                     </div>
@@ -288,6 +289,24 @@
                                                                 >
                                                                 @error('place_of_issue') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                                             </div>
+                                                        </div>
+                                                    </template>
+
+                                                    <!-- Resume -->
+                                                    <template x-if="docType === 'resume'">
+                                                        <div class="space-y-4">
+                                                            <!-- Resume Name (Optional) -->
+                                                            <div>
+                                                                <label class="block font-medium">Resume Name (Optional)</label>
+                                                                <input 
+                                                                    type="text" 
+                                                                    wire:model="doc_name" 
+                                                                    class="w-full border p-2 rounded-md"
+                                                                    placeholder="e.g. My CV 2025"
+                                                                >
+                                                                @error('doc_name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                                            </div>
+                                                            <p class="text-sm text-gray-500">Upload your resume/CV. Supported formats: PDF, DOC, DOCX, JPG, PNG</p>
                                                         </div>
                                                     </template>
 

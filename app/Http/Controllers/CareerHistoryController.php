@@ -202,7 +202,7 @@ class CareerHistoryController extends Controller
         $oldType = $document->type;
 
         $base = [
-            'type' => 'required|in:passport,idvisa,certificate,other',
+            'type' => 'required|in:passport,idvisa,certificate,resume,other',
             'file' => 'nullable|file|max:5120',
             'dob'  => 'nullable|date|before_or_equal:today',
         ];
@@ -464,7 +464,7 @@ class CareerHistoryController extends Controller
     {
         // Step 1: Base validation rules
         $base = [
-            'type' => 'required|in:passport,idvisa,certificate,other',
+            'type' => 'required|in:passport,idvisa,certificate,resume,other',
             'file' => 'nullable|file|max:5120', // 5MB
           	'dob'  => 'nullable|date|before_or_equal:today',
         ];
