@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\CrewProfileController;
 use App\Http\Controllers\Api\MasterDataController;
 use App\Http\Controllers\Api\WorkLogController;
 use App\Http\Controllers\Api\ScheduleController;
+use App\Http\Controllers\Api\MentalHealthController;
 
 // Master Data API - Public endpoints for mobile developers
 Route::get('/master-data', [MasterDataController::class, 'index']);
@@ -308,6 +309,14 @@ Route::get('/restaurants', [RestaurantController::class, 'index']);
 Route::get('/restaurants/{slug}', [RestaurantController::class, 'show']);
 Route::get('/restaurants/{restaurantId}/reviews', [RestaurantReviewController::class, 'index']);
 Route::get('/restaurants/{restaurantId}/reviews/{reviewId}', [RestaurantReviewController::class, 'show']);
+
+// Mental Health & Wellness Support - Public Endpoints
+Route::prefix('mental-health')->group(function () {
+    Route::get('/therapists', [MentalHealthController::class, 'getTherapists']);
+    Route::get('/therapists/{id}', [MentalHealthController::class, 'getTherapist']);
+    Route::get('/resources', [MentalHealthController::class, 'getResources']);
+    Route::get('/filter-options', [MentalHealthController::class, 'getFilterOptions']);
+});
 
 // Optional token refresh route
 Route::middleware('jwt.refresh')->get('/token/refresh', function () {

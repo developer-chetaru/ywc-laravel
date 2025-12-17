@@ -8060,6 +8060,51 @@
                 }
             }
         },
+        "/api/mental-health/filter-options": {
+            "get": {
+                "tags": ["Mental Health"],
+                "summary": "Get available filter options for therapists",
+                "description": "Returns all available filter options including specializations, languages, and price ranges for filtering therapists.",
+                "operationId": "getMentalHealthFilterOptions",
+                "responses": {
+                    "200": {
+                        "description": "Available filter options",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean", "example": true},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "specializations": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                    "example": ["anxiety", "depression", "stress", "trauma", "relationships", "grief", "addiction", "eating disorders", "PTSD", "bipolar disorder"]
+                                                },
+                                                "languages": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                    "example": ["English", "Spanish", "French", "German", "Italian", "Portuguese"]
+                                                },
+                                                "price_range": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "min": {"type": "number", "example": 50},
+                                                        "max": {"type": "number", "example": 300}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/mental-health/therapists/{id}": {
             "get": {
                 "tags": ["Mental Health"],
