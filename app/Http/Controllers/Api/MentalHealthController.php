@@ -398,76 +398,215 @@ class MentalHealthController extends Controller
      */
     public function getTherapistAvailability(Request $request, $id): JsonResponse
     {
-        $therapist = MentalHealthTherapist::where('application_status', 'approved')
-            ->where('is_active', true)
-            ->find($id);
+        try {
+            $therapist = MentalHealthTherapist::where('application_status', 'approved')
+                ->where('is_active', true)
+                ->find($id);
 
-        if (!$therapist) {
+            if (!$therapist) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Therapist not found',
+                ], 404);
+            }
+
+            // Determine date range
+            if ($request->filled('date')) {
+                $startDate = Carbon::parse($request->date);
+                $endDate = $startDate->copy();
+            } else {
+                // Default to next 7 days
+                $startDate = Carbon::today();
+                $endDate = Carbon::today()->addDays(6);
+            }
+
+            // Get recurring availability (weekly schedule)
+            $recurringAvailability = MentalHealthTherapistAvailability::where('therapist_id', $id)
+                ->where('is_recurring', true)
+                ->where('is_active', true)
+                ->where('is_blocked', false)
+                ->whereNull('specific_date')
+                ->get();
+
+            // Get specific date availability (one-time schedules)
+            $specificAvailability = MentalHealthTherapistAvailability::where('therapist_id', $id)
+                ->where('is_active', true)
+                ->where('is_blocked', false)
+                ->whereNotNull('specific_date')
+                ->whereDate('specific_date', '>=', $startDate->format('Y-m-d'))
+                ->whereDate('specific_date', '<=', $endDate->format('Y-m-d'))
+                ->get();
+
+            // Get blocked dates
+            $blockedDates = MentalHealthTherapistAvailability::where('therapist_id', $id)
+                ->where('is_blocked', true)
+                ->whereNotNull('specific_date')
+                ->whereDate('specific_date', '>=', $startDate->format('Y-m-d'))
+                ->whereDate('specific_date', '<=', $endDate->format('Y-m-d'))
+                ->pluck('specific_date')
+                ->map(function ($date) {
+                    return is_string($date) ? $date : Carbon::parse($date)->format('Y-m-d');
+                })
+                ->toArray();
+
+            // Get existing bookings to exclude booked slots
+            $existingBookings = MentalHealthSessionBooking::where('therapist_id', $id)
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->whereBetween('scheduled_at', [
+                    $startDate->startOfDay(),
+                    $endDate->endOfDay()
+                ])
+                ->get()
+                ->map(function ($booking) {
+                    return [
+                        'date' => Carbon::parse($booking->scheduled_at)->format('Y-m-d'),
+                        'time' => Carbon::parse($booking->scheduled_at)->format('H:i'),
+                        'duration' => $booking->duration_minutes,
+                    ];
+                })
+                ->groupBy('date');
+
+            $result = [];
+            $currentDate = $startDate->copy();
+
+            // Generate availability for each day in range
+            while ($currentDate->lte($endDate)) {
+                $dateStr = $currentDate->format('Y-m-d');
+                $dayOfWeek = strtolower($currentDate->format('l')); // monday, tuesday, etc.
+
+                // Skip if date is blocked
+                if (in_array($dateStr, $blockedDates)) {
+                    $currentDate->addDay();
+                    continue;
+                }
+
+                $timeSlots = [];
+
+                // Check for specific date availability first
+                $specificSlots = $specificAvailability->filter(function ($slot) use ($dateStr) {
+                    $slotDate = is_string($slot->specific_date) 
+                        ? $slot->specific_date 
+                        : Carbon::parse($slot->specific_date)->format('Y-m-d');
+                    return $slotDate === $dateStr;
+                });
+                if ($specificSlots->isNotEmpty()) {
+                    foreach ($specificSlots as $slot) {
+                        $slots = $this->generateTimeSlots($slot, $currentDate, $existingBookings->get($dateStr, collect()), $therapist);
+                        $timeSlots = array_merge($timeSlots, $slots);
+                    }
+                } else {
+                    // Use recurring availability for this day of week
+                    $daySlots = $recurringAvailability->where('day_of_week', $dayOfWeek);
+                    foreach ($daySlots as $slot) {
+                        $slots = $this->generateTimeSlots($slot, $currentDate, $existingBookings->get($dateStr, collect()), $therapist);
+                        $timeSlots = array_merge($timeSlots, $slots);
+                    }
+                }
+
+                // Sort time slots by start time
+                usort($timeSlots, function ($a, $b) {
+                    return strcmp($a['start_time'], $b['start_time']);
+                });
+
+                if (!empty($timeSlots)) {
+                    $result[] = [
+                        'date' => $dateStr,
+                        'day_name' => $currentDate->format('l'),
+                        'timezone' => $therapist->timezone ?? 'UTC',
+                        'time_slots' => $timeSlots,
+                    ];
+                }
+
+                $currentDate->addDay();
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Availability retrieved successfully',
+                'data' => $result,
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Therapist not found',
-            ], 404);
+                'message' => 'Error retrieving availability: ' . $e->getMessage(),
+            ], 500);
         }
+    }
 
-        // Get availability records
-        $query = MentalHealthTherapistAvailability::where('therapist_id', $id)
-            ->where('is_available', true);
+    /**
+     * Generate time slots from availability record
+     */
+    private function generateTimeSlots($availability, Carbon $date, $existingBookings, $therapist = null): array
+    {
+        $slots = [];
+        
+        // Parse start and end times (they are TIME fields, not datetime)
+        $startTimeStr = is_string($availability->start_time) 
+            ? $availability->start_time 
+            : Carbon::parse($availability->start_time)->format('H:i:s');
+        $endTimeStr = is_string($availability->end_time) 
+            ? $availability->end_time 
+            : Carbon::parse($availability->end_time)->format('H:i:s');
+            
+        $startTime = Carbon::createFromTimeString($startTimeStr);
+        $endTime = Carbon::createFromTimeString($endTimeStr);
+        
+        $bufferMinutes = $availability->buffer_minutes ?? 15;
+        $sessionDurations = $availability->session_durations ?? [30, 60, 90];
 
-        // If specific date provided, filter by date
-        if ($request->filled('date')) {
-            $date = Carbon::parse($request->date);
-            $query->whereDate('available_date', $date->format('Y-m-d'));
-        } else {
-            // Default to next 7 days
-            $query->whereBetween('available_date', [
-                Carbon::today(),
-                Carbon::today()->addDays(7)
-            ]);
-        }
+        // Get booked times for this date
+        $bookedTimes = $existingBookings->pluck('time')->toArray();
 
-        $availabilities = $query->orderBy('available_date')
-            ->orderBy('start_time')
-            ->get();
+        // Generate slots for each available duration
+        foreach ($sessionDurations as $duration) {
+            $currentTime = $startTime->copy();
 
-        // Group by date
-        $grouped = $availabilities->groupBy(function ($item) {
-            return Carbon::parse($item->available_date)->format('Y-m-d');
-        });
+            while ($currentTime->copy()->addMinutes($duration)->lte($endTime)) {
+                $slotStart = $currentTime->format('H:i');
+                $slotEnd = $currentTime->copy()->addMinutes($duration)->format('H:i');
 
-        $result = [];
-        foreach ($grouped as $date => $slots) {
-            $dayName = Carbon::parse($date)->format('l');
-            $timeSlots = [];
+                // Check if this slot is already booked
+                $isBooked = false;
+                foreach ($bookedTimes as $bookedTime) {
+                    $bookedStart = Carbon::createFromTimeString($bookedTime);
+                    $bookedEnd = $bookedStart->copy()->addMinutes(60); // Assume 60 min booking
+                    $slotStartTime = Carbon::createFromTimeString($slotStart);
+                    $slotEndTime = Carbon::createFromTimeString($slotEnd);
 
-            foreach ($slots as $slot) {
-                $startTime = Carbon::parse($slot->start_time)->format('H:i');
-                $endTime = Carbon::parse($slot->end_time)->format('H:i');
-                $datetime = Carbon::parse($date . ' ' . $slot->start_time)->setTimezone($therapist->timezone ?? 'UTC');
+                    if ($slotStartTime->lt($bookedEnd) && $slotEndTime->gt($bookedStart)) {
+                        $isBooked = true;
+                        break;
+                    }
+                }
 
-                $timeSlots[] = [
-                    'start_time' => $startTime,
-                    'end_time' => $endTime,
-                    'datetime' => $datetime->toIso8601String(),
-                    'is_available' => true,
-                    'session_types' => $slot->session_types ?? ['video', 'phone'],
-                ];
+                if (!$isBooked) {
+                    $datetime = $date->copy()->setTimeFromTimeString($slotStart);
+                    $timezone = $therapist->timezone ?? 'UTC';
+                    if ($timezone !== 'UTC') {
+                        try {
+                            $datetime->setTimezone($timezone);
+                        } catch (\Exception $e) {
+                            // If timezone is invalid, use UTC
+                            $timezone = 'UTC';
+                        }
+                    }
+
+                    $slots[] = [
+                        'start_time' => $slotStart,
+                        'end_time' => $slotEnd,
+                        'datetime' => $datetime->toIso8601String(),
+                        'is_available' => true,
+                        'session_types' => ['video', 'phone'], // Default session types
+                        'duration_minutes' => $duration,
+                    ];
+                }
+
+                // Move to next slot (duration + buffer)
+                $currentTime->addMinutes($duration + $bufferMinutes);
             }
-
-            if (!empty($timeSlots)) {
-                $result[] = [
-                    'date' => $date,
-                    'day_name' => $dayName,
-                    'timezone' => $therapist->timezone ?? 'UTC',
-                    'time_slots' => $timeSlots,
-                ];
-            }
         }
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Availability retrieved successfully',
-            'data' => $result,
-        ]);
+        return $slots;
     }
 }
 
