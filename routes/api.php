@@ -314,6 +314,8 @@ Route::get('/restaurants/{restaurantId}/reviews/{reviewId}', [RestaurantReviewCo
 // Mental Health & Wellness Support - Public Endpoints
 Route::prefix('mental-health')->group(function () {
     Route::get('/therapists', [MentalHealthController::class, 'getTherapists']);
+    // More specific route must come before less specific route
+    Route::get('/therapists/{id}/availability', [MentalHealthController::class, 'getTherapistAvailability'])->middleware('auth:sanctum');
     Route::get('/therapists/{id}', [MentalHealthController::class, 'getTherapist']);
     Route::get('/resources', [MentalHealthController::class, 'getResources']);
     Route::get('/filter-options', [MentalHealthController::class, 'getFilterOptions']);

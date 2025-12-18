@@ -7,8 +7,10 @@ use App\Models\MentalHealthTherapist;
 use App\Models\MentalHealthResource;
 use App\Models\MentalHealthSession;
 use App\Models\MentalHealthSessionBooking;
+use App\Models\MentalHealthTherapistAvailability;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Carbon\Carbon;
 
 /**
  * @OA\Tag(
@@ -389,6 +391,83 @@ class MentalHealthController extends Controller
         }
 
         return array_values(array_unique($languages));
+    }
+
+    /**
+     * Get therapist availability
+     */
+    public function getTherapistAvailability(Request $request, $id): JsonResponse
+    {
+        $therapist = MentalHealthTherapist::where('application_status', 'approved')
+            ->where('is_active', true)
+            ->find($id);
+
+        if (!$therapist) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Therapist not found',
+            ], 404);
+        }
+
+        // Get availability records
+        $query = MentalHealthTherapistAvailability::where('therapist_id', $id)
+            ->where('is_available', true);
+
+        // If specific date provided, filter by date
+        if ($request->filled('date')) {
+            $date = Carbon::parse($request->date);
+            $query->whereDate('available_date', $date->format('Y-m-d'));
+        } else {
+            // Default to next 7 days
+            $query->whereBetween('available_date', [
+                Carbon::today(),
+                Carbon::today()->addDays(7)
+            ]);
+        }
+
+        $availabilities = $query->orderBy('available_date')
+            ->orderBy('start_time')
+            ->get();
+
+        // Group by date
+        $grouped = $availabilities->groupBy(function ($item) {
+            return Carbon::parse($item->available_date)->format('Y-m-d');
+        });
+
+        $result = [];
+        foreach ($grouped as $date => $slots) {
+            $dayName = Carbon::parse($date)->format('l');
+            $timeSlots = [];
+
+            foreach ($slots as $slot) {
+                $startTime = Carbon::parse($slot->start_time)->format('H:i');
+                $endTime = Carbon::parse($slot->end_time)->format('H:i');
+                $datetime = Carbon::parse($date . ' ' . $slot->start_time)->setTimezone($therapist->timezone ?? 'UTC');
+
+                $timeSlots[] = [
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'datetime' => $datetime->toIso8601String(),
+                    'is_available' => true,
+                    'session_types' => $slot->session_types ?? ['video', 'phone'],
+                ];
+            }
+
+            if (!empty($timeSlots)) {
+                $result[] = [
+                    'date' => $date,
+                    'day_name' => $dayName,
+                    'timezone' => $therapist->timezone ?? 'UTC',
+                    'time_slots' => $timeSlots,
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Availability retrieved successfully',
+            'data' => $result,
+        ]);
     }
 }
 
