@@ -323,8 +323,8 @@
                 <div class="wishlist-left">
                     <div class="section-heading">
                         <h2>From Waitlist to Crew Ready</h2>
-                        <p>We're inviting the first 1,000 crew to shape the future of yacht careers. Here's how you'll
-                            experience Yacht Workers Council.</p>
+                        <p>The first 1,000 members receive a permanent 2× engagement score.
+                        Early contributors shape the platform. To recognise those who help build YWC from day one, founding members earn double engagement credit on all activity.</p>
                     </div>
                 </div>
                 <div class="wishlist-right">
