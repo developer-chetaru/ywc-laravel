@@ -252,13 +252,12 @@
 
                 <div class="platform-box">
                     <div class="platform-icon">
-                        <img src="{{ asset('assets/images/platform8.svg') }}" alt="Financial Future Planning">
+                        <img src="{{ asset('assets/images/platform8.svg') }}" alt="Contractors">
                     </div>
                     <div class="platform-content">
-                        <h4>Financial Future Planning</h4>
-                        <p>Plan your long-term financial goals with tools tailored for yacht crew and international work
-                            life.</p>
-                        @guest
+                        <h4>Contractors</h4>
+                        <p>The Complete, Fully Searchable Contractor Ecosystem for the Yachting Industry.</p>
+                        <!-- @guest
                             <a href="{{ route('financial.calculators.index') }}" 
                                class="inline-block mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                                 Get Started →
@@ -268,7 +267,7 @@
                                class="inline-block mt-3 text-blue-600 hover:text-blue-800 font-medium text-sm">
                                 Access Dashboard →
                             </a>
-                        @endguest
+                        @endguest -->
                     </div>
                 </div>
 

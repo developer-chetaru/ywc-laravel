@@ -19,9 +19,10 @@ class TrainingController extends Controller
      * 
      * Uses APP_URL from environment configuration to build full URLs.
      * Falls back to request scheme and host if APP_URL is not set.
+     * Returns null if file doesn't exist (unless it's already a full URL).
      * 
      * @param string|null $path Storage file path (relative to storage/app/public)
-     * @return string|null Full URL with domain from APP_URL environment variable
+     * @return string|null Full URL with domain from APP_URL environment variable, or null if file doesn't exist
      */
     private function getFullUrl(?string $path): ?string
     {
@@ -34,6 +35,40 @@ class TrainingController extends Controller
             return $path;
         }
         
+        // Normalize path
+        $storagePath = ltrim($path, '/');
+        $storagePath = preg_replace('/^storage\//', '', $storagePath);
+        
+        // Check if file exists in storage/app/public (Laravel storage)
+        $fullStoragePath = storage_path('app/public/' . $storagePath);
+        $fileExists = file_exists($fullStoragePath);
+        
+        // If not in storage, check public/images directory (legacy location)
+        if (!$fileExists) {
+            $publicPath = public_path($storagePath);
+            if (file_exists($publicPath)) {
+                $fileExists = true;
+                // For public directory files, use direct path without /storage/
+                $baseUrl = config('app.url');
+                if (!$baseUrl) {
+                    $baseUrl = request()->getSchemeAndHttpHost();
+                }
+                $baseUrl = rtrim($baseUrl, '/');
+                return $baseUrl . '/' . $storagePath;
+            }
+        }
+        
+        // If file doesn't exist in either location, return null
+        if (!$fileExists) {
+            \Log::warning('Image file not found', [
+                'path' => $path,
+                'storage_path' => $storagePath,
+                'checked_storage' => $fullStoragePath,
+                'checked_public' => public_path($storagePath)
+            ]);
+            return null;
+        }
+        
         // Get base URL from environment config (APP_URL)
         // This reads from .env file: APP_URL=https://your-domain.com
         $baseUrl = config('app.url');
@@ -43,12 +78,8 @@ class TrainingController extends Controller
         }
         $baseUrl = rtrim($baseUrl, '/');
         
-        // Remove 'storage/' prefix if present (it will be added)
-        $path = ltrim($path, '/');
-        $path = preg_replace('/^storage\//', '', $path);
-        
         // Return full URL: {APP_URL}/storage/{path}
-        return $baseUrl . '/storage/' . $path;
+        return $baseUrl . '/storage/' . $storagePath;
     }
 
     /**
