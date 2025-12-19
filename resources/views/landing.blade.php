@@ -287,8 +287,7 @@
                     </div>
                     <div class="platform-content">
                         <h4>Marketplace</h4>
-                        <p>Discover trusted crew services, equipment, and suppliers in a secure crew-only marketplace.
-                        </p>
+                        <p>Sell parts, spares, tenders, and all yacht related equipment in one dedicated marketplace.</p>
                     </div>
                 </div>
 
