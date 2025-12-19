@@ -120,8 +120,7 @@
         <div class="container">
             <div class="section-heading">
                 <h2>Built to Make Life at Sea Smoother</h2>
-                <p>From communication to route planning, these smart tools support captains and crew in every moment on
-                    board.</p>
+                <p>From communication to contractor reviews, these intelligent tools support captains and crew at every stage of onboard operations.</p>
             </div>
             <div class="features-grid">
                 <a href="#" class="features-box">
@@ -336,8 +335,8 @@
                                 <span>01</span>
                             </div>
                             <div class="wishlist-box-right">
-                                <h4>Join the curated waitlist</h4>
-                                <p>Submit your profile and crew role. We verify every submission to keep the community authentic.</p>
+                                <h4>Join the waitlist</h4>
+                                <p>Create your profile and select your role. Applications are reviewed to keep the platform credible, relevant, and crew-focused.</p>
                             </div>
                         </div>
 
@@ -346,8 +345,8 @@
                                 <span>02</span>
                             </div>
                             <div class="wishlist-box-right">
-                                <h4>Captain-approved onboarding</h4>
-                                <p>Receive an invite with personalized onboarding, role-based access, and first access to crew forums.</p>
+                                <h4>Role-based onboarding</h4>
+                                <p>You’re onboarded based on how you actually work on board. Access is structured by role, not hierarchy or job title.</p>
                             </div>
                         </div>
 
@@ -356,8 +355,8 @@
                                 <span>03</span>
                             </div>
                             <div class="wishlist-box-right">
-                                <h4>Collaborative feature sprints</h4>
-                                <p>Participate in exclusive roadmap sessions and feedback loops directly with the founding team.</p>
+                                <h4>Shape what gets built</h4>
+                                <p>Early members help steer YWC. Focused feedback, feature testing, and direct input into what gets built next.</p>
                             </div>
                         </div>
 
@@ -366,8 +365,8 @@
                                 <span>04</span>
                             </div>
                             <div class="wishlist-box-right">
-                                <h4>Full platform unlock</h4>
-                                <p>Access itinerary marketplace, compliance dashboards, and the verified crew network.</p>
+                                <h4>Full platform access</h4>
+                                <p>Contractors and reviews. Operational tools. Compliance visibility. Crew networks. One platform. Built for life on board.</p>
                             </div>
                         </div>
                     </div>
