@@ -55,10 +55,10 @@
                 {{-- Form Card --}}
                 <div class="bg-white rounded-2xl shadow-xl pt-16 pb-6 px-5 flex flex-col items-center">
                     <h1 class="text-2xl font-semibold mb-2 text-center">Login</h1>
-                    <p class="text-sm text-center text-gray-500 mb-6">
+                    <!-- <p class="text-sm text-center text-gray-500 mb-6">
                         Need to create an account? 
                         <a href="{{ route('register') }}" class="text-[#0053FF] font-medium">Sign up</a>
-                    </p>
+                    </p> -->
 
                     {{-- Laravel Login Form --}}
                     <form method="POST" action="{{ route('login') }}" class="w-full" x-data="{ show: false }">
