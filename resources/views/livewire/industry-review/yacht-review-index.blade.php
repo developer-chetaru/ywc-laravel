@@ -5,6 +5,49 @@
 
 <div class="py-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        {{-- Navigation Links --}}
+        <div class="bg-white shadow-lg rounded-xl p-4 border border-gray-200 mb-6">
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('yacht-reviews.index') }}" 
+                   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-blue-600 text-white border-2 border-blue-600 shadow-md hover:bg-blue-700 hover:shadow-lg">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    <span>Yacht Reviews</span>
+                </a>
+                <a href="{{ route('marina-reviews.index') }}" 
+                   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 shadow-sm">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span>Marina Reviews</span>
+                </a>
+                <a href="{{ route('contractor-reviews.index') }}" 
+                   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 shadow-sm">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span>Contractor Reviews</span>
+                </a>
+                <a href="{{ route('broker-reviews.index') }}" 
+                   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 shadow-sm">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span>Broker Reviews</span>
+                </a>
+                <a href="{{ route('restaurant-reviews.index') }}" 
+                   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 shadow-sm">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                    </svg>
+                    <span>Restaurant Reviews</span>
+                </a>
+            </div>
+        </div>
+
         {{-- Header Section --}}
         <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -143,9 +186,13 @@
                             <div class="mb-4">
                                 <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $review->title }}</h3>
                                 <div class="flex items-center gap-4 mb-3">
-                                    <a href="{{ route('yacht-reviews.show', $review->yacht->slug) }}" class="text-blue-600 hover:text-blue-700 font-medium">
-                                        {{ $review->yacht->name }}
-                                    </a>
+                                    @if($review->yacht)
+                                        <a href="{{ route('yacht-reviews.show', $review->yacht->slug) }}" class="text-blue-600 hover:text-blue-700 font-medium">
+                                            {{ $review->yacht->name }}
+                                        </a>
+                                    @else
+                                        <span class="text-gray-500 font-medium">Yacht Deleted</span>
+                                    @endif
                                     @if($review->position_held)
                                         <span class="text-sm text-gray-500">• {{ $review->position_held }}</span>
                                     @endif
@@ -181,9 +228,13 @@
                                         </span>
                                     @endif
                                 </div>
-                                <a href="{{ route('yacht-reviews.show', $review->yacht->slug) }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                                    View Full Review →
-                                </a>
+                                @if($review->yacht)
+                                    <a href="{{ route('yacht-reviews.show', $review->yacht->slug) }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                        View Full Review →
+                                    </a>
+                                @else
+                                    <span class="text-gray-400 text-sm">Yacht no longer available</span>
+                                @endif
                             </div>
                         </div>
                     @endforeach

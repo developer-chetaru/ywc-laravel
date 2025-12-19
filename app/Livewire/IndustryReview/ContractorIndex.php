@@ -102,6 +102,7 @@ class ContractorIndex extends Component
             })
             ->when($this->category, fn ($q) => $q->where('category', $this->category))
             ->when($this->min_rating, fn ($q) => $q->where('rating_avg', '>=', $this->min_rating))
+            ->orderByDesc('created_at')
             ->orderByDesc('rating_avg')
             ->orderByDesc('reviews_count')
             ->orderBy('name');

@@ -118,6 +118,7 @@ class MarinaReviewIndex extends Component
             ->when($this->country, fn ($q) => $q->where('country', $this->country))
             ->when($this->type, fn ($q) => $q->where('type', $this->type))
             ->when($this->min_rating, fn ($q) => $q->where('rating_avg', '>=', $this->min_rating))
+            ->orderByDesc('created_at')
             ->orderByDesc('rating_avg')
             ->orderByDesc('reviews_count')
             ->orderBy('name');

@@ -16,7 +16,7 @@ class YachtReviewCreate extends Component
     use WithFileUploads;
 
     public $yachtId;
-    public Yacht $yacht;
+    public ?Yacht $yacht = null;
     public $editId = null;
 
     // Form fields
@@ -82,7 +82,7 @@ class YachtReviewCreate extends Component
         } else {
             $this->yachtId = $yachtId;
             if ($yachtId) {
-                $this->yacht = Yacht::findOrFail($yachtId);
+                $this->yacht = Yacht::find($yachtId);
             }
         }
     }
@@ -184,7 +184,17 @@ class YachtReviewCreate extends Component
         }
 
         session()->flash('success', $this->editId ? 'Review updated successfully!' : 'Review submitted successfully!');
-        return $this->redirect(route('yacht-reviews.show', $this->yacht->slug));
+        
+        // Ensure yacht is loaded before redirecting
+        if (!$this->yacht && $this->yachtId) {
+            $this->yacht = Yacht::find($this->yachtId);
+        }
+        
+        if ($this->yacht) {
+            return $this->redirect(route('yacht-reviews.show', $this->yacht->slug));
+        }
+        
+        return $this->redirect(route('yacht-reviews.index'));
     }
 
     public function removePhoto($photoId)

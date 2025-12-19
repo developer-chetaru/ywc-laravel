@@ -113,6 +113,7 @@ class YachtReviewIndex extends Component
             ->when($this->status, fn ($q) => $q->where('status', $this->status))
             ->when($this->min_rating, fn ($q) => $q->where('rating_avg', '>=', $this->min_rating))
             ->when($this->min_recommendation, fn ($q) => $q->where('recommendation_percentage', '>=', $this->min_recommendation))
+            ->orderByDesc('created_at')
             ->orderByDesc('rating_avg')
             ->orderByDesc('reviews_count')
             ->orderBy('name');

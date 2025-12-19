@@ -106,6 +106,7 @@ class RestaurantIndex extends Component
             ->when($this->type, fn ($q) => $q->where('type', $this->type))
             ->when($this->min_rating, fn ($q) => $q->where('rating_avg', '>=', $this->min_rating))
             ->when($this->crew_friendly !== null, fn ($q) => $q->where('crew_friendly', $this->crew_friendly))
+            ->orderByDesc('created_at')
             ->orderByDesc('rating_avg')
             ->orderByDesc('reviews_count')
             ->orderBy('name');

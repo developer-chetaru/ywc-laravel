@@ -306,8 +306,16 @@
                                         </div>
                                     </div>
                                 @else
-                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <span class="text-blue-600 font-semibold">{{ Str::substr($review->user->first_name, 0, 1) }}{{ Str::substr($review->user->last_name, 0, 1) }}</span>
+                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+                                        @if($review->user->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $review->user->profile_photo_path) }}" 
+                                                 alt="{{ $review->user->name }}" 
+                                                 class="w-full h-full object-cover rounded-full"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <span class="text-blue-600 font-semibold hidden">{{ Str::substr($review->user->first_name, 0, 1) }}{{ Str::substr($review->user->last_name, 0, 1) }}</span>
+                                        @else
+                                            <span class="text-blue-600 font-semibold">{{ Str::substr($review->user->first_name, 0, 1) }}{{ Str::substr($review->user->last_name, 0, 1) }}</span>
+                                        @endif
                                     </div>
                                     <div>
                                         <div class="font-semibold text-gray-900">{{ $review->user->name }}</div>

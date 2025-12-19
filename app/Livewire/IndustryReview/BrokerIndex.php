@@ -110,6 +110,7 @@ class BrokerIndex extends Component
             ->when($this->type, fn ($q) => $q->where('type', $this->type))
             ->when($this->fee_structure, fn ($q) => $q->where('fee_structure', $this->fee_structure))
             ->when($this->min_rating, fn ($q) => $q->where('rating_avg', '>=', $this->min_rating))
+            ->orderByDesc('created_at')
             ->orderByDesc('rating_avg')
             ->orderByDesc('reviews_count')
             ->orderBy('name');
