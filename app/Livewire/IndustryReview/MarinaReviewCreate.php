@@ -65,6 +65,11 @@ class MarinaReviewCreate extends Component
 
     public function mount($marinaId = null, $reviewId = null)
     {
+        // Get marinaId from query parameter if not provided as route parameter
+        if (!$marinaId && request()->has('marinaId')) {
+            $marinaId = request()->query('marinaId');
+        }
+        
         if ($reviewId) {
             $this->editId = $reviewId;
             $this->loadReview($reviewId);

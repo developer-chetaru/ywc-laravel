@@ -71,6 +71,11 @@ class YachtReviewCreate extends Component
 
     public function mount($yachtId = null, $reviewId = null)
     {
+        // Get yachtId from query parameter if not provided as route parameter
+        if (!$yachtId && request()->has('yachtId')) {
+            $yachtId = request()->query('yachtId');
+        }
+        
         if ($reviewId) {
             $this->editId = $reviewId;
             $this->loadReview($reviewId);

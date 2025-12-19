@@ -6,11 +6,11 @@
 <div class="py-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
         {{-- Back Button --}}
-        <a href="{{ route('industryreview.index') }}" class="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-4 transition-colors">
+        <a href="{{ route('yacht-reviews.index') }}" class="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-4 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
             </svg>
-            <span class="font-medium">Back to Industry Reviews</span>
+            <span class="font-medium">Back to Yacht Reviews</span>
         </a>
 
         {{-- Yacht Header --}}
@@ -75,7 +75,7 @@
                         </div>
                     @endif
                     <div class="mt-4 flex gap-3">
-                        <a href="{{ route('yacht-reviews.create', $yacht->id) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <a href="{{ route('yacht-reviews.create', ['yachtId' => $yacht->id]) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
@@ -408,7 +408,7 @@
                 </svg>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">No reviews yet</h3>
                 <p class="text-gray-600 mb-6">Be the first to review this yacht!</p>
-                <a href="{{ route('yacht-reviews.create', $yacht->id) }}" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <a href="{{ route('yacht-reviews.create', ['yachtId' => $yacht->id]) }}" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     Write the First Review
                 </a>
             </div>

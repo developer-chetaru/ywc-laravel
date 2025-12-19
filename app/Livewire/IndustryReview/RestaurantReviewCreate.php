@@ -51,6 +51,11 @@ class RestaurantReviewCreate extends Component
 
     public function mount($restaurantId = null, $reviewId = null)
     {
+        // Get restaurantId from query parameter if not provided as route parameter
+        if (!$restaurantId && request()->has('restaurantId')) {
+            $restaurantId = request()->query('restaurantId');
+        }
+        
         if ($reviewId) {
             $this->editId = $reviewId;
             $this->loadReview($reviewId);

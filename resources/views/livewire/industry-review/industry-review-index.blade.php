@@ -9,522 +9,65 @@
                 </p>
             </div>
 
-            {{-- Tabs --}}
+            {{-- Category Buttons --}}
             <div class="mb-4 sm:mb-6">
-                <nav class="flex flex-wrap gap-2 sm:flex-nowrap sm:space-x-2 sm:overflow-x-auto sm:overflow-y-hidden sm:pb-2 sm:-mx-1 sm:px-1 sm:scroll-smooth">
-                    <style>
-                        @media (min-width: 640px) {
-                            nav::-webkit-scrollbar { 
-                                height: 4px;
-                            }
-                            nav::-webkit-scrollbar-track { 
-                                background: #f3f4f6; 
-                                border-radius: 10px;
-                            }
-                            nav::-webkit-scrollbar-thumb { 
-                                background: #9ca3af; 
-                                border-radius: 10px;
-                            }
-                            nav::-webkit-scrollbar-thumb:hover { 
-                                background: #6b7280; 
-                            }
-                        }
-                    </style>
-                    <button
-                        wire:click="setTab('yachts')"
-                        class="py-2.5 px-4 rounded-lg font-semibold text-sm transition-all whitespace-nowrap flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[100px] {{ $activeTab === 'yachts' ? 'bg-blue-600 text-white border-2 border-blue-600 shadow-md' : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 active:bg-gray-300' }}">
+                <div class="flex flex-wrap gap-3 sm:gap-4">
+                    <a href="{{ route('yacht-reviews.index') }}" 
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-blue-600 text-white border-2 border-blue-600 shadow-md hover:bg-blue-700 hover:shadow-lg">
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                         </svg>
-                        <span>Yacht</span>
-                    </button>
-                    <button
-                        wire:click="setTab('marinas')"
-                        class="py-2.5 px-4 rounded-lg font-semibold text-sm transition-all whitespace-nowrap flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[100px] {{ $activeTab === 'marinas' ? 'bg-blue-600 text-white border-2 border-blue-600 shadow-md' : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 active:bg-gray-300' }}">
+                        <span>Yacht Reviews</span>
+                    </a>
+                    <a href="{{ route('marina-reviews.index') }}" 
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 shadow-sm">
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                        <span>Marina</span>
-                    </button>
-                    <button
-                        wire:click="setTab('contractors')"
-                        class="py-2.5 px-4 rounded-lg font-semibold text-sm transition-all whitespace-nowrap flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[100px] {{ $activeTab === 'contractors' ? 'bg-blue-600 text-white border-2 border-blue-600 shadow-md' : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 active:bg-gray-300' }}">
+                        <span>Marina Reviews</span>
+                    </a>
+                    <a href="{{ route('contractor-reviews.index') }}" 
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 shadow-sm">
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                        <span>Contractor</span>
-                    </button>
-                    <button
-                        wire:click="setTab('brokers')"
-                        class="py-2.5 px-4 rounded-lg font-semibold text-sm transition-all whitespace-nowrap flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[100px] {{ $activeTab === 'brokers' ? 'bg-blue-600 text-white border-2 border-blue-600 shadow-md' : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 active:bg-gray-300' }}">
+                        <span>Contractor Reviews</span>
+                    </a>
+                    <a href="{{ route('broker-reviews.index') }}" 
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 shadow-sm">
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
-                        <span>Broker</span>
-                    </button>
-                    <button
-                        wire:click="setTab('restaurants')"
-                        class="py-2.5 px-4 rounded-lg font-semibold text-sm transition-all whitespace-nowrap flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[100px] {{ $activeTab === 'restaurants' ? 'bg-blue-600 text-white border-2 border-blue-600 shadow-md' : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 active:bg-gray-300' }}">
+                        <span>Broker Reviews</span>
+                    </a>
+                    <a href="{{ route('restaurant-reviews.index') }}" 
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 shadow-sm">
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
                         </svg>
-                        <span>Restaurant</span>
-                    </button>
-                </nav>
-            </div>
-
-            {{-- Search Bar --}}
-            <div class="mb-4 sm:mb-6">
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        wire:model.live.debounce.300ms="searchQuery"
-                        placeholder="Search {{ $activeTab === 'yachts' ? 'yachts' : ($activeTab === 'marinas' ? 'marinas' : ($activeTab === 'contractors' ? 'contractors' : ($activeTab === 'brokers' ? 'brokers' : 'restaurants'))) }}..."
-                        class="w-full pl-11 pr-10 sm:pl-12 sm:pr-12 py-3 sm:py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all text-sm sm:text-base bg-gray-50 focus:bg-white"
-                    >
-                    <svg class="absolute left-3.5 sm:left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    @if($searchQuery)
-                        <button 
-                            wire:click="clearSearch"
-                            class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Clear search">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    @endif
+                        <span>Restaurant Reviews</span>
+                    </a>
+                    @auth
+                    <a href="{{ route('my-reviews.index') }}" 
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-green-600 text-white border-2 border-green-600 shadow-md hover:bg-green-700 hover:shadow-lg">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span>My Reviews</span>
+                    </a>
+                    @endauth
                 </div>
             </div>
 
-            {{-- Tab Content --}}
-            <div>
-                @if($activeTab === 'yachts')
-                    @if($loading)
-                        <div class="text-center py-12 sm:py-16">
-                            <div class="inline-block animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-2 border-blue-200 border-t-blue-600"></div>
-                            <p class="mt-4 text-sm sm:text-base text-gray-600 font-medium">Loading yachts...</p>
-                        </div>
-                    @elseif(($showAll && isset($yachtsPaginated) && $yachtsPaginated && $yachtsPaginated->total() > 0) || (!$showAll && !empty($yachts) && count($yachts) > 0))
-                        @php
-                            $yachtsToDisplay = $showAll && isset($yachtsPaginated) ? $yachtsPaginated : collect($yachts);
-                        @endphp
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-                            @foreach($yachtsToDisplay as $yacht)
-                                @php
-                                    if (is_object($yacht)) {
-                                        $yachtData = $yacht->toArray();
-                                        if ($yacht->cover_image) {
-                                            $yachtData['cover_image_url'] = str_starts_with($yacht->cover_image, 'http') 
-                                                ? $yacht->cover_image 
-                                                : asset('storage/' . $yacht->cover_image);
-                                        }
-                                    } else {
-                                        $yachtData = $yacht;
-                                    }
-                                @endphp
-                                <div wire:key="yacht-{{ $yachtData['id'] }}" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden group">
-                                    <div class="relative h-44 sm:h-48 lg:h-52 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden">
-                                        @if(!empty($yachtData['cover_image_url']))
-                                            <img src="{{ $yachtData['cover_image_url'] }}" alt="{{ $yachtData['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-20 h-20 text-white opacity-50\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'></path></svg></div>';">
-                                        @else
-                                            <div class="w-full h-full flex items-center justify-center">
-                                                <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                                                </svg>
-                                            </div>
-                                        @endif
-                                        @if(isset($yachtData['rating_avg']) && $yachtData['rating_avg'] > 0)
-                                            <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md">
-                                                <svg class="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" viewBox="0 0 20 20">
-                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
-                                                </svg>
-                                                <span class="text-sm font-bold text-gray-900">{{ number_format($yachtData['rating_avg'] ?? 0, 1) }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="p-4 sm:p-5 flex-1 flex flex-col space-y-3">
-                                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 leading-tight">{{ $yachtData['name'] ?? 'Unknown Yacht' }}</h2>
-                                        <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
-                                            <div class="bg-blue-50 rounded-xl p-2.5 sm:p-3 border border-blue-100">
-                                                <dt class="text-[10px] sm:text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">Type</dt>
-                                                <dd class="text-sm sm:text-base text-gray-900 font-semibold">{{ isset($yachtData['type']) ? ucfirst(str_replace('_', ' ', $yachtData['type'])) : '—' }}</dd>
-                                            </div>
-                                            <div class="bg-green-50 rounded-xl p-2.5 sm:p-3 border border-green-100">
-                                                <dt class="text-[10px] sm:text-xs font-semibold text-green-600 uppercase tracking-wide mb-1">Length</dt>
-                                                <dd class="text-sm sm:text-base text-gray-900 font-semibold">
-                                                    @if(isset($yachtData['length_meters']))
-                                                        {{ number_format($yachtData['length_meters'], 1) }}m
-                                                    @elseif(isset($yachtData['length_feet']))
-                                                        {{ number_format($yachtData['length_feet'], 0) }}ft
-                                                    @else
-                                                        —
-                                                    @endif
-                                                </dd>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-                                            <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
-                                                </svg>
-                                                <span class="font-semibold">{{ $yachtData['reviews_count'] ?? 0 }} {{ ($yachtData['reviews_count'] ?? 0) == 1 ? 'review' : 'reviews' }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
-                                        @php
-                                            $yachtSlug = $yachtData['slug'] ?? $yachtData['id'];
-                                        @endphp
-                                        <a 
-                                            href="{{ route('yacht-reviews.show', $yachtSlug) }}"
-                                            class="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg active:scale-[0.98]">
-                                            View Details
-                                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                        
-                        {{-- See All / Show Less Button and Pagination --}}
-                        @if(!$showAll && $yachtsTotalCount > 12)
-                            <div class="mt-6 flex justify-center">
-                                <button wire:click="toggleShowAll" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all">
-                                    See All Yachts ({{ $yachtsTotalCount }} total)
-                                </button>
-                            </div>
-                        @elseif($showAll && isset($yachtsPaginated) && $yachtsPaginated)
-                            <div class="mt-6 flex flex-col items-center gap-4">
-                                <div class="w-full">
-                                    {{ $yachtsPaginated->links() }}
-                                </div>
-                                <button wire:click="toggleShowAll" class="px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition-all">
-                                    Show Less
-                                </button>
-                            </div>
-                        @endif
-                    @else
-                        <div class="bg-white rounded-xl shadow-lg p-6 sm:p-12 text-center">
-                            <svg class="w-16 h-16 sm:w-24 sm:h-24 text-gray-300 mx-auto mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                            </svg>
-                            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No yachts found</h3>
-                            <p class="text-sm sm:text-base text-gray-600">No yachts available at the moment.</p>
-                        </div>
-                    @endif
-                @elseif($activeTab === 'marinas')
-                    @if($loading)
-                        <div class="text-center py-12 sm:py-16">
-                            <div class="inline-block animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-2 border-blue-200 border-t-blue-600"></div>
-                            <p class="mt-4 text-sm sm:text-base text-gray-600 font-medium">Loading marinas...</p>
-                        </div>
-                    @elseif(count($marinas) > 0)
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-                            @foreach($marinas as $marina)
-                                <div wire:key="marina-{{ $marina['id'] }}" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden group">
-                                    <div class="relative h-44 sm:h-48 lg:h-52 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden">
-                                        @if(!empty($marina['cover_image_url']))
-                                            <img src="{{ $marina['cover_image_url'] }}" alt="{{ $marina['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-20 h-20 text-white opacity-50\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'></path></svg></div>';">
-                                        @else
-                                            <div class="w-full h-full flex items-center justify-center">
-                                                <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                </svg>
-                                            </div>
-                                        @endif
-                                        @if(isset($marina['rating_avg']) && $marina['rating_avg'] > 0)
-                                            <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md">
-                                                <svg class="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" viewBox="0 0 20 20">
-                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
-                                                </svg>
-                                                <span class="text-sm font-bold text-gray-900">{{ number_format($marina['rating_avg'], 1) }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="p-4 sm:p-5 flex-1 flex flex-col space-y-3">
-                                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 leading-tight">{{ $marina['name'] ?? 'Unknown Marina' }}</h2>
-                                        <div class="flex items-center gap-2 text-sm text-gray-600">
-                                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            </svg>
-                                            <span>
-                                                @if(isset($marina['city']) && isset($marina['country']))
-                                                    {{ $marina['city'] }}, {{ $marina['country'] }}
-                                                @elseif(isset($marina['country']))
-                                                    {{ $marina['country'] }}
-                                                @else
-                                                    —
-                                                @endif
-                                            </span>
-                                        </div>
-                                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-                                            <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
-                                                </svg>
-                                                <span class="font-semibold">{{ $marina['reviews_count'] ?? 0 }} {{ ($marina['reviews_count'] ?? 0) == 1 ? 'review' : 'reviews' }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
-                                        @php
-                                            $marinaSlug = $marina['slug'] ?? $marina['id'];
-                                        @endphp
-                                        <a 
-                                            href="{{ route('marina-reviews.show', $marinaSlug) }}"
-                                            class="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg active:scale-[0.98]">
-                                            View Details
-                                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="bg-white rounded-xl shadow-lg p-6 sm:p-12 text-center">
-                            <svg class="w-16 h-16 sm:w-24 sm:h-24 text-gray-300 mx-auto mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No marinas found</h3>
-                            <p class="text-sm sm:text-base text-gray-600">No marinas available at the moment.</p>
-                        </div>
-                    @endif
-                @elseif($activeTab === 'contractors')
-                    @if($loading)
-                        <div class="text-center py-12 sm:py-16">
-                            <div class="inline-block animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-2 border-blue-200 border-t-blue-600"></div>
-                            <p class="mt-4 text-sm sm:text-base text-gray-600 font-medium">Loading contractors...</p>
-                        </div>
-                    @elseif(count($contractors) > 0)
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-                            @foreach($contractors as $contractor)
-                                <div wire:key="contractor-{{ $contractor['id'] }}" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden group">
-                                    <div class="relative h-44 sm:h-48 lg:h-52 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden">
-                                        @if(!empty($contractor['logo_url']))
-                                            <img src="{{ $contractor['logo_url'] }}" alt="{{ $contractor['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-20 h-20 text-white opacity-50\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'></path></svg></div>';">
-                                        @else
-                                            <div class="w-full h-full flex items-center justify-center">
-                                                <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                </svg>
-                                            </div>
-                                        @endif
-                                        @if(isset($contractor['rating_avg']) && $contractor['rating_avg'] > 0)
-                                            <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md">
-                                                <svg class="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" viewBox="0 0 20 20">
-                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
-                                                </svg>
-                                                <span class="text-sm font-bold text-gray-900">{{ number_format($contractor['rating_avg'], 1) }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="p-4 sm:p-5 flex-1 flex flex-col space-y-3">
-                                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 leading-tight">{{ $contractor['name'] ?? 'Unknown Contractor' }}</h2>
-                                        <div class="flex items-center gap-2 text-sm text-gray-600">
-                                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            </svg>
-                                            <span>
-                                                @if(isset($contractor['city']) && isset($contractor['country']))
-                                                    {{ $contractor['city'] }}, {{ $contractor['country'] }}
-                                                @elseif(isset($contractor['country']))
-                                                    {{ $contractor['country'] }}
-                                                @else
-                                                    —
-                                                @endif
-                                            </span>
-                                        </div>
-                                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-                                            <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
-                                                </svg>
-                                                <span class="font-semibold">{{ $contractor['reviews_count'] ?? 0 }} {{ ($contractor['reviews_count'] ?? 0) == 1 ? 'review' : 'reviews' }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
-                                        @php
-                                            $contractorSlug = $contractor['slug'] ?? $contractor['id'];
-                                        @endphp
-                                        <a 
-                                            href="{{ route('contractor-reviews.show', $contractorSlug) }}"
-                                            class="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg active:scale-[0.98]">
-                                            View Details
-                                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="bg-white rounded-xl shadow-lg p-6 sm:p-12 text-center">
-                            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No contractors found</h3>
-                            <p class="text-sm sm:text-base text-gray-600">No contractors available at the moment.</p>
-                        </div>
-                    @endif
-                @elseif($activeTab === 'brokers')
-                    @if($loading)
-                        <div class="text-center py-12 sm:py-16">
-                            <div class="inline-block animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-2 border-blue-200 border-t-blue-600"></div>
-                            <p class="mt-4 text-sm sm:text-base text-gray-600 font-medium">Loading brokers...</p>
-                        </div>
-                    @elseif(count($brokers) > 0)
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-                            @foreach($brokers as $broker)
-                                <div wire:key="broker-{{ $broker['id'] }}" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden group">
-                                    <div class="relative h-44 sm:h-48 lg:h-52 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden">
-                                        @if(!empty($broker['logo_url']))
-                                            <img src="{{ $broker['logo_url'] }}" alt="{{ $broker['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-20 h-20 text-white opacity-50\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'></path></svg></div>';">
-                                        @else
-                                            <div class="w-full h-full flex items-center justify-center">
-                                                <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                                </svg>
-                                            </div>
-                                        @endif
-                                        @if(isset($broker['rating_avg']) && $broker['rating_avg'] > 0)
-                                            <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md">
-                                                <svg class="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" viewBox="0 0 20 20">
-                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
-                                                </svg>
-                                                <span class="text-sm font-bold text-gray-900">{{ number_format($broker['rating_avg'], 1) }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="p-4 sm:p-5 flex-1 flex flex-col space-y-3">
-                                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 leading-tight">{{ $broker['name'] ?? 'Unknown Broker' }}</h2>
-                                        <div class="flex items-center gap-2 text-sm text-gray-600">
-                                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            </svg>
-                                            <span>{{ $broker['primary_location'] ?? '—' }}</span>
-                                        </div>
-                                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-                                            <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
-                                                </svg>
-                                                <span class="font-semibold">{{ $broker['reviews_count'] ?? 0 }} {{ ($broker['reviews_count'] ?? 0) == 1 ? 'review' : 'reviews' }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
-                                        @php
-                                            $brokerSlug = $broker['slug'] ?? $broker['id'];
-                                        @endphp
-                                        <a 
-                                            href="{{ route('broker-reviews.show', $brokerSlug) }}"
-                                            class="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg active:scale-[0.98]">
-                                            View Details
-                                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="bg-white rounded-xl shadow-lg p-6 sm:p-12 text-center">
-                            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No brokers found</h3>
-                            <p class="text-sm sm:text-base text-gray-600">No brokers available at the moment.</p>
-                        </div>
-                    @endif
-                @elseif($activeTab === 'restaurants')
-                    @if($loading)
-                        <div class="text-center py-12 sm:py-16">
-                            <div class="inline-block animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-2 border-blue-200 border-t-blue-600"></div>
-                            <p class="mt-4 text-sm sm:text-base text-gray-600 font-medium">Loading restaurants...</p>
-                        </div>
-                    @elseif(count($restaurants) > 0)
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-                            @foreach($restaurants as $restaurant)
-                                <div wire:key="restaurant-{{ $restaurant['id'] }}" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-100 overflow-hidden group">
-                                    <div class="relative h-44 sm:h-48 lg:h-52 bg-gradient-to-br from-blue-400 to-indigo-600 overflow-hidden">
-                                        @if(!empty($restaurant['cover_image_url']))
-                                            <img src="{{ $restaurant['cover_image_url'] }}" alt="{{ $restaurant['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-20 h-20 text-white opacity-50\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'></path></svg></div>';">
-                                        @else
-                                            <div class="w-full h-full flex items-center justify-center">
-                                                <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                                                </svg>
-                                            </div>
-                                        @endif
-                                        @if(isset($restaurant['rating_avg']) && $restaurant['rating_avg'] > 0)
-                                            <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md">
-                                                <svg class="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" viewBox="0 0 20 20">
-                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
-                                                </svg>
-                                                <span class="text-sm font-bold text-gray-900">{{ number_format($restaurant['rating_avg'], 1) }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="p-4 sm:p-5 flex-1 flex flex-col space-y-3">
-                                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 leading-tight">{{ $restaurant['name'] ?? 'Unknown Restaurant' }}</h2>
-                                        <div class="flex items-center gap-2 text-sm text-gray-600">
-                                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            </svg>
-                                            <span>
-                                                @if(isset($restaurant['city']) && isset($restaurant['country']))
-                                                    {{ $restaurant['city'] }}, {{ $restaurant['country'] }}
-                                                @elseif(isset($restaurant['country']))
-                                                    {{ $restaurant['country'] }}
-                                                @else
-                                                    —
-                                                @endif
-                                            </span>
-                                        </div>
-                                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-                                            <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
-                                                </svg>
-                                                <span class="font-semibold">{{ $restaurant['reviews_count'] ?? 0 }} {{ ($restaurant['reviews_count'] ?? 0) == 1 ? 'review' : 'reviews' }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
-                                        @php
-                                            $restaurantSlug = $restaurant['slug'] ?? $restaurant['id'];
-                                        @endphp
-                                        <a 
-                                            href="{{ route('restaurant-reviews.show', $restaurantSlug) }}"
-                                            class="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg active:scale-[0.98]">
-                                            View Details
-                                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="bg-white rounded-xl shadow-lg p-6 sm:p-12 text-center">
-                            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No restaurants found</h3>
-                            <p class="text-sm sm:text-base text-gray-600">No restaurants available at the moment.</p>
-                        </div>
-                    @endif
-                @endif
+            {{-- Overview Content --}}
+            <div class="mb-6">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 sm:p-8 border border-blue-100">
+                    <p class="text-base sm:text-lg text-gray-700 leading-relaxed">
+                        Select a category above to browse and review yachts, marinas, contractors, brokers, and restaurants. Share your experiences and help the yacht crew community make informed decisions.
+                    </p>
+                </div>
             </div>
 
 

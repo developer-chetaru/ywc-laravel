@@ -59,6 +59,11 @@ class ContractorReviewCreate extends Component
 
     public function mount($contractorId = null, $reviewId = null)
     {
+        // Get contractorId from query parameter if not provided as route parameter
+        if (!$contractorId && request()->has('contractorId')) {
+            $contractorId = request()->query('contractorId');
+        }
+        
         if ($reviewId) {
             $this->editId = $reviewId;
             $this->loadReview($reviewId);

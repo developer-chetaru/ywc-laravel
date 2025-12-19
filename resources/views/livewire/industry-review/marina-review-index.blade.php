@@ -13,6 +13,15 @@
                     <p class="text-sm text-gray-600">Find and review marinas, ports, and anchorages worldwide</p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3">
+                    @auth
+                    <button wire:click="toggleMyReviews"
+                       class="inline-flex items-center justify-center px-6 py-3 font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 {{ $showMyReviews ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800' : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-gray-200 hover:to-gray-300 border-2 border-gray-300' }}">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        My Reviews
+                    </button>
+                    @endauth
                     <a href="{{ route('marina-reviews.create') }}"
                        class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 transition-all transform hover:scale-105">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +145,7 @@
                                    class="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm">
                                     View Reviews
                                 </a>
-                                <a href="{{ route('marina-reviews.create', $marina->id) }}"
+                                <a href="{{ route('marina-reviews.create', ['marinaId' => $marina->id]) }}"
                                    class="px-4 py-2 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-all">
                                     Review
                                 </a>

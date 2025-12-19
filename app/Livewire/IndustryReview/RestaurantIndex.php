@@ -8,6 +8,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use App\Models\Restaurant;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 #[Layout('layouts.app')]
 class RestaurantIndex extends Component
@@ -28,6 +29,9 @@ class RestaurantIndex extends Component
     #[Url]
     public ?bool $crew_friendly = null;
 
+    #[Url]
+    public bool $showMyReviews = false;
+
     public array $types = [
         'restaurant' => 'Restaurant',
         'bar' => 'Bar',
@@ -38,9 +42,15 @@ class RestaurantIndex extends Component
 
     public function updating($name, $value): void
     {
-        if (in_array($name, ['search', 'type', 'min_rating', 'crew_friendly'], true)) {
+        if (in_array($name, ['search', 'type', 'min_rating', 'crew_friendly', 'showMyReviews'], true)) {
             $this->resetPage();
         }
+    }
+
+    public function toggleMyReviews(): void
+    {
+        $this->showMyReviews = !$this->showMyReviews;
+        $this->resetPage();
     }
 
     public function clearFilters(): void
@@ -49,6 +59,7 @@ class RestaurantIndex extends Component
         $this->type = null;
         $this->min_rating = null;
         $this->crew_friendly = null;
+        $this->showMyReviews = false;
         $this->resetPage();
     }
 
@@ -67,6 +78,11 @@ class RestaurantIndex extends Component
             ->when($this->type, fn ($q) => $q->where('type', $this->type))
             ->when($this->min_rating, fn ($q) => $q->where('rating_avg', '>=', $this->min_rating))
             ->when($this->crew_friendly !== null, fn ($q) => $q->where('crew_friendly', $this->crew_friendly))
+            ->when($this->showMyReviews && Auth::check(), function ($q) {
+                $q->whereHas('reviews', function ($reviewQuery) {
+                    $reviewQuery->where('user_id', Auth::id());
+                });
+            })
             ->orderByDesc('rating_avg')
             ->orderByDesc('reviews_count')
             ->orderBy('name');

@@ -1,5 +1,13 @@
-<div class="py-6 bg-gray-50 min-h-screen">
-    <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+<div class="py-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        {{-- Back Button --}}
+        <a href="{{ isset($contractor) && $contractor ? route('contractor-reviews.show', $contractor->slug) : route('contractor-reviews.index') }}" class="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-4 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            <span class="font-medium">Back to {{ isset($contractor) && $contractor ? $contractor->name : 'Contractor Reviews' }}</span>
+        </a>
+
         <div class="bg-white shadow-lg rounded-xl p-6">
             <h1 class="text-3xl font-bold text-gray-900 mb-6">Write a Review for {{ $contractor->name ?? 'Contractor' }}</h1>
 
@@ -78,7 +86,7 @@
                         <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                             Submit Review
                         </button>
-                        <a href="{{ route('contractor-reviews.index') }}" class="px-6 py-2 border rounded-lg hover:bg-gray-50">
+                        <a href="{{ isset($contractor) && $contractor ? route('contractor-reviews.show', $contractor->slug) : route('contractor-reviews.index') }}" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
                             Cancel
                         </a>
                     </div>

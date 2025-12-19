@@ -59,6 +59,11 @@ class BrokerReviewCreate extends Component
 
     public function mount($brokerId = null, $reviewId = null)
     {
+        // Get brokerId from query parameter if not provided as route parameter
+        if (!$brokerId && request()->has('brokerId')) {
+            $brokerId = request()->query('brokerId');
+        }
+        
         if ($reviewId) {
             $this->editId = $reviewId;
             $this->loadReview($reviewId);
