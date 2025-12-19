@@ -153,7 +153,7 @@
                 </a>
                 <a href="#" class="features-box">
                     <div class="features-img">
-                        <img src="{{ asset('assets/images/features4live.jpg.jpg') }}" alt="Find Training Providers">
+                        <img src="{{ asset('assets/images/features4live.jpg') }}" alt="Find Training Providers">
                     </div>
                     <div class="features-content">
                         <h4>Find Training Providers</h4>
