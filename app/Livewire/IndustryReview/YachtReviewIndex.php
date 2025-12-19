@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use App\Models\Yacht;
+use App\Models\YachtReview;
 use App\Models\MasterData;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -69,6 +70,36 @@ class YachtReviewIndex extends Component
 
     public function render()
     {
+        if ($this->showMyReviews && Auth::check()) {
+            // Show user's reviews instead of yachts
+            $query = YachtReview::query()
+                ->with(['yacht', 'user', 'photos'])
+                ->where('user_id', Auth::id())
+                ->when($this->search, function ($q) {
+                    $q->where(function ($inner) {
+                        $inner->where('title', 'like', "%{$this->search}%")
+                            ->orWhere('review', 'like', "%{$this->search}%")
+                            ->orWhereHas('yacht', function ($yachtQuery) {
+                                $yachtQuery->where('name', 'like', "%{$this->search}%");
+                            });
+                    });
+                })
+                ->when($this->min_rating, fn ($q) => $q->where('overall_rating', '>=', $this->min_rating))
+                ->orderByDesc('created_at');
+
+            $reviews = $query->paginate(12);
+
+            $yachtTypes = MasterData::getYachtTypes();
+
+            return view('livewire.industry-review.yacht-review-index', [
+                'yachts' => collect(),
+                'reviews' => $reviews,
+                'yachtTypes' => $yachtTypes,
+                'showMyReviews' => true,
+            ]);
+        }
+
+        // Show yachts (normal view)
         $query = Yacht::query()
             ->withCount('reviews')
             ->when($this->search, function ($q) {
@@ -82,11 +113,6 @@ class YachtReviewIndex extends Component
             ->when($this->status, fn ($q) => $q->where('status', $this->status))
             ->when($this->min_rating, fn ($q) => $q->where('rating_avg', '>=', $this->min_rating))
             ->when($this->min_recommendation, fn ($q) => $q->where('recommendation_percentage', '>=', $this->min_recommendation))
-            ->when($this->showMyReviews && Auth::check(), function ($q) {
-                $q->whereHas('reviews', function ($reviewQuery) {
-                    $reviewQuery->where('user_id', Auth::id());
-                });
-            })
             ->orderByDesc('rating_avg')
             ->orderByDesc('reviews_count')
             ->orderBy('name');
@@ -105,7 +131,9 @@ class YachtReviewIndex extends Component
 
         return view('livewire.industry-review.yacht-review-index', [
             'yachts' => $yachts,
+            'reviews' => null,
             'yachtTypes' => $yachtTypes,
+            'showMyReviews' => false,
         ]);
     }
 }

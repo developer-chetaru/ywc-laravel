@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use App\Models\Broker;
+use App\Models\BrokerReview;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
@@ -70,6 +71,33 @@ class BrokerIndex extends Component
 
     public function render()
     {
+        if ($this->showMyReviews && Auth::check()) {
+            // Show user's reviews instead of brokers
+            $query = BrokerReview::query()
+                ->with(['broker', 'user', 'photos'])
+                ->where('user_id', Auth::id())
+                ->when($this->search, function ($q) {
+                    $q->where(function ($inner) {
+                        $inner->where('title', 'like', "%{$this->search}%")
+                            ->orWhere('review', 'like', "%{$this->search}%")
+                            ->orWhereHas('broker', function ($brokerQuery) {
+                                $brokerQuery->where('name', 'like', "%{$this->search}%");
+                            });
+                    });
+                })
+                ->when($this->min_rating, fn ($q) => $q->where('overall_rating', '>=', $this->min_rating))
+                ->orderByDesc('created_at');
+
+            $reviews = $query->paginate(12);
+
+            return view('livewire.industry-review.broker-index', [
+                'brokers' => collect(),
+                'reviews' => $reviews,
+                'showMyReviews' => true,
+            ]);
+        }
+
+        // Show brokers (normal view)
         $query = Broker::query()
             ->withCount('reviews')
             ->when($this->search, function ($q) {
@@ -82,11 +110,6 @@ class BrokerIndex extends Component
             ->when($this->type, fn ($q) => $q->where('type', $this->type))
             ->when($this->fee_structure, fn ($q) => $q->where('fee_structure', $this->fee_structure))
             ->when($this->min_rating, fn ($q) => $q->where('rating_avg', '>=', $this->min_rating))
-            ->when($this->showMyReviews && Auth::check(), function ($q) {
-                $q->whereHas('reviews', function ($reviewQuery) {
-                    $reviewQuery->where('user_id', Auth::id());
-                });
-            })
             ->orderByDesc('rating_avg')
             ->orderByDesc('reviews_count')
             ->orderBy('name');
@@ -103,6 +126,8 @@ class BrokerIndex extends Component
 
         return view('livewire.industry-review.broker-index', [
             'brokers' => $brokers,
+            'reviews' => null,
+            'showMyReviews' => false,
         ]);
     }
 }
