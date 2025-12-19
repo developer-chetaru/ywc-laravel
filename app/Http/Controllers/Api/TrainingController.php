@@ -10,11 +10,159 @@ use App\Models\TrainingCertificationCategory;
 use App\Models\TrainingCourseSchedule;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class TrainingController extends Controller
 {
     /**
+     * Get full URL for storage file
+     * 
+     * Uses APP_URL from environment configuration to build full URLs.
+     * Falls back to request scheme and host if APP_URL is not set.
+     * 
+     * @param string|null $path Storage file path (relative to storage/app/public)
+     * @return string|null Full URL with domain from APP_URL environment variable
+     */
+    private function getFullUrl(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+        
+        // If already a full URL, return as is
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return $path;
+        }
+        
+        // Get base URL from environment config (APP_URL)
+        // This reads from .env file: APP_URL=https://your-domain.com
+        $baseUrl = config('app.url');
+        if (!$baseUrl) {
+            // Fallback to request URL if APP_URL not configured
+            $baseUrl = request()->getSchemeAndHttpHost();
+        }
+        $baseUrl = rtrim($baseUrl, '/');
+        
+        // Remove 'storage/' prefix if present (it will be added)
+        $path = ltrim($path, '/');
+        $path = preg_replace('/^storage\//', '', $path);
+        
+        // Return full URL: {APP_URL}/storage/{path}
+        return $baseUrl . '/storage/' . $path;
+    }
+
+    /**
+     * Transform provider data to include full image URLs
+     */
+    private function transformProvider($provider)
+    {
+        if (!$provider) {
+            return $provider;
+        }
+
+        // Handle Eloquent models
+        if (is_object($provider) && method_exists($provider, 'getAttribute')) {
+            if ($provider->logo) {
+                $provider->logo_url = $this->getFullUrl($provider->logo);
+            }
+
+            // Transform galleries
+            if ($provider->relationLoaded('galleries') && $provider->galleries) {
+                foreach ($provider->galleries as $gallery) {
+                    if ($gallery->image_path) {
+                        $gallery->image_url = $this->getFullUrl($gallery->image_path);
+                    }
+                }
+            }
+        } else {
+            // Handle arrays or stdClass objects
+            if (is_array($provider)) {
+                $provider = (object) $provider;
+            }
+
+            if (isset($provider->logo)) {
+                $provider->logo_url = $this->getFullUrl($provider->logo);
+            }
+
+            // Transform galleries
+            if (isset($provider->galleries) && is_iterable($provider->galleries)) {
+                foreach ($provider->galleries as $gallery) {
+                    if (isset($gallery->image_path)) {
+                        $gallery->image_url = $this->getFullUrl($gallery->image_path);
+                    }
+                }
+            }
+        }
+
+        return $provider;
+    }
+
+    /**
+     * Transform course data to include full image URLs
+     */
+    private function transformCourse($course)
+    {
+        if (!$course) {
+            return $course;
+        }
+
+        // Handle Eloquent models
+        if (is_object($course) && method_exists($course, 'getAttribute')) {
+            // Transform certification cover image if present
+            if ($course->relationLoaded('certification') && $course->certification && $course->certification->cover_image) {
+                $course->certification->cover_image_url = $this->getFullUrl($course->certification->cover_image);
+            }
+
+            // Transform provider if present
+            if ($course->relationLoaded('provider') && $course->provider) {
+                $course->provider = $this->transformProvider($course->provider);
+            }
+
+            // Transform reviews user profile photos
+            if ($course->relationLoaded('reviews') && $course->reviews) {
+                foreach ($course->reviews as $review) {
+                    if ($review->relationLoaded('user') && $review->user && $review->user->profile_photo_path) {
+                        $review->user->profile_photo_url = $this->getFullUrl($review->user->profile_photo_path);
+                    }
+                }
+            }
+        } else {
+            // Handle arrays or stdClass objects
+            if (is_array($course)) {
+                $course = (object) $course;
+            }
+
+            // Transform certification cover image if present
+            if (isset($course->certification) && isset($course->certification->cover_image)) {
+                $course->certification->cover_image_url = $this->getFullUrl($course->certification->cover_image);
+            }
+
+            // Transform provider if present
+            if (isset($course->provider)) {
+                $course->provider = $this->transformProvider($course->provider);
+            }
+
+            // Transform reviews user profile photos
+            if (isset($course->reviews) && is_iterable($course->reviews)) {
+                foreach ($course->reviews as $review) {
+                    if (isset($review->user) && isset($review->user->profile_photo_path)) {
+                        $review->user->profile_photo_url = $this->getFullUrl($review->user->profile_photo_path);
+                    }
+                }
+            }
+        }
+
+        return $course;
+    }
+
+    /**
      * Get list of training providers with filters
+     * 
+     * Returns a paginated list of active training providers with optional filtering and sorting.
+     * Supports filtering by country, certification type, verification status, rating, and search by name.
+     * 
+     * @param Request $request
+     * @return JsonResponse
      */
     public function getProviders(Request $request): JsonResponse
     {
@@ -59,10 +207,15 @@ class TrainingController extends Controller
 
         $providers = $query->paginate($request->input('per_page', 15));
 
+        // Transform providers to include full image URLs
+        $transformedProviders = collect($providers->items())->map(function ($provider) {
+            return $this->transformProvider($provider);
+        });
+
         return response()->json([
             'status' => true,
             'message' => 'Training providers retrieved successfully',
-            'data' => $providers->items(),
+            'data' => $transformedProviders,
             'meta' => [
                 'current_page' => $providers->currentPage(),
                 'last_page' => $providers->lastPage(),
@@ -73,7 +226,12 @@ class TrainingController extends Controller
     }
 
     /**
-     * Get provider details
+     * Get detailed information about a specific training provider
+     * 
+     * Returns comprehensive details including active courses, locations, schedules, and gallery.
+     * 
+     * @param string $slug Provider slug identifier
+     * @return JsonResponse
      */
     public function getProvider($slug): JsonResponse
     {
@@ -94,6 +252,9 @@ class TrainingController extends Controller
             ], 404);
         }
 
+        // Transform provider to include full image URLs
+        $provider = $this->transformProvider($provider);
+
         return response()->json([
             'status' => true,
             'message' => 'Provider details retrieved successfully',
@@ -102,7 +263,13 @@ class TrainingController extends Controller
     }
 
     /**
-     * Get list of courses with filters
+     * Get list of training courses with advanced filters
+     * 
+     * Returns a paginated list of active courses with filtering options including:
+     * certification, category, provider, location, format, price range, duration, and search.
+     * 
+     * @param Request $request
+     * @return JsonResponse
      */
     public function getCourses(Request $request): JsonResponse
     {
@@ -167,10 +334,15 @@ class TrainingController extends Controller
 
         $courses = $query->paginate($request->input('per_page', 15));
 
+        // Transform courses to include full image URLs
+        $transformedCourses = collect($courses->items())->map(function ($course) {
+            return $this->transformCourse($course);
+        });
+
         return response()->json([
             'status' => true,
             'message' => 'Courses retrieved successfully',
-            'data' => $courses->items(),
+            'data' => $transformedCourses,
             'meta' => [
                 'current_page' => $courses->currentPage(),
                 'last_page' => $courses->lastPage(),
@@ -181,7 +353,13 @@ class TrainingController extends Controller
     }
 
     /**
-     * Get course details
+     * Get detailed information about a specific course
+     * 
+     * Returns comprehensive course details including certification info, provider details,
+     * locations, upcoming schedules, and reviews. Automatically increments view count.
+     * 
+     * @param int $id Course ID
+     * @return JsonResponse
      */
     public function getCourse($id): JsonResponse
     {
@@ -205,6 +383,9 @@ class TrainingController extends Controller
         // Increment view count
         $course->increment('view_count');
 
+        // Transform course to include full image URLs
+        $course = $this->transformCourse($course);
+
         return response()->json([
             'status' => true,
             'message' => 'Course details retrieved successfully',
@@ -213,7 +394,12 @@ class TrainingController extends Controller
     }
 
     /**
-     * Get certifications list
+     * Get list of available certifications
+     * 
+     * Returns all certifications with optional filtering by category and search functionality.
+     * 
+     * @param Request $request
+     * @return JsonResponse
      */
     public function getCertifications(Request $request): JsonResponse
     {
@@ -229,15 +415,27 @@ class TrainingController extends Controller
 
         $certifications = $query->orderBy('name')->get();
 
+        // Transform certifications to include full image URLs
+        $transformedCertifications = $certifications->map(function ($certification) {
+            if ($certification->cover_image) {
+                $certification->cover_image_url = $this->getFullUrl($certification->cover_image);
+            }
+            return $certification;
+        });
+
         return response()->json([
             'status' => true,
             'message' => 'Certifications retrieved successfully',
-            'data' => $certifications,
+            'data' => $transformedCertifications,
         ]);
     }
 
     /**
-     * Get certification categories
+     * Get list of certification categories
+     * 
+     * Returns all certification categories with the count of certifications in each category.
+     * 
+     * @return JsonResponse
      */
     public function getCategories(): JsonResponse
     {
@@ -253,7 +451,12 @@ class TrainingController extends Controller
     }
 
     /**
-     * Get filter options
+     * Get available filter options for courses and providers
+     * 
+     * Returns all available filter options including categories, certifications,
+     * course formats, countries, and price range. Useful for building filter UIs.
+     * 
+     * @return JsonResponse
      */
     public function getFilterOptions(): JsonResponse
     {
@@ -291,7 +494,13 @@ class TrainingController extends Controller
     }
 
     /**
-     * Get upcoming schedules
+     * Get upcoming course schedules
+     * 
+     * Returns a paginated list of upcoming course schedules that are not cancelled or full.
+     * Supports filtering by certification, country, month, and year.
+     * 
+     * @param Request $request
+     * @return JsonResponse
      */
     public function getSchedules(Request $request): JsonResponse
     {
@@ -323,10 +532,18 @@ class TrainingController extends Controller
         $schedules = $query->orderBy('start_date')
             ->paginate($request->input('per_page', 20));
 
+        // Transform schedules to include full image URLs for provider courses
+        $transformedSchedules = collect($schedules->items())->map(function ($schedule) {
+            if (isset($schedule->providerCourse)) {
+                $schedule->providerCourse = $this->transformCourse($schedule->providerCourse);
+            }
+            return $schedule;
+        });
+
         return response()->json([
             'status' => true,
             'message' => 'Schedules retrieved successfully',
-            'data' => $schedules->items(),
+            'data' => $transformedSchedules,
             'meta' => [
                 'current_page' => $schedules->currentPage(),
                 'last_page' => $schedules->lastPage(),

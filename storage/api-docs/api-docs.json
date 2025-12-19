@@ -7,12 +7,14 @@
     },
     "servers": [
         {
-            "url": "https://console-ywc.nativeappdev.com",
-            "description": "Production Server"
-        },
-        {
-            "url": "http://localhost",
-            "description": "Development Server"
+            "url": "{serverUrl}",
+            "description": "API Server (set via APP_URL environment variable)",
+            "variables": {
+                "serverUrl": {
+                    "default": "https://console-ywc.nativeappdev.com",
+                    "description": "Base URL from APP_URL environment variable"
+                }
+            }
         }
     ],
     "paths": {
@@ -10841,6 +10843,7 @@
                                                     "slug": {"type": "string", "example": "maritime-safety-academy"},
                                                     "description": {"type": "string", "example": "Leading provider of maritime safety training"},
                                                     "logo": {"type": "string", "example": "providers/logos/msa-logo.png"},
+                                                    "logo_url": {"type": "string", "format": "uri", "description": "Full URL to provider logo (base URL from APP_URL + /storage/ + logo path)", "example": "{baseUrl}/storage/providers/logos/msa-logo.png"},
                                                     "rating_avg": {"type": "number", "example": 4.8},
                                                     "total_reviews": {"type": "integer", "example": 156},
                                                     "total_students_trained": {"type": "integer", "example": 5200},
@@ -10878,8 +10881,55 @@
                     {"name": "slug", "in": "path", "required": true, "description": "Provider slug", "schema": {"type": "string"}}
                 ],
                 "responses": {
-                    "200": {"description": "Provider details retrieved successfully"},
-                    "404": {"description": "Provider not found"}
+                    "200": {
+                        "description": "Provider details retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Provider details retrieved successfully"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {"type": "integer", "example": 1},
+                                                "name": {"type": "string", "example": "Maritime Safety Academy"},
+                                                "slug": {"type": "string", "example": "maritime-safety-academy"},
+                                                "logo": {"type": "string", "example": "providers/logos/msa-logo.png"},
+                                                    "logo_url": {"type": "string", "format": "uri", "description": "Full URL to provider logo (base URL from APP_URL environment variable + /storage/ + logo path)", "example": "https://console-ywc.nativeappdev.com/storage/providers/logos/msa-logo.png"},
+                                                "galleries": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 1},
+                                                            "image_path": {"type": "string", "example": "providers/gallery/image1.jpg"},
+                                                            "image_url": {"type": "string", "format": "uri", "description": "Full URL to gallery image (base URL from APP_URL environment variable + /storage/ + image_path)", "example": "https://console-ywc.nativeappdev.com/storage/providers/gallery/image1.jpg"}
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Provider not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "Provider not found"}
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -10899,6 +10949,7 @@
                     {"name": "max_duration_days", "in": "query", "description": "Maximum duration in days", "schema": {"type": "integer"}, "example": 5},
                     {"name": "search", "in": "query", "description": "Search by certification name", "schema": {"type": "string"}, "example": "STCW"},
                     {"name": "sort_by", "in": "query", "description": "Sort by field", "schema": {"type": "string", "enum": ["price", "rating_avg", "duration_days", "review_count"]}, "example": "price"},
+                    {"name": "sort_order", "in": "query", "description": "Sort order", "schema": {"type": "string", "enum": ["asc", "desc"]}, "example": "desc"},
                     {"name": "page", "in": "query", "description": "Page number", "schema": {"type": "integer", "default": 1}, "example": 1},
                     {"name": "per_page", "in": "query", "description": "Items per page", "schema": {"type": "integer", "default": 15}, "example": 15}
                 ],
@@ -10933,6 +10984,8 @@
                                                         "properties": {
                                                             "id": {"type": "integer", "example": 3},
                                                             "name": {"type": "string", "example": "STCW Basic Safety Training"},
+                                                            "cover_image": {"type": "string", "example": "certifications/covers/stcw-basic.jpg"},
+                                                            "cover_image_url": {"type": "string", "format": "uri", "description": "Full URL to certification cover image (base URL from APP_URL + /storage/ + cover_image path)", "example": "{baseUrl}/storage/certifications/covers/stcw-basic.jpg"},
                                                             "category": {"type": "object"}
                                                         }
                                                     },
@@ -10941,6 +10994,9 @@
                                                         "properties": {
                                                             "id": {"type": "integer", "example": 1},
                                                             "name": {"type": "string", "example": "Maritime Safety Academy"},
+                                                            "slug": {"type": "string", "example": "maritime-safety-academy"},
+                                                            "logo": {"type": "string", "example": "providers/logos/msa-logo.png"},
+                                                            "logo_url": {"type": "string", "format": "uri", "description": "Full URL to provider logo (base URL from APP_URL + /storage/ + logo path)", "example": "{baseUrl}/storage/providers/logos/msa-logo.png"},
                                                             "is_verified_partner": {"type": "boolean", "example": true}
                                                         }
                                                     },
@@ -10975,8 +11031,79 @@
                     {"name": "id", "in": "path", "required": true, "description": "Course ID", "schema": {"type": "integer"}}
                 ],
                 "responses": {
-                    "200": {"description": "Course details retrieved successfully"},
-                    "404": {"description": "Course not found"}
+                    "200": {
+                        "description": "Course details retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Course details retrieved successfully"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {"type": "integer", "example": 1},
+                                                "certification": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {"type": "integer", "example": 1},
+                                                        "name": {"type": "string", "example": "STCW Basic Safety Training"},
+                                                        "cover_image": {"type": "string", "example": "certifications/covers/stcw-basic.jpg"},
+                                                        "cover_image_url": {"type": "string", "format": "uri", "example": "https://console-ywc.nativeappdev.com/storage/certifications/covers/stcw-basic.jpg"}
+                                                    }
+                                                },
+                                                "provider": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {"type": "integer", "example": 1},
+                                                        "name": {"type": "string", "example": "Maritime Safety Academy"},
+                                                        "slug": {"type": "string", "example": "maritime-safety-academy"},
+                                                        "logo": {"type": "string", "example": "providers/logos/msa-logo.png"},
+                                                        "logo_url": {"type": "string", "format": "uri", "example": "https://console-ywc.nativeappdev.com/storage/providers/logos/msa-logo.png"}
+                                                    }
+                                                },
+                                                "reviews": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 1},
+                                                            "rating": {"type": "integer", "example": 5},
+                                                            "user": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "id": {"type": "integer", "example": 1},
+                                                                    "first_name": {"type": "string", "example": "John"},
+                                                                    "last_name": {"type": "string", "example": "Doe"},
+                                                                    "profile_photo_path": {"type": "string", "example": "profile-photos/user1.jpg"},
+                                                                    "profile_photo_url": {"type": "string", "format": "uri", "description": "Full URL to user profile photo (base URL from APP_URL + /storage/ + profile_photo_path)", "example": "{baseUrl}/storage/profile-photos/user1.jpg"}
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Course not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": false},
+                                        "message": {"type": "string", "example": "Course not found"}
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -11017,7 +11144,8 @@
                     {"name": "country", "in": "query", "description": "Filter by country", "schema": {"type": "string"}, "example": "United Kingdom"},
                     {"name": "month", "in": "query", "description": "Filter by month (1-12)", "schema": {"type": "integer"}, "example": 3},
                     {"name": "year", "in": "query", "description": "Filter by year", "schema": {"type": "integer"}, "example": 2025},
-                    {"name": "page", "in": "query", "description": "Page number", "schema": {"type": "integer", "default": 1}, "example": 1}
+                    {"name": "page", "in": "query", "description": "Page number", "schema": {"type": "integer", "default": 1}, "example": 1},
+                    {"name": "per_page", "in": "query", "description": "Items per page", "schema": {"type": "integer", "default": 20}, "example": 20}
                 ],
                 "responses": {
                     "200": {
