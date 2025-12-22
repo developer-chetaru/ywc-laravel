@@ -8,6 +8,13 @@ use App\Models\MentalHealthResource;
 use App\Models\MentalHealthSession;
 use App\Models\MentalHealthSessionBooking;
 use App\Models\MentalHealthTherapistAvailability;
+use App\Models\MentalHealthMoodTracking;
+use App\Models\MentalHealthGoal;
+use App\Models\MentalHealthJournal;
+use App\Models\MentalHealthHabit;
+use App\Models\MentalHealthHabitTracking;
+use App\Models\MentalHealthCredit;
+use App\Models\MentalHealthCourseEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
@@ -783,17 +790,22 @@ class MentalHealthController extends Controller
         $habitsCompletionRate = 0;
         if ($activeHabits > 0) {
             try {
-                $totalHabitTracking = \App\Models\MentalHealthHabitTracking::whereHas('habit', function ($query) use ($user) {
-                    $query->where('user_id', $user->id)->where('is_active', true);
-                })
-                ->whereMonth('tracked_date', now()->month)
-                ->whereYear('tracked_date', now()->year)
-                ->count();
+                // Get active habit IDs for the user
+                $activeHabitIds = MentalHealthHabit::where('user_id', $user->id)
+                    ->where('is_active', true)
+                    ->pluck('id');
                 
-                $expectedCompletions = $activeHabits * now()->daysInMonth;
-                $habitsCompletionRate = $expectedCompletions > 0 
-                    ? round(($totalHabitTracking / $expectedCompletions) * 100, 1)
-                    : 0;
+                if ($activeHabitIds->isNotEmpty()) {
+                    $totalHabitTracking = MentalHealthHabitTracking::whereIn('habit_id', $activeHabitIds)
+                        ->whereMonth('tracked_date', now()->month)
+                        ->whereYear('tracked_date', now()->year)
+                        ->count();
+                    
+                    $expectedCompletions = $activeHabits * now()->daysInMonth;
+                    $habitsCompletionRate = $expectedCompletions > 0 
+                        ? round(($totalHabitTracking / $expectedCompletions) * 100, 1)
+                        : 0;
+                }
             } catch (\Exception $e) {
                 // If habit tracking table doesn't exist or has issues, default to 0
                 $habitsCompletionRate = 0;
