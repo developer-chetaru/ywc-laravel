@@ -319,6 +319,11 @@ Route::prefix('mental-health')->group(function () {
     Route::get('/therapists/{id}', [MentalHealthController::class, 'getTherapist']);
     Route::get('/resources', [MentalHealthController::class, 'getResources']);
     Route::get('/filter-options', [MentalHealthController::class, 'getFilterOptions']);
+    
+    // Authenticated endpoints
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/dashboard', [MentalHealthController::class, 'getDashboard']);
+    });
 });
 
 // Training & Resources - Public Endpoints

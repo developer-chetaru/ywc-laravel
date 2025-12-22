@@ -608,5 +608,241 @@ class MentalHealthController extends Controller
 
         return $slots;
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/mental-health/dashboard",
+     *     summary="Get mental health dashboard",
+     *     tags={"Mental Health"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Dashboard data retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Dashboard data retrieved successfully"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function getDashboard(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
+        // Get upcoming sessions (next 3)
+        $upcomingSessions = MentalHealthSessionBooking::with(['therapist.user:id,first_name,last_name'])
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->where('scheduled_at', '>=', now())
+            ->orderBy('scheduled_at', 'asc')
+            ->limit(3)
+            ->get()
+            ->map(function ($booking) {
+                $therapist = $booking->therapist;
+                $therapistUser = $therapist ? $therapist->user : null;
+                $scheduledAt = Carbon::parse($booking->scheduled_at);
+                $daysUntil = now()->diffInDays($scheduledAt, false);
+                
+                return [
+                    'id' => $booking->id,
+                    'therapist_id' => $booking->therapist_id,
+                    'therapist_name' => $therapistUser 
+                        ? ($therapistUser->first_name . ' ' . $therapistUser->last_name)
+                        : 'Unknown Therapist',
+                    'scheduled_at' => $booking->scheduled_at->toIso8601String(),
+                    'session_type' => $booking->session_type ?? 'video',
+                    'duration_minutes' => $booking->duration_minutes ?? 60,
+                    'status' => $booking->status,
+                    'days_until' => max(0, $daysUntil),
+                ];
+            });
+
+        // Get recent mood entries (last 7 days)
+        $recentMoodEntries = MentalHealthMoodTracking::where('user_id', $user->id)
+            ->where('tracked_date', '>=', now()->subDays(7))
+            ->orderBy('tracked_date', 'desc')
+            ->get()
+            ->map(function ($entry) {
+                return [
+                    'id' => $entry->id,
+                    'tracked_date' => $entry->tracked_date->format('Y-m-d'),
+                    'mood_rating' => $entry->mood_rating,
+                    'primary_mood' => $entry->primary_mood,
+                    'energy_level' => $entry->energy_level,
+                    'stress_level' => $entry->stress_level,
+                ];
+            });
+
+        // Get active goals
+        $activeGoals = MentalHealthGoal::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->orderBy('target_date', 'asc')
+            ->get()
+            ->map(function ($goal) {
+                return [
+                    'id' => $goal->id,
+                    'title' => $goal->title,
+                    'target_date' => $goal->target_date ? $goal->target_date->format('Y-m-d') : null,
+                    'progress_percentage' => (float) $goal->progress_percentage,
+                ];
+            });
+
+        // Get recent resources (last 5 published resources)
+        $recentResources = MentalHealthResource::where('is_published', true)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($resource) {
+                return [
+                    'id' => $resource->id,
+                    'title' => $resource->title,
+                    'category' => $resource->category,
+                    'resource_type' => $resource->type,
+                    'reading_time_minutes' => $resource->duration_minutes ?? 10,
+                ];
+            });
+
+        // Calculate mood trends
+        $moodEntries7Days = MentalHealthMoodTracking::where('user_id', $user->id)
+            ->where('tracked_date', '>=', now()->subDays(7))
+            ->whereNotNull('mood_rating')
+            ->get();
+        
+        $moodEntries30Days = MentalHealthMoodTracking::where('user_id', $user->id)
+            ->where('tracked_date', '>=', now()->subDays(30))
+            ->whereNotNull('mood_rating')
+            ->get();
+
+        $averageMood7Days = $moodEntries7Days->isNotEmpty() 
+            ? round($moodEntries7Days->avg('mood_rating'), 1)
+            : null;
+        
+        $averageMood30Days = $moodEntries30Days->isNotEmpty()
+            ? round($moodEntries30Days->avg('mood_rating'), 1)
+            : null;
+
+        // Determine trend
+        $trend = 'stable';
+        if ($averageMood7Days !== null && $averageMood30Days !== null) {
+            if ($averageMood7Days > $averageMood30Days) {
+                $trend = 'improving';
+            } elseif ($averageMood7Days < $averageMood30Days) {
+                $trend = 'declining';
+            }
+        }
+
+        // Get daily entries for charting (last 30 days)
+        $dailyEntries = MentalHealthMoodTracking::where('user_id', $user->id)
+            ->where('tracked_date', '>=', now()->subDays(30))
+            ->orderBy('tracked_date', 'asc')
+            ->get()
+            ->groupBy(function ($entry) {
+                return $entry->tracked_date->format('Y-m-d');
+            })
+            ->map(function ($entries, $date) {
+                $entry = $entries->first();
+                return [
+                    'date' => $date,
+                    'mood_rating' => $entry->mood_rating,
+                    'energy_level' => $entry->energy_level,
+                    'stress_level' => $entry->stress_level,
+                ];
+            })
+            ->values();
+
+        // Calculate statistics
+        $totalSessions = MentalHealthSessionBooking::where('user_id', $user->id)->count();
+        $completedSessions = MentalHealthSessionBooking::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->count();
+        
+        $moodEntriesThisMonth = MentalHealthMoodTracking::where('user_id', $user->id)
+            ->whereMonth('tracked_date', now()->month)
+            ->whereYear('tracked_date', now()->year)
+            ->count();
+        
+        $journalEntriesThisMonth = MentalHealthJournal::where('user_id', $user->id)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+        
+        $activeHabits = MentalHealthHabit::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->count();
+        
+        // Calculate habit completion rate
+        $habitsCompletionRate = 0;
+        if ($activeHabits > 0) {
+            try {
+                $totalHabitTracking = \App\Models\MentalHealthHabitTracking::whereHas('habit', function ($query) use ($user) {
+                    $query->where('user_id', $user->id)->where('is_active', true);
+                })
+                ->whereMonth('tracked_date', now()->month)
+                ->whereYear('tracked_date', now()->year)
+                ->count();
+                
+                $expectedCompletions = $activeHabits * now()->daysInMonth;
+                $habitsCompletionRate = $expectedCompletions > 0 
+                    ? round(($totalHabitTracking / $expectedCompletions) * 100, 1)
+                    : 0;
+            } catch (\Exception $e) {
+                // If habit tracking table doesn't exist or has issues, default to 0
+                $habitsCompletionRate = 0;
+            }
+        }
+        
+        // Get available credits
+        $creditsAvailable = MentalHealthCredit::where('user_id', $user->id)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('expired_at')
+                    ->orWhere('expired_at', '>', now());
+            })
+            ->sum('amount');
+        
+        $coursesEnrolled = MentalHealthCourseEnrollment::where('user_id', $user->id)
+            ->whereNull('completed_at')
+            ->count();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Dashboard data retrieved successfully',
+            'data' => [
+                'upcoming_sessions' => $upcomingSessions,
+                'recent_mood_entries' => $recentMoodEntries,
+                'active_goals' => $activeGoals->count(),
+                'goals' => $activeGoals,
+                'recent_resources' => $recentResources,
+                'mood_trend' => [
+                    'average_mood_7_days' => $averageMood7Days,
+                    'average_mood_30_days' => $averageMood30Days,
+                    'trend' => $trend,
+                    'daily_entries' => $dailyEntries,
+                ],
+                'statistics' => [
+                    'total_sessions' => $totalSessions,
+                    'completed_sessions' => $completedSessions,
+                    'mood_entries_this_month' => $moodEntriesThisMonth,
+                    'journal_entries_this_month' => $journalEntriesThisMonth,
+                    'active_habits' => $activeHabits,
+                    'habits_completion_rate' => $habitsCompletionRate,
+                    'credits_available' => (float) $creditsAvailable,
+                    'courses_enrolled' => $coursesEnrolled,
+                ],
+            ],
+        ]);
+    }
 }
 

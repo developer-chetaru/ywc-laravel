@@ -11281,6 +11281,858 @@
                     }
                 }
             }
+        },
+        "/api/job-board/jobs": {
+            "get": {
+                "tags": ["Job Board"],
+                "summary": "Get list of job posts",
+                "description": "Returns paginated list of published job posts with filtering and sorting options. Public endpoint - no authentication required.",
+                "operationId": "getJobPosts",
+                "parameters": [
+                    {"name": "job_type", "in": "query", "description": "Filter by job type", "schema": {"type": "string", "enum": ["permanent", "temporary"]}, "example": "permanent"},
+                    {"name": "position", "in": "query", "description": "Filter by position title or level", "schema": {"type": "string"}, "example": "Captain"},
+                    {"name": "location", "in": "query", "description": "Filter by location", "schema": {"type": "string"}, "example": "Mediterranean"},
+                    {"name": "department", "in": "query", "description": "Filter by department", "schema": {"type": "string", "enum": ["deck", "interior", "engineering", "galley", "other"]}, "example": "deck"},
+                    {"name": "search", "in": "query", "description": "Search in position title, description, or location", "schema": {"type": "string"}, "example": "yachtmaster"},
+                    {"name": "salary_min", "in": "query", "description": "Minimum salary filter", "schema": {"type": "number"}, "example": 3000},
+                    {"name": "salary_max", "in": "query", "description": "Maximum salary filter", "schema": {"type": "number"}, "example": 8000},
+                    {"name": "sort", "in": "query", "description": "Sort order", "schema": {"type": "string", "enum": ["newest", "salary_high", "salary_low", "match_score"]}, "example": "newest"},
+                    {"name": "page", "in": "query", "description": "Page number", "schema": {"type": "integer", "default": 1}, "example": 1},
+                    {"name": "per_page", "in": "query", "description": "Items per page", "schema": {"type": "integer", "default": 15}, "example": 15}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job posts retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Job posts retrieved successfully"},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "integer", "example": 1},
+                                                    "job_type": {"type": "string", "example": "permanent"},
+                                                    "position_title": {"type": "string", "example": "Captain"},
+                                                    "department": {"type": "string", "example": "deck"},
+                                                    "location": {"type": "string", "example": "Mediterranean"},
+                                                    "salary_min": {"type": "number", "example": 5000.00},
+                                                    "salary_max": {"type": "number", "example": 7000.00},
+                                                    "salary_currency": {"type": "string", "example": "EUR"},
+                                                    "start_date": {"type": "string", "format": "date", "example": "2025-03-01"},
+                                                    "views_count": {"type": "integer", "example": 45},
+                                                    "applications_count": {"type": "integer", "example": 12},
+                                                    "published_at": {"type": "string", "format": "date-time", "example": "2025-01-15T10:00:00Z"}
+                                                }
+                                            }
+                                        },
+                                        "meta": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["Job Board"],
+                "summary": "Create a new job post",
+                "description": "Creates a new job post. Requires authentication. Supports both permanent and temporary work positions.",
+                "operationId": "createJobPost",
+                "security": [{"bearerAuth": []}],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["job_type", "position_title", "department"],
+                                "properties": {
+                                    "job_type": {"type": "string", "enum": ["permanent", "temporary"], "example": "permanent"},
+                                    "position_title": {"type": "string", "example": "Captain"},
+                                    "department": {"type": "string", "enum": ["deck", "interior", "engineering", "galley", "other"], "example": "deck"},
+                                    "position_level": {"type": "string", "example": "Senior"},
+                                    "yacht_id": {"type": "integer", "example": 1},
+                                    "location": {"type": "string", "example": "Mediterranean"},
+                                    "salary_min": {"type": "number", "example": 5000.00},
+                                    "salary_max": {"type": "number", "example": 7000.00},
+                                    "salary_currency": {"type": "string", "example": "EUR"},
+                                    "start_date": {"type": "string", "format": "date", "example": "2025-03-01"},
+                                    "about_position": {"type": "string", "example": "We are looking for an experienced Captain..."},
+                                    "public_post": {"type": "boolean", "example": true}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Job post created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Job post created successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {"description": "Validation error"}
+                }
+            }
+        },
+        "/api/job-board/jobs/{id}": {
+            "get": {
+                "tags": ["Job Board"],
+                "summary": "Get job post details",
+                "description": "Returns detailed information about a specific job post. Public endpoint - no authentication required.",
+                "operationId": "getJobPost",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job post details retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Job post retrieved successfully"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {"type": "integer", "example": 1},
+                                                "job_type": {"type": "string", "example": "permanent"},
+                                                "position_title": {"type": "string", "example": "Captain"},
+                                                "department": {"type": "string", "example": "deck"},
+                                                "location": {"type": "string", "example": "Mediterranean"},
+                                                "salary_min": {"type": "number", "example": 5000.00},
+                                                "salary_max": {"type": "number", "example": 7000.00},
+                                                "about_position": {"type": "string", "example": "We are looking for an experienced Captain..."},
+                                                "responsibilities": {"type": "string", "example": "Manage vessel operations..."},
+                                                "required_certifications": {"type": "array", "items": {"type": "string"}, "example": ["Yachtmaster", "ENG1"]},
+                                                "views_count": {"type": "integer", "example": 45},
+                                                "applications_count": {"type": "integer", "example": 12}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Job post not found"}
+                }
+            },
+            "put": {
+                "tags": ["Job Board"],
+                "summary": "Update job post",
+                "description": "Updates an existing job post. Requires authentication and ownership.",
+                "operationId": "updateJobPost",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "position_title": {"type": "string", "example": "Captain"},
+                                    "salary_min": {"type": "number", "example": 5500.00},
+                                    "salary_max": {"type": "number", "example": 7500.00},
+                                    "about_position": {"type": "string", "example": "Updated job description..."}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Job post updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Job post updated successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized - not the owner"},
+                    "404": {"description": "Job post not found"}
+                }
+            },
+            "delete": {
+                "tags": ["Job Board"],
+                "summary": "Delete job post",
+                "description": "Deletes a job post. Requires authentication and ownership.",
+                "operationId": "deleteJobPost",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job post deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Job post deleted successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized - not the owner"},
+                    "404": {"description": "Job post not found"}
+                }
+            }
+        },
+        "/api/job-board/jobs/{id}/apply": {
+            "post": {
+                "tags": ["Job Board"],
+                "summary": "Apply for a job",
+                "description": "Submit an application for a job post. Requires authentication. Calculates match score automatically.",
+                "operationId": "applyForJob",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "cover_message": {"type": "string", "example": "I am very interested in this position..."},
+                                    "screening_responses": {
+                                        "type": "object",
+                                        "description": "Responses to screening questions (question_id => response)",
+                                        "example": {"1": "Yes, I have 5 years experience", "2": "Available immediately"}
+                                    },
+                                    "attached_documents": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                        "description": "Array of document IDs from career history",
+                                        "example": [1, 2, 3]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Application submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Application submitted successfully"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {"type": "integer", "example": 1},
+                                                "job_post_id": {"type": "integer", "example": 1},
+                                                "status": {"type": "string", "example": "submitted"},
+                                                "match_score": {"type": "number", "example": 85.5},
+                                                "submitted_at": {"type": "string", "format": "date-time", "example": "2025-01-15T10:00:00Z"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {"description": "Already applied or invalid request"},
+                    "404": {"description": "Job post not found"}
+                }
+            }
+        },
+        "/api/job-board/jobs/{id}/applications": {
+            "get": {
+                "tags": ["Job Board"],
+                "summary": "Get applications for a job",
+                "description": "Returns list of applications for a specific job post. Requires authentication and ownership of the job post.",
+                "operationId": "getJobApplications",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID", "schema": {"type": "integer"}, "example": 1},
+                    {"name": "status", "in": "query", "description": "Filter by application status", "schema": {"type": "string", "enum": ["submitted", "viewed", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "interviewed", "offer_sent", "hired", "declined", "withdrawn"]}, "example": "submitted"},
+                    {"name": "page", "in": "query", "description": "Page number", "schema": {"type": "integer", "default": 1}, "example": 1},
+                    {"name": "per_page", "in": "query", "description": "Items per page", "schema": {"type": "integer", "default": 15}, "example": 15}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Applications retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Applications retrieved successfully"},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "integer", "example": 1},
+                                                    "user_id": {"type": "integer", "example": 5},
+                                                    "status": {"type": "string", "example": "submitted"},
+                                                    "match_score": {"type": "number", "example": 85.5},
+                                                    "cover_message": {"type": "string", "example": "I am very interested..."},
+                                                    "submitted_at": {"type": "string", "format": "date-time", "example": "2025-01-15T10:00:00Z"},
+                                                    "user": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 5},
+                                                            "first_name": {"type": "string", "example": "John"},
+                                                            "last_name": {"type": "string", "example": "Doe"}
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "meta": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized - not the owner"},
+                    "404": {"description": "Job post not found"}
+                }
+            }
+        },
+        "/api/job-board/applications": {
+            "get": {
+                "tags": ["Job Board"],
+                "summary": "Get my job applications",
+                "description": "Returns list of job applications submitted by the authenticated user.",
+                "operationId": "getMyApplications",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "status", "in": "query", "description": "Filter by application status", "schema": {"type": "string"}, "example": "submitted"},
+                    {"name": "page", "in": "query", "description": "Page number", "schema": {"type": "integer", "default": 1}, "example": 1},
+                    {"name": "per_page", "in": "query", "description": "Items per page", "schema": {"type": "integer", "default": 15}, "example": 15}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Applications retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Applications retrieved successfully"},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "integer", "example": 1},
+                                                    "job_post_id": {"type": "integer", "example": 1},
+                                                    "status": {"type": "string", "example": "submitted"},
+                                                    "match_score": {"type": "number", "example": 85.5},
+                                                    "submitted_at": {"type": "string", "format": "date-time", "example": "2025-01-15T10:00:00Z"},
+                                                    "job_post": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {"type": "integer", "example": 1},
+                                                            "position_title": {"type": "string", "example": "Captain"},
+                                                            "location": {"type": "string", "example": "Mediterranean"}
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "meta": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/job-board/applications/{id}": {
+            "get": {
+                "tags": ["Job Board"],
+                "summary": "Get application details",
+                "description": "Returns detailed information about a specific job application.",
+                "operationId": "getApplication",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Application ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Application details retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Application details retrieved successfully"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {"type": "integer", "example": 1},
+                                                "job_post_id": {"type": "integer", "example": 1},
+                                                "status": {"type": "string", "example": "submitted"},
+                                                "match_score": {"type": "number", "example": 85.5},
+                                                "cover_message": {"type": "string", "example": "I am very interested..."},
+                                                "screening_responses": {"type": "object"},
+                                                "submitted_at": {"type": "string", "format": "date-time", "example": "2025-01-15T10:00:00Z"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized"},
+                    "404": {"description": "Application not found"}
+                }
+            },
+            "put": {
+                "tags": ["Job Board"],
+                "summary": "Update application status",
+                "description": "Updates the status of a job application. Requires authentication and ownership of the job post.",
+                "operationId": "updateApplicationStatus",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Application ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["status"],
+                                "properties": {
+                                    "status": {"type": "string", "enum": ["viewed", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "interviewed", "offer_sent", "hired", "declined"], "example": "shortlisted"},
+                                    "captain_notes": {"type": "string", "example": "Strong candidate with excellent experience"},
+                                    "captain_rating": {"type": "integer", "minimum": 1, "maximum": 5, "example": 4}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Application status updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Application status updated successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized"},
+                    "404": {"description": "Application not found"}
+                }
+            },
+            "post": {
+                "tags": ["Job Board"],
+                "summary": "Withdraw application",
+                "description": "Withdraws a job application. Requires authentication and ownership of the application.",
+                "operationId": "withdrawApplication",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Application ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "withdrawal_reason": {"type": "string", "example": "Found another position"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Application withdrawn successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Application withdrawn successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized"},
+                    "404": {"description": "Application not found"}
+                }
+            }
+        },
+        "/api/job-board/jobs/{id}/save": {
+            "post": {
+                "tags": ["Job Board"],
+                "summary": "Save a job post",
+                "description": "Saves a job post to the user's saved jobs list. Requires authentication.",
+                "operationId": "saveJobPost",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job post saved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Job post saved successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Job post not found"}
+                }
+            },
+            "delete": {
+                "tags": ["Job Board"],
+                "summary": "Unsave a job post",
+                "description": "Removes a job post from the user's saved jobs list. Requires authentication.",
+                "operationId": "unsaveJobPost",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job post unsaved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Job post unsaved successfully"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {"description": "Job post not found"}
+                }
+            }
+        },
+        "/api/job-board/saved-jobs": {
+            "get": {
+                "tags": ["Job Board"],
+                "summary": "Get saved job posts",
+                "description": "Returns list of job posts saved by the authenticated user.",
+                "operationId": "getSavedJobs",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "page", "in": "query", "description": "Page number", "schema": {"type": "integer", "default": 1}, "example": 1},
+                    {"name": "per_page", "in": "query", "description": "Items per page", "schema": {"type": "integer", "default": 15}, "example": 15}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Saved jobs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Saved jobs retrieved successfully"},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "integer", "example": 1},
+                                                    "position_title": {"type": "string", "example": "Captain"},
+                                                    "location": {"type": "string", "example": "Mediterranean"},
+                                                    "saved_at": {"type": "string", "format": "date-time", "example": "2025-01-15T10:00:00Z"}
+                                                }
+                                            }
+                                        },
+                                        "meta": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/job-board/jobs/{id}/publish": {
+            "post": {
+                "tags": ["Job Board"],
+                "summary": "Publish a job post",
+                "description": "Publishes a job post, making it visible to all users. Requires authentication and ownership.",
+                "operationId": "publishJobPost",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job post published successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Job post published successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized - not the owner"},
+                    "404": {"description": "Job post not found"}
+                }
+            }
+        },
+        "/api/job-board/jobs/{id}/mark-filled": {
+            "post": {
+                "tags": ["Job Board"],
+                "summary": "Mark job post as filled",
+                "description": "Marks a job post as filled, indicating the position has been filled. Requires authentication and ownership.",
+                "operationId": "markJobFilled",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job post marked as filled successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Job post marked as filled successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {"description": "Unauthorized - not the owner"},
+                    "404": {"description": "Job post not found"}
+                }
+            }
+        },
+        "/api/job-board/jobs/{id}/messages": {
+            "get": {
+                "tags": ["Job Board"],
+                "summary": "Get messages for a job",
+                "description": "Returns messages/conversations related to a job post. Requires authentication.",
+                "operationId": "getJobMessages",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID", "schema": {"type": "integer"}, "example": 1},
+                    {"name": "application_id", "in": "query", "description": "Filter by application ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Messages retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Messages retrieved successfully"},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "integer", "example": 1},
+                                                    "message": {"type": "string", "example": "Thank you for your application..."},
+                                                    "sender_id": {"type": "integer", "example": 1},
+                                                    "created_at": {"type": "string", "format": "date-time", "example": "2025-01-15T10:00:00Z"}
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["Job Board"],
+                "summary": "Send a message for a job",
+                "description": "Sends a message related to a job post or application. Requires authentication.",
+                "operationId": "sendJobMessage",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["message"],
+                                "properties": {
+                                    "message": {"type": "string", "example": "Thank you for your application. We would like to schedule an interview."},
+                                    "application_id": {"type": "integer", "example": 1}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Message sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Message sent successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/job-board/jobs/{id}/ratings": {
+            "get": {
+                "tags": ["Job Board"],
+                "summary": "Get ratings for a job",
+                "description": "Returns ratings and reviews for a job post or booking. Requires authentication.",
+                "operationId": "getJobRatings",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID or Booking ID", "schema": {"type": "integer"}, "example": 1},
+                    {"name": "type", "in": "query", "description": "Rating type", "schema": {"type": "string", "enum": ["job", "booking"]}, "example": "job"}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ratings retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Ratings retrieved successfully"},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "integer", "example": 1},
+                                                    "rating": {"type": "integer", "minimum": 1, "maximum": 5, "example": 5},
+                                                    "comment": {"type": "string", "example": "Excellent experience working with this crew"},
+                                                    "created_at": {"type": "string", "format": "date-time", "example": "2025-01-15T10:00:00Z"}
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["Job Board"],
+                "summary": "Submit a rating for a job",
+                "description": "Submits a rating and review for a job post or booking. Requires authentication.",
+                "operationId": "submitJobRating",
+                "security": [{"bearerAuth": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "description": "Job post ID or Booking ID", "schema": {"type": "integer"}, "example": 1}
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["rating"],
+                                "properties": {
+                                    "rating": {"type": "integer", "minimum": 1, "maximum": 5, "example": 5},
+                                    "comment": {"type": "string", "example": "Excellent experience working with this crew"},
+                                    "type": {"type": "string", "enum": ["job", "booking"], "example": "job"},
+                                    "booking_id": {"type": "integer", "example": 1}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Rating submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "boolean", "example": true},
+                                        "message": {"type": "string", "example": "Rating submitted successfully"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -11393,6 +12245,10 @@
         {
             "name": "Training & Resources",
             "description": "Training Providers, Courses, Certifications, and Schedules"
+        },
+        {
+            "name": "Job Board",
+            "description": "Job Postings, Applications, and Crew Hiring Management"
         }
     ]
 }
