@@ -288,18 +288,14 @@ class MentalHealthController extends Controller
      */
     public function getResources(Request $request): JsonResponse
     {
-        $query = MentalHealthResource::where('is_published', true);
+        $query = MentalHealthResource::where('status', 'published');
 
         if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
 
         if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->boolean('is_free')) {
-            $query->where('is_free', true);
+            $query->where('resource_type', $request->type);
         }
 
         $resources = $query->orderBy('created_at', 'desc')
@@ -704,7 +700,7 @@ class MentalHealthController extends Controller
             });
 
         // Get recent resources (last 5 published resources)
-        $recentResources = MentalHealthResource::where('is_published', true)
+        $recentResources = MentalHealthResource::where('status', 'published')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
@@ -713,8 +709,8 @@ class MentalHealthController extends Controller
                     'id' => $resource->id,
                     'title' => $resource->title,
                     'category' => $resource->category,
-                    'resource_type' => $resource->type,
-                    'reading_time_minutes' => $resource->duration_minutes ?? 10,
+                    'resource_type' => $resource->resource_type,
+                    'reading_time_minutes' => $resource->reading_time_minutes ?? 10,
                 ];
             });
 
