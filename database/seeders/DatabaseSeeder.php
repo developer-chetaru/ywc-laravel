@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
         // Users and admins
         $this->call([
             UserSeeder::class,
-            AdminSeeder::class,
+            // AdminSeeder::class,
             AssignRolesToUsersSeeder::class,
         ]);
 
