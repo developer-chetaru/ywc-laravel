@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Waitlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 
 class LandingPageController extends Controller
 {
@@ -16,6 +16,14 @@ class LandingPageController extends Controller
 
     public function joinWaitlist(Request $request)
     {
+        \Log::info('Waitlist signup attempt', [
+            'email' => $request->email,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'role' => $request->role,
+            'source' => $request->get('source', 'landing_page'),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|max:255|unique:waitlists,email',
             'first_name' => 'nullable|string|max:255',
@@ -24,6 +32,11 @@ class LandingPageController extends Controller
         ]);
 
         if ($validator->fails()) {
+            \Log::warning('Waitlist signup validation failed', [
+                'email' => $request->email,
+                'errors' => $validator->errors()->toArray(),
+            ]);
+
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
@@ -44,13 +57,65 @@ class LandingPageController extends Controller
                 'source' => $request->get('source', 'landing_page'),
             ]);
 
+            \Log::info('Waitlist entry created successfully', [
+                'waitlist_id' => $waitlist->id,
+                'email' => $waitlist->email,
+            ]);
+
             // Track conversion in analytics if available
             if (function_exists('gtag')) {
                 // This will be handled by frontend JavaScript
             }
 
-            // TODO: Send confirmation email to user
-            // TODO: Send notification to admin about new waitlist signup
+            // Send confirmation via OneSignal (email channel using external_user_id = email)
+            try {
+                $appId = config('services.onesignal.app_id');
+                $apiKey = config('services.onesignal.rest_api_key');
+
+                \Log::info('Attempting to send waitlist confirmation via OneSignal', [
+                    'waitlist_id' => $waitlist->id,
+                    'email' => $waitlist->email,
+                    'first_name' => $waitlist->first_name,
+                    'last_name' => $waitlist->last_name,
+                    'role' => $waitlist->role,
+                    'onesignal_app_id' => $appId ? 'set' : 'missing',
+                ]);
+
+                if ($appId && $apiKey) {
+                    $emailBody = view('emails.waitlist-confirmation', [
+                        'waitlist' => $waitlist,
+                    ])->render();
+
+                    $response = Http::withHeaders([
+                        'Authorization' => 'Basic ' . $apiKey,
+                        'Content-Type'  => 'application/json; charset=utf-8',
+                    ])->post('https://api.onesignal.com/notifications', [
+                        'app_id' => $appId,
+                        'include_external_user_ids' => [$waitlist->email],
+                        'channel_for_external_user_ids' => 'email',
+                        'email_subject' => 'Welcome to Yacht Workers Council Waitlist',
+                        'email_body' => $emailBody,
+                    ]);
+
+                    \Log::info('OneSignal waitlist notification response', [
+                        'status' => $response->status(),
+                        'body' => $response->json(),
+                    ]);
+                } else {
+                    \Log::warning('OneSignal credentials missing, cannot send waitlist confirmation', [
+                        'app_id_present' => (bool) $appId,
+                        'api_key_present' => (bool) $apiKey,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send waitlist confirmation via OneSignal', [
+                    'waitlist_id' => $waitlist->id,
+                    'email' => $waitlist->email,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                // Don't fail the request if notification fails
+            }
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([

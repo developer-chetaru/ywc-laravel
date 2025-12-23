@@ -159,6 +159,25 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             </li>
             @endrole
 
+            {{-- WAITLIST (Super Admin Only) --}}
+            @role('super_admin')
+            <li>
+                <a href="{{ route('admin.waitlist') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                        {{ request()->is('admin/waitlist*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+
+                    <img
+                        src="{{ request()->is('admin/waitlist*') ? '/images/user-group-list-active.svg' : '/images/user-group-list-defalt.svg' }}"
+                        alt="Waitlist" class="w-5 h-5">
+
+                    <span x-show="isOpen"
+                        class="text-base font-medium {{ request()->is('admin/waitlist*') ? 'text-black' : 'text-white' }}">
+                        Waitlist
+                    </span>
+                </a>
+            </li>
+            @endrole
+
 
             {{-- DOCUMENTS & CAREER HISTORY --}}
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))

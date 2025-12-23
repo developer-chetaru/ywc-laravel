@@ -112,6 +112,7 @@
                                     <option value="engineer" {{ old('role') == 'engineer' ? 'selected' : '' }}>Engineer</option>
                                     <option value="chef" {{ old('role') == 'chef' ? 'selected' : '' }}>Chef</option>
                                     <option value="stewardess" {{ old('role') == 'stewardess' ? 'selected' : '' }}>Stewardess</option>
+                                    <option value="partner" {{ old('role') == 'partner' ? 'selected' : '' }}>Partner</option>
                                     <option value="other" {{ old('role') == 'other' ? 'selected' : '' }}>Other</option>
                                 </select>
                             </div>

@@ -205,7 +205,7 @@ Route::prefix('financial-planning')->name('financial.')
 Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
 
 
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'role:super_admin', 'setlocale'])
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale'])
     ->group(function () {
         Route::get('/admin/waitlist', [WaitlistAdminController::class, 'index'])->name('admin.waitlist');
         Route::patch('/admin/waitlist/{waitlist}', [WaitlistAdminController::class, 'update'])->name('admin.waitlist.update');

@@ -9,6 +9,11 @@ class WaitlistAdminController extends Controller
 {
     public function index(Request $request)
     {
+        // Extra safety: only allow super admins to access waitlist admin
+        if (! auth()->user() || ! auth()->user()->hasRole('super_admin')) {
+            abort(403);
+        }
+
         $status = $request->get('status', 'all');
 
         $entries = Waitlist::when($status !== 'all', function ($query) use ($status) {
@@ -26,6 +31,11 @@ class WaitlistAdminController extends Controller
 
     public function update(Request $request, Waitlist $waitlist)
     {
+        // Extra safety: only allow super admins to update waitlist entries
+        if (! auth()->user() || ! auth()->user()->hasRole('super_admin')) {
+            abort(403);
+        }
+
         $data = $request->validate([
             'status' => 'required|in:pending,approved,invited',
             'notes' => 'nullable|string|max:500',
