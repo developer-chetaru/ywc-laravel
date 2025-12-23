@@ -15,20 +15,37 @@ class UserSeeder extends Seeder
     {
         $faker = Faker::create('en_US'); // 🇺🇸 U.S. locale
 
-        // 🔹 Keep or create super admin
-        $superAdmin = User::where('email', 'superadmin@mailinator.com')->first();
+        // 🔹 Keep or create primary super admin
+        $superAdmin = User::where('email', 'james@yachtworkerscouncil.com')->first();
 
         if (!$superAdmin) {
             $superAdmin = User::create([
                 'first_name' => 'Super',
                 'last_name' => 'Admin',
-                'email' => 'superadmin@mailinator.com',
-                'password' => Hash::make('Super@123'), // change later!
+                'email' => 'james@yachtworkerscouncil.com',
+                'password' => Hash::make('James@Chetaru#2'), // change later!
                 'status' => 'active',
                 'is_active' => true,
                 'gender' => 'Male',
                 'nationality' => 'American',
                 'dob' => '1980-01-01',
+            ]);
+        }
+
+        // 🔹 Keep or create secondary super admin
+        $secondSuperAdmin = User::where('email', 'mousam@chetaru.com')->first();
+
+        if (!$secondSuperAdmin) {
+            $secondSuperAdmin = User::create([
+                'first_name' => 'Mousam',
+                'last_name' => 'Jain',
+                'email' => 'mousam@chetaru.com',
+                'password' => Hash::make('Mousam@Chetaru#1'), // change later!
+                'status' => 'active',
+                'is_active' => true,
+                'gender' => 'Male',
+                'nationality' => 'American',
+                'dob' => '1985-01-01',
             ]);
         }
 
@@ -40,13 +57,14 @@ class UserSeeder extends Seeder
 
         // Assign super_admin role
         $superAdmin->assignRole('super_admin');
+        $secondSuperAdmin->assignRole('super_admin');
 
-        // 🔹 Delete all users except the super admin
-        User::where('id', '!=', $superAdmin->id)->delete();
+        // 🔹 Delete all users except the super admins
+        User::whereNotIn('id', [$superAdmin->id, $secondSuperAdmin->id])->delete();
 
         // 🔹 Insert 1000 fake users in chunks to avoid memory issues and handle duplicates
-        $totalUsers = 1000;
-        $chunkSize = 100;
+        $totalUsers = 0;
+        $chunkSize = 0;
         $inserted = 0;
         
         for ($chunk = 0; $chunk < ($totalUsers / $chunkSize); $chunk++) {
@@ -86,8 +104,8 @@ class UserSeeder extends Seeder
             }
         }
 
-        // 🔹 Assign "user" role to all newly created users
-        $allUsers = User::where('id', '!=', $superAdmin->id)->get();
+        // 🔹 Assign "user" role to all newly created non-admin users
+        $allUsers = User::whereNotIn('id', [$superAdmin->id, $secondSuperAdmin->id])->get();
         foreach ($allUsers as $user) {
             $user->assignRole('user');
         }

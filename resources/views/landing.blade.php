@@ -2,21 +2,37 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-    <title>YWC</title>
+    <title>Yacht Workers Council</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="description" content="Yacht Workers Council - The premier platform for yacht crew networking, career management, and industry insights. Join our waitlist today!">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!-- ========== main css ========== -->
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/favicon-icon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicon-icon.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <!-- ========== main css ========== -->
 
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-WQSHJL27');</script>
+    <!-- End Google Tag Manager -->
 </head>
 
 <body>
 
-
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WQSHJL27"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
 
     <!-- header section -->
     <header>
@@ -36,7 +52,7 @@
     <!-- header section -->
 
     <!-- banner section -->
-    <section class="banner" style="background-image: url({{ asset('assets/images/banner-img.jpg') }});">
+    <section class="banner" style="background-image: url('{{ asset('assets/images/banner-img.jpg') }}');">
         <div class="container">
             <div class="row">
                 <div class="banner-left">
