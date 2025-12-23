@@ -404,21 +404,18 @@
             </a>
             <h3>Built for crew, by crew. The premier platform for yacht crew professionals.</h3>
             <div class="footer-social row">
-                <a href="#">
+                <a href="#" target="_blank" rel="noopener noreferrer">
                     <img src="{{ asset('assets/images/linkedin.svg') }}" alt="LinkedIn">
                 </a>
-                <a href="#">
-                    <img src="{{ asset('assets/images/facebook.svg') }}" alt="Facebook">
-                </a>
-                <a href="#">
+                <a href="https://www.instagram.com/yachtworkerscouncil/" target="_blank" rel="noopener noreferrer">
                     <img src="{{ asset('assets/images/instagram.svg') }}" alt="Instagram">
                 </a>
-                <a href="#">
-                    <img src="{{ asset('assets/images/twitter.svg') }}" alt="Twitter">
+                <a href="https://www.youtube.com/@Yachtworkerscouncil" target="_blank" rel="noopener noreferrer">
+                    <img src="{{ asset('assets/images/youtube.svg') }}" alt="YouTube">
                 </a>
             </div>
             <p class="footer-copy">
-                © {{ date('Y') }} Yacht Worker Council
+                © {{ date('Y') }} Yacht Workers Council
             </p>
         </div>
      </footer>
