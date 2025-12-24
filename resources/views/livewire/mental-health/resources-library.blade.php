@@ -103,7 +103,7 @@
                             @endif
                         </div>
 
-                        <a href="{{ route('mental-health.resources') }}/{{ $resource->id }}" 
+                        <a href="{{ route('mental-health.resources.view', $resource->id) }}" 
                            class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition">
                             View Resource
                         </a>

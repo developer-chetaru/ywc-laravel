@@ -282,6 +282,7 @@ Route::middleware([
         Route::get('/crisis-support', \App\Livewire\MentalHealth\CrisisSupport::class)->name('crisis');
         Route::get('/mood-tracking', \App\Livewire\MentalHealth\MoodTracking::class)->name('mood-tracking');
         Route::get('/resources', \App\Livewire\MentalHealth\ResourcesLibrary::class)->name('resources');
+        Route::get('/resources/{id}', \App\Livewire\MentalHealth\ViewResource::class)->name('resources.view');
         
         // Admin Routes - Use auth middleware and check role in component
         Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(function () {
