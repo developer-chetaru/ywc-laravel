@@ -60,6 +60,15 @@
                         <h1>Built for Crew, by Crew</h1>
                         <p>The premier platform for yacht crew networking, career management, and industry insights.
                             Join thousands of crew members already on board.</p>
+                        <a href="#" class="video-btn" id="openVideoModal">
+                            <span class="video-btn-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="11" fill="#FFFFFF" class="video-icon-circle"/>
+                                    <path d="M9.5 7.5L15.5 12L9.5 16.5V7.5Z" fill="#0000FF" class="video-icon-play"/>
+                                </svg>
+                            </span>
+                            Play Video
+                        </a>
                     </div>
                 </div>
                 <div class="banner-right">
@@ -440,9 +449,202 @@
      </footer>
     <!-- footer section -->
 
+    <!-- Video Modal -->
+    <div id="videoModal" class="video-modal" style="display: none;">
+        <div class="video-modal-overlay" onclick="closeVideoModal()"></div>
+        <div class="video-modal-content">
+            <button class="video-modal-close" onclick="closeVideoModal()" aria-label="Close modal">&times;</button>
+            <div class="video-modal-iframe-container">
+                <iframe id="youtubeVideo" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .video-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            cursor: pointer;
+        }
+
+        .video-modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 900px;
+            background-color: #000;
+            border-radius: 8px;
+            padding: 20px;
+            z-index: 10001;
+        }
+
+        .video-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 40px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10002;
+        }
+
+        .video-modal-close:hover {
+            opacity: 0.7;
+        }
+
+        .video-modal-iframe-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+        }
+
+        .video-modal-iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .video-modal-content {
+                width: 95%;
+                padding: 15px;
+            }
+
+            .video-modal-close {
+                top: -35px;
+                font-size: 35px;
+            }
+        }
+
+        /* Video Button Styles */
+        .video-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 32px;
+            margin-top: 20px;
+            border: 1px solid #FFFFFF;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #FFFFFF;
+            font-weight: 500;
+            font-size: 16px;
+            line-height: 1.2;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .video-btn-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .video-btn-icon svg {
+            width: 24px;
+            height: 24px;
+            transition: color 0.3s ease;
+        }
+
+        .video-btn-icon circle {
+            fill: #FFFFFF;
+            transition: fill 0.3s ease;
+        }
+
+        .video-btn-icon path {
+            fill: #0000FF;
+            transition: fill 0.3s ease;
+        }
+
+        .video-btn:hover {
+            background-color: #FFFFFF;
+            color: #0000FF;
+            border-color: #FFFFFF;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        .video-btn:hover .video-btn-icon circle {
+            fill: #0000FF;
+        }
+
+        .video-btn:hover .video-btn-icon path {
+            fill: #FFFFFF;
+        }
+
+        .video-btn:active {
+            transform: scale(0.98);
+        }
+
+        @media (max-width: 768px) {
+            .video-btn {
+                padding: 12px 28px;
+                font-size: 15px;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .video-btn {
+                padding: 10px 24px;
+                font-size: 14px;
+                gap: 8px;
+            }
+
+            .video-btn-icon {
+                width: 20px;
+                height: 20px;
+            }
+
+            .video-btn-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    </style>
+
     <script>
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            // Skip the video modal button
+            if (anchor.id === 'openVideoModal') {
+                return;
+            }
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
@@ -456,6 +658,45 @@
                     });
                 }
             });
+        });
+
+        // Video Modal functionality
+        function openVideoModal() {
+            const modal = document.getElementById('videoModal');
+            const iframe = document.getElementById('youtubeVideo');
+            // Extract video ID from YouTube URL
+            const videoId = 'VipTtRMNBQA';
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeVideoModal() {
+            const modal = document.getElementById('videoModal');
+            const iframe = document.getElementById('youtubeVideo');
+            modal.style.display = 'none';
+            iframe.src = ''; // Stop video playback
+            document.body.style.overflow = '';
+        }
+
+        // Add event listener to the video button
+        const videoButton = document.getElementById('openVideoModal');
+        if (videoButton) {
+            videoButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openVideoModal();
+            });
+        }
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('videoModal');
+                if (modal && modal.style.display === 'flex') {
+                    closeVideoModal();
+                }
+            }
         });
 
         // Form submission handling with AJAX (optional enhancement)
