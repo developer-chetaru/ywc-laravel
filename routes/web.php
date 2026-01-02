@@ -156,22 +156,6 @@ Route::prefix('financial-planning')->name('financial.')
     ->middleware('auth:web')
     ->group(function () {
     
-    // Simple test route to verify routing works
-    Route::get('/test-route', function () {
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Financial-planning route is working!',
-            'path' => request()->path(),
-            'route_name' => request()->route()->getName(),
-            'auth_check' => auth()->check(),
-            'auth_id' => auth()->id(),
-            'user_email' => auth()->user() ? auth()->user()->email : null,
-            'session_id' => session()->getId(),
-            'middleware' => request()->route()->middleware(),
-            'url' => request()->fullUrl(),
-        ]);
-    })->name('test-route');
-    
     Route::get('/dashboard', FinancialDashboard::class)->name('dashboard'); // Route name will be 'financial.dashboard' due to prefix
     
     // Management pages (requires auth)
@@ -290,12 +274,9 @@ Route::middleware([
     Route::get('/training', [ManageDocumentController::class, 'training'])->name('training');
     Route::get('/weather', [ManageDocumentController::class, 'weather'])->name('weather');
     Route::get('/review', [ManageDocumentController::class, 'review'])->name('review');
-    Route::get('/itinerary-system', [ManageDocumentController::class, 'itinerarySystem'])->name('itinerary-system');
   
     Route::get('/certificate-types', [CertificateTypeController::class, 'index'])->name('certificate-types.index');
     Route::patch('/certificate-type/{id}/toggle', [CertificateTypeController::class, 'toggleActive'])->name('certificate-type.toggle');
-  
-    //Route::get('/career-history', CareerHistory::class)->name('career-history');
   
   	Route::get('/documents', [CareerHistoryController::class, 'index'])->name('documents');
   	// Documents show route - must come before career-history route to avoid conflict
@@ -311,7 +292,6 @@ Route::middleware([
   		return redirect()->route('documents.show', $id);
   	})->name('career-history.show');
   	Route::patch('/admin/documents/{document}/status', [CareerHistoryController::class, 'updateStatus']);
-    // Route::post('/career-history/docs/{doc}/toggle', [CareerHistoryController::class, 'toggleDoc'])->name('career-history.docs.toggle');
 
   	Route::get('/career-history/documents/{id}/edit', [CareerHistoryController::class, 'getDocumentForEdit'])->name('career-history.documents.edit');
     Route::put('/career-history/{id}', [CareerHistoryController::class, 'update'])->name('career-history.update');
@@ -336,7 +316,6 @@ Route::middleware([
   	Route::get('/purchase-history', PurchaseHistory::class)->name('purchase.history');
 	Route::get('/users', UserList::class)->name('users.index');
   	Route::get('/itinerary-system', ItinerarySystem::class)->name('itinerary.system');
-  	// Route::get('/certificate-types', CertificateTypeIndex::class)->name('certificate-types.index');
 	
     Route::get('/career-history/issuers', [CareerHistoryController::class, 'getIssuers'])->name('career-history.issuers');
 

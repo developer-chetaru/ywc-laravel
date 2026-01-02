@@ -342,18 +342,9 @@ Route::middleware('jwt.refresh')->get('/token/refresh', function () {
     return response()->json(['status' => 'token refreshed']);
 });
 
-// Route::post('/forgot-password', [ForgetPasswordController::class, 'sendOtp']);
-// Route::post('/reset-password', [ForgetPasswordController::class, 'resetPassword']);
-
 Route::post('auth/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('auth/verify-otp', [AuthController::class, 'verifyOtp']);
 
 Route::get('/verify-user/{id}', [VerificationController::class, 'verify'])
     ->name('api.user.verify')
-    ->middleware('signed'); 
-
-
-
-
-
-
+    ->middleware('signed');

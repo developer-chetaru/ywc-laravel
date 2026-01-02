@@ -85,11 +85,6 @@ class CareerHistory extends Component
         $this->certificateRows = array_values($this->certificateRows);
     }
 
-    // public function updated($propertyName)
-    // {
-    //     $this->validateOnly($propertyName, $this->getRules());
-    // }
-
     // Public rules method for validation on click
     public function getRules(): array
     {
