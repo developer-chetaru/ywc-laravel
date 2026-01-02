@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\Concerns\ApiResponseTrait;
 use App\Models\Yacht;
 use App\Models\YachtGallery;
 use App\Services\YachtService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class YachtController extends Controller
 {
+    use ApiResponseTrait;
     public function index(Request $request): JsonResponse
     {
         $query = Yacht::query()
@@ -73,12 +76,11 @@ class YachtController extends Controller
             $user = $request->user();
             $yacht = $service->create($request->all(), $request->file('cover_image'), $user);
 
-            return response()->json([
-                'message' => 'Yacht created successfully.',
-                'data' => $yacht,
-            ], 200);
+            return $this->successResponse($yacht, 'Yacht created successfully.');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
+            return $this->validationErrorResponse($e);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -86,20 +88,29 @@ class YachtController extends Controller
     {
         try {
             $yacht = Yacht::findOrFail($id);
+            
+            // Check authorization
+            Gate::authorize('update', $yacht);
+            
             $yacht = $service->update($yacht, $request->all(), $request->file('cover_image'));
 
-            return response()->json([
-                'message' => 'Yacht updated successfully.',
-                'data' => $yacht,
-            ]);
+            return $this->successResponse($yacht, 'Yacht updated successfully.');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
+            return $this->validationErrorResponse($e);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return $this->unauthorizedResponse('You do not have permission to update this yacht.');
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
     public function destroy($id, YachtService $service): JsonResponse
     {
         $yacht = Yacht::findOrFail($id);
+        
+        // Check authorization
+        Gate::authorize('delete', $yacht);
+        
         $service->delete($yacht);
 
         return response()->json(['message' => 'Yacht deleted successfully.']);
@@ -109,18 +120,21 @@ class YachtController extends Controller
     public function addGalleryImage(Request $request, $yachtId): JsonResponse
     {
         $request->validate([
-            'image' => 'required|image|max:5120',
+            'image' => 'required|image|mimes:jpeg,jpg,png,webp|max:5120',
             'caption' => 'nullable|string|max:255',
             'category' => 'nullable|in:exterior,interior,crew_areas,deck,engine_room,bridge,crew_mess,crew_cabins,other',
             'order' => 'nullable|integer|min:0',
         ]);
 
         $yacht = Yacht::findOrFail($yachtId);
+        
+        // Check authorization - user must be able to update the yacht to add gallery images
+        Gate::authorize('update', $yacht);
 
         // Check gallery limit (max 20 images)
         $currentCount = $yacht->gallery()->count();
         if ($currentCount >= 20) {
-            return response()->json(['error' => 'Maximum 20 images allowed per yacht.'], 422);
+            return $this->errorResponse('Maximum 20 images allowed per yacht.', 422);
         }
 
         $path = $request->file('image')->store('yacht-gallery', 'public');
@@ -142,6 +156,10 @@ class YachtController extends Controller
     public function deleteGalleryImage($yachtId, $imageId): JsonResponse
     {
         $gallery = YachtGallery::where('yacht_id', $yachtId)->findOrFail($imageId);
+        $yacht = Yacht::findOrFail($yachtId);
+        
+        // Check authorization - user must be able to update the yacht to delete gallery images
+        Gate::authorize('update', $yacht);
 
         if ($gallery->image_path && Storage::disk('public')->exists($gallery->image_path)) {
             Storage::disk('public')->delete($gallery->image_path);
@@ -159,6 +177,11 @@ class YachtController extends Controller
             'images.*.id' => 'required|exists:yacht_galleries,id',
             'images.*.order' => 'required|integer|min:0',
         ]);
+
+        $yacht = Yacht::findOrFail($yachtId);
+        
+        // Check authorization - user must be able to update the yacht to reorder gallery images
+        Gate::authorize('update', $yacht);
 
         foreach ($request->input('images') as $imageData) {
             YachtGallery::where('yacht_id', $yachtId)

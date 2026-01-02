@@ -83,7 +83,8 @@ class CareerHistoryController extends Controller
         // Sort expired/expiring soon first
         $documents = $documents->sortByDesc(fn($doc) => $doc->is_expiring_soon ? 1 : 0);
 
-        $share_documents = Document::where('user_id', Auth::id())
+        $share_documents = Document::with(['passportDetail', 'idvisaDetail', 'certificates.type', 'certificates.issuer', 'otherDocument'])
+                ->where('user_id', Auth::id())
                 ->where('is_active', 1)->get();
 
         $request = request(); // Laravel request helper

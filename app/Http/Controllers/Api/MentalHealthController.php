@@ -700,7 +700,8 @@ class MentalHealthController extends Controller
             });
 
         // Get recent resources (last 5 published resources)
-        $recentResources = MentalHealthResource::where('status', 'published')
+        $recentResources = MentalHealthResource::with(['category'])
+            ->where('status', 'published')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()

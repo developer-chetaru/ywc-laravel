@@ -107,7 +107,7 @@ class MarinaController extends Controller
     public function addGalleryImage(Request $request, $marinaId): JsonResponse
     {
         $request->validate([
-            'image' => 'required|image|max:5120',
+            'image' => 'required|image|mimes:jpeg,jpg,png,webp|max:5120',
             'caption' => 'nullable|string|max:255',
             'category' => 'nullable|in:facilities,berths,amenities,restaurant,shop,other',
             'order' => 'nullable|integer|min:0',

@@ -145,8 +145,15 @@ class ReviewController extends Controller
      */
     public function update(Request $request, ItineraryRoute $route, ItineraryRouteReview $review): JsonResponse
     {
-        Gate::authorize('update', $route);
+        Gate::authorize('view', $route);
         abort_unless($review->route_id === $route->id, 404);
+        
+        // Users can only update their own reviews, or route owners/admins can update any review
+        abort_unless(
+            $review->user_id === $request->user()->id || Gate::allows('update', $route),
+            403,
+            'You can only update your own reviews.'
+        );
 
         $data = $request->validate([
             'rating' => ['sometimes', 'integer', 'between:1,5'],
@@ -196,8 +203,15 @@ class ReviewController extends Controller
      */
     public function destroy(ItineraryRoute $route, ItineraryRouteReview $review): JsonResponse
     {
-        Gate::authorize('update', $route);
+        Gate::authorize('view', $route);
         abort_unless($review->route_id === $route->id, 404);
+        
+        // Users can only delete their own reviews, or route owners/admins can delete any review
+        abort_unless(
+            $review->user_id === request()->user()->id || Gate::allows('update', $route),
+            403,
+            'You can only delete your own reviews.'
+        );
 
         $review->delete();
         $this->syncRouteRating($route);

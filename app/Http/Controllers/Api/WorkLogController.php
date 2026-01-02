@@ -158,7 +158,7 @@ class WorkLogController extends Controller
         $workLog = WorkLog::findOrFail($id);
 
         // Check if user has access (own log or super admin)
-        if ($workLog->user_id !== Auth::id() && Auth::user()->role !== 'super_admin') {
+        if ($workLog->user_id !== Auth::id() && !Auth::user()->hasRole('super_admin')) {
             return response()->json(['message' => 'Access denied - can only update own entries (or super admin)'], 403);
         }
 
@@ -240,7 +240,7 @@ class WorkLogController extends Controller
         $workLog = WorkLog::findOrFail($id);
 
         // Check if user has access (own log or super admin)
-        if ($workLog->user_id !== Auth::id() && Auth::user()->role !== 'super_admin') {
+        if ($workLog->user_id !== Auth::id() && !Auth::user()->hasRole('super_admin')) {
             return response()->json(['message' => 'Access denied - can only delete own entries (or super admin)'], 403);
         }
 
@@ -353,7 +353,7 @@ class WorkLogController extends Controller
         $workLog = WorkLog::findOrFail($id);
 
         // Check if user has access
-        if ($workLog->user_id !== Auth::id() && Auth::user()->role !== 'super_admin') {
+        if ($workLog->user_id !== Auth::id() && !Auth::user()->hasRole('super_admin')) {
             return response()->json(['message' => 'Access denied'], 403);
         }
 
@@ -386,7 +386,7 @@ class WorkLogController extends Controller
         $workLog = WorkLog::findOrFail($id);
 
         // Check if user has access
-        if ($workLog->user_id !== Auth::id() && Auth::user()->role !== 'super_admin') {
+        if ($workLog->user_id !== Auth::id() && !Auth::user()->hasRole('super_admin')) {
             return response()->json(['message' => 'Access denied'], 403);
         }
 
@@ -420,7 +420,7 @@ class WorkLogController extends Controller
         $workLog = WorkLog::findOrFail($id);
 
         // Check if user has access
-        if ($workLog->user_id !== Auth::id() && Auth::user()->role !== 'super_admin') {
+        if ($workLog->user_id !== Auth::id() && !Auth::user()->hasRole('super_admin')) {
             return response()->json(['message' => 'Access denied'], 403);
         }
 

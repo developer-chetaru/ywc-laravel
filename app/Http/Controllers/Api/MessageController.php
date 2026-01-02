@@ -118,14 +118,19 @@ class MessageController extends Controller
     public function getConversations(Request $request): JsonResponse
     {
         $user = auth('api')->user();
+        
+        // Ensure user ID is an integer to prevent SQL injection
+        // This is safe because: 1) value comes from authenticated user, 2) cast to int prevents injection
+        $userId = (int) $user->id;
 
         // Get distinct conversations
+        // Using integer cast in CASE statement - safe because userId is guaranteed to be an integer
         $conversations = Message::select('sender_id', 'receiver_id', DB::raw('MAX(created_at) as last_message_at'))
-            ->where(function ($q) use ($user) {
-                $q->where('sender_id', $user->id)
-                    ->orWhere('receiver_id', $user->id);
+            ->where(function ($q) use ($userId) {
+                $q->where('sender_id', $userId)
+                    ->orWhere('receiver_id', $userId);
             })
-            ->groupBy(DB::raw('IF(sender_id = ' . $user->id . ', receiver_id, sender_id)'))
+            ->groupBy(DB::raw("CASE WHEN sender_id = {$userId} THEN receiver_id ELSE sender_id END"))
             ->orderBy('last_message_at', 'desc')
             ->get()
             ->map(function ($conv) use ($user) {

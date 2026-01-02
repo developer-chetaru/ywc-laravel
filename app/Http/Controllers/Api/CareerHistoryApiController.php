@@ -745,15 +745,16 @@ class CareerHistoryApiController extends Controller
             }
         }
 
-        // Fetch documents where is_active = 1
+        // Fetch documents where is_active = 1 and user owns them
         $documents = Document::whereIn('id', $data['documents'])
+            ->where('user_id', auth()->id())
             ->where('is_active', 1)
             ->get();
 
         if ($documents->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No valid documents found.'
+                'message' => 'No valid documents found or you do not have permission to share these documents.'
             ], 404);
         }
 

@@ -444,7 +444,7 @@ class TrainingController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $certifications = $query->orderBy('name')->get();
+        $certifications = $query->with(['category', 'providers'])->orderBy('name')->get();
 
         // Transform certifications to include full image URLs
         $transformedCertifications = $certifications->map(function ($certification) {

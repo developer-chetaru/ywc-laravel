@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\Concerns\ApiResponseTrait;
 use App\Models\Contractor;
 use App\Models\ContractorGallery;
 use Illuminate\Http\JsonResponse;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ContractorController extends Controller
 {
+    use ApiResponseTrait;
     public function index(Request $request): JsonResponse
     {
         $query = Contractor::query()
@@ -129,7 +131,7 @@ class ContractorController extends Controller
     public function addGalleryImage(Request $request, $contractorId): JsonResponse
     {
         $request->validate([
-            'image' => 'required|image|max:5120',
+            'image' => 'required|image|mimes:jpeg,jpg,png,webp|max:5120',
             'caption' => 'nullable|string|max:255',
             'category' => 'nullable|in:work_samples,equipment,team,facilities,other',
             'order' => 'nullable|integer|min:0',
@@ -139,7 +141,7 @@ class ContractorController extends Controller
 
         $currentCount = $contractor->gallery()->count();
         if ($currentCount >= 20) {
-            return response()->json(['error' => 'Maximum 20 images allowed per contractor.'], 422);
+            return $this->errorResponse('Maximum 20 images allowed per contractor.', 422);
         }
 
         $path = $request->file('image')->store('contractors/gallery', 'public');

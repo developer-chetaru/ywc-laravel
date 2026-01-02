@@ -65,13 +65,6 @@ use Stripe\Checkout\Session as CheckoutSession;
 Route::get('/', [LandingPageController::class, 'index'])->name('landing');
 Route::post('/waitlist/join', [LandingPageController::class, 'joinWaitlist'])->name('waitlist.join');
 
-// Test route for financial-planning (public access - no auth required)
-Route::get('/test-financial', function () {
-    // Force session to load
-    session()->save();
-    return view('test-financial');
-})->name('test-financial');
-
 // Financial Future Planning - Public route (accessible to all)
 Route::get('/financial-future-planning', function () {
     // Redirect logged-in users to dashboard, guests to calculators
@@ -210,15 +203,6 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::get('/admin/waitlist', [WaitlistAdminController::class, 'index'])->name('admin.waitlist');
         Route::patch('/admin/waitlist/{waitlist}', [WaitlistAdminController::class, 'update'])->name('admin.waitlist.update');
     });
-
-
-Route::get('/test-reset-mail', function () {
-    $user = \App\Models\User::find(32);
-    $token = app('auth.password.broker')->createToken($user);
-    $user->sendPasswordResetNotification($token);
-    return 'Custom reset password mail sent!';
-});
-
 
 
 
