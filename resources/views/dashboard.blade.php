@@ -17,7 +17,6 @@
                                 ['label' => 'Mental Health Support', 'defaultImage' => '/images/brain-02.svg', 'hoverImage' => '/images/brain-white.svg', 'url' => route('mental-health.dashboard')],
                                 ['label' => 'Department Forums', 'defaultImage' => '/images/message-multiple-01 (1).svg', 'hoverImage' => '/images/message-multiple-white.svg', 'url' => '/forum'],
                                 ['label' => 'Financial Future Planning', 'defaultImage' => '/images/save-money-dollar.svg', 'hoverImage' => '/images/save-money-dollar-white.svg', 'url' => auth()->check() ? route('financial.dashboard') : route('financial.calculators.index')],
-                                ['label' => 'Pension & Investment Advice', 'defaultImage' => '/images/money-bag-ywc.svg', 'hoverImage' => '/images/money-bag-white.svg', 'url' => route('pension-investment-advice')],
                                 ['label' => 'Industry Review System', 'defaultImage' => '/images/industry-review-active.svg', 'hoverImage' => '/images/industry-review-default.svg', 'url' => route('industryreview.index')],
                                 ['label' => 'Itinerary System', 'defaultImage' => '/images/itinerarySystem.svg', 'hoverImage' => '/images/itinerarySystemWhite.svg', 'url' => route('itinerary.routes.index')],
                                 ['label' => 'Market Place', 'defaultImage' => '/images/market-place-active-icon.svg', 'hoverImage' => '/images/market-place-default-icon.svg', 'url' => route('marketplace.index')],
@@ -75,7 +74,7 @@
                                                     🧮 Get Started
                                                 </a>
                                             </div>
-                                        @elseif(!in_array($item['label'], ['Department Forums', 'Pension & Investment Advice']))
+                                        @elseif(!in_array($item['label'], ['Department Forums']))
                                             <div class="mt-3 w-full">
                                                 <a href="{{ route('register') }}" 
                                                    onclick="event.stopPropagation();"

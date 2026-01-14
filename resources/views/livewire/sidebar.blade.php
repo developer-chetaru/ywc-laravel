@@ -35,7 +35,8 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
         itineraryOpen: {{ request()->is('itinerary*') ? 'true' : 'false' }},
         crewDiscoveryOpen: {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'true' : 'false' }},
         documentsCareerOpen: {{ request()->is('documents*') || request()->is('career-history*') ? 'true' : 'false' }},
-        trainingOpen: {{ request()->is('training*') ? 'true' : 'false' }}
+        trainingOpen: {{ request()->is('training*') ? 'true' : 'false' }},
+        financialPlanningOpen: {{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? 'true' : 'false' }}
     }"
     x-init="
         // Wait for Alpine to be ready
@@ -420,14 +421,31 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             @endhasanyrole
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
+            {{-- FINANCIAL FUTURE PLANNING --}}
             <li>
-                <a href="{{ url('/financial-planning/dashboard') }}" 
-                   @click.prevent.stop="window.location.href = '{{ url('/financial-planning/dashboard') }}'"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                    {{ request()->is('financial-planning*') && !request()->is('financial-planning/admin*') && !request()->is('financial-planning/calculators*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-                    <img src="{{ request()->is('financial-planning*') && !request()->is('financial-planning/admin*') && !request()->is('financial-planning/calculators*') ? '/images/save-money-dollar.svg' : '/images/save-money-dollar-white.svg' }}" alt="Financial Future Planning" class="w-5 h-5">
-                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('financial-planning*') && !request()->is('financial-planning/admin*') && !request()->is('financial-planning/calculators*') ? 'text-black' : 'text-white' }}">Financial Future Planning</span>
-                </a>
+                <button @click="financialPlanningOpen = !financialPlanningOpen"
+                    class="flex items-center justify-between w-full px-4 py-3 rounded-lg transition
+                            {{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? 'bg-[#F2F2F2] text-black' : 'hover:bg-white/10 text-white' }}">
+                    <div class="flex items-center space-x-3">
+                        <img src="{{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? '/images/save-money-dollar.svg' : '/images/save-money-dollar-white.svg' }}" alt="Financial Future Planning" class="w-5 h-5">
+                        <span x-show="isOpen" class="text-base font-medium {{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? 'text-black' : 'text-white' }}">
+                            Financial Future Planning
+                        </span>
+                    </div>
+                    <svg x-show="isOpen" :class="{'rotate-180': financialPlanningOpen}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="financialPlanningOpen && isOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                    <a href="{{ url('/financial-planning/dashboard') }}"
+                        class="block px-4 py-2 rounded text-sm {{ request()->is('financial-planning/dashboard') ? 'bg-blue-100 text-blue-800' : 'text-gray-300 hover:text-white' }}">
+                        Dashboard
+                    </a>
+                    <a href="{{ route('pension-investment-advice') }}"
+                        class="block px-4 py-2 rounded text-sm {{ request()->is('pension-investment-advice*') ? 'bg-blue-100 text-blue-800' : 'text-gray-300 hover:text-white' }}">
+                        Pension & Investment
+                    </a>
+                </div>
             </li>
             @endhasanyrole
 
@@ -450,23 +468,6 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                 </a>
             </li>
             @endif
-
-            @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
-            <li>
-                <a href="{{ route('pension-investment-advice') }}" 
-                   wire:navigate
-                   class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                    {{ request()->is('pension-investment-advice*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-                    <img src="{{ request()->is('pension-investment-advice*') ? '/images/money-bag-ywc.svg' : '/images/money-bag-white.svg' }}" 
-                         alt="Pension & Investment Advice" 
-                         class="w-5 h-5">
-                    <span x-show="isOpen" 
-                          class="text-base font-medium {{ request()->is('pension-investment-advice*') ? 'text-black' : 'text-white' }}">
-                        Pension & Investment
-                    </span>
-                </a>
-            </li>
-            @endhasanyrole
 
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             {{-- INDUSTRY REVIEW SYSTEM --}}
