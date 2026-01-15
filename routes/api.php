@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\WorkLogController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\MentalHealthController;
 use App\Http\Controllers\Api\TrainingController;
+use App\Http\Controllers\Api\JobBoardController;
 
 // Master Data API - Public endpoints for mobile developers
 Route::get('/master-data', [MasterDataController::class, 'index']);
@@ -335,6 +336,31 @@ Route::prefix('training')->group(function () {
     Route::get('/categories', [TrainingController::class, 'getCategories']);
     Route::get('/schedules', [TrainingController::class, 'getSchedules']);
     Route::get('/filter-options', [TrainingController::class, 'getFilterOptions']);
+});
+
+// Job Board - Public Endpoints
+Route::prefix('job-board')->group(function () {
+    Route::get('/jobs', [JobBoardController::class, 'index']);
+    Route::get('/jobs/{id}', [JobBoardController::class, 'show']);
+    
+    // Authenticated endpoints
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/jobs', [JobBoardController::class, 'store']);
+        Route::put('/jobs/{id}', [JobBoardController::class, 'update']);
+        Route::post('/jobs/{id}/apply', [JobBoardController::class, 'apply']);
+        Route::get('/jobs/{id}/applications', [JobBoardController::class, 'getApplications']);
+        Route::get('/applications', [JobBoardController::class, 'getMyApplications']);
+        Route::get('/applications/{id}', [JobBoardController::class, 'getApplication']);
+        Route::put('/applications/{id}', [JobBoardController::class, 'updateApplicationStatus']);
+        Route::post('/applications/{id}/withdraw', [JobBoardController::class, 'withdrawApplication']);
+        Route::post('/jobs/{id}/save', [JobBoardController::class, 'saveJob']);
+        Route::delete('/jobs/{id}/save', [JobBoardController::class, 'unsaveJob']);
+        Route::get('/saved-jobs', [JobBoardController::class, 'getSavedJobs']);
+        Route::post('/jobs/{id}/publish', [JobBoardController::class, 'publishJob']);
+        Route::post('/jobs/{id}/mark-filled', [JobBoardController::class, 'markFilled']);
+        Route::get('/jobs/{id}/messages', [JobBoardController::class, 'getMessages']);
+        Route::get('/jobs/{id}/ratings', [JobBoardController::class, 'getRatings']);
+    });
 });
 
 // Optional token refresh route
