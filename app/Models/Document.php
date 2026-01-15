@@ -11,7 +11,16 @@ class Document extends Model
 
     protected $fillable = [
         'user_id',
-        'type',
+        'type', // Legacy enum - kept for backward compatibility
+        'document_type_id', // New Phase 1 field
+        'document_name',
+        'document_number',
+        'issuing_authority',
+        'issuing_country',
+        'notes',
+        'tags',
+        'featured_on_profile',
+        'thumbnail_path',
         'file_path',
         'file_type',
         'file_size',
@@ -25,10 +34,34 @@ class Document extends Model
         'status',
     ];
 
+    protected $casts = [
+        'tags' => 'array',
+        'featured_on_profile' => 'boolean',
+        'issue_date' => 'date',
+        'expiry_date' => 'date',
+        'dob' => 'date',
+    ];
+
     /* 🔗 Relationships */
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the document type (Phase 1)
+     */
+    public function documentType()
+    {
+        return $this->belongsTo(DocumentType::class);
+    }
+
+    /**
+     * Get expiry reminders for this document
+     */
+    public function expiryReminders()
+    {
+        return $this->hasMany(DocumentExpiryReminder::class);
     }
 
     public function passportDetail()
@@ -75,5 +108,79 @@ class Document extends Model
     public function isRejected(): bool
     {
         return $this->status === 'rejected';
+    }
+
+    /**
+     * Check if document is expiring soon (within 6 months)
+     */
+    public function isExpiringSoon(): bool
+    {
+        if (!$this->expiry_date) {
+            return false;
+        }
+
+        $sixMonthsFromNow = now()->addMonths(6);
+        return $this->expiry_date->lte($sixMonthsFromNow) && $this->expiry_date->isFuture();
+    }
+
+    /**
+     * Check if document is expired
+     */
+    public function isExpired(): bool
+    {
+        if (!$this->expiry_date) {
+            return false;
+        }
+
+        return $this->expiry_date->isPast();
+    }
+
+    /**
+     * Get days until expiry (negative if expired)
+     */
+    public function getDaysUntilExpiryAttribute(): ?int
+    {
+        if (!$this->expiry_date) {
+            return null;
+        }
+
+        return now()->diffInDays($this->expiry_date, false);
+    }
+
+    /**
+     * Scope for expiring soon documents
+     */
+    public function scopeExpiringSoon($query)
+    {
+        return $query->whereNotNull('expiry_date')
+            ->where('expiry_date', '<=', now()->addMonths(6))
+            ->where('expiry_date', '>', now());
+    }
+
+    /**
+     * Scope for expired documents
+     */
+    public function scopeExpired($query)
+    {
+        return $query->whereNotNull('expiry_date')
+            ->where('expiry_date', '<', now());
+    }
+
+    /**
+     * Scope for expiring soon or expired
+     */
+    public function scopeExpiringSoonOrExpired($query)
+    {
+        return $query->whereNotNull('expiry_date')
+            ->where('expiry_date', '<=', now()->addMonths(6));
+    }
+
+    /**
+     * Get document shares
+     */
+    public function shares()
+    {
+        return $this->belongsToMany(DocumentShare::class, 'document_share_documents')
+            ->withTimestamps();
     }
 }

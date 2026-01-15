@@ -444,6 +444,86 @@ document.addEventListener('DOMContentLoaded', function () {
     closeBtn.addEventListener('click', closeSidebar);
     overlay.addEventListener('click', closeSidebar);
 
+    // CHANGE STATUS
+    document.querySelectorAll('.change-status-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const docId = this.dataset.id;
+            if (!docId) {
+                Swal.fire({icon: 'error', title: 'Document ID missing'});
+                return;
+            }
+
+            // Show status selection dialog
+            Swal.fire({
+                title: 'Change Document Status',
+                text: 'Select the new status for this document',
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'Approve',
+                denyButtonText: 'Reject',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#0C7B24',
+                denyButtonColor: '#EB1C24',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Approve
+                    updateDocumentStatus(docId, 'approved');
+                } else if (result.isDenied) {
+                    // Reject
+                    updateDocumentStatus(docId, 'rejected');
+                }
+            });
+        });
+    });
+
+    function updateDocumentStatus(docId, status) {
+        const csrfToken = '{{ csrf_token() }}';
+        
+        fetch(`/admin/documents/${docId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ status: status })
+        })
+        .then(res => {
+            if (!res.ok) {
+                return res.json().then(err => Promise.reject(err));
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Status Updated!',
+                    text: `Document status changed to ${status}.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Update Failed',
+                    text: data.message || 'Failed to update document status'
+                });
+            }
+        })
+        .catch(err => {
+            console.error('Error updating status:', err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Request Failed',
+                text: err.message || 'Failed to update document status. Please try again.'
+            });
+        });
+    }
+
 });
 
 

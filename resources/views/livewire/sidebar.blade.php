@@ -229,6 +229,18 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                 <span class="text-sm font-medium">Career History</span>
                             </a>
                         </li>
+                        @hasanyrole('super_admin|admin')
+                        <li>
+                            <a href="{{ route('admin.documents.approval') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('admin/documents/approval*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Document Approval</span>
+                            </a>
+                        </li>
+                        @endhasanyrole
                     </ul>
                 </div>
             </li>

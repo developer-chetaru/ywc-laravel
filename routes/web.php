@@ -291,17 +291,39 @@ Route::middleware([
   	Route::get('/career-history/{id}', function($id) {
   		return redirect()->route('documents.show', $id);
   	})->name('career-history.show');
-  	Route::patch('/admin/documents/{document}/status', [CareerHistoryController::class, 'updateStatus']);
-
   	Route::get('/career-history/documents/{id}/edit', [CareerHistoryController::class, 'getDocumentForEdit'])->name('career-history.documents.edit');
     Route::put('/career-history/{id}', [CareerHistoryController::class, 'update'])->name('career-history.update');
 
   	Route::post('/admin/documents/{document}/verify', [CocCheckerController::class, 'verify']);
-    Route::patch('/admin/documents/{document}/status', [CocCheckerController::class, 'updateStatus']);  	
+    Route::patch('/admin/documents/{document}/status', [CareerHistoryController::class, 'updateStatus']);
+    
+    // Admin Document Approval
+    Route::get('/admin/documents/approval', \App\Livewire\Documents\Admin\DocumentApproval::class)->name('admin.documents.approval');
   
-    Route::post('/documents/share', [DocumentController::class, 'share'])->name('documents.share');
+    Route::post('/documents/share', [DocumentController::class, 'share'])->name('documents.share'); // Legacy email sharing
     Route::delete('/documents/{id}', [DocumentController::class, 'destroy'])->name('documents.destroy');
-    Route::post('/profile/share', [ProfileController::class, 'share'])->name('profile.share');
+    Route::post('/profile/share', [ProfileController::class, 'share'])->name('profile.share'); // Legacy email sharing
+
+    // New token-based sharing routes
+    Route::prefix('shares')->name('shares.')->group(function () {
+        // Document shares
+        Route::get('/documents', [\App\Http\Controllers\DocumentShareController::class, 'index'])->name('documents.index');
+        Route::post('/documents', [\App\Http\Controllers\DocumentShareController::class, 'store'])->name('documents.store');
+        Route::delete('/documents/{share}', [\App\Http\Controllers\DocumentShareController::class, 'revoke'])->name('documents.revoke');
+        Route::post('/documents/{share}/resend', [\App\Http\Controllers\DocumentShareController::class, 'resend'])->name('documents.resend');
+        Route::get('/documents/view/{token}', [\App\Http\Controllers\DocumentShareController::class, 'view'])->name('documents.view');
+
+        // Profile shares
+        Route::get('/profile', [\App\Http\Controllers\ProfileShareController::class, 'index'])->name('profile.index');
+        Route::post('/profile', [\App\Http\Controllers\ProfileShareController::class, 'store'])->name('profile.store');
+        Route::delete('/profile/{share}', [\App\Http\Controllers\ProfileShareController::class, 'revoke'])->name('profile.revoke');
+        Route::post('/profile/{share}/qr-code', [\App\Http\Controllers\ProfileShareController::class, 'generateQrCode'])->name('profile.qr-code');
+        Route::get('/profile/view/{token}', [\App\Http\Controllers\ProfileShareController::class, 'view'])->name('profile.view');
+    });
+
+    // Public share routes (no auth required)
+    Route::get('/documents/share/{token}', [\App\Http\Controllers\DocumentShareController::class, 'view'])->name('documents.share.view');
+    Route::get('/profile/share/{token}', [\App\Http\Controllers\ProfileShareController::class, 'view'])->name('profile.share.view');
 
   
   	Route::get('/qrcode', [QRCodeController::class, 'generate'])->name('qrcode.generate');

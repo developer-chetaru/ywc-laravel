@@ -205,6 +205,7 @@
             @endphp
 
            <main class="{{ $mainClasses }} h-[calc(100vh-74px)]" style="padding: 0;">
+                {{ $slot ?? '' }}
                 @yield('content')
             </main>
 

@@ -28,14 +28,15 @@ class CocCheckerController extends Controller
     }
 
 
-    public function updateStatus(Request $request, $documentId)
+    public function updateStatus(Request $request, Document $document)
     {
         $request->validate([
             'status' => 'required|in:approved,rejected'
         ]);
 
-        $document = Document::findOrFail($documentId);
-        $document->update(['status' => $request->status]);
+        $document->status = $request->status;
+        $document->updated_by = auth()->id();
+        $document->save();
 
         return response()->json(['success' => true]);
     }

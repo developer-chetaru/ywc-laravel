@@ -272,6 +272,10 @@ class CareerHistoryController extends Controller
             if ($document->file_path && \Storage::disk('public')->exists($document->file_path)) {
                 \Storage::disk('public')->delete($document->file_path);
             }
+            // Delete old thumbnail if exists
+            if ($document->thumbnail_path && \Storage::disk('public')->exists($document->thumbnail_path)) {
+                \Storage::disk('public')->delete($document->thumbnail_path);
+            }
             $storedPath = $request->file('file')->store('documents', 'public');
             $document->file_path = $storedPath;
             $document->file_type = $request->file->getClientOriginalExtension();
@@ -285,6 +289,17 @@ class CareerHistoryController extends Controller
             'dob' => $validated['dob'] ?? null,
             'status' => 'pending',
         ]);
+
+        // Generate thumbnail if file was uploaded
+        if ($request->hasFile('file') && $document->id) {
+            try {
+                $thumbnailService = app(\App\Services\Documents\ThumbnailService::class);
+                $thumbnailService->ensureThumbnail($document);
+            } catch (\Exception $e) {
+                \Log::warning('Thumbnail generation failed for document ' . $document->id . ': ' . $e->getMessage());
+                // Don't fail the update if thumbnail generation fails
+            }
+        }
 
         switch ($validated['type']) {
             case 'passport':
@@ -561,6 +576,17 @@ class CareerHistoryController extends Controller
             'expiry_date'=> $validated['expiry_date'] ?? null,
           	'dob'        => $validated['dob'] ?? null,
         ]);
+
+        // Generate thumbnail if file was uploaded
+        if ($storedPath && $document->id) {
+            try {
+                $thumbnailService = app(\App\Services\Documents\ThumbnailService::class);
+                $thumbnailService->ensureThumbnail($document);
+            } catch (\Exception $e) {
+                \Log::warning('Thumbnail generation failed for document ' . $document->id . ': ' . $e->getMessage());
+                // Don't fail the upload if thumbnail generation fails
+            }
+        }
 
         // Step 6: Save child details depending on type
         switch ($validated['type']) {

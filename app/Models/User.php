@@ -157,6 +157,66 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Document::class);
     }
+
+    /**
+     * Get career history entries for this user (Phase 1)
+     */
+    public function careerHistoryEntries()
+    {
+        return $this->hasMany(CareerHistoryEntry::class);
+    }
+
+    /**
+     * Get document shares for this user
+     */
+    public function documentShares()
+    {
+        return $this->hasMany(DocumentShare::class);
+    }
+
+    /**
+     * Get profile shares for this user
+     */
+    public function profileShares()
+    {
+        return $this->hasMany(ProfileShare::class);
+    }
+
+    /**
+     * Calculate total sea service in days from career history entries
+     */
+    public function getTotalSeaServiceDays(): int
+    {
+        return $this->careerHistoryEntries()
+            ->whereNotNull('vessel_name')
+            ->get()
+            ->filter(fn($entry) => $entry->qualifiesForSeaService())
+            ->sum(fn($entry) => $entry->getSeaServiceDays());
+    }
+
+    /**
+     * Get formatted total sea service (e.g., "5 years 3 months")
+     */
+    public function getFormattedTotalSeaService(): string
+    {
+        $totalDays = $this->getTotalSeaServiceDays();
+        $years = floor($totalDays / 365);
+        $months = floor(($totalDays % 365) / 30);
+        $days = $totalDays % 30;
+
+        $parts = [];
+        if ($years > 0) {
+            $parts[] = $years . ' ' . ($years === 1 ? 'year' : 'years');
+        }
+        if ($months > 0) {
+            $parts[] = $months . ' ' . ($months === 1 ? 'month' : 'months');
+        }
+        if ($days > 0 && $years === 0 && $months === 0) {
+            $parts[] = $days . ' ' . ($days === 1 ? 'day' : 'days');
+        }
+
+        return $parts ? implode(' ', $parts) : 'No sea service recorded';
+    }
   
     public function itineraryRoutes()
     {
