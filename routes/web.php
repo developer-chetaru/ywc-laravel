@@ -281,7 +281,16 @@ Route::middleware([
   	Route::get('/documents', [CareerHistoryController::class, 'index'])->name('documents');
   	// Documents show route - must come before career-history route to avoid conflict
   	Route::get('/documents/{id}', [CareerHistoryController::class, 'show'])->name('documents.show');
-  	Route::get('/career-history/{userId?}', \App\Livewire\CareerHistoryView::class)->name('career-history');
+  	// Career History routes - specific routes must come before parameterized routes
+  	Route::get('/career-history/manage', \App\Livewire\CareerHistory\CareerHistoryManager::class)->name('career-history.manage');
+  	Route::get('/career-history/manage/{userId}', \App\Livewire\CareerHistory\CareerHistoryManager::class)->name('career-history.manage.user');
+  	// Legacy route - redirect to manage
+  	Route::get('/career-history/{userId?}', function($userId = null) {
+  		if ($userId) {
+  			return redirect()->route('career-history.manage.user', ['userId' => $userId]);
+  		}
+  		return redirect()->route('career-history.manage');
+  	})->name('career-history');
     Route::get('/certificate-type/{id}/issuers', [CareerHistoryController::class, 'getIssuersByType']);
     Route::post('/documents/scan', [CareerHistoryController::class, 'scan'])->name('documents.scan');
     Route::post('/career-history', [CareerHistoryController::class, 'store'])->name('career-history.store');
@@ -308,6 +317,7 @@ Route::middleware([
     Route::prefix('shares')->name('shares.')->group(function () {
         // Document shares
         Route::get('/documents', [\App\Http\Controllers\DocumentShareController::class, 'index'])->name('documents.index');
+        Route::get('/documents/analytics', \App\Livewire\Documents\ShareAnalytics::class)->name('documents.analytics');
         Route::post('/documents', [\App\Http\Controllers\DocumentShareController::class, 'store'])->name('documents.store');
         Route::delete('/documents/{share}', [\App\Http\Controllers\DocumentShareController::class, 'revoke'])->name('documents.revoke');
         Route::post('/documents/{share}/resend', [\App\Http\Controllers\DocumentShareController::class, 'resend'])->name('documents.resend');
@@ -323,6 +333,8 @@ Route::middleware([
 
     // Public share routes (no auth required)
     Route::get('/documents/share/{token}', [\App\Http\Controllers\DocumentShareController::class, 'view'])->name('documents.share.view');
+    Route::get('/documents/share/{token}/download/{documentId}', [\App\Http\Controllers\DocumentShareController::class, 'download'])->name('documents.share.download');
+    Route::post('/documents/share/{token}/report-abuse', [\App\Http\Controllers\DocumentShareController::class, 'reportAbuse'])->name('documents.share.report-abuse');
     Route::get('/profile/share/{token}', [\App\Http\Controllers\ProfileShareController::class, 'view'])->name('profile.share.view');
     Route::post('/profile/share/{token}/download', [\App\Http\Controllers\ProfileShareController::class, 'downloadZip'])->name('profile.share.download');
 

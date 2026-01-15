@@ -12,3 +12,8 @@ Artisan::command('inspire', function () {
 Schedule::command('documents:process-expiry-reminders')
     ->dailyAt('00:00')
     ->timezone('UTC');
+
+// Schedule share cleanup to run weekly on Sundays at 2 AM UTC
+Schedule::command('shares:cleanup-expired')
+    ->weeklyOn(0, '02:00')
+    ->timezone('UTC');

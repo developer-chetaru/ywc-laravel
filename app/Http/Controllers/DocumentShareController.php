@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DocumentShare;
+use App\Models\ShareAuditLog;
 use App\Services\Documents\DocumentShareService;
 use Carbon\Carbon;
 
@@ -82,6 +83,56 @@ class DocumentShareController extends Controller
     }
 
     /**
+     * Download document from share
+     */
+    public function download(Request $request, string $token, int $documentId)
+    {
+        $share = $this->shareService->getShareByToken($token);
+
+        if (!$share || !$share->isValid()) {
+            abort(404, 'Share link not found or expired');
+        }
+
+        // Verify document belongs to this share
+        $document = $share->documents()->findOrFail($documentId);
+
+        if (!$document->file_path || !\Storage::disk('public')->exists($document->file_path)) {
+            abort(404, 'Document file not found');
+        }
+
+        // Record download
+        $this->shareService->recordDownload($share);
+
+        return \Storage::disk('public')->download(
+            $document->file_path,
+            ($document->document_name ?? 'document') . '.' . pathinfo($document->file_path, PATHINFO_EXTENSION)
+        );
+    }
+
+    /**
+     * Report abuse
+     */
+    public function reportAbuse(Request $request, string $token)
+    {
+        $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $share = $this->shareService->getShareByToken($token);
+
+        if (!$share) {
+            abort(404, 'Share link not found');
+        }
+
+        $this->shareService->reportAbuse($share, $request->reason);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Abuse report submitted. Thank you for your feedback.',
+        ]);
+    }
+
+    /**
      * Get all shares for authenticated user
      */
     public function index()
@@ -137,6 +188,52 @@ class DocumentShareController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Email resent successfully',
+        ]);
+    }
+
+    /**
+     * Get share analytics
+     */
+    public function analytics()
+    {
+        $user = Auth::user();
+        $shares = DocumentShare::where('user_id', $user->id)
+            ->with('documents')
+            ->get();
+
+        $analytics = [
+            'total_shares' => $shares->count(),
+            'active_shares' => $shares->where('is_active', true)->count(),
+            'expired_shares' => $shares->where('is_active', false)->count(),
+            'total_views' => $shares->sum('access_count'),
+            'total_downloads' => $shares->sum('download_count'),
+            'shares_by_month' => $shares->groupBy(function($share) {
+                return $share->created_at->format('Y-m');
+            })->map(function($group) {
+                return $group->count();
+            }),
+            'top_shared_documents' => \DB::table('document_share_documents')
+                ->join('documents', 'document_share_documents.document_id', '=', 'documents.id')
+                ->join('document_shares', 'document_share_documents.document_share_id', '=', 'document_shares.id')
+                ->where('document_shares.user_id', $user->id)
+                ->select('documents.id', 'documents.document_name', \DB::raw('COUNT(*) as share_count'))
+                ->groupBy('documents.id', 'documents.document_name')
+                ->orderBy('share_count', 'desc')
+                ->limit(10)
+                ->get(),
+        ];
+
+        // Get audit logs for detailed analytics
+        $auditLogs = ShareAuditLog::where('share_type', 'document')
+            ->whereIn('shareable_id', $shares->pluck('id'))
+            ->orderBy('created_at', 'desc')
+            ->limit(100)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'analytics' => $analytics,
+            'recent_activity' => $auditLogs,
         ]);
     }
 }

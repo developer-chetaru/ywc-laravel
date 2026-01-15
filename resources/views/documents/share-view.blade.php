@@ -79,8 +79,7 @@
                     </div>
                     
                     @if($document->file_path)
-                    <a href="{{ asset('storage/' . $document->file_path) }}" 
-                        target="_blank" 
+                    <a href="{{ route('documents.share.download', ['token' => $share->share_token, 'documentId' => $document->id]) }}" 
                         class="block w-full text-center bg-[#0053FF] text-white px-4 py-2 rounded-md hover:bg-[#0044DD] transition-colors">
                         <i class="fas fa-download mr-2"></i>Download
                     </a>
@@ -95,11 +94,48 @@
             </div>
             @endif
 
+            {{-- Report Abuse --}}
+            <div class="mt-6 text-center">
+                <button onclick="reportAbuse()" 
+                    class="text-sm text-red-600 hover:text-red-800 underline">
+                    <i class="fas fa-flag mr-1"></i>Report Abuse
+                </button>
+            </div>
+
             {{-- Footer --}}
             <div class="mt-8 text-center text-sm text-gray-600">
                 <p>Powered by Yacht Workers Council</p>
             </div>
         </div>
     </div>
+
+    <script>
+        function reportAbuse() {
+            if (confirm('Are you sure you want to report this share link as abusive?')) {
+                fetch('{{ route("documents.share.report-abuse", $share->share_token) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        reason: 'User reported abuse'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Thank you for reporting. The share link has been flagged.');
+                    } else {
+                        alert('Error reporting abuse. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error reporting abuse. Please try again.');
+                });
+            }
+        }
+    </script>
 </body>
 </html>

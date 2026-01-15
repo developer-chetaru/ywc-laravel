@@ -14,13 +14,18 @@ class DocumentShare extends Model
     protected $fillable = [
         'user_id',
         'share_token',
+        'token_hash',
+        'password_hash',
         'recipient_email',
         'recipient_name',
         'personal_message',
         'expires_at',
         'is_active',
         'access_count',
+        'download_count',
+        'abuse_reports',
         'last_accessed_at',
+        'ip_address',
     ];
 
     protected $casts = [
@@ -30,15 +35,32 @@ class DocumentShare extends Model
     ];
 
     /**
-     * Generate a unique share token
+     * Generate a unique share token (cryptographically secure)
      */
     public static function generateToken(): string
     {
         do {
-            $token = Str::random(64);
+            // Use cryptographically secure random bytes
+            $token = bin2hex(random_bytes(32)); // 64 character hex string
         } while (self::where('share_token', $token)->exists());
 
         return $token;
+    }
+
+    /**
+     * Hash token for secure storage
+     */
+    public static function hashToken(string $token): string
+    {
+        return hash('sha256', $token);
+    }
+
+    /**
+     * Verify token without timing attacks
+     */
+    public static function verifyToken(string $token, string $hash): bool
+    {
+        return hash_equals($hash, self::hashToken($token));
     }
 
     /**
@@ -77,7 +99,35 @@ class DocumentShare extends Model
     public function recordAccess(): void
     {
         $this->increment('access_count');
-        $this->update(['last_accessed_at' => now()]);
+        $this->update([
+            'last_accessed_at' => now(),
+            'ip_address' => request()->ip(),
+        ]);
+    }
+
+    /**
+     * Record download
+     */
+    public function recordDownload(): void
+    {
+        $this->increment('download_count');
+        $this->update([
+            'last_accessed_at' => now(),
+            'ip_address' => request()->ip(),
+        ]);
+    }
+
+    /**
+     * Report abuse
+     */
+    public function reportAbuse(): void
+    {
+        $this->increment('abuse_reports');
+        
+        // Auto-revoke if too many abuse reports
+        if ($this->abuse_reports >= 3) {
+            $this->update(['is_active' => false]);
+        }
     }
 
     /**
