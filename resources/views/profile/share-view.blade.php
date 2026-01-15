@@ -26,7 +26,8 @@
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm text-gray-600">Views: {{ $share->view_count }}</p>
+                        <p class="text-sm text-gray-600">Views: {{ $share->view_count ?? $share->access_count ?? 0 }}</p>
+                        <p class="text-sm text-gray-600">Downloads: {{ $share->download_count ?? 0 }}</p>
                         @if($share->expires_at)
                         <p class="text-sm text-gray-600">
                             Expires: {{ \Carbon\Carbon::parse($share->expires_at)->format('M d, Y') }}
@@ -129,6 +130,35 @@
                 </div>
             </div>
             @endif
+
+            {{-- Download All as ZIP --}}
+            @if($share->hasSection('documents') && isset($documents) && $documents->count() > 0)
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 mb-2">Download All Documents</h2>
+                        <p class="text-sm text-gray-600">Download all shared documents as a ZIP file</p>
+                    </div>
+                    <form action="{{ route('profile.share.download', $share->share_token) }}" method="POST">
+                        @csrf
+                        <button type="submit" 
+                            class="bg-[#0053FF] text-white px-6 py-3 rounded-md hover:bg-[#0044DD] transition-colors font-medium">
+                            <i class="fas fa-download mr-2"></i>Download All as ZIP
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @endif
+
+            {{-- Connect on YWC CTA --}}
+            <div class="bg-gradient-to-r from-[#0053FF] to-[#0044DD] rounded-lg shadow-md p-8 mb-6 text-white text-center">
+                <h2 class="text-2xl font-bold mb-2">Connect on Yacht Workers Council</h2>
+                <p class="mb-4">Join thousands of yacht crew members managing their careers with YWC</p>
+                <a href="{{ route('register') }}" 
+                    class="inline-block bg-white text-[#0053FF] px-8 py-3 rounded-md hover:bg-gray-100 transition-colors font-semibold">
+                    Join YWC Today
+                </a>
+            </div>
 
             {{-- Footer --}}
             <div class="mt-8 text-center text-sm text-gray-600">

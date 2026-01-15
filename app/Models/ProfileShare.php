@@ -22,8 +22,10 @@ class ProfileShare extends Model
         'career_entry_ids',
         'expires_at',
         'is_active',
-        'access_count',
+        'view_count',
+        'download_count',
         'last_accessed_at',
+        'ip_address',
         'qr_code_path',
     ];
 
@@ -73,12 +75,27 @@ class ProfileShare extends Model
     }
 
     /**
-     * Increment access count and update last accessed
+     * Increment view count and update last accessed
      */
-    public function recordAccess(): void
+    public function recordView(): void
     {
-        $this->increment('access_count');
-        $this->update(['last_accessed_at' => now()]);
+        $this->increment('view_count');
+        $this->update([
+            'last_accessed_at' => now(),
+            'ip_address' => request()->ip(),
+        ]);
+    }
+
+    /**
+     * Increment download count
+     */
+    public function recordDownload(): void
+    {
+        $this->increment('download_count');
+        $this->update([
+            'last_accessed_at' => now(),
+            'ip_address' => request()->ip(),
+        ]);
     }
 
     /**

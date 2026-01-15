@@ -324,6 +324,7 @@ Route::middleware([
     // Public share routes (no auth required)
     Route::get('/documents/share/{token}', [\App\Http\Controllers\DocumentShareController::class, 'view'])->name('documents.share.view');
     Route::get('/profile/share/{token}', [\App\Http\Controllers\ProfileShareController::class, 'view'])->name('profile.share.view');
+    Route::post('/profile/share/{token}/download', [\App\Http\Controllers\ProfileShareController::class, 'downloadZip'])->name('profile.share.download');
 
   
   	Route::get('/qrcode', [QRCodeController::class, 'generate'])->name('qrcode.generate');

@@ -167,4 +167,65 @@ class ProfileShareController extends Controller
             'qr_code_url' => asset('storage/' . $qrCodePath),
         ]);
     }
+
+    /**
+     * Download all shared documents as ZIP
+     */
+    public function downloadZip(Request $request, string $token)
+    {
+        $share = $this->shareService->getShareByToken($token);
+
+        if (!$share || !$share->isValid()) {
+            abort(404, 'Share link not found or expired');
+        }
+
+        if (!$share->hasSection('documents')) {
+            abort(400, 'No documents available for download');
+        }
+
+        $user = $share->user;
+        $query = $user->documents()->with('documentType');
+        
+        if ($share->document_categories) {
+            $query->whereHas('documentType', function($q) use ($share) {
+                $q->whereIn('slug', $share->document_categories);
+            });
+        }
+        
+        $documents = $query->get();
+
+        if ($documents->isEmpty()) {
+            abort(400, 'No documents available for download');
+        }
+
+        // Create ZIP file
+        $zipFileName = 'profile-share-' . $share->id . '-' . time() . '.zip';
+        $zipPath = storage_path('app/temp/' . $zipFileName);
+        
+        // Ensure temp directory exists
+        if (!file_exists(storage_path('app/temp'))) {
+            mkdir(storage_path('app/temp'), 0755, true);
+        }
+
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            abort(500, 'Failed to create ZIP file');
+        }
+
+        foreach ($documents as $document) {
+            if ($document->file_path && \Storage::disk('public')->exists($document->file_path)) {
+                $filePath = \Storage::disk('public')->path($document->file_path);
+                $fileName = $document->document_name ?? ($document->documentType->name ?? 'document-' . $document->id);
+                $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+                $zip->addFile($filePath, $fileName . '.' . $extension);
+            }
+        }
+
+        $zip->close();
+
+        // Record download
+        $share->recordDownload();
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+    }
 }

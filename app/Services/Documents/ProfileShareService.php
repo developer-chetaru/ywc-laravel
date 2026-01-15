@@ -97,12 +97,12 @@ class ProfileShareService
     }
 
     /**
-     * Record access to a share
+     * Record view access to a share
      */
     public function recordAccess(ProfileShare $share): void
     {
         if ($share->isValid()) {
-            $share->recordAccess();
+            $share->recordView();
         }
     }
 

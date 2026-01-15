@@ -56,7 +56,7 @@
                                         @else
                                         <p><strong>Expires:</strong> Never</p>
                                         @endif
-                                        <p><strong>Views:</strong> {{ $share->view_count }} | <strong>Downloads:</strong> {{ $share->download_count }}</p>
+                                        <p><strong>Views:</strong> {{ $share->view_count ?? 0 }} | <strong>Downloads:</strong> {{ $share->download_count ?? 0 }}</p>
                                         <p><strong>Created:</strong> {{ $share->created_at->format('M d, Y') }}</p>
                                     </div>
                                     

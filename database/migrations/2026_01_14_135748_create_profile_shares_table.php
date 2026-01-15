@@ -23,8 +23,10 @@ return new class extends Migration
             $table->json('career_entry_ids')->nullable(); // Specific career entries to include
             $table->timestamp('expires_at')->nullable(); // Optional expiry date
             $table->boolean('is_active')->default(true); // Can be revoked
-            $table->integer('access_count')->default(0); // Track views
+            $table->integer('view_count')->default(0); // Track views
+            $table->integer('download_count')->default(0); // Track downloads
             $table->timestamp('last_accessed_at')->nullable();
+            $table->string('ip_address')->nullable(); // Track IP for analytics
             $table->string('qr_code_path')->nullable(); // Path to generated QR code image
             $table->timestamps();
 
