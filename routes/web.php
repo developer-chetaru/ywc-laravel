@@ -284,6 +284,10 @@ Route::middleware([
   	// Career History routes - specific routes must come before parameterized routes
   	Route::get('/career-history/manage', \App\Livewire\CareerHistory\CareerHistoryManager::class)->name('career-history.manage');
   	Route::get('/career-history/manage/{userId}', \App\Livewire\CareerHistory\CareerHistoryManager::class)->name('career-history.manage.user');
+  	Route::get('/career-history/sea-service-report', [\App\Http\Controllers\CareerHistory\SeaServiceReportController::class, 'view'])->name('career-history.sea-service-report');
+  	Route::get('/career-history/sea-service-report/{userId}', [\App\Http\Controllers\CareerHistory\SeaServiceReportController::class, 'view'])->name('career-history.sea-service-report.user');
+  	Route::get('/career-history/sea-service-report/download', [\App\Http\Controllers\CareerHistory\SeaServiceReportController::class, 'download'])->name('career-history.sea-service-report.download');
+  	Route::get('/career-history/sea-service-report/{userId}/download', [\App\Http\Controllers\CareerHistory\SeaServiceReportController::class, 'download'])->name('career-history.sea-service-report.user.download');
   	// Legacy route - redirect to manage
   	Route::get('/career-history/{userId?}', function($userId = null) {
   		if ($userId) {
@@ -312,6 +316,13 @@ Route::middleware([
     Route::post('/documents/share', [DocumentController::class, 'share'])->name('documents.share'); // Legacy email sharing
     Route::delete('/documents/{id}', [DocumentController::class, 'destroy'])->name('documents.destroy');
     Route::post('/profile/share', [ProfileController::class, 'share'])->name('profile.share'); // Legacy email sharing
+
+    // Secure document access routes
+    Route::prefix('documents')->name('documents.')->group(function () {
+        Route::get('/{document}/signed-url', [\App\Http\Controllers\DocumentDownloadController::class, 'signedUrl'])->name('signed-url');
+        Route::get('/{document}/download', [\App\Http\Controllers\DocumentDownloadController::class, 'download'])->name('download');
+        Route::get('/{document}/view', [\App\Http\Controllers\DocumentDownloadController::class, 'view'])->name('view');
+    });
 
     // New token-based sharing routes
     Route::prefix('shares')->name('shares.')->group(function () {

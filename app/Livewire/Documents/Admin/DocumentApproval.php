@@ -6,7 +6,10 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Document;
 use App\Models\User;
+use App\Models\DocumentStatusChange;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\DocumentStatusChangedMail;
 use Illuminate\Validation\Rule;
 
 class DocumentApproval extends Component
@@ -21,6 +24,8 @@ class DocumentApproval extends Component
     public $approvalNotes = '';
     public $rejectionNotes = '';
     public $action = ''; // 'approve' or 'reject'
+    public $selectedDocuments = []; // For batch actions
+    public $selectAll = false;
 
     protected $queryString = [
         'selectedStatus' => ['except' => 'pending'],
@@ -64,13 +69,29 @@ class DocumentApproval extends Component
             return;
         }
 
+        $oldStatus = $this->selectedDocument->status;
+        
         $this->selectedDocument->update([
             'status' => 'approved',
             'updated_by' => Auth::id(),
         ]);
 
-        // TODO: Send notification email to user
-        // Mail::to($this->selectedDocument->user->email)->send(new DocumentApprovedMail($this->selectedDocument, $this->approvalNotes));
+        // Track status change
+        DocumentStatusChange::create([
+            'document_id' => $this->selectedDocument->id,
+            'old_status' => $oldStatus,
+            'new_status' => 'approved',
+            'notes' => $this->approvalNotes,
+            'changed_by' => Auth::id(),
+        ]);
+
+        // Send notification email
+        try {
+            Mail::to($this->selectedDocument->user->email)
+                ->send(new DocumentStatusChangedMail($this->selectedDocument, 'approved', $this->approvalNotes));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send document approval email: ' . $e->getMessage());
+        }
 
         session()->flash('message', 'Document approved successfully');
         $this->closeModal();
@@ -87,29 +108,148 @@ class DocumentApproval extends Component
             return;
         }
 
+        $oldStatus = $this->selectedDocument->status;
+        
         $this->selectedDocument->update([
             'status' => 'rejected',
             'updated_by' => Auth::id(),
         ]);
 
-        // TODO: Send notification email to user with rejection notes
-        // Mail::to($this->selectedDocument->user->email)->send(new DocumentRejectedMail($this->selectedDocument, $this->rejectionNotes));
+        // Track status change
+        DocumentStatusChange::create([
+            'document_id' => $this->selectedDocument->id,
+            'old_status' => $oldStatus,
+            'new_status' => 'rejected',
+            'notes' => $this->rejectionNotes,
+            'changed_by' => Auth::id(),
+        ]);
+
+        // Send notification email
+        try {
+            Mail::to($this->selectedDocument->user->email)
+                ->send(new DocumentStatusChangedMail($this->selectedDocument, 'rejected', $this->rejectionNotes));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send document rejection email: ' . $e->getMessage());
+        }
 
         session()->flash('message', 'Document rejected');
         $this->closeModal();
         $this->resetPage();
     }
 
-    public function batchApprove($documentIds)
+    public function updatedSelectAll($value)
     {
-        Document::whereIn('id', $documentIds)
+        if ($value) {
+            $this->selectedDocuments = $this->documents->pluck('id')->toArray();
+        } else {
+            $this->selectedDocuments = [];
+        }
+    }
+
+    public function batchApprove()
+    {
+        if (empty($this->selectedDocuments)) {
+            session()->flash('error', 'Please select at least one document');
+            return;
+        }
+
+        $documents = Document::whereIn('id', $this->selectedDocuments)
             ->where('status', 'pending')
-            ->update([
+            ->with('user')
+            ->get();
+
+        $count = 0;
+        foreach ($documents as $document) {
+            $oldStatus = $document->status;
+            
+            $document->update([
                 'status' => 'approved',
                 'updated_by' => Auth::id(),
             ]);
 
-        session()->flash('message', count($documentIds) . ' documents approved');
+            // Track status change
+            DocumentStatusChange::create([
+                'document_id' => $document->id,
+                'old_status' => $oldStatus,
+                'new_status' => 'approved',
+                'notes' => 'Batch approved',
+                'changed_by' => Auth::id(),
+            ]);
+
+            // Send notification email
+            try {
+                Mail::to($document->user->email)
+                    ->send(new DocumentStatusChangedMail($document, 'approved', 'Batch approved'));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send batch approval email: ' . $e->getMessage());
+            }
+
+            $count++;
+        }
+
+        $this->selectedDocuments = [];
+        $this->selectAll = false;
+        session()->flash('message', $count . ' document(s) approved');
+        $this->resetPage();
+    }
+
+    public function batchReject()
+    {
+        if (empty($this->selectedDocuments)) {
+            session()->flash('error', 'Please select at least one document');
+            return;
+        }
+
+        $this->action = 'batch-reject';
+        $this->showModal = true;
+    }
+
+    public function confirmBatchReject()
+    {
+        $this->validate([
+            'rejectionNotes' => 'required|string|max:500',
+        ]);
+
+        $documents = Document::whereIn('id', $this->selectedDocuments)
+            ->where('status', 'pending')
+            ->with('user')
+            ->get();
+
+        $count = 0;
+        foreach ($documents as $document) {
+            $oldStatus = $document->status;
+            
+            $document->update([
+                'status' => 'rejected',
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Track status change
+            DocumentStatusChange::create([
+                'document_id' => $document->id,
+                'old_status' => $oldStatus,
+                'new_status' => 'rejected',
+                'notes' => $this->rejectionNotes,
+                'changed_by' => Auth::id(),
+            ]);
+
+            // Send notification email
+            try {
+                Mail::to($document->user->email)
+                    ->send(new DocumentStatusChangedMail($document, 'rejected', $this->rejectionNotes));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send batch rejection email: ' . $e->getMessage());
+            }
+
+            $count++;
+        }
+
+        $this->selectedDocuments = [];
+        $this->selectAll = false;
+        $this->rejectionNotes = '';
+        $this->action = '';
+        $this->showModal = false;
+        session()->flash('message', $count . ' document(s) rejected');
         $this->resetPage();
     }
 

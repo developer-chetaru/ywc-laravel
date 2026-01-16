@@ -4,11 +4,20 @@ namespace App\Services\Documents;
 
 use App\Models\Document;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Facades\Image;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 use Imagick;
 
 class ThumbnailService
 {
+    protected $imageManager;
+
+    public function __construct()
+    {
+        // Use GD driver for Intervention Image v3
+        $this->imageManager = new ImageManager(new Driver());
+    }
+
     /**
      * Generate thumbnail for a document
      */
@@ -42,19 +51,25 @@ class ThumbnailService
     /**
      * Generate thumbnail for image files
      */
-    protected function generateImageThumbnail(string $filePath, Document $document): string
+    protected function generateImageThumbnail(string $filePath, Document $document): ?string
     {
-        $thumbnail = Image::make($filePath)
-            ->fit(300, 300, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            })
-            ->encode('jpg', 85);
+        try {
+            $image = $this->imageManager->read($filePath);
+            
+            // Resize maintaining aspect ratio, max 300x300
+            $image->scaleDown(300, 300);
+            
+            // Encode as JPEG with 85% quality
+            $thumbnailData = $image->toJpeg(85);
 
-        $thumbnailPath = 'thumbnails/' . $document->id . '-' . time() . '.jpg';
-        Storage::disk('public')->put($thumbnailPath, $thumbnail);
+            $thumbnailPath = 'thumbnails/' . $document->id . '-' . time() . '.jpg';
+            Storage::disk('public')->put($thumbnailPath, $thumbnailData);
 
-        return $thumbnailPath;
+            return $thumbnailPath;
+        } catch (\Exception $e) {
+            \Log::error('Image thumbnail generation failed: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**

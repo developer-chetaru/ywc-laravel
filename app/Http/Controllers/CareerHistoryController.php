@@ -244,6 +244,14 @@ class CareerHistoryController extends Controller
                     'dob'                       => 'required|date|before_or_equal:today',
                 ]);
                 break;
+            case 'resume':
+                $rules = array_merge($base, [
+                    'doc_name'   => 'nullable|string|max:100',
+                    'issue_date' => 'nullable|date',
+                    'expiry_date'=> 'nullable|date|after_or_equal:issue_date',
+                    'dob'        => 'nullable|date|before_or_equal:today',
+                ]);
+                break;
             case 'other':
                 $rules = array_merge($base, [
                     'doc_name'   => 'required|string|max:100',
@@ -282,8 +290,14 @@ class CareerHistoryController extends Controller
             $document->file_size = (int) ceil($request->file->getSize() / 1024);
         }
 
+        // Map 'resume' to 'other' for legacy enum compatibility
+        $legacyType = $validated['type'];
+        if ($legacyType === 'resume') {
+            $legacyType = 'other';
+        }
+
         $document->update([
-            'type' => $validated['type'],
+            'type' => $legacyType,
             'issue_date' => $validated['issue_date'] ?? null,
             'expiry_date' => $validated['expiry_date'] ?? null,
             'dob' => $validated['dob'] ?? null,
@@ -302,6 +316,17 @@ class CareerHistoryController extends Controller
         }
 
         switch ($validated['type']) {
+            case 'resume':
+                // Resume is treated as 'other' in database
+                $other = $document->otherDocument ?? new OtherDocument(['document_id' => $document->id]);
+                $other->doc_name = $validated['doc_name'] ?? 'Resume';
+                $other->doc_number = null;
+                $other->issue_date = $validated['issue_date'] ?? null;
+                $other->expiry_date = $validated['expiry_date'] ?? null;
+                $other->dob = $validated['dob'] ?? null;
+                $other->save();
+                break;
+
             case 'passport':
                 $passport = $document->passportDetail ?? new PassportDetail(['document_id' => $document->id]);
                 $passport->passport_number = $validated['passport_number'];
@@ -545,6 +570,15 @@ class CareerHistoryController extends Controller
                 ]);
                 break;
 
+            case 'resume':
+                $rules = array_merge($base, [
+                    'doc_name'   => 'nullable|string|max:100',
+                    'issue_date' => 'nullable|date',
+                    'expiry_date'=> 'nullable|date|after_or_equal:issue_date',
+                  	'dob'        => 'nullable|date|before_or_equal:today',
+                ]);
+                break;
+
             case 'other':
                 $rules = array_merge($base, [
                     'doc_name'   => 'required|string|max:100',
@@ -565,10 +599,16 @@ class CareerHistoryController extends Controller
             $storedPath = $request->file('file')->store('documents', 'public');
         }
 
-        // Step 5: Save main Document
+        // Step 5: Map 'resume' to 'other' for legacy enum compatibility
+        $legacyType = $validated['type'];
+        if ($legacyType === 'resume') {
+            $legacyType = 'other';
+        }
+
+        // Step 6: Save main Document
         $document = Document::create([
             'user_id'    => auth()->id(),
-            'type'       => $validated['type'],
+            'type'       => $legacyType,
             'file_path'  => $storedPath,
             'file_type'  => $request->file ? $request->file->getClientOriginalExtension() : null,
             'file_size'  => $request->file ? (int) ceil($request->file->getSize() / 1024) : null,
@@ -588,8 +628,19 @@ class CareerHistoryController extends Controller
             }
         }
 
-        // Step 6: Save child details depending on type
+        // Step 7: Save child details depending on type
         switch ($validated['type']) {
+            case 'resume':
+                // Resume is treated as 'other' in database
+                OtherDocument::create([
+                    'document_id' => $document->id,
+                    'doc_name'    => $validated['doc_name'] ?? 'Resume',
+                    'doc_number'  => null,
+                    'issue_date'  => $validated['issue_date'] ?? null,
+                    'expiry_date' => $validated['expiry_date'] ?? null,
+                  	'dob'         => $validated['dob'] ?? null,
+                ]);
+                break;
             case 'passport':
                 PassportDetail::create([
                     'document_id'     => $document->id,
@@ -664,13 +715,18 @@ class CareerHistoryController extends Controller
 
 	public function show($id)
     {
-        $user = User::with([
-            'documents.passportDetail',
-            'documents.idvisaDetail',
-            'documents.certificates.type',
-            'documents.certificates.issuer',
-            'documents.otherDocument',
-        ])->findOrFail($id);
+        try {
+            $user = User::with([
+                'documents.documentType', // New Phase 1 relationship
+                'documents.passportDetail',
+                'documents.idvisaDetail',
+                'documents.certificates.type',
+                'documents.certificates.issuer',
+                'documents.otherDocument',
+            ])->findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            abort(404, 'User not found');
+        }
 
         // transform documents with expiry details
         $user->documents->transform(function ($doc) {
@@ -742,11 +798,31 @@ class CareerHistoryController extends Controller
     {
         $request->validate([
             'status' => 'required|in:approved,rejected',
+            'notes' => 'nullable|string|max:500',
         ]);
 
+        $oldStatus = $document->status;
+        
         $document->status = $request->status;
         $document->updated_by = auth()->id();
         $document->save();
+
+        // Track status change
+        \App\Models\DocumentStatusChange::create([
+            'document_id' => $document->id,
+            'old_status' => $oldStatus,
+            'new_status' => $request->status,
+            'notes' => $request->notes,
+            'changed_by' => auth()->id(),
+        ]);
+
+        // Send notification email
+        try {
+            \Illuminate\Support\Facades\Mail::to($document->user->email)
+                ->send(new \App\Mail\DocumentStatusChangedMail($document, $request->status, $request->notes));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send document status change email: ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true]);
     }

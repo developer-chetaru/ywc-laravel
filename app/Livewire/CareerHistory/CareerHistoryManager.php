@@ -4,6 +4,7 @@ namespace App\Livewire\CareerHistory;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CareerHistoryEntry;
 use App\Models\Document;
@@ -336,6 +337,57 @@ class CareerHistoryManager extends Component
         $entry = CareerHistoryEntry::where('user_id', $this->viewingUserId)->findOrFail($entryId);
         $entry->delete();
         session()->flash('message', 'Career entry deleted successfully!');
+    }
+
+    #[On('deleteCareerEntry')]
+    public function handleDeleteCareerEntry(int $entryId): void
+    {
+        $this->delete($entryId);
+    }
+
+    #[On('duplicateCareerEntry')]
+    public function handleDuplicateCareerEntry(int $entryId): void
+    {
+        // Only allow duplicating own entries (or super admin can duplicate any)
+        if (!$this->isSuperAdmin && $this->viewingUserId !== Auth::id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $originalEntry = CareerHistoryEntry::where('user_id', $this->viewingUserId)->findOrFail($entryId);
+        
+        // Create a copy with incremented dates
+        $newStartDate = $originalEntry->end_date 
+            ? \Carbon\Carbon::parse($originalEntry->end_date)->addDay() 
+            : \Carbon\Carbon::now();
+        
+        $newEntry = CareerHistoryEntry::create([
+            'user_id' => $this->viewingUserId,
+            'vessel_name' => $originalEntry->vessel_name,
+            'position_title' => $originalEntry->position_title,
+            'vessel_type' => $originalEntry->vessel_type,
+            'vessel_flag' => $originalEntry->vessel_flag,
+            'vessel_length_meters' => $originalEntry->vessel_length_meters,
+            'gross_tonnage' => $originalEntry->gross_tonnage,
+            'start_date' => $newStartDate,
+            'end_date' => null,
+            'employment_type' => $originalEntry->employment_type,
+            'position_rank' => $originalEntry->position_rank,
+            'department' => $originalEntry->department,
+            'employer_company' => $originalEntry->employer_company,
+            'supervisor_name' => $originalEntry->supervisor_name,
+            'supervisor_contact' => $originalEntry->supervisor_contact,
+            'key_duties' => $originalEntry->key_duties,
+            'notable_achievements' => $originalEntry->notable_achievements,
+            'departure_reason' => $originalEntry->departure_reason,
+            'reference_document_id' => $originalEntry->reference_document_id,
+            'contract_document_id' => $originalEntry->contract_document_id,
+            'signoff_document_id' => $originalEntry->signoff_document_id,
+            'visible_on_profile' => $originalEntry->visible_on_profile,
+            'display_order' => $originalEntry->display_order,
+        ]);
+
+        session()->flash('message', 'Career entry duplicated successfully!');
+        $this->openModal($newEntry->id);
     }
 
     public function getEntriesProperty()

@@ -52,6 +52,41 @@
                         <p class="text-sm text-green-700">{{ session('message') }}</p>
                     </div>
                     @endif
+                    @if(session()->has('error'))
+                    <div class="mb-4 bg-red-50 border-l-4 border-red-400 p-4">
+                        <p class="text-sm text-red-700">{{ session('error') }}</p>
+                    </div>
+                    @endif
+
+                    {{-- Batch Actions --}}
+                    @if($documents->count() > 0 && $selectedStatus === 'pending')
+                    <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" wire:model.live="selectAll" class="rounded border-gray-300">
+                                    <span class="ml-2 text-sm text-gray-700">Select All</span>
+                                </label>
+                                @if(count($selectedDocuments) > 0)
+                                <span class="text-sm text-gray-600">{{ count($selectedDocuments) }} selected</span>
+                                @endif
+                            </div>
+                            @if(count($selectedDocuments) > 0)
+                            <div class="flex gap-2">
+                                <button wire:click="batchApprove" 
+                                    wire:confirm="Approve {{ count($selectedDocuments) }} selected document(s)?"
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm">
+                                    <i class="fas fa-check mr-1"></i>Approve Selected
+                                </button>
+                                <button wire:click="batchReject" 
+                                    class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm">
+                                    <i class="fas fa-times mr-1"></i>Reject Selected
+                                </button>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
 
                     {{-- Documents Table --}}
                     @if($documents->count() > 0)
@@ -59,6 +94,11 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
+                                    @if($selectedStatus === 'pending')
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                                        <input type="checkbox" wire:model.live="selectAll" class="rounded border-gray-300">
+                                    </th>
+                                    @endif
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
@@ -69,7 +109,15 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($documents as $document)
-                                <tr class="hover:bg-gray-50">
+                                <tr class="hover:bg-gray-50 {{ in_array($document->id, $selectedDocuments) ? 'bg-blue-50' : '' }}">
+                                    @if($selectedStatus === 'pending')
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" 
+                                            wire:model.live="selectedDocuments" 
+                                            value="{{ $document->id }}"
+                                            class="rounded border-gray-300">
+                                    </td>
+                                    @endif
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             @if($document->thumbnail_path)
@@ -149,15 +197,40 @@
     </main>
 
     {{-- Approval/Rejection Modal --}}
-    @if($showModal && $selectedDocument)
+    @if($showModal)
     <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" 
          wire:click="closeModal">
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" 
              wire:click.stop>
             <div class="mt-3">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">
-                    {{ $action === 'approve' ? 'Approve Document' : 'Reject Document' }}
+                    @if($action === 'batch-reject')
+                        Reject {{ count($selectedDocuments) }} Document(s)
+                    @elseif($selectedDocument)
+                        {{ $action === 'approve' ? 'Approve Document' : 'Reject Document' }}
+                    @endif
                 </h3>
+                
+                @if($action === 'batch-reject')
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Rejection Reason <span class="text-red-500">*</span></label>
+                    <textarea wire:model="rejectionNotes" 
+                        rows="4" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#0053FF] focus:border-[#0053FF]"
+                        placeholder="Please provide a reason for rejection..."></textarea>
+                    @error('rejectionNotes') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </div>
+                <div class="flex gap-2">
+                    <button wire:click="confirmBatchReject" 
+                        class="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+                        Reject All
+                    </button>
+                    <button wire:click="closeModal" 
+                        class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+                @elseif($selectedDocument)
                 
                 <div class="mb-4">
                     <p class="text-sm text-gray-600">
@@ -205,6 +278,7 @@
                         Cancel
                     </button>
                 </div>
+                @endif
                 @endif
             </div>
         </div>

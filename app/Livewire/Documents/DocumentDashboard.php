@@ -78,6 +78,7 @@ class DocumentDashboard extends Component
             ->documents()
             ->expiringSoonOrExpired()
             ->with('documentType')
+            ->select('documents.*') // Ensure all fields including status are loaded
             ->orderBy('expiry_date', 'asc')
             ->limit(10)
             ->get();

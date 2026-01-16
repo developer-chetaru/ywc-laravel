@@ -16,13 +16,26 @@ class CocCheckerController extends Controller
 
         $document = Document::findOrFail($documentId);
 
+        // Only allow verification for certificate type documents
+        // The CocCheckerService only works with UK Certificate of Competency (CoC) database
+        if ($document->type !== 'certificate') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Verification is only available for Certificate documents. This service checks UK Certificate of Competency (CoC) database. Please use "Change Status" to manually approve/reject other document types.'
+            ], 400);
+        }
+
         $result = $checker->checkCertificate($request->doc_number, $request->dob);
 
+        // Only auto-approve if found, but don't auto-reject if not found
+        // Let admin manually decide to reject after verification fails
         if ($result['status'] === 'found') {
-            $document->update(['status' => 'approved']);
-        } else {
-            $document->update(['status' => 'rejected']);
+            $document->update([
+                'status' => 'approved',
+                'updated_by' => auth()->id()
+            ]);
         }
+        // If not found or error, don't change status - let admin decide manually
 
         return response()->json($result);
     }

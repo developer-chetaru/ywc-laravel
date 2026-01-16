@@ -94,11 +94,27 @@
 
                                         $extension = $filePath ? strtolower(pathinfo($filePath, PATHINFO_EXTENSION)) : null;
 
-                                        $docNumber = null;
-                                        if ($doc->type === 'passport' && !empty($doc->passportDetail->passport_number ?? null)) $docNumber = $doc->passportDetail->passport_number;
-                                        elseif ($doc->type === 'idvisa' && !empty($doc->idvisaDetail->document_number ?? null)) $docNumber = $doc->idvisaDetail->document_number;
-                                        elseif ($doc->type === 'certificate' && !empty($doc->certificates[0]->certificate_number ?? null)) $docNumber = $doc->certificates[0]->certificate_number;
-                                        elseif ($doc->type === 'other' && !empty($doc->otherDocument->doc_number ?? null)) $docNumber = $doc->otherDocument->doc_number;
+                                        // Get document number - check new structure first, then fallback to old structure
+                                        $docNumber = $doc->document_number ?? null;
+                                        if (!$docNumber) {
+                                            if ($doc->type === 'passport' && !empty($doc->passportDetail->passport_number ?? null)) {
+                                                $docNumber = $doc->passportDetail->passport_number;
+                                            } elseif ($doc->type === 'idvisa' && !empty($doc->idvisaDetail->document_number ?? null)) {
+                                                $docNumber = $doc->idvisaDetail->document_number;
+                                            } elseif ($doc->type === 'certificate' && !empty($doc->certificates[0]->certificate_number ?? null)) {
+                                                $docNumber = $doc->certificates[0]->certificate_number;
+                                            } elseif ($doc->type === 'other' && !empty($doc->otherDocument->doc_number ?? null)) {
+                                                $docNumber = $doc->otherDocument->doc_number;
+                                            }
+                                        }
+                                        
+                                        // Get DOB - check new structure first, then fallback to old structure
+                                        $docDob = $doc->dob ?? null;
+                                        if (!$docDob) {
+                                            $docDob = $doc->passportDetail->dob ?? $doc->idvisaDetail->dob ?? $doc->certificates[0]->dob ?? $doc->otherDocument->dob ?? null;
+                                        }
+                                        // Format DOB for data attribute
+                                        $docDobFormatted = $docDob ? (is_string($docDob) ? $docDob : \Carbon\Carbon::parse($docDob)->format('Y-m-d')) : null;
 
                                         $uploadDate = $doc->created_at ? $doc->created_at->format('d-m-Y') : '-';
                                         $uploadTime = $doc->created_at ? $doc->created_at->format('H:i') : '-';
@@ -132,7 +148,17 @@
                                                 <button class="px-4 py-2 rounded-md text-sm border border-[#1B1B1B] hover:bg-gray-200 min-w-[120px] view-doc-btn" data-doc='@json($doc)'>View Details</button>
 
                                                 @if($status === 'pending')
-                                                    <button class="px-4 py-2 rounded-md text-sm border border-[#1B1B1B] hover:bg-gray-200 min-w-[120px] verify-btn" data-id="{{ $doc->id }}" data-dob="{{ $doc->passportDetail->dob ?? $doc->idvisaDetail->dob ?? null }}" data-docno="{{ $docNumber }}">Verify</button>
+                                                    {{-- Only show Verify button for Certificate type documents --}}
+                                                    @if($doc->type === 'certificate' && $docDobFormatted && $docNumber)
+                                                        <button class="px-4 py-2 rounded-md text-sm border border-[#1B1B1B] hover:bg-gray-200 min-w-[120px] verify-btn" 
+                                                                data-id="{{ $doc->id }}" 
+                                                                data-dob="{{ $docDobFormatted }}" 
+                                                                data-docno="{{ $docNumber }}">Verify</button>
+                                                    @else
+                                                        <button class="px-4 py-2 rounded-md text-sm border border-[#1B1B1B] hover:bg-gray-200 min-w-[120px] change-status-btn" 
+                                                                data-id="{{ $doc->id }}"
+                                                                title="{{ $doc->type !== 'certificate' ? 'Verification is only available for Certificate documents. Use Change Status to approve/reject manually.' : 'Missing DOB or Document Number - Use Change Status to approve/reject manually' }}">Change Status</button>
+                                                    @endif
                                                 @else
                                                     <button class="px-4 py-2 rounded-md text-sm border border-[#1B1B1B] hover:bg-gray-200 min-w-[120px] change-status-btn" data-id="{{ $doc->id }}">Change Status</button>
                                                 @endif
@@ -397,25 +423,90 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.verify-btn').forEach(btn=>{
         btn.addEventListener('click',function(){
             const docId=this.dataset.id, dob=this.dataset.dob, docNo=this.dataset.docno;
-            if(!docId || !dob || !docNo){Swal.fire({icon:'error',title:'Missing Document Info'}); return;}
+            if(!docId || !dob || !docNo){
+                Swal.fire({
+                    icon:'error',
+                    title:'Missing Document Info',
+                    text:'This document is missing Date of Birth or Document Number. Please use "Change Status" button to approve/reject manually.',
+                    confirmButtonText:'OK'
+                });
+                return;
+            }
             const csrfToken='{{ csrf_token() }}';
             fetch(`/admin/documents/${docId}/verify`,{method:'POST',headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':csrfToken},body:JSON.stringify({dob,doc_number:docNo})})
             .then(res=>res.ok?res.json():res.json().then(err=>Promise.reject(err)))
             .then(data=>{
-                if(data.status==='found'){Swal.fire({icon:'success',title:'Document Verified!',text:'✅ Document verified successfully.',timer:2000,showConfirmButton:false}).then(()=>window.location.reload());}
-                else if(data.status==='not_found'){Swal.fire({icon:'error',title:'Document Not Found',text:'❌ Document not found. Rejecting...',timer:2000,showConfirmButton:false}).then(()=>rejectDocument(docId));}
-                else Swal.fire({icon:'warning',title:'Unexpected result'});
+                if(data.status==='found'){
+                    Swal.fire({
+                        icon:'success',
+                        title:'Document Verified!',
+                        text:'✅ Document verified successfully.',
+                        timer:2000,
+                        showConfirmButton:false
+                    }).then(()=>window.location.reload());
+                }
+                else if(data.status==='not_found'){
+                    Swal.fire({
+                        icon:'error',
+                        title:'Certificate Not Found',
+                        text:'❌ This certificate was not found in the UK Certificate of Competency (CoC) database. This could mean:\n\n• The certificate number or DOB is incorrect\n• The certificate is not registered in the UK system\n• The certificate is from a different issuing authority\n\nWould you like to reject this document?',
+                        showCancelButton:true,
+                        confirmButtonText:'Yes, Reject',
+                        cancelButtonText:'No, Keep Pending',
+                        confirmButtonColor:'#d33',
+                        cancelButtonColor:'#3085d6',
+                        width:600
+                    }).then((result)=>{
+                        if(result.isConfirmed){
+                            rejectDocument(docId);
+                        }
+                    });
+                }
+                else if(data.status==='error'){
+                    Swal.fire({
+                        icon:'warning',
+                        title:'Verification Error',
+                        text:data.message||'Unable to verify document. Please try again later or verify manually.',
+                        confirmButtonText:'OK',
+                        width:500
+                    });
+                }
+                else {
+                    Swal.fire({
+                        icon:'warning',
+                        title:'Unexpected result',
+                        text:'Please try again or verify manually.'
+                    });
+                }
             }).catch(err=>{console.error(err); Swal.fire({icon:'error',title:err.message||'Request failed!'})});
         });
     });
 
     function rejectDocument(docId){
-        const csrfToken='{{ csrf_token() }}';
-        fetch(`/admin/documents/${docId}/status`,{method:'PATCH',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrfToken},body:JSON.stringify({status:'rejected'})})
-        .then(res=>res.json()).then(data=>{
-            if(data.success){Swal.fire({icon:'error',title:'Document Rejected',text:'❌ Document rejected.',timer:2000,showConfirmButton:false}).then(()=>window.location.reload());}
-            else Swal.fire({icon:'warning',title:'Error rejecting document'});
-        }).catch(err=>{console.error(err); Swal.fire({icon:'error',title:'Reject request failed'});});
+        Swal.fire({
+            title: 'Rejection Reason',
+            input: 'textarea',
+            inputPlaceholder: 'Please provide a reason for rejection...',
+            inputAttributes: {
+                'aria-label': 'Rejection reason'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Reject',
+            inputValidator: (value) => {
+                if (!value || value.trim() === '') {
+                    return 'Rejection reason is required';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const csrfToken='{{ csrf_token() }}';
+                fetch(`/admin/documents/${docId}/status`,{method:'PATCH',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrfToken,'Accept':'application/json'},body:JSON.stringify({status:'rejected',notes:result.value})})
+                .then(res=>res.json()).then(data=>{
+                    if(data.success){Swal.fire({icon:'error',title:'Document Rejected',text:'❌ Document rejected.',timer:2000,showConfirmButton:false}).then(()=>window.location.reload());}
+                    else Swal.fire({icon:'warning',title:'Error rejecting document'});
+                }).catch(err=>{console.error(err); Swal.fire({icon:'error',title:'Reject request failed'});});
+            }
+        });
     }
 
     const openBtn = document.getElementById('openProfileSidebar');
@@ -456,28 +547,67 @@ document.addEventListener('DOMContentLoaded', function () {
             // Show status selection dialog
             Swal.fire({
                 title: 'Change Document Status',
-                text: 'Select the new status for this document',
-                icon: 'question',
+                input: 'select',
+                inputOptions: {
+                    'approved': 'Approved',
+                    'rejected': 'Rejected'
+                },
+                inputPlaceholder: 'Select status',
                 showCancelButton: true,
-                showDenyButton: true,
-                confirmButtonText: 'Approve',
-                denyButtonText: 'Reject',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#0C7B24',
-                denyButtonColor: '#EB1C24',
+                confirmButtonText: 'Next',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Please select a status';
+                    }
+                }
             }).then((result) => {
-                if (result.isConfirmed) {
-                    // Approve
-                    updateDocumentStatus(docId, 'approved');
-                } else if (result.isDenied) {
-                    // Reject
-                    updateDocumentStatus(docId, 'rejected');
+                if (result.isConfirmed && result.value) {
+                    const status = result.value;
+                    
+                    if (status === 'rejected') {
+                        // Ask for rejection reason
+                        Swal.fire({
+                            title: 'Rejection Reason',
+                            input: 'textarea',
+                            inputPlaceholder: 'Please provide a reason for rejection...',
+                            inputAttributes: {
+                                'aria-label': 'Rejection reason'
+                            },
+                            showCancelButton: true,
+                            confirmButtonText: 'Reject',
+                            inputValidator: (value) => {
+                                if (!value || value.trim() === '') {
+                                    return 'Rejection reason is required';
+                                }
+                            }
+                        }).then((notesResult) => {
+                            if (notesResult.isConfirmed) {
+                                updateDocumentStatus(docId, status, notesResult.value);
+                            }
+                        });
+                    } else {
+                        // Ask for optional approval notes
+                        Swal.fire({
+                            title: 'Approval Notes (Optional)',
+                            input: 'textarea',
+                            inputPlaceholder: 'Add any notes about this approval...',
+                            inputAttributes: {
+                                'aria-label': 'Approval notes'
+                            },
+                            showCancelButton: true,
+                            confirmButtonText: 'Approve'
+                        }).then((notesResult) => {
+                            if (notesResult.isConfirmed || notesResult.dismiss === Swal.DismissReason.cancel) {
+                                updateDocumentStatus(docId, status, notesResult.value || '');
+                            }
+                        });
+                    }
                 }
             });
         });
     });
 
-    function updateDocumentStatus(docId, status) {
+    function updateDocumentStatus(docId, status, notes = '') {
         const csrfToken = '{{ csrf_token() }}';
         
         fetch(`/admin/documents/${docId}/status`, {
@@ -487,7 +617,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ status: status })
+            body: JSON.stringify({ status: status, notes: notes })
         })
         .then(res => {
             if (!res.ok) {

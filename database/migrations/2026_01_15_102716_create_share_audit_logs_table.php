@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('share_audit_logs')) {
+            return;
+        }
+        
         Schema::create('share_audit_logs', function (Blueprint $table) {
             $table->id();
             $table->morphs('shareable'); // Polymorphic: document_share_id or profile_share_id

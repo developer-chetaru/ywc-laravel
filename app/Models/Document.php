@@ -64,6 +64,14 @@ class Document extends Model
         return $this->hasMany(DocumentExpiryReminder::class);
     }
 
+    /**
+     * Get status change history for this document
+     */
+    public function statusChanges()
+    {
+        return $this->hasMany(DocumentStatusChange::class);
+    }
+
     public function passportDetail()
     {
         return $this->hasOne(PassportDetail::class);

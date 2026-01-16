@@ -105,12 +105,16 @@
                             </div>
 
                             @if($doc->status === 'pending')
-                                <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition verify-btn"
-                                        data-id="{{ $doc->id }}"
-                                        data-dob="{{ $doc->dob ? \Carbon\Carbon::parse($doc->dob)->format('Y-m-d') : '' }}"
-                                        data-docno="{{ $docNumber ?? '' }}">
-                                    Verify
-                                </button>
+                                {{-- Only show Verify button for Certificate type documents --}}
+                                @if($doc->type === 'certificate' && $doc->dob && $docNumber)
+                                    <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition verify-btn"
+                                            data-id="{{ $doc->id }}"
+                                            data-dob="{{ $doc->dob ? \Carbon\Carbon::parse($doc->dob)->format('Y-m-d') : '' }}"
+                                            data-docno="{{ $docNumber ?? '' }}"
+                                            title="Verify UK Certificate of Competency (CoC)">
+                                        Verify
+                                    </button>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -578,17 +582,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else if (data.status === 'not_found') {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Document Not Found',
-                        text: '❌ Document not found. Rejecting...',
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        rejectDocument(selectedDocId);
+                        title: 'Certificate Not Found',
+                        text: '❌ This certificate was not found in the UK Certificate of Competency (CoC) database. This could mean:\n\n• The certificate number or DOB is incorrect\n• The certificate is not registered in the UK system\n• The certificate is from a different issuing authority\n\nWould you like to reject this document?',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Reject',
+                        cancelButtonText: 'No, Keep Pending',
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        width: 600
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            rejectDocument(selectedDocId);
+                        }
+                    });
+                } else if (data.status === 'error') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Verification Error',
+                        text: data.message || 'Unable to verify document. Please try again later or verify manually.',
+                        confirmButtonText: 'OK',
+                        width: 500
                     });
                 } else {
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Unexpected result'
+                        title: 'Unexpected result',
+                        text: 'Please try again or verify manually.'
                     });
                 }
             })

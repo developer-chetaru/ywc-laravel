@@ -32,12 +32,35 @@
                                 <p class="text-sm text-gray-600 mt-1">Manage your career history and sea service records</p>
                                 @endif
                             </div>
-                            @if($canEdit)
-                            <button wire:click="openModal" 
-                                class="bg-[#0053FF] text-white px-4 py-2 rounded-md hover:bg-[#0044DD] transition-colors font-medium">
-                                <i class="fas fa-plus mr-2"></i>Add Career Entry
-                            </button>
-                            @endif
+                            <div class="flex gap-2">
+                                @if($canEdit)
+                                <button wire:click="openModal" 
+                                    class="bg-[#0053FF] text-white px-4 py-2 rounded-md hover:bg-[#0044DD] transition-colors font-medium">
+                                    <i class="fas fa-plus mr-2"></i>Add Career Entry
+                                </button>
+                                @endif
+                                @if($isSuperAdmin && $viewingUser && $viewingUser->id !== Auth::id())
+                                <a href="{{ route('career-history.sea-service-report.user', ['userId' => $viewingUser->id]) }}" 
+                                    target="_blank"
+                                    class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium">
+                                    <i class="fas fa-file-pdf mr-2"></i>View Report
+                                </a>
+                                <a href="{{ route('career-history.sea-service-report.user.download', ['userId' => $viewingUser->id]) }}" 
+                                    class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors font-medium">
+                                    <i class="fas fa-download mr-2"></i>Download PDF
+                                </a>
+                                @else
+                                <a href="{{ route('career-history.sea-service-report') }}" 
+                                    target="_blank"
+                                    class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium">
+                                    <i class="fas fa-file-pdf mr-2"></i>View Report
+                                </a>
+                                <a href="{{ route('career-history.sea-service-report.download') }}" 
+                                    class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors font-medium">
+                                    <i class="fas fa-download mr-2"></i>Download PDF
+                                </a>
+                                @endif
+                            </div>
                         </div>
 
                         {{-- Super Admin User Selector --}}
@@ -203,19 +226,26 @@
                                         @endif
                                     </div>
 
-                                    @if($canEdit)
                                     <div class="flex gap-2">
+                                        <button wire:click="$dispatch('openCareerEntryDetails', { entryId: {{ $entry->id }}, viewingUserId: {{ $viewingUserId ?? 'null' }} })" 
+                                            class="text-[#0053FF] hover:text-[#0044DD] p-2" 
+                                            title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        @if($canEdit)
                                         <button wire:click="openModal({{ $entry->id }})" 
-                                            class="text-blue-600 hover:text-blue-800 p-2">
+                                            class="text-blue-600 hover:text-blue-800 p-2"
+                                            title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <button wire:click="delete({{ $entry->id }})" 
                                             wire:confirm="Are you sure you want to delete this career entry?"
-                                            class="text-red-600 hover:text-red-800 p-2">
+                                            class="text-red-600 hover:text-red-800 p-2"
+                                            title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                        @endif
                                     </div>
-                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -487,4 +517,7 @@
         </div>
     </div>
     @endif
+
+    {{-- Career Entry Details Modal --}}
+    @livewire('career-history.career-history-entry-details-modal')
 </div>

@@ -152,7 +152,10 @@
                                     <div class="w-full mt-5">
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             @foreach($priorityDocs as $doc)
-                                                <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row relative border border-gray-200 items-center gap-3 sm:gap-0">
+                                                @php
+                                                    $isRejected = strtolower(trim($doc->status ?? '')) === 'rejected';
+                                                @endphp
+                                                <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3">
 
                                                     <!-- Document Image -->
                                                     <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card" data-doc='@json($doc)'>
@@ -180,7 +183,7 @@
                                                     </div>
 
                                                     <!-- Document Details -->
-                                                    <div class="w-full sm:w-[calc(100%-100px)] flex flex-col sm:flex-row sm:justify-between items-start sm:pl-3 mb-1">
+                                                    <div class="w-full flex flex-col sm:flex-row sm:justify-between items-start sm:pl-3 mb-1">
                                                         <div class="flex-1">
                                                             <h3 class="text-md font-semibold mb-1 text-left">{{ $doc->name }}</h3>
                                                             <p class="text-sm font-semibold text-gray-800 mb-1">
@@ -261,6 +264,17 @@
                                                         </div>
                                                     </div>
 
+                                                    {{-- Action Buttons for Rejected Documents --}}
+                                                    @if($isRejected)
+                                                    <div class="mt-auto pt-3 border-t border-gray-200 w-full">
+                                                        <button type="button" 
+                                                                onclick="editDocument({{ $doc->id }})"
+                                                                class="w-full px-3 py-2 bg-orange-600 text-white text-xs rounded-md hover:bg-orange-700 transition-colors font-medium shadow-sm">
+                                                            <i class="fas fa-redo mr-1"></i>Re-Submit
+                                                        </button>
+                                                    </div>
+                                                    @endif
+
                                                 </div>
                                             @endforeach
                                         </div>
@@ -289,7 +303,10 @@
                 <h4 class="text-md font-semibold mb-3">{{ $categoryName }}</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     @foreach($docs as $doc)
-                        <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row relative border border-gray-200 items-center gap-3 sm:gap-0">
+                        @php
+                            $isRejected = strtolower(trim($doc->status ?? '')) === 'rejected';
+                        @endphp
+                        <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3">
 
                             <!-- Document Image -->
                             <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card" data-doc='@json($doc)'>
@@ -314,7 +331,7 @@
                             </div>
 
                             <!-- Document Details -->
-                            <div class="w-full sm:w-[calc(100%-100px)] flex flex-col sm:flex-row sm:justify-between items-start sm:pl-3 mb-1">
+                            <div class="w-full flex flex-col sm:flex-row sm:justify-between items-start gap-3">
                                 <div class="flex-1">
                                     <h3 class="text-md font-semibold mb-1 text-left">{{ $doc->name }}</h3>
                                     <p class="text-sm font-semibold text-gray-800 mb-1">
@@ -394,6 +411,17 @@
                                     @endif
                                 </div>
                             </div>
+
+                            {{-- Action Buttons for Rejected Documents --}}
+                            @if($isRejected)
+                            <div class="mt-auto pt-3 border-t border-gray-200 w-full">
+                                <button type="button" 
+                                        onclick="editDocument({{ $doc->id }})"
+                                        class="w-full px-3 py-2 bg-orange-600 text-white text-xs rounded-md hover:bg-orange-700 transition-colors font-medium shadow-sm">
+                                    <i class="fas fa-redo mr-1"></i>Re-Submit
+                                </button>
+                            </div>
+                            @endif
 
                         </div>
                     @endforeach
@@ -763,6 +791,88 @@
 <!-- <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script> -->
 <script>
   
+  // Re-Submit Document Function - Opens edit modal (must be globally accessible)
+  function editDocument(docId) {
+      $.ajax({
+          url: "/career-history/documents/" + docId + "/edit",
+          method: "GET",
+          headers: {
+              "X-Requested-With": "XMLHttpRequest"
+          },
+          success: function(doc) {
+              if (doc && (doc.id || doc.document_id)) {
+                  // Open the modal
+                  $("#addDocumentModal").removeClass("hidden").addClass("flex");
+                  
+                  // Change modal title
+                  $("#addDocumentModal h2").text("Re-Submit Document");
+                  
+                  // Set form to edit mode
+                  const form = $("#documentForm");
+                  const editId = doc.id || doc.document_id;
+                  form.attr("data-edit-id", editId);
+                  form.attr("action", "/career-history/" + editId);
+                  form.find('input[name="_method"]').remove();
+                  form.append('<input type="hidden" name="_method" value="PUT">');
+                  
+                  // Populate form fields
+                  $("#docType").val(doc.type || '').trigger('change');
+                  $("#docName").val(doc.name || '');
+                  
+                  // Populate document-specific fields
+                  setTimeout(function() {
+                      if (doc.type === 'passport' && doc.passport_detail) {
+                          $("#passportNumber").val(doc.passport_detail.passport_number || '');
+                          $("#passportDob").val(doc.passport_detail.dob || '');
+                          $("#passportIssueDate").val(doc.passport_detail.issue_date || '');
+                          $("#passportExpiryDate").val(doc.passport_detail.expiry_date || '');
+                          $("#passportIssuingAuthority").val(doc.passport_detail.issuing_authority || '');
+                          $("#passportIssuingCountry").val(doc.passport_detail.issuing_country || '');
+                      } else if (doc.type === 'idvisa' && doc.idvisa_detail) {
+                          $("#idvisaDocumentNumber").val(doc.idvisa_detail.document_number || '');
+                          $("#idvisaDob").val(doc.idvisa_detail.dob || '');
+                          $("#idvisaIssueDate").val(doc.idvisa_detail.issue_date || '');
+                          $("#idvisaExpiryDate").val(doc.idvisa_detail.expiry_date || '');
+                          $("#idvisaIssuingAuthority").val(doc.idvisa_detail.issuing_authority || '');
+                          $("#idvisaIssuingCountry").val(doc.idvisa_detail.issuing_country || '');
+                      } else if (doc.type === 'certificate' && doc.certificates && doc.certificates.length > 0) {
+                          const cert = doc.certificates[0];
+                          $("#certificateType").val(cert.type_id || '');
+                          $("#certificateNumber").val(cert.certificate_number || '');
+                          $("#certificateIssueDate").val(cert.issue_date || '');
+                          $("#certificateExpiryDate").val(cert.expiry_date || '');
+                          $("#certificateIssuer").val(cert.issuer_id || '');
+                      }
+                  }, 500);
+                  
+                  // Show replace button
+                  $("#replaceBtn").removeClass("hidden");
+                  
+                  // Show existing file preview if available
+                  if (doc.file_path || doc.file_url) {
+                      const filePath = doc.file_url || ("{{ asset('storage/') }}/" + doc.file_path);
+                      const extension = filePath.split('.').pop().toLowerCase();
+                      if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)) {
+                          $("#previewBox").html('<img src="' + filePath + '" class="max-w-full max-h-full object-contain">');
+                      } else if (extension === 'pdf') {
+                          $("#previewBox").html('<img src="{{ asset("images/pdf.png") }}" class="h-10 w-10 object-contain">');
+                      }
+                  }
+              } else {
+                  alert("Failed to load document details.");
+              }
+          },
+          error: function(xhr) {
+              console.error("Error loading document:", xhr);
+              if (xhr.status === 404) {
+                  alert("Document not found.");
+              } else {
+                  alert("Error loading document details.");
+              }
+          }
+      });
+  }
+
   $(document).ready(function () {
     console.log("jQuery ready");
 
@@ -844,9 +954,23 @@ $(function () {
         // Hide the popup
         popup.addClass("hidden").removeClass("flex");
 
-        // Reset the form
-        const form = popup.find("#documentForm")[0];
-        if (form) form.reset();
+        // Reset the form and clear edit mode
+        const formElement = popup.find("#documentForm");
+        if (formElement.length) {
+            const form = formElement[0];
+            if (form) form.reset();
+            
+            // Clear edit mode attributes
+            formElement.removeAttr("data-edit-id");
+            formElement.find('input[name="_method"]').remove();
+            formElement.attr("action", "{{ route('career-history.store') }}");
+            
+            // Reset modal title
+            popup.find("h2").text("Add Document");
+            
+            // Hide replace button
+            popup.find("#replaceBtn").addClass("hidden");
+        }
 
         // Reset the file input separately
         const fileInput = popup.find("#docFile");
@@ -1186,13 +1310,14 @@ function renderDynamicFields(type, callback) {
                 <div id="certificateContainer" class="space-y-4">
                     <div class="certificateRow border rounded-md p-4 relative">
                         <div>
-                            <label class="block font-medium mb-1">Certificate Type</label>
-                            <select name="certificateRows[0][type_id]" class="w-full border p-2 rounded-md certificate-type">
+                            <label class="block font-medium mb-1">Certificate Type <span class="text-red-500">*</span></label>
+                            <select name="certificateRows[0][type_id]" class="w-full border p-2 rounded-md certificate-type" required>
                                 <option value="">Select Certificate Type</option>
                                 @foreach($certificateTypes as $type)
                                     <option value="{{ $type->id }}">{{ $type->name }}</option>
                                 @endforeach
                             </select>
+                            <p class="text-red-500 text-sm mt-1 error-text-certificate-type-0 hidden">The certificate type field is required.</p>
                         </div>
                         <div class="grid grid-cols-2 gap-4 mt-2">
                             <div>
@@ -1218,13 +1343,14 @@ function renderDynamicFields(type, callback) {
                     <input type="text" name="certificate_number" class="w-full border p-2 rounded-md" placeholder="Enter Certificate Number">
                 </div>
                 <div class="mt-4">
-                    <label class="block font-medium mb-1">Certificate Issuer</label>
-                    <select name="certificate_issuer_id" class="w-full border p-2 rounded-md certificate-issuer">
+                    <label class="block font-medium mb-1">Certificate Issuer <span class="text-red-500">*</span></label>
+                    <select name="certificate_issuer_id" class="w-full border p-2 rounded-md certificate-issuer" required>
                         <option value="">Select Certificate Issuer</option>
                         @foreach($certificateIssuers as $issuer)
                             <option value="{{ $issuer->id }}">{{ $issuer->name }}</option>
                         @endforeach
                     </select>
+                    <p class="text-red-500 text-sm mt-1 error-text-certificate-issuer hidden">The certificate issuer field is required.</p>
                 </div>
             </div>
         `;
@@ -1746,6 +1872,10 @@ document.querySelectorAll('.toggle-share').forEach(span => {
         });
 
         newRow.find(".removeRow").removeClass("hidden");
+        
+        // Update error text class name for new row
+        newRow.find('.error-text-certificate-type-0').removeClass('error-text-certificate-type-0').addClass(`error-text-certificate-type-${rowIndex}`);
+        
         $("#certificateContainer").append(newRow);
     });
 
@@ -1758,22 +1888,76 @@ document.querySelectorAll('.toggle-share').forEach(span => {
         $("#documentForm").on("submit", function (e) {
         e.preventDefault();
 
+        // Client-side validation for certificate type
+        let docType = $("#docType").val();
+        if (docType === "certificate") {
+            let hasValidType = false;
+            $('select[name^="certificateRows["][name$="[type_id]"]').each(function() {
+                if ($(this).val()) {
+                    hasValidType = true;
+                    return false; // break loop
+                }
+            });
+            if (!hasValidType) {
+                alert("Please select at least one Certificate Type.");
+                $('select[name^="certificateRows["][name$="[type_id]"]').first().focus().addClass("border-red-600");
+                return false;
+            }
+        }
+
         let formData = new FormData(this);
-        formData.append("file", $("#docFile")[0].files[0]);
+        
+        // Only append file if a file is actually selected
+        const fileInput = $("#docFile")[0];
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+            formData.append("file", fileInput.files[0]);
+        }
 
         // Clear ALL previous error messages and borders before validating again
         $(".error-text").remove();
         $("input, select, textarea").removeClass("border-red-600");
+        $(".error-text-certificate-type-0").addClass("hidden");
+
+        // Check if form is in edit mode
+        const form = $(this);
+        const editId = form.attr("data-edit-id");
+        let url, method;
+        
+        if (editId) {
+            // Update existing document - use POST with _method=PUT for Laravel method spoofing
+            url = "/career-history/" + editId;
+            method = "POST";
+            // Ensure _method is set for Laravel method spoofing
+            // The form should already have it, but we'll ensure it's in FormData
+            formData.set("_method", "PUT");
+        } else {
+            // Create new document
+            url = "{{ route('career-history.store') }}";
+            method = "POST";
+            // Remove _method if it exists (shouldn't be there for new documents)
+            formData.delete("_method");
+        }
 
         $.ajax({
-            url: "{{ route('career-history.store') }}",
-            method: "POST",
+            url: url,
+            method: method,
             data: formData,
             processData: false,
             contentType: false,
             success: function () {
                 // Reset form
-                $("#documentForm")[0].reset();
+                const form = $("#documentForm");
+                form[0].reset();
+                form.removeAttr("data-edit-id");
+                form.find('input[name="_method"]').remove();
+                form.attr("action", "{{ route('career-history.store') }}");
+                
+                // Reset modal title
+                $("#addDocumentModal h2").text("Add Document");
+                
+                // Hide replace button
+                $("#replaceBtn").addClass("hidden");
+                
                 $("#previewBox").html("No file selected");
                 $("#dynamicFields").empty();
 
@@ -1823,6 +2007,29 @@ document.querySelectorAll('.toggle-share').forEach(span => {
                                 inputField.after(`<p class="error-text text-red-600 text-sm mt-1">${messages[0]}</p>`);
                             }
                             inputField.addClass("border-red-600");
+                        } else if (field.startsWith('certificateRows.') && field.includes('.type_id')) {
+                            // Handle certificateRows type_id errors
+                            let match = field.match(/certificateRows\.(\d+)\.type_id/);
+                            if (match) {
+                                let index = match[1];
+                                let typeField = $(`select[name="certificateRows[${index}][type_id]"]`);
+                                if (typeField.length) {
+                                    typeField.addClass("border-red-600");
+                                    let errorText = typeField.siblings('.error-text-certificate-type-' + index);
+                                    if (errorText.length) {
+                                        errorText.removeClass('hidden').text(messages[0]);
+                                    } else {
+                                        typeField.after(`<p class="error-text text-red-600 text-sm mt-1 error-text-certificate-type-${index}">${messages[0]}</p>`);
+                                    }
+                                }
+                            }
+                        } else if (field === 'certificate_issuer_id') {
+                            // Handle certificate_issuer_id error specifically
+                            let issuerField = $('select[name="certificate_issuer_id"]');
+                            if (issuerField.length) {
+                                issuerField.addClass("border-red-600");
+                                $('.error-text-certificate-issuer').removeClass('hidden').text(messages[0]);
+                            }
                         } else if (field === 'file') {
                             let fileField = $("#docFile");
                             if (!fileField.next(".error-text").length) {
@@ -2146,8 +2353,7 @@ function showResultPopup(title, message, type) {
             });
         }
     }
-    
 
-});
+  });
 </script>
 

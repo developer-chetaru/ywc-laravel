@@ -53,27 +53,84 @@
                         </div>
                     </div>
 
-                    {{-- Expiring Documents Alert --}}
+                    {{-- Expiring Within 6 Months Section --}}
                     @if($expiringDocuments->count() > 0)
-                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-                            </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-yellow-800">Documents Expiring Soon</h3>
-                                <div class="mt-2 text-sm text-yellow-700">
-                                    <ul class="list-disc list-inside">
-                                        @foreach($expiringDocuments->take(5) as $doc)
-                                        <li>
-                                            {{ $doc->document_name ?? 'Document #' . $doc->id }} 
-                                            - Expires {{ $doc->expiry_date ? \Carbon\Carbon::parse($doc->expiry_date)->format('M d, Y') : 'N/A' }}
-                                            ({{ $doc->days_until_expiry }} days)
-                                        </li>
-                                        @endforeach
-                                    </ul>
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4">Expiring Within 6 Months</h2>
+                        <div class="flex gap-4 overflow-x-auto pb-4" style="scrollbar-width: thin;">
+                            @foreach($expiringDocuments as $doc)
+                            @php
+                                $docStatus = strtolower(trim($doc->status ?? 'pending'));
+                                $isRejected = ($docStatus === 'rejected');
+                                $monthsRemaining = $doc->expiry_date ? \Carbon\Carbon::parse($doc->expiry_date)->diffInMonths(\Carbon\Carbon::now()) : 0;
+                                // Force check - also check for 'Rejected' with capital R
+                                if (!$isRejected && strtolower($doc->status ?? '') === 'rejected') {
+                                    $isRejected = true;
+                                }
+                            @endphp
+                            <div class="bg-white border border-gray-200 rounded-lg p-4 min-w-[280px] max-w-[280px] flex-shrink-0 hover:shadow-md transition-shadow flex flex-col" style="min-height: 400px;">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex-1">
+                                        <h3 class="font-semibold text-gray-900 mb-1">
+                                            {{ $doc->document_name ?? ($doc->documentType->name ?? 'Document') }}
+                                        </h3>
+                                        @if($doc->featured_on_profile)
+                                        <p class="text-xs text-gray-500 mb-1">
+                                            <i class="fas fa-eye mr-1"></i>Featured on your Profile Preview
+                                        </p>
+                                        @else
+                                        <p class="text-xs text-gray-500 mb-1">
+                                            <i class="fas fa-eye-slash mr-1"></i>Not featured on your Profile Preview
+                                        </p>
+                                        @endif
+                                    </div>
+                                    <span class="px-2 py-1 text-xs font-bold rounded
+                                        @if($monthsRemaining <= 0) bg-red-100 text-red-800
+                                        @elseif($monthsRemaining <= 3) bg-yellow-100 text-yellow-800
+                                        @else bg-orange-100 text-orange-800
+                                        @endif">
+                                        {{ $monthsRemaining > 0 ? $monthsRemaining : 0 }} MONTHS
+                                    </span>
+                                </div>
+                                
+                                @if($doc->thumbnail_path)
+                                <div class="mb-3">
+                                    <img src="{{ asset('storage/' . $doc->thumbnail_path) }}" 
+                                        alt="Thumbnail" 
+                                        class="w-full h-24 object-cover rounded">
+                                </div>
+                                @endif
+                                
+                                <div class="mb-3">
+                                    <span class="px-2 py-1 text-xs font-medium rounded
+                                        @if($docStatus === 'approved') bg-green-100 text-green-800
+                                        @elseif($docStatus === 'rejected') bg-red-100 text-red-800
+                                        @else bg-yellow-100 text-yellow-800
+                                        @endif">
+                                        Status: {{ ucfirst($doc->status ?? 'pending') }}
+                                    </span>
+                                </div>
+                                
+                                <div class="mt-auto pt-3 border-t border-gray-200">
+                                    <div class="flex flex-col gap-2">
+                                        <button type="button" 
+                                                wire:click="$dispatch('openDocumentDetails', { documentId: {{ $doc->id }} })" 
+                                                class="w-full text-center bg-[#0053FF] text-white px-3 py-2 rounded-md hover:bg-[#0044DD] transition-colors text-xs font-medium shadow-sm">
+                                            <i class="fas fa-eye mr-1"></i>View Details
+                                        </button>
+                                        {{-- Always show Re-Submit for rejected documents --}}
+                                        @if($isRejected || strtolower(trim($doc->status ?? '')) === 'rejected')
+                                        <button type="button" 
+                                                wire:click="$dispatch('openUploadModal', { documentId: {{ $doc->id }}, mode: 'edit' })" 
+                                                class="w-full text-center bg-orange-600 text-white px-3 py-2 rounded-md hover:bg-orange-700 transition-colors text-xs font-medium shadow-sm"
+                                                style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                                            <i class="fas fa-redo mr-1"></i>Re-Submit
+                                        </button>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
+                            @endforeach
                         </div>
                     </div>
                     @endif
@@ -187,18 +244,20 @@
                                 @endif
                             </div>
                             
-                            <div class="flex gap-2">
-                                @if($document->file_path)
-                                <a href="{{ asset('storage/' . $document->file_path) }}" 
-                                    target="_blank" 
+                            <div class="flex gap-2 flex-wrap">
+                                @php
+                                    $docStatus = strtolower(trim($document->status ?? 'pending'));
+                                @endphp
+                                <button wire:click="$dispatch('openDocumentDetails', { documentId: {{ $document->id }} })" 
                                     class="flex-1 text-center bg-[#0053FF] text-white px-3 py-2 rounded-md hover:bg-[#0044DD] transition-colors text-sm">
-                                    <i class="fas fa-eye mr-1"></i>View
-                                </a>
+                                    <i class="fas fa-eye mr-1"></i>View Details
+                                </button>
+                                @if($docStatus === 'rejected')
+                                <button wire:click="$dispatch('openUploadModal', { documentId: {{ $document->id }}, mode: 'edit' })" 
+                                    class="flex-1 text-center bg-orange-600 text-white px-3 py-2 rounded-md hover:bg-orange-700 transition-colors text-sm font-medium">
+                                    <i class="fas fa-redo mr-1"></i>Re-Submit
+                                </button>
                                 @endif
-                                <a href="{{ route('documents.show', $document->id) }}" 
-                                    class="flex-1 text-center bg-gray-100 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-200 transition-colors text-sm">
-                                    <i class="fas fa-edit mr-1"></i>Details
-                                </a>
                             </div>
                         </div>
                         @endforeach
@@ -222,4 +281,19 @@
             </div>
         </div>
     </main>
+
+    {{-- Document Upload Modal --}}
+    @livewire('documents.document-upload')
+    
+    {{-- Document Details Modal --}}
+    @livewire('documents.document-details-modal')
 </div>
+
+<script>
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('documentUploaded', () => {
+            // Refresh the page to show new document
+            window.location.reload();
+        });
+    });
+</script>
