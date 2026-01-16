@@ -1248,17 +1248,56 @@ $(function () {
 
     // Document type matcher
     function matchDocumentType(text) {
-        text = text.toLowerCase();
+        const lowerText = text.toLowerCase();
+        const upperText = text.toUpperCase();
 
-        if (text.includes("passport") || text.match(/\b[A-Z]{1}\d{7}\b/)) {
-            return "passport";
+        // Passport detection - multiple patterns
+        const passportPatterns = [
+            /passport/i,
+            /पासपोर्ट/i,  // Hindi: passport
+            /republic of india/i,
+            /भारत गणराज्य/i,  // Hindi: Republic of India
+            /passport\s*no[.:\s]*[A-Z0-9]{6,12}/i,  // "Passport No: Z0000000"
+            /पासपोर्ट\s*न[.:\s]*[A-Z0-9]{6,12}/i,  // Hindi: "पासपोर्ट न: Z0000000"
+            /\b[A-Z]\d{7,9}\b/,  // Standard passport: A1234567
+            /\b[A-Z]{1,2}\d{6,9}\b/,  // Indian passport: Z0000000, AB1234567
+            /P<[A-Z]{3}/,  // MRZ pattern: P<UTOERIKSSON
+            /machine readable zone/i,
+            /mrz/i,
+            /date of issue/i,
+            /date of expiry/i,
+            /place of issue/i,
+            /place of birth/i,
+            /nationality/i,
+            /राष्ट्रीयता/i  // Hindi: nationality
+        ];
+
+        for (let pattern of passportPatterns) {
+            if (pattern.test(text)) {
+                return "passport";
+            }
         }
-        if (text.includes("visa") || text.includes("permit") || text.includes("id card")) {
+
+        // Visa/ID detection
+        if (lowerText.includes("visa") || 
+            lowerText.includes("permit") || 
+            lowerText.includes("id card") ||
+            lowerText.includes("identity card") ||
+            lowerText.includes("driving license") ||
+            lowerText.includes("schengen")) {
             return "idvisa";
         }
-        if (text.includes("certificate") || text.includes("degree") || text.includes("qualification")) {
+
+        // Certificate detection
+        if (lowerText.includes("certificate") || 
+            lowerText.includes("degree") || 
+            lowerText.includes("qualification") ||
+            lowerText.includes("diploma") ||
+            lowerText.includes("license") ||
+            lowerText.includes("certification")) {
             return "certificate";
         }
+
         return null;
     }
 
@@ -1266,16 +1305,34 @@ $(function () {
 // EXTRACT PASSPORT FIELDS
 // =======================
 function extractPassportNumber(text) {
-    let match = text.match(/documentnummer.*?\n([A-Z0-9]{6,9})/i);
+    // Indian passport format: "Passport No." or "पासपोर्ट न." followed by number
+    let match = text.match(/(?:passport\s*no[.:\s]*|पासपोर्ट\s*न[.:\s]*)([A-Z0-9]{6,12})/i);
     if (match) {
         console.log("Passport number found (label):", match[1]);
-        return match[1];
+        return match[1].trim();
     }
+    
+    // Generic passport number pattern
+    match = text.match(/documentnummer.*?\n([A-Z0-9]{6,9})/i);
+    if (match) {
+        console.log("Passport number found (generic label):", match[1]);
+        return match[1].trim();
+    }
+    
+    // MRZ format
     match = text.match(/\n([A-Z0-9]{9})[A-Z0-9]{3}[A-Z0-9]{7}/);
     if (match) {
         console.log("Passport number found (MRZ):", match[1]);
-        return match[1];
+        return match[1].trim();
     }
+    
+    // Pattern: Z followed by numbers (Indian passport format)
+    match = text.match(/\b([A-Z]\d{7,9})\b/);
+    if (match) {
+        console.log("Passport number found (pattern):", match[1]);
+        return match[1].trim();
+    }
+    
     console.log("Passport number not found");
     return "";
 }
@@ -1562,6 +1619,30 @@ function formatCustomDate(dateStr) {
     return "";
 }
 
+// Helper function to format DD/MM/YYYY or DD-MM-YYYY to YYYY-MM-DD
+function formatDateDDMMYYYY(dateStr) {
+    if (!dateStr) return "";
+    
+    // Remove extra spaces and normalize separators
+    dateStr = dateStr.trim().replace(/\s+/g, '');
+    
+    // Match DD/MM/YYYY or DD-MM-YYYY
+    let match = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (match) {
+        let day = match[1].padStart(2, '0');
+        let month = match[2].padStart(2, '0');
+        let year = match[3];
+        
+        // Validate date
+        if (parseInt(day) > 0 && parseInt(day) <= 31 && 
+            parseInt(month) > 0 && parseInt(month) <= 12 &&
+            parseInt(year) >= 1900 && parseInt(year) <= 2100) {
+            return `${year}-${month}-${day}`;
+        }
+    }
+    return "";
+}
+
 
 
 // =======================
@@ -1584,8 +1665,24 @@ function tryParseDateString(dateStr) {
 }
 
 function findDateAfterLabel(text, regex) {
+    // First try DD/MM/YYYY format (Indian format)
+    const ddmmMatch = text.match(new RegExp(regex.source + "[:\\s\\n]*([\\d]{1,2}[\\/\\-][\\d]{1,2}[\\/\\-][\\d]{4})", "i"));
+    if (ddmmMatch) {
+        let formatted = formatDateDDMMYYYY(ddmmMatch[1]);
+        if (formatted) {
+            console.log("Date found (DD/MM/YYYY):", formatted);
+            return formatted;
+        }
+    }
+    
+    // Try other date formats
     const match = text.match(new RegExp(regex.source + "[:\\s\\n]*([\\dA-Za-z/\\-\\s]{6,20})", "i"));
     if (match) {
+        // Try DD/MM/YYYY format first
+        let formatted = formatDateDDMMYYYY(match[1]);
+        if (formatted) return formatted;
+        
+        // Fallback to tryParseDateString
         return tryParseDateString(match[1]);
     }
     return null;
@@ -1603,12 +1700,22 @@ function parse6DigitMRZToISO(val) {
 function extractDOB(text) {
     text = normalizeOCRText(text);
 
+    // Indian passport format: "Date of Birth: 24/05/1985" or "जन्म तिथि: 24/05/1985"
+    let match = text.match(/(?:date\s+of\s+birth|जन्म\s+तिथि|जन्मतिथि|dob|geburtsdatum|date\s+de\s+naissance|birth\s+date)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+    if (match) {
+        console.log("DOB found (label):", match[1]);
+        let formatted = formatDateDDMMYYYY(match[1]);
+        if (formatted) return formatted;
+    }
+
     const dobLabels = [
         /date of birth/i,
         /\bdob\b/i,
         /geburtsdatum/i,
         /date de naissance/i,
-        /birth date/i
+        /birth date/i,
+        /जन्म\s+तिथि/i,
+        /जन्मतिथि/i
     ];
 
     for (const lbl of dobLabels) {
@@ -1619,14 +1726,33 @@ function extractDOB(text) {
         }
     }
 
-    const dateSearch = text.match(/(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}|\d{1,2}\s+[A-Za-z]{3,9}\s*\d{4}|\d{6})/g);
+    // Try to find DD/MM/YYYY format dates (Indian format)
+    const dateSearch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/g);
     if (dateSearch && dateSearch.length) {
         for (const candidate of dateSearch) {
+            // Check if it's a valid date in DD/MM/YYYY format
+            let formatted = formatDateDDMMYYYY(candidate);
+            if (formatted) {
+                const y = Number(formatted.slice(0, 4));
+                const curr = new Date().getFullYear();
+                // DOB should be between 1900 and current year - 15
+                if (y >= 1900 && y <= curr - 15) {
+                    console.log("DOB found by DD/MM/YYYY format:", formatted);
+                    return formatted;
+                }
+            }
+        }
+    }
+
+    // Try other date formats
+    const otherDateSearch = text.match(/(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}|\d{1,2}\s+[A-Za-z]{3,9}\s*\d{4}|\d{6})/g);
+    if (otherDateSearch && otherDateSearch.length) {
+        for (const candidate of otherDateSearch) {
             const iso = tryParseDateString(candidate.replace(/\s+/g, " "));
             if (!iso) continue;
             const y = Number(iso.slice(0, 4));
             const curr = new Date().getFullYear();
-            if (y >= 1900 && y <= curr - 15) { // DOB likely older than 15 years
+            if (y >= 1900 && y <= curr - 15) {
                 console.log("DOB found by candidate:", iso);
                 return iso;
             }
@@ -1653,37 +1779,125 @@ function extractDOB(text) {
 }
 
 function extractIssueDate(text) {
-    let match = text.match(/(?:datum van afgifte|date of issue|date de délivrance).*?\n\s*(\d{2}\s?[A-Z]{3}\/?[A-Z]{3}\s?\d{4})/i);
+    // Indian passport format: "Date of Issue: 01/01/2013" or "जारी करने की तिथि: 01/01/2013"
+    let match = text.match(/(?:date\s+of\s+issue|जारी\s+करने\s+की\s+तिथि|date\s+de\s+délivrance|datum\s+van\s+afgifte)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
     if (match) {
-        console.log("Issue date found:", match[1]);
+        console.log("Issue date found (label):", match[1]);
+        let formatted = formatDateDDMMYYYY(match[1]);
+        if (formatted) return formatted;
+    }
+    
+    // Pattern: DD/MM/YYYY or DD-MM-YYYY after "issue" or "जारी"
+    match = text.match(/(?:issue|जारी)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+    if (match) {
+        console.log("Issue date found (pattern):", match[1]);
+        let formatted = formatDateDDMMYYYY(match[1]);
+        if (formatted) return formatted;
+    }
+    
+    // Look for date pattern near "issue" keywords (more flexible)
+    match = text.match(/(?:issue|जारी).{0,50}?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+    if (match) {
+        console.log("Issue date found (flexible):", match[1]);
+        let formatted = formatDateDDMMYYYY(match[1]);
+        if (formatted) return formatted;
+    }
+    
+    // Generic date format after "date of issue"
+    match = text.match(/(?:datum\s+van\s+afgifte|date\s+of\s+issue|date\s+de\s+délivrance).*?\n\s*(\d{2}\s?[A-Z]{3}\/?[A-Z]{3}\s?\d{4})/i);
+    if (match) {
+        console.log("Issue date found (custom):", match[1]);
         return formatCustomDate(match[1]);
     }
+    
     return "";
 }
 
 
 function extractExpiryDate(text) {
-    let match = text.match(/(?:geldig tot|date of expiry|date d'expiration).*?\n\s*(\d{2}\s?[A-Z]{3}\/?[A-Z]{3}\s?\d{4})/i);
+    // Indian passport format: "Date of Expiry: 01/01/2023" or "समाप्ति की तिथि: 01/01/2023"
+    let match = text.match(/(?:date\s+of\s+expiry|समाप्ति\s+की\s+तिथि|date\s+d'expiration|geldig\s+tot)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
     if (match) {
-        console.log("Expiry date found:", match[1]);
+        console.log("Expiry date found (label):", match[1]);
+        let formatted = formatDateDDMMYYYY(match[1]);
+        if (formatted) return formatted;
+    }
+    
+    // Pattern: DD/MM/YYYY or DD-MM-YYYY after "expiry" or "समाप्ति"
+    match = text.match(/(?:expiry|समाप्ति)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+    if (match) {
+        console.log("Expiry date found (pattern):", match[1]);
+        let formatted = formatDateDDMMYYYY(match[1]);
+        if (formatted) return formatted;
+    }
+    
+    // Look for date pattern near "expiry" keywords (more flexible)
+    match = text.match(/(?:expiry|समाप्ति).{0,50}?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+    if (match) {
+        console.log("Expiry date found (flexible):", match[1]);
+        let formatted = formatDateDDMMYYYY(match[1]);
+        if (formatted) return formatted;
+    }
+    
+    // Generic date format after "date of expiry"
+    match = text.match(/(?:geldig\s+tot|date\s+of\s+expiry|date\s+d'expiration).*?\n\s*(\d{2}\s?[A-Z]{3}\/?[A-Z]{3}\s?\d{4})/i);
+    if (match) {
+        console.log("Expiry date found (custom):", match[1]);
         return formatCustomDate(match[1]);
     }
+    
     return "";
 }
 
 function extractNationality(text) {
-    text = text.toLowerCase();
-    if (text.includes("american")) return "American";
-    if (text.includes("indian")) return "Indian";
-    if (text.includes("netherlands")) return "Netherlands";
+    const lowerText = text.toLowerCase();
+    
+    // Check for Indian nationality (Hindi + English)
+    if (lowerText.includes("indian") || lowerText.includes("भारतीय") || lowerText.includes("india")) {
+        return "Indian";
+    }
+    if (lowerText.includes("american") || lowerText.includes("united states")) {
+        return "American";
+    }
+    if (lowerText.includes("netherlands") || lowerText.includes("dutch")) {
+        return "Netherlands";
+    }
+    if (lowerText.includes("british") || lowerText.includes("uk") || lowerText.includes("united kingdom")) {
+        return "British";
+    }
+    if (lowerText.includes("canadian") || lowerText.includes("canada")) {
+        return "Canadian";
+    }
+    if (lowerText.includes("australian") || lowerText.includes("australia")) {
+        return "Australian";
+    }
+    
     return "";
 }
 
 function extractCountryCode(text) {
-    text = text.toLowerCase();
-    if (text.includes("usa")) return "USA";
-    if (text.includes("ind")) return "IND";
-    if (text.includes("netherlands") || text.includes("nld")) return "NLD";
+    const lowerText = text.toLowerCase();
+    
+    // Indian passport - check for IND code or India
+    if (lowerText.includes("ind") || lowerText.includes("india") || lowerText.includes("भारत")) {
+        return "IND";
+    }
+    if (lowerText.includes("usa") || lowerText.includes("united states")) {
+        return "USA";
+    }
+    if (lowerText.includes("netherlands") || lowerText.includes("nld") || lowerText.includes("dutch")) {
+        return "NLD";
+    }
+    if (lowerText.includes("uk") || lowerText.includes("united kingdom") || lowerText.includes("gbr")) {
+        return "GBR";
+    }
+    if (lowerText.includes("canada") || lowerText.includes("can")) {
+        return "CAN";
+    }
+    if (lowerText.includes("australia") || lowerText.includes("aus")) {
+        return "AUS";
+    }
+    
     return "";
 }
 

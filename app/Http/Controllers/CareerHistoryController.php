@@ -459,69 +459,95 @@ class CareerHistoryController extends Controller
         $text = '';
 
         try {
-            // Check if TesseractOCR is available
-            $tesseractAvailable = $this->checkTesseractAvailable();
-            
-            if (!$tesseractAvailable) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'TesseractOCR is not installed. Please install it: sudo apt-get install tesseract-ocr tesseract-ocr-eng'
-                ], 500);
-            }
-
             $extension = strtolower($file->getClientOriginalExtension());
-
-            if ($extension === 'pdf') {
-                // Check if Imagick is available
-                if (!extension_loaded('imagick') || !class_exists('Imagick')) {
+            
+            // Try Google Cloud Vision API first (more accurate for images)
+            if ($extension !== 'pdf' && config('services.google_cloud.api_key')) {
+                try {
+                    $ocrService = app(\App\Services\Documents\OcrService::class);
+                    
+                    // Store file in public disk for OcrService
+                    $publicPath = $file->store('temp', 'public');
+                    $result = $ocrService->extractText($publicPath);
+                    
+                    // Clean up public temp file
+                    if (Storage::disk('public')->exists($publicPath)) {
+                        Storage::disk('public')->delete($publicPath);
+                    }
+                    
+                    if ($result['success'] && !empty(trim($result['text']))) {
+                        $text = $result['text'];
+                        Log::info('Manual scan: Used Google Vision API successfully');
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Google Vision API failed for manual scan, falling back to TesseractOCR: ' . $e->getMessage());
+                }
+            }
+            
+            // Fallback to TesseractOCR if Google Vision failed or not available
+            if (empty(trim($text))) {
+                // Check if TesseractOCR is available
+                $tesseractAvailable = $this->checkTesseractAvailable();
+                
+                if (!$tesseractAvailable) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Imagick extension is required for PDF processing. Please install: sudo apt-get install php-imagick'
+                        'message' => 'OCR is not available. Please install TesseractOCR: sudo apt-get install tesseract-ocr tesseract-ocr-eng'
                     ], 500);
                 }
 
-                // Convert PDF pages to images
-                $imagick = new Imagick();
-                $imagick->setResolution(300, 300);
-                $imagick->readImage($fullPath);
-
-                foreach ($imagick as $i => $page) {
-                    $page->setImageFormat('png');
-                    $tmpImage = storage_path("app/temp/page_{$i}.png");
-                    
-                    // Ensure temp directory exists
-                    if (!is_dir(storage_path('app/temp'))) {
-                        mkdir(storage_path('app/temp'), 0755, true);
+                if ($extension === 'pdf') {
+                    // Check if Imagick is available
+                    if (!extension_loaded('imagick') || !class_exists('Imagick')) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Imagick extension is required for PDF processing. Please install: sudo apt-get install php-imagick'
+                        ], 500);
                     }
-                    
-                    $page->writeImage($tmpImage);
 
-                    // OCR per page
+                    // Convert PDF pages to images
+                    $imagick = new Imagick();
+                    $imagick->setResolution(300, 300);
+                    $imagick->readImage($fullPath);
+
+                    foreach ($imagick as $i => $page) {
+                        $page->setImageFormat('png');
+                        $tmpImage = storage_path("app/temp/page_{$i}.png");
+                        
+                        // Ensure temp directory exists
+                        if (!is_dir(storage_path('app/temp'))) {
+                            mkdir(storage_path('app/temp'), 0755, true);
+                        }
+                        
+                        $page->writeImage($tmpImage);
+
+                        // OCR per page
+                        try {
+                            $ocr = new TesseractOCR($tmpImage);
+                            $ocr->lang('eng')->psm(3)->oem(1);
+                            $text .= $ocr->run() . "\n";
+                        } catch (\Exception $e) {
+                            Log::warning("TesseractOCR failed for PDF page {$i}: " . $e->getMessage());
+                        }
+
+                        // Delete temp page
+                        if (file_exists($tmpImage)) {
+                            unlink($tmpImage);
+                        }
+                    }
+
+                    $imagick->clear();
+                    $imagick->destroy();
+                } else {
+                    // Normal image OCR with TesseractOCR
                     try {
-                        $ocr = new TesseractOCR($tmpImage);
+                        $ocr = new TesseractOCR($fullPath);
                         $ocr->lang('eng')->psm(3)->oem(1);
-                        $text .= $ocr->run() . "\n";
+                        $text = $ocr->run();
                     } catch (\Exception $e) {
-                        Log::warning("TesseractOCR failed for PDF page {$i}: " . $e->getMessage());
+                        Log::error("TesseractOCR failed: " . $e->getMessage());
+                        throw $e;
                     }
-
-                    // Delete temp page
-                    if (file_exists($tmpImage)) {
-                        unlink($tmpImage);
-                    }
-                }
-
-                $imagick->clear();
-                $imagick->destroy();
-            } else {
-                // Normal image OCR
-                try {
-                    $ocr = new TesseractOCR($fullPath);
-                    $ocr->lang('eng')->psm(3)->oem(1);
-                    $text = $ocr->run();
-                } catch (\Exception $e) {
-                    Log::error("TesseractOCR failed: " . $e->getMessage());
-                    throw $e;
                 }
             }
 
