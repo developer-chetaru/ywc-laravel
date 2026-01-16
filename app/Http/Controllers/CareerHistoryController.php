@@ -417,17 +417,22 @@ class CareerHistoryController extends Controller
      */
     protected function checkTesseractAvailable(): bool
     {
-        // Check if tesseract command exists
+        // Check if exec function is available
+        if (!function_exists('exec')) {
+            return false;
+        }
+
+        // Check if tesseract command exists (use global namespace)
         $output = [];
         $returnVar = 0;
-        @exec('which tesseract 2>&1', $output, $returnVar);
+        @\exec('which tesseract 2>&1', $output, $returnVar);
         
         if ($returnVar !== 0) {
             return false;
         }
         
         // Try to get version
-        @exec('tesseract --version 2>&1', $output, $returnVar);
+        @\exec('tesseract --version 2>&1', $output, $returnVar);
         return $returnVar === 0;
     }
 
