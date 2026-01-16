@@ -17,3 +17,12 @@ Schedule::command('documents:process-expiry-reminders')
 Schedule::command('shares:cleanup-expired')
     ->weeklyOn(0, '02:00')
     ->timezone('UTC');
+
+// Schedule permanent deletion of soft-deleted documents (90 days retention)
+Schedule::command('documents:cleanup-permanent-deletes')
+    ->dailyAt('03:00')
+    ->timezone('UTC');
+
+// Schedule cleanup of failed uploads (24 hours retention)
+Schedule::command('documents:cleanup-failed-uploads')
+    ->hourly();

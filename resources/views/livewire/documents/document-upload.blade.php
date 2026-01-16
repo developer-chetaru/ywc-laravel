@@ -77,6 +77,24 @@
                                 @if($file)
                                 <p class="text-sm text-gray-700 mt-2">{{ $file->getClientOriginalName() }}</p>
                                 @endif
+                                
+                                {{-- Upload Progress Bar --}}
+                                <div x-data="{ progress: 0 }" 
+                                     x-on:livewire-upload-progress.window="progress = $event.detail.progress"
+                                     x-on:livewire-upload-start.window="$el.classList.remove('hidden')"
+                                     x-on:livewire-upload-finish.window="$el.classList.add('hidden'); progress = 0"
+                                     x-on:livewire-upload-error.window="$el.classList.add('hidden'); progress = 0"
+                                     class="hidden mt-3 w-full">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-medium text-gray-700">Uploading...</span>
+                                        <span class="text-xs font-medium text-gray-700" x-text="progress + '%'"></span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-[#0053FF] h-2 rounded-full transition-all duration-300" 
+                                             :style="'width: ' + progress + '%'"></div>
+                                    </div>
+                                </div>
+                                
                                 @error('file') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                             </div>
                         </div>

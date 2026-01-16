@@ -40,6 +40,8 @@ class DocumentUpload extends Component
     public $featured_on_profile = false;
     public $file = null;
     public $filePreview = null;
+    public $uploadProgress = 0;
+    public $isUploading = false;
 
     public function mount()
     {

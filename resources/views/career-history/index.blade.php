@@ -14,7 +14,7 @@
             <main class="p-3 sm:p-6 flex-1">
                 <div class="w-full min-h-full">
                     <div class="bg-white p-4 sm:p-5 rounded-lg shadow-md">
-                        <h2 class="text-xl border-b border-gray-100 font-medium text-[#0053FF] pb-2">Documents</h2>
+                        <h2 class="text-xl border-b border-gray-100 font-medium text-[#0053FF] pb-2" role="heading" aria-level="2">Documents</h2>
 
                         <!-- Success Popup -->
                         <div id="successPopup" class="fixed inset-0 flex items-center justify-center z-50 hidden bg-black bg-opacity-20">
@@ -574,7 +574,7 @@
         <!-- Header -->
         <div class="flex justify-between items-center px-6 py-4 border-b border-gray-300 bg-gray-50">
             <h2 class="text-2xl font-bold text-blue-600">View Document</h2>
-            <button class="closePopup text-gray-600 hover:text-gray-800 text-3xl font-bold">&times;</button>
+                            <button class="closePopup text-gray-600 hover:text-gray-800 text-3xl font-bold" aria-label="Close document view">&times;</button>
         </div>
 
         <!-- Content -->
@@ -584,19 +584,19 @@
             <div class="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r p-4 sm:p-6 flex flex-col items-center justify-center relative bg-gray-50">
                 <!-- Zoom Controls for Images -->
                 <div id="zoomControls" class="absolute top-6 right-6 z-10 flex gap-2 hidden">
-                    <button id="zoomInBtn" class="bg-white hover:bg-gray-100 text-gray-700 px-3 py-2 rounded-md shadow-md border border-gray-300 transition-colors" title="Zoom In">
-                        <i class="fas fa-search-plus"></i>
+                    <button id="zoomInBtn" class="bg-white hover:bg-gray-100 text-gray-700 px-3 py-2 rounded-md shadow-md border border-gray-300 transition-colors" title="Zoom In" aria-label="Zoom in on document">
+                        <i class="fas fa-search-plus" aria-hidden="true"></i>
                     </button>
-                    <button id="zoomOutBtn" class="bg-white hover:bg-gray-100 text-gray-700 px-3 py-2 rounded-md shadow-md border border-gray-300 transition-colors" title="Zoom Out">
-                        <i class="fas fa-search-minus"></i>
+                    <button id="zoomOutBtn" class="bg-white hover:bg-gray-100 text-gray-700 px-3 py-2 rounded-md shadow-md border border-gray-300 transition-colors" title="Zoom Out" aria-label="Zoom out on document">
+                        <i class="fas fa-search-minus" aria-hidden="true"></i>
                     </button>
-                    <button id="resetZoomBtn" class="bg-white hover:bg-gray-100 text-gray-700 px-3 py-2 rounded-md shadow-md border border-gray-300 transition-colors" title="Reset Zoom">
-                        <i class="fas fa-expand-arrows-alt"></i>
+                    <button id="resetZoomBtn" class="bg-white hover:bg-gray-100 text-gray-700 px-3 py-2 rounded-md shadow-md border border-gray-300 transition-colors" title="Reset Zoom" aria-label="Reset zoom to 100%">
+                        <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i>
                     </button>
                 </div>
                 
                 <div id="viewPreviewBox" class="w-full h-[450px] border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center text-gray-500 overflow-auto px-4 text-center bg-white shadow-sm relative">
-                    <img id="viewDocImage" src="" alt="Document Preview" class="max-w-full max-h-full hidden rounded shadow-md cursor-zoom-in transition-transform duration-200" style="transform-origin: center;">
+                    <img id="viewDocImage" src="" alt="Document Preview" class="max-w-full max-h-full hidden rounded shadow-md cursor-zoom-in transition-transform duration-200" style="transform-origin: center;" role="img" aria-label="Document preview image">
                     <embed id="viewDocPDF" src="" type="application/pdf" class="w-full h-full hidden">
                     <span id="viewNoFileText" class="text-gray-400 font-medium">No File</span>
                 </div>
@@ -709,18 +709,21 @@
                         <button type="button" 
                                 id="editDocumentButton"
                                 onclick="editDocument(0)"
-                                class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors font-medium">
-                            <i class="fas fa-edit mr-1"></i>Edit
+                                class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors font-medium"
+                                aria-label="Edit document">
+                            <i class="fas fa-edit mr-1" aria-hidden="true"></i>Edit
                         </button>
                         <button type="button" 
                                 id="downloadDocumentButton"
-                                class="flex-1 px-4 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 transition-colors font-medium">
-                            <i class="fas fa-download mr-1"></i>Download
+                                class="flex-1 px-4 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 transition-colors font-medium"
+                                aria-label="Download document">
+                            <i class="fas fa-download mr-1" aria-hidden="true"></i>Download
                         </button>
                         <button type="button" 
                                 id="printDocumentButton"
-                                class="flex-1 px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors font-medium">
-                            <i class="fas fa-print mr-1"></i>Print
+                                class="flex-1 px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors font-medium"
+                                aria-label="Print document">
+                            <i class="fas fa-print mr-1" aria-hidden="true"></i>Print
                         </button>
                     </div>
                 </div>
