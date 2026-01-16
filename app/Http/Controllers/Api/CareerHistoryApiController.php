@@ -16,6 +16,7 @@ use App\Models\CertificateType;
 use App\Models\CertificateIssuer;
 use App\Models\OtherDocument;
 use App\Models\User;
+use App\Jobs\ProcessDocumentOcr;
 use Carbon\Carbon;
 use Imagick;
 use thiagoalessio\TesseractOCR\TesseractOCR;
@@ -151,7 +152,11 @@ class CareerHistoryApiController extends Controller
                 'expiry_date' => $validated['expiry_date'],
                 'dob'         => $validated['dob'],
                 'status'      => 'pending',
+                'ocr_status'  => 'pending', // OCR will be processed in background
             ]);
+
+            // Queue OCR processing
+            ProcessDocumentOcr::dispatch($document);
 
             // Type-specific save
             switch ($documentType) {

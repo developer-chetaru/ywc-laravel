@@ -5,6 +5,7 @@ namespace App\Services\Documents;
 use App\Models\Document;
 use App\Models\DocumentType;
 use App\Models\User;
+use App\Jobs\ProcessDocumentOcr;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -70,7 +71,11 @@ class DocumentService
             'file_size' => (int) ceil($file->getSize() / 1024), // Size in KB
             'status' => 'pending', // Default status
             'uploaded_by' => $user->id,
+            'ocr_status' => 'pending', // OCR will be processed in background
         ]);
+
+        // Queue OCR processing
+        ProcessDocumentOcr::dispatch($document);
 
         return $document;
     }
@@ -134,6 +139,15 @@ class DocumentService
             
             // Reset status to pending when file is replaced
             $document->status = 'pending';
+            
+            // Reset OCR status and queue new OCR processing
+            $document->ocr_status = 'pending';
+            $document->ocr_data = null;
+            $document->ocr_confidence = null;
+            $document->ocr_error = null;
+            
+            // Queue OCR processing for new file
+            ProcessDocumentOcr::dispatch($document);
         }
 
         // If document was rejected, reset status to pending when re-submitting (even without new file)

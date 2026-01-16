@@ -18,6 +18,7 @@ use App\Models\IdvisaDetail;
 use App\Models\Certificate;
 use App\Models\OtherDocument;
 use App\Models\User;
+use App\Jobs\ProcessDocumentOcr;
 use Carbon\Carbon;
 use Imagick;
 
@@ -618,7 +619,13 @@ class CareerHistoryController extends Controller
             'issue_date' => $validated['issue_date'] ?? null,
             'expiry_date'=> $validated['expiry_date'] ?? null,
           	'dob'        => $validated['dob'] ?? null,
+            'ocr_status' => 'pending', // OCR will be processed in background
         ]);
+
+        // Queue OCR processing if file was uploaded
+        if ($storedPath) {
+            ProcessDocumentOcr::dispatch($document);
+        }
 
         // Generate thumbnail if file was uploaded
         if ($storedPath && $document->id) {

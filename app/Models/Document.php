@@ -32,6 +32,10 @@ class Document extends Model
         'uploaded_by',
         'updated_by',
         'status',
+        'ocr_status',
+        'ocr_confidence',
+        'ocr_data',
+        'ocr_error',
     ];
 
     protected $casts = [
@@ -40,6 +44,8 @@ class Document extends Model
         'issue_date' => 'date',
         'expiry_date' => 'date',
         'dob' => 'date',
+        'ocr_data' => 'array',
+        'ocr_confidence' => 'float',
     ];
 
     /* 🔗 Relationships */

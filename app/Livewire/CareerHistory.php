@@ -13,6 +13,7 @@ use App\Models\PassportDetail;
 use App\Models\IdvisaDetail;
 use App\Models\Certificate;
 use App\Models\OtherDocument;
+use App\Jobs\ProcessDocumentOcr;
 
 class CareerHistory extends Component
 {
@@ -187,7 +188,13 @@ class CareerHistory extends Component
                     'file_size'  => $this->file ? (int) ceil($this->file->getSize() / 1024) : null,
                     'issue_date' => $this->issue_date,
                     'expiry_date'=> $this->expiry_date,
+                    'ocr_status' => 'pending', // OCR will be processed in background
                 ]);
+
+                // Queue OCR processing if file was uploaded
+                if ($storedPath) {
+                    ProcessDocumentOcr::dispatch($document);
+                }
 
                 // Child tables per type
                 if ($this->type === 'passport') {

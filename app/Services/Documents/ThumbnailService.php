@@ -6,7 +6,6 @@ use App\Models\Document;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
-use Imagick;
 
 class ThumbnailService
 {
@@ -77,8 +76,16 @@ class ThumbnailService
      */
     protected function generatePdfThumbnail(string $filePath, Document $document): ?string
     {
+        // Check if Imagick extension is available
+        if (!extension_loaded('imagick') || !class_exists('Imagick')) {
+            \Log::warning('Imagick extension not available. PDF thumbnail generation skipped.');
+            // Return null - thumbnail generation will be skipped
+            // You can install imagick extension or use alternative method
+            return null;
+        }
+
         try {
-            $imagick = new Imagick();
+            $imagick = new \Imagick();
             $imagick->setResolution(150, 150);
             $imagick->readImage($filePath . '[0]'); // First page only
             $imagick->setImageFormat('jpg');

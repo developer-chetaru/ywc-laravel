@@ -58,4 +58,10 @@ return [
         'rest_api_key' => env('ONESIGNAL_REST_API_KEY'),
     ],
 
+    'google_cloud' => [
+        'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
+        'key_file' => env('GOOGLE_CLOUD_KEY_FILE', 'storage/app/google-cloud-vision-key.json'),
+        'api_key' => env('GOOGLE_CLOUD_API_KEY'), // Alternative to key_file
+    ],
+
 ];
