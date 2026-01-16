@@ -158,7 +158,7 @@
                                                 <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3">
 
                                                     <!-- Document Image -->
-                                                    <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card" data-doc='@json($doc)'>
+                                                    <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card hover:bg-[#D0E7FF] transition-colors group relative" data-doc='@json($doc)'>
 
                                                         @if($doc->file_path)
                                                             @php
@@ -308,25 +308,42 @@
                         @endphp
                         <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3">
 
-                            <!-- Document Image -->
-                            <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card" data-doc='@json($doc)'>
+                            <!-- Document Image/Thumbnail -->
+                            <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card hover:bg-[#D0E7FF] transition-colors group relative" data-doc='@json($doc)'>
                                 @if($doc->file_path)
                                     @php
+                                        // Use thumbnail if available, otherwise use original file
+                                        $thumbnailPath = $doc->thumbnail_path ? asset('storage/' . $doc->thumbnail_path) : null;
                                         $filePath = asset('storage/' . $doc->file_path);
                                         $extension = strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION));
                                     @endphp
 
                                     @if(in_array($extension, ['jpg','jpeg','png','gif','bmp','webp','svg']))
-                                        <img src="{{ $filePath }}" alt="{{ $doc->name }}" class="max-w-full max-h-full object-contain">
+                                        @if($thumbnailPath)
+                                            <img src="{{ $thumbnailPath }}" alt="{{ $doc->name ?? 'Document' }}" class="max-w-full max-h-full object-contain rounded shadow-sm group-hover:shadow-md transition-shadow">
+                                        @else
+                                            <img src="{{ $filePath }}" alt="{{ $doc->name ?? 'Document' }}" class="max-w-full max-h-full object-contain rounded shadow-sm group-hover:shadow-md transition-shadow">
+                                        @endif
+                                        <!-- Hover overlay for images -->
+                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-md transition-all flex items-center justify-center">
+                                            <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg"></i>
+                                        </div>
                                     @elseif($extension === 'pdf')
-                                        <a class="flex flex-col items-center text-red-600">
-                                            <img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain">
-                                        </a>
+                                        <div class="flex flex-col items-center text-red-600 group-hover:text-red-700 transition-colors">
+                                            <img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain group-hover:scale-110 transition-transform">
+                                            <span class="text-xs mt-1 font-medium">PDF</span>
+                                        </div>
                                     @else
-                                        <span class="text-gray-400 text-sm">Unsupported</span>
+                                        <div class="flex flex-col items-center text-gray-500">
+                                            <i class="fas fa-file text-2xl mb-1"></i>
+                                            <span class="text-gray-400 text-xs">File</span>
+                                        </div>
                                     @endif
                                 @else
-                                    <span class="text-gray-400 text-sm">No File</span>
+                                    <div class="flex flex-col items-center text-gray-400">
+                                        <i class="fas fa-file-alt text-2xl mb-1"></i>
+                                        <span class="text-xs">No File</span>
+                                    </div>
                                 @endif
                             </div>
 
@@ -565,11 +582,27 @@
 
             <!-- LEFT: Preview -->
             <div class="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r p-4 sm:p-6 flex flex-col items-center justify-center relative bg-gray-50">
-                <div id="viewPreviewBox" class="w-full h-[450px] border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center text-gray-500 overflow-hidden px-4 text-center bg-white shadow-sm">
-                    <img id="viewDocImage" src="" alt="Document Preview" class="max-w-full max-h-full hidden rounded shadow-md">
+                <!-- Zoom Controls for Images -->
+                <div id="zoomControls" class="absolute top-6 right-6 z-10 flex gap-2 hidden">
+                    <button id="zoomInBtn" class="bg-white hover:bg-gray-100 text-gray-700 px-3 py-2 rounded-md shadow-md border border-gray-300 transition-colors" title="Zoom In">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button id="zoomOutBtn" class="bg-white hover:bg-gray-100 text-gray-700 px-3 py-2 rounded-md shadow-md border border-gray-300 transition-colors" title="Zoom Out">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button id="resetZoomBtn" class="bg-white hover:bg-gray-100 text-gray-700 px-3 py-2 rounded-md shadow-md border border-gray-300 transition-colors" title="Reset Zoom">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </button>
+                </div>
+                
+                <div id="viewPreviewBox" class="w-full h-[450px] border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center text-gray-500 overflow-auto px-4 text-center bg-white shadow-sm relative">
+                    <img id="viewDocImage" src="" alt="Document Preview" class="max-w-full max-h-full hidden rounded shadow-md cursor-zoom-in transition-transform duration-200" style="transform-origin: center;">
                     <embed id="viewDocPDF" src="" type="application/pdf" class="w-full h-full hidden">
                     <span id="viewNoFileText" class="text-gray-400 font-medium">No File</span>
                 </div>
+                
+                <!-- Zoom Level Indicator -->
+                <div id="zoomLevel" class="mt-2 text-sm text-gray-500 hidden">100%</div>
             </div>
 
             <!-- RIGHT: Details -->
@@ -653,6 +686,42 @@
                             <label class="block text-gray-500 text-sm">Certificate Issuer</label>
                             <p id="viewCertificateIssuer" class="text-gray-800 font-medium">-</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Verification Notes (if rejected) -->
+                <div id="verificationNotesDiv" class="hidden">
+                    <label class="block font-semibold text-gray-600">Verification Notes</label>
+                    <p id="viewVerificationNotes" class="text-gray-800 text-sm bg-yellow-50 p-3 rounded border border-yellow-200">-</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-4 border-t border-gray-200 space-y-2">
+                    <div id="reSubmitButtonDiv" class="hidden">
+                        <button type="button" 
+                                id="reSubmitButton"
+                                onclick="editDocument(0)"
+                                class="w-full px-4 py-2 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-700 transition-colors font-medium shadow-sm">
+                            <i class="fas fa-redo mr-1"></i>Re-Submit Document
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" 
+                                id="editDocumentButton"
+                                onclick="editDocument(0)"
+                                class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors font-medium">
+                            <i class="fas fa-edit mr-1"></i>Edit
+                        </button>
+                        <button type="button" 
+                                id="downloadDocumentButton"
+                                class="flex-1 px-4 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 transition-colors font-medium">
+                            <i class="fas fa-download mr-1"></i>Download
+                        </button>
+                        <button type="button" 
+                                id="printDocumentButton"
+                                class="flex-1 px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors font-medium">
+                            <i class="fas fa-print mr-1"></i>Print
+                        </button>
                     </div>
                 </div>
 
@@ -1717,13 +1786,23 @@ document.querySelectorAll('.toggle-share').forEach(span => {
                 $("#viewDocImage").attr("src", "/storage/" + doc.file_path).removeClass("hidden");
                 $("#viewDocPDF").addClass("hidden");
                 $("#viewNoFileText").addClass("hidden");
+                // Show zoom controls for images
+                $("#zoomControls").removeClass("hidden");
+                $("#zoomLevel").removeClass("hidden");
+                // Reset zoom when new image loads
+                resetImageZoom();
             } else if (ext === 'pdf') {
                 $("#viewDocPDF").attr("src", "/storage/" + doc.file_path).removeClass("hidden");
                 $("#viewDocImage").addClass("hidden");
                 $("#viewNoFileText").addClass("hidden");
+                // Hide zoom controls for PDFs
+                $("#zoomControls").addClass("hidden");
+                $("#zoomLevel").addClass("hidden");
             } else {
                 $("#viewDocImage, #viewDocPDF").addClass("hidden");
                 $("#viewNoFileText").removeClass("hidden").text("Unsupported file type");
+                $("#zoomControls").addClass("hidden");
+                $("#zoomLevel").addClass("hidden");
             }
         } else {
             $("#viewDocImage, #viewDocPDF").addClass("hidden");
@@ -1751,8 +1830,54 @@ document.querySelectorAll('.toggle-share').forEach(span => {
 
         $("#viewDocName").text(docName);
 
-        // --- Basic Info ---
-        $("#viewDocStatus").text(doc.is_active ? 'Active' : 'Inactive');
+        // --- Status Display (Verification Status) ---
+        const status = doc.status || 'pending';
+        const statusColors = {
+            'approved': 'text-green-600',
+            'rejected': 'text-red-600',
+            'pending': 'text-yellow-600'
+        };
+        const statusText = capitalizeFirstLetter(status);
+        $("#viewDocStatus").text(statusText).removeClass('text-green-600 text-red-600 text-yellow-600').addClass(statusColors[status] || 'text-yellow-600');
+        
+        // Show Re-Submit button if rejected
+        if (status === 'rejected') {
+            $("#reSubmitButtonDiv").removeClass("hidden");
+            $("#reSubmitButton").attr("onclick", "editDocument(" + doc.id + ")");
+        } else {
+            $("#reSubmitButtonDiv").addClass("hidden");
+        }
+        
+        // Set edit, download, and print button actions
+        $("#editDocumentButton").attr("onclick", "editDocument(" + doc.id + ")");
+        if (doc.file_path) {
+            const fileUrl = "/storage/" + doc.file_path;
+            $("#downloadDocumentButton").attr("onclick", "window.open('" + fileUrl + "', '_blank')").removeClass("hidden");
+            $("#printDocumentButton").off("click").on("click", function() { printDocument(fileUrl); }).removeClass("hidden");
+        } else {
+            $("#downloadDocumentButton").addClass("hidden");
+            $("#printDocumentButton").addClass("hidden");
+        }
+        
+        // Show verification notes if rejected - get from latest status change
+        if (status === 'rejected') {
+            // Try to get notes from status change history (if available in doc object)
+            // Check both camelCase and snake_case
+            const statusChanges = doc.status_changes || doc.statusChanges || [];
+            const latestRejection = statusChanges.length > 0 
+                ? statusChanges.find(sc => (sc.new_status === 'rejected' || sc.newStatus === 'rejected'))
+                : null;
+            const rejectionNotes = latestRejection ? (latestRejection.notes || latestRejection.note) : null;
+            
+            if (rejectionNotes) {
+                $("#verificationNotesDiv").removeClass("hidden");
+                $("#viewVerificationNotes").text(rejectionNotes);
+            } else {
+                $("#verificationNotesDiv").addClass("hidden");
+            }
+        } else {
+            $("#verificationNotesDiv").addClass("hidden");
+        }
 
         // --- Standard Fields ---
         doc.issue_date ? $("#issueDateDiv").removeClass("hidden").find("#viewIssueDate").text(doc.issue_date) : $("#issueDateDiv").addClass("hidden");
@@ -1788,6 +1913,90 @@ document.querySelectorAll('.toggle-share').forEach(span => {
         $("#viewDocumentModal").removeClass("hidden").addClass("flex");
     });
 
+    // Zoom functionality for images
+    let currentZoom = 1;
+    const minZoom = 0.5;
+    const maxZoom = 5;
+    const zoomStep = 0.25;
+
+    function resetImageZoom() {
+        currentZoom = 1;
+        const img = $("#viewDocImage");
+        if (img.length) {
+            img.css('transform', 'scale(1)');
+            updateZoomLevel();
+        }
+    }
+
+    function updateZoomLevel() {
+        $("#zoomLevel").text(Math.round(currentZoom * 100) + '%');
+    }
+
+    function applyZoom() {
+        const img = $("#viewDocImage");
+        if (img.length) {
+            img.css('transform', 'scale(' + currentZoom + ')');
+            updateZoomLevel();
+        }
+    }
+
+    // Zoom In
+    $("#zoomInBtn").on("click", function(e) {
+        e.stopPropagation();
+        if (currentZoom < maxZoom) {
+            currentZoom = Math.min(currentZoom + zoomStep, maxZoom);
+            applyZoom();
+        }
+    });
+
+    // Zoom Out
+    $("#zoomOutBtn").on("click", function(e) {
+        e.stopPropagation();
+        if (currentZoom > minZoom) {
+            currentZoom = Math.max(currentZoom - zoomStep, minZoom);
+            applyZoom();
+        }
+    });
+
+    // Reset Zoom
+    $("#resetZoomBtn").on("click", function(e) {
+        e.stopPropagation();
+        resetImageZoom();
+    });
+
+    // Mouse wheel zoom
+    $("#viewPreviewBox").on("wheel", function(e) {
+        if ($("#viewDocImage").is(":visible")) {
+            e.preventDefault();
+            const delta = e.originalEvent.deltaY > 0 ? -zoomStep : zoomStep;
+            currentZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom + delta));
+            applyZoom();
+        }
+    });
+
+    // Double click to zoom in/out
+    $("#viewDocImage").on("dblclick", function(e) {
+        e.preventDefault();
+        if (currentZoom === 1) {
+            currentZoom = 2;
+        } else {
+            currentZoom = 1;
+        }
+        applyZoom();
+    });
+
+    // Print document function
+    function printDocument(fileUrl) {
+        const printWindow = window.open(fileUrl, '_blank');
+        if (printWindow) {
+            printWindow.onload = function() {
+                printWindow.print();
+            };
+        } else {
+            alert('Please allow popups to print documents');
+        }
+    }
+
 
     $(".closePopup").on("click", function() {
         const popup = $(this).closest(".popup");
@@ -1796,8 +2005,15 @@ document.querySelectorAll('.toggle-share').forEach(span => {
         $("#viewDocImage, #viewDocPDF").addClass("hidden").attr("src", "");
         $("#viewNoFileText").removeClass("hidden").text("No File");
 
-        $("#viewDocName, #viewDocStatus, #viewIssueDate, #viewExpiryDate, #viewNationality, #viewCountryCode, #viewDocRemaining, #viewDocumentNumber, #viewCertificateType, #viewCertificateIssue, #viewCertificateExpiry, #viewCertificateNumber, #viewCertificateIssuer").text('');
-        $("#issueDateDiv, #expiryDateDiv, #nationalityDiv, #countryCodeDiv, #remainingDurationDiv, #documentNumberDiv, #certificateDiv").addClass("hidden");
+        $("#viewDocName, #viewDocStatus, #viewIssueDate, #viewExpiryDate, #viewNationality, #viewCountryCode, #viewDocRemaining, #viewDocumentNumber, #viewCertificateType, #viewCertificateIssue, #viewCertificateExpiry, #viewCertificateNumber, #viewCertificateIssuer, #viewVerificationNotes").text('');
+        $("#issueDateDiv, #expiryDateDiv, #nationalityDiv, #countryCodeDiv, #remainingDurationDiv, #documentNumberDiv, #certificateDiv, #verificationNotesDiv, #reSubmitButtonDiv").addClass("hidden");
+        $("#editDocumentButton").attr("onclick", "editDocument(0)");
+        $("#reSubmitButton").attr("onclick", "editDocument(0)");
+        $("#downloadDocumentButton").attr("onclick", "").removeClass("hidden");
+        $("#printDocumentButton").attr("onclick", "").removeClass("hidden");
+        $("#zoomControls").addClass("hidden");
+        $("#zoomLevel").addClass("hidden");
+        resetImageZoom();
     });
 
 

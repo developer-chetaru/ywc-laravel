@@ -39,6 +39,9 @@ class CareerHistoryController extends Controller
             'certificates.type',
             'certificates.issuer',
             'otherDocument',
+            'statusChanges' => function($q) {
+                $q->latest()->limit(1); // Get latest status change for notes
+            },
         ])->where('user_id', Auth::id())->get();
 
         $documents->transform(function ($doc) {
