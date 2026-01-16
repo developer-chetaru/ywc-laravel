@@ -2,46 +2,36 @@
 
 namespace App\Services\Documents;
 
-use Google\Cloud\Vision\V1\Client\ImageAnnotatorClient;
-use Google\Cloud\Vision\V1\Image;
-use Google\Cloud\Vision\V1\Feature;
-use Google\Cloud\Vision\V1\Feature\Type as FeatureType;
-use Google\Cloud\Vision\V1\AnnotateImageRequest;
-use Google\Cloud\Vision\V1\BatchAnnotateImagesRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 
 class OcrService
 {
-    protected $client;
     protected $apiKey;
+    protected $apiUrl = 'https://vision.googleapis.com/v1/images:annotate';
 
     public function __construct()
     {
         $this->apiKey = config('services.google_cloud.api_key');
         
-        // Initialize client with API key
-        if ($this->apiKey) {
-            $this->client = new ImageAnnotatorClient([
-                'key' => $this->apiKey,
-            ]);
-        } else {
+        if (!$this->apiKey) {
             Log::warning('Google Cloud Vision API key not configured');
         }
     }
 
     /**
-     * Extract text from document image/PDF
+     * Extract text from document image/PDF using Google Cloud Vision API REST
      */
     public function extractText(string $filePath): array
     {
-        if (!$this->client) {
+        if (!$this->apiKey) {
             return [
                 'success' => false,
                 'text' => '',
                 'confidence' => 0,
-                'message' => 'Google Cloud Vision API not configured'
+                'message' => 'Google Cloud Vision API key not configured'
             ];
         }
 
@@ -58,28 +48,53 @@ class OcrService
                 ];
             }
             
-            // Create Image object with content
-            $image = new Image();
-            $image->setContent($imageContent);
+            // Check file type - Google Vision API doesn't support PDF directly
+            $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
             
-            // Create Feature for document text detection
-            $feature = new Feature();
-            $feature->setType(FeatureType::DOCUMENT_TEXT_DETECTION);
+            // For PDFs, fall back to TesseractOCR (Google Vision needs async API for PDFs)
+            if ($extension === 'pdf') {
+                return $this->extractTextFromPdf($filePath);
+            }
             
-            // Create annotation request
-            $request = new AnnotateImageRequest();
-            $request->setImage($image);
-            $request->setFeatures([$feature]);
+            // For images, use Google Vision API
+            // Encode image to base64
+            $base64Image = base64_encode($imageContent);
             
-            // Create batch request
-            $batchRequest = new BatchAnnotateImagesRequest();
-            $batchRequest->setRequests([$request]);
+            // Prepare API request
+            $requestData = [
+                'requests' => [
+                    [
+                        'image' => [
+                            'content' => $base64Image
+                        ],
+                        'features' => [
+                            [
+                                'type' => 'DOCUMENT_TEXT_DETECTION',
+                                'maxResults' => 1
+                            ]
+                        ]
+                    ]
+                ]
+            ];
             
-            // Call API
-            $response = $this->client->batchAnnotateImages($batchRequest);
-            $responses = $response->getResponses();
+            // Call Google Vision API REST endpoint
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post($this->apiUrl . '?key=' . $this->apiKey, $requestData);
             
-            if (empty($responses)) {
+            if (!$response->successful()) {
+                $error = $response->json();
+                return [
+                    'success' => false,
+                    'text' => '',
+                    'confidence' => 0,
+                    'message' => 'Google Vision API Error: ' . ($error['error']['message'] ?? $response->body())
+                ];
+            }
+            
+            $responseData = $response->json();
+            
+            if (empty($responseData['responses'])) {
                 return [
                     'success' => false,
                     'text' => '',
@@ -88,21 +103,20 @@ class OcrService
                 ];
             }
             
-            $annotateResponse = $responses[0];
+            $annotateResponse = $responseData['responses'][0];
             
             // Check for errors
-            if ($annotateResponse->hasError()) {
-                $error = $annotateResponse->getError();
+            if (isset($annotateResponse['error'])) {
                 return [
                     'success' => false,
                     'text' => '',
                     'confidence' => 0,
-                    'message' => 'Google Vision API Error: ' . $error->getMessage()
+                    'message' => 'Google Vision API Error: ' . $annotateResponse['error']['message']
                 ];
             }
             
             // Get full text annotation
-            if (!$annotateResponse->hasFullTextAnnotation()) {
+            if (!isset($annotateResponse['fullTextAnnotation'])) {
                 return [
                     'success' => false,
                     'text' => '',
@@ -111,43 +125,43 @@ class OcrService
                 ];
             }
             
-            $fullTextAnnotation = $annotateResponse->getFullTextAnnotation();
-            $fullText = $fullTextAnnotation->getText();
+            $fullTextAnnotation = $annotateResponse['fullTextAnnotation'];
+            $fullText = $fullTextAnnotation['text'] ?? '';
             
             // Calculate confidence from text annotations
-            // Use a default confidence if we can't calculate it precisely
-            $avgConfidence = 85.0; // Default confidence for document text detection
+            $avgConfidence = 85.0; // Default confidence
             
-            // Try to get confidence from pages/blocks if available
+            // Try to calculate confidence from pages/blocks
             try {
-                $pages = $fullTextAnnotation->getPages();
-                $confidences = [];
-                foreach ($pages as $page) {
-                    $blocks = $page->getBlocks();
-                    foreach ($blocks as $block) {
-                        $paragraphs = $block->getParagraphs();
-                        foreach ($paragraphs as $paragraph) {
-                            $words = $paragraph->getWords();
-                            foreach ($words as $word) {
-                                $symbols = $word->getSymbols();
-                                foreach ($symbols as $symbol) {
-                                    if (method_exists($symbol, 'getConfidence')) {
-                                        $conf = $symbol->getConfidence();
-                                        if ($conf > 0) {
-                                            $confidences[] = $conf;
+                if (isset($fullTextAnnotation['pages'])) {
+                    $confidences = [];
+                    foreach ($fullTextAnnotation['pages'] as $page) {
+                        if (isset($page['blocks'])) {
+                            foreach ($page['blocks'] as $block) {
+                                if (isset($block['paragraphs'])) {
+                                    foreach ($block['paragraphs'] as $paragraph) {
+                                        if (isset($paragraph['words'])) {
+                                            foreach ($paragraph['words'] as $word) {
+                                                if (isset($word['symbols'])) {
+                                                    foreach ($word['symbols'] as $symbol) {
+                                                        if (isset($symbol['confidence']) && $symbol['confidence'] > 0) {
+                                                            $confidences[] = $symbol['confidence'];
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                
-                if (!empty($confidences)) {
-                    $avgConfidence = (array_sum($confidences) / count($confidences)) * 100;
+                    
+                    if (!empty($confidences)) {
+                        $avgConfidence = (array_sum($confidences) / count($confidences)) * 100;
+                    }
                 }
             } catch (\Exception $e) {
-                // Use default confidence if calculation fails
                 Log::debug('Confidence calculation failed, using default', ['error' => $e->getMessage()]);
             }
             
@@ -432,12 +446,97 @@ class OcrService
     }
 
     /**
-     * Clean up client
+     * Extract text from PDF using TesseractOCR (fallback for PDFs)
      */
-    public function __destruct()
+    protected function extractTextFromPdf(string $filePath): array
     {
-        if ($this->client) {
-            $this->client->close();
+        try {
+            $fullPath = Storage::disk('public')->path($filePath);
+            
+            if (!file_exists($fullPath)) {
+                return [
+                    'success' => false,
+                    'text' => '',
+                    'confidence' => 0,
+                    'message' => 'PDF file not found'
+                ];
+            }
+
+            // Check if Imagick is available for PDF conversion
+            if (!extension_loaded('imagick') || !class_exists('Imagick')) {
+                return [
+                    'success' => false,
+                    'text' => '',
+                    'confidence' => 0,
+                    'message' => 'Imagick extension not available for PDF processing. Please install php-imagick.'
+                ];
+            }
+
+            $text = '';
+            $imagick = new \Imagick();
+            $imagick->setResolution(300, 300);
+            $imagick->readImage($fullPath);
+            
+            // Process each page
+            foreach ($imagick as $i => $page) {
+                $page->setImageFormat('png');
+                $tmpImage = storage_path("app/temp/page_{$i}_" . time() . ".png");
+                
+                // Ensure temp directory exists
+                if (!is_dir(storage_path('app/temp'))) {
+                    mkdir(storage_path('app/temp'), 0755, true);
+                }
+                
+                $page->writeImage($tmpImage);
+                
+                // OCR per page using TesseractOCR
+                try {
+                    $ocr = new \thiagoalessio\TesseractOCR\TesseractOCR($tmpImage);
+                    $ocr->lang('eng')->psm(3)->oem(1);
+                    $pageText = $ocr->run();
+                    $text .= $pageText . "\n";
+                } catch (\Exception $e) {
+                    Log::warning("TesseractOCR failed for PDF page {$i}: " . $e->getMessage());
+                }
+                
+                // Clean up temp file
+                if (file_exists($tmpImage)) {
+                    unlink($tmpImage);
+                }
+            }
+            
+            $imagick->clear();
+            $imagick->destroy();
+            
+            if (empty(trim($text))) {
+                return [
+                    'success' => false,
+                    'text' => '',
+                    'confidence' => 0,
+                    'message' => 'No text detected in PDF'
+                ];
+            }
+            
+            // Use default confidence for TesseractOCR (typically 70-80%)
+            return [
+                'success' => true,
+                'text' => $text,
+                'confidence' => 75.0, // Default confidence for TesseractOCR
+                'annotations' => null
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('PDF OCR Error: ' . $e->getMessage(), [
+                'file_path' => $filePath,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return [
+                'success' => false,
+                'text' => '',
+                'confidence' => 0,
+                'message' => 'PDF OCR processing failed: ' . $e->getMessage()
+            ];
         }
     }
 }
