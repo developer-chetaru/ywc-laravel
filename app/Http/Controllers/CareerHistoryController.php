@@ -412,6 +412,25 @@ class CareerHistoryController extends Controller
     }
 
 
+    /**
+     * Check if TesseractOCR command is available
+     */
+    protected function checkTesseractAvailable(): bool
+    {
+        // Check if tesseract command exists
+        $output = [];
+        $returnVar = 0;
+        @exec('which tesseract 2>&1', $output, $returnVar);
+        
+        if ($returnVar !== 0) {
+            return false;
+        }
+        
+        // Try to get version
+        @exec('tesseract --version 2>&1', $output, $returnVar);
+        return $returnVar === 0;
+    }
+
     public function scan(Request $request)
     {
         $request->validate([
@@ -435,9 +454,27 @@ class CareerHistoryController extends Controller
         $text = '';
 
         try {
+            // Check if TesseractOCR is available
+            $tesseractAvailable = $this->checkTesseractAvailable();
+            
+            if (!$tesseractAvailable) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'TesseractOCR is not installed. Please install it: sudo apt-get install tesseract-ocr tesseract-ocr-eng'
+                ], 500);
+            }
+
             $extension = strtolower($file->getClientOriginalExtension());
 
             if ($extension === 'pdf') {
+                // Check if Imagick is available
+                if (!extension_loaded('imagick') || !class_exists('Imagick')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Imagick extension is required for PDF processing. Please install: sudo apt-get install php-imagick'
+                    ], 500);
+                }
+
                 // Convert PDF pages to images
                 $imagick = new Imagick();
                 $imagick->setResolution(300, 300);
@@ -446,24 +483,41 @@ class CareerHistoryController extends Controller
                 foreach ($imagick as $i => $page) {
                     $page->setImageFormat('png');
                     $tmpImage = storage_path("app/temp/page_{$i}.png");
+                    
+                    // Ensure temp directory exists
+                    if (!is_dir(storage_path('app/temp'))) {
+                        mkdir(storage_path('app/temp'), 0755, true);
+                    }
+                    
                     $page->writeImage($tmpImage);
 
                     // OCR per page
-                    $ocr = new TesseractOCR($tmpImage);
-                    $ocr->lang('eng')->psm(3)->oem(1);
-                    $text .= $ocr->run() . "\n";
+                    try {
+                        $ocr = new TesseractOCR($tmpImage);
+                        $ocr->lang('eng')->psm(3)->oem(1);
+                        $text .= $ocr->run() . "\n";
+                    } catch (\Exception $e) {
+                        Log::warning("TesseractOCR failed for PDF page {$i}: " . $e->getMessage());
+                    }
 
                     // Delete temp page
-                    unlink($tmpImage);
+                    if (file_exists($tmpImage)) {
+                        unlink($tmpImage);
+                    }
                 }
 
                 $imagick->clear();
                 $imagick->destroy();
             } else {
                 // Normal image OCR
-                $ocr = new TesseractOCR($fullPath);
-                $ocr->lang('eng')->psm(3)->oem(1);
-                $text = $ocr->run();
+                try {
+                    $ocr = new TesseractOCR($fullPath);
+                    $ocr->lang('eng')->psm(3)->oem(1);
+                    $text = $ocr->run();
+                } catch (\Exception $e) {
+                    Log::error("TesseractOCR failed: " . $e->getMessage());
+                    throw $e;
+                }
             }
 
             if (empty(trim($text))) {
