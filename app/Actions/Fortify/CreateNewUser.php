@@ -27,20 +27,22 @@ class CreateNewUser implements CreatesNewUsers
     public function create(array $input): User
     {
         Validator::make($input, [
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name'  => ['required', 'string', 'max:255'],
-            'email'      => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password'   => $this->passwordRules(),
-            'role'       => ['required', 'string', 'exists:roles,name'],
-            'terms'      => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
+            'first_name'        => ['required', 'string', 'max:255'],
+            'last_name'         => ['required', 'string', 'max:255'],
+            'email'             => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password'          => $this->passwordRules(),
+            'role'              => ['required', 'string', 'exists:roles,name'],
+            'vessel_flag_state' => ['nullable', 'string', 'max:100'],
+            'terms'             => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
         ])->validate();
 
         $user = User::create([
-            'first_name' => $input['first_name'],
-            'last_name'  => $input['last_name'],
-            'email'      => $input['email'],
-            'password'   => Hash::make($input['password']),
-            'is_active'  => false,
+            'first_name'        => $input['first_name'],
+            'last_name'         => $input['last_name'],
+            'email'             => $input['email'],
+            'password'          => Hash::make($input['password']),
+            'vessel_flag_state' => $input['vessel_flag_state'] ?? null,
+            'is_active'         => false,
         ]);
 
         $user->assignRole($input['role']);

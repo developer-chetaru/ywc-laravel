@@ -54,6 +54,23 @@ Route::get('/verification-levels', function () {
     return VerificationLevel::active()->ordered()->get();
 });
 
+// Vessel Flags API (public endpoint)
+Route::get('/vessel-flags', function () {
+    $flags = config('vessel_flags.flags');
+    
+    return response()->json([
+        'success' => true,
+        'total' => count($flags),
+        'data' => collect($flags)->map(function ($emoji, $country) {
+            return [
+                'country' => $country,
+                'emoji' => $emoji,
+                'display' => $emoji . ' ' . $country
+            ];
+        })->values()
+    ]);
+});
+
 Route::prefix('itinerary')->group(function () {
     // Route CRUD operations (index and show are public, others require auth)
     Route::get('/routes/filter-options', [SailingRouteController::class, 'filterOptions']);

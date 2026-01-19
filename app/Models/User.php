@@ -32,6 +32,7 @@ class User extends Authenticatable implements JWTSubject
         'phone',
         'gender',
         'nationality',
+        'vessel_flag_state',
         'marital_status',
         'birth_country',
         'birth_province',

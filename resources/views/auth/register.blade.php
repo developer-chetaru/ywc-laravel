@@ -132,6 +132,24 @@
                       @enderror
                   </div>
 
+                  {{-- Vessel Flag State with Search --}}
+                  <div>
+                      <select
+                          id="vessel_flag_state"
+                          name="vessel_flag_state"
+                          class="w-full px-4 py-2 border border-gray-300 rounded-md 
+                              focus:border-[#0053FF] focus:ring-2 focus:ring-[#0053FF] outline-none"
+                      >
+                          <option value="">Select Vessel Flag (Optional)</option>
+                          @foreach(config('vessel_flags.flags') as $country => $flag)
+                              <option value="{{ $country }}">{{ $flag }} {{ $country }}</option>
+                          @endforeach
+                      </select>
+                      @error('vessel_flag_state')
+                          <p class="text-sm text-[#0053FF] mt-1">{{ $message }}</p>
+                      @enderror
+                  </div>
+
                   {{-- Password Field --}}
                   <div x-data="{ showPassword: false }" class="relative">
                       <label class="flex items-center bg-[#fafafa] border border-gray-300 rounded px-3 w-full focus-within:ring-2 focus-within:ring-[#0053FF]">
@@ -242,4 +260,50 @@
             </div>
         </div>
     </div>
+
+    {{-- Select2 for Searchable Dropdown --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <style>
+        /* Style Select2 to match form design */
+        .select2-container--default .select2-selection--single {
+            height: 42px !important;
+            padding: 8px 16px !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 0.375rem !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 26px !important;
+            padding-left: 0 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px !important;
+        }
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #0053FF !important;
+            outline: 2px solid #0053FF33 !important;
+        }
+        .select2-dropdown {
+            border: 1px solid #d1d5db !important;
+            border-radius: 0.375rem !important;
+        }
+        .select2-search--dropdown .select2-search__field {
+            border: 1px solid #d1d5db !important;
+            border-radius: 0.375rem !important;
+            padding: 8px !important;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function() {
+            $('#vessel_flag_state').select2({
+                placeholder: 'Select Vessel Flag (Optional)',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('.max-w-md')
+            });
+        });
+    </script>
 </x-guest-layout>
