@@ -182,6 +182,57 @@ Route::prefix('financial-planning')->name('financial.')
 Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
 
 
+// Employer Dashboard Routes
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale', 'role:employer'])
+    ->prefix('employer')->name('employer.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\EmployerDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/add-crew', function() { return view('employer.add-crew'); })->name('add-crew-page');
+        Route::get('/crew/{id}', [\App\Http\Controllers\EmployerDashboardController::class, 'showCrewMember'])->name('crew-details');
+        Route::get('/crew/{id}/edit', [\App\Http\Controllers\EmployerDashboardController::class, 'editCrewPage'])->name('edit-crew-page');
+        Route::post('/crew/add', [\App\Http\Controllers\EmployerDashboardController::class, 'addCrew'])->name('add-crew');
+        Route::post('/crew/{id}/update', [\App\Http\Controllers\EmployerDashboardController::class, 'updateCrew'])->name('update-crew');
+        Route::delete('/crew/{id}/remove', [\App\Http\Controllers\EmployerDashboardController::class, 'removeCrew'])->name('remove-crew');
+        Route::get('/compliance-report', [\App\Http\Controllers\EmployerDashboardController::class, 'complianceReport'])->name('compliance-report');
+        Route::get('/export-compliance', [\App\Http\Controllers\EmployerDashboardController::class, 'exportComplianceReport'])->name('export-compliance');
+    });
+
+// Recruitment Agency Dashboard Routes
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale', 'role:recruitment_agency'])
+    ->prefix('agency')->name('agency.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\RecruitmentAgencyController::class, 'index'])->name('dashboard');
+        Route::get('/candidates/{id}', [\App\Http\Controllers\RecruitmentAgencyController::class, 'showCandidate'])->name('candidate-details');
+        Route::post('/candidates/add', [\App\Http\Controllers\RecruitmentAgencyController::class, 'addCandidate'])->name('add-candidate');
+        Route::post('/candidates/{id}/update', [\App\Http\Controllers\RecruitmentAgencyController::class, 'updateCandidate'])->name('update-candidate');
+        Route::delete('/candidates/{id}/remove', [\App\Http\Controllers\RecruitmentAgencyController::class, 'removeCandidate'])->name('remove-candidate');
+        Route::get('/jobs', [\App\Http\Controllers\RecruitmentAgencyController::class, 'jobs'])->name('jobs');
+        Route::post('/jobs/create', [\App\Http\Controllers\RecruitmentAgencyController::class, 'createJob'])->name('create-job');
+        Route::post('/jobs/{id}/update', [\App\Http\Controllers\RecruitmentAgencyController::class, 'updateJob'])->name('update-job');
+        Route::delete('/jobs/{id}/delete', [\App\Http\Controllers\RecruitmentAgencyController::class, 'deleteJob'])->name('delete-job');
+        Route::get('/jobs/{id}/matches', [\App\Http\Controllers\RecruitmentAgencyController::class, 'matchCandidates'])->name('job-matches');
+    });
+
+// Training Provider Dashboard Routes
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale'])
+    ->prefix('training-provider')->name('training-provider.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\TrainingProviderController::class, 'index'])->name('dashboard');
+        Route::get('/issue-certificate', [\App\Http\Controllers\TrainingProviderController::class, 'showIssueForm'])->name('issue-form');
+        Route::post('/issue-certificate', [\App\Http\Controllers\TrainingProviderController::class, 'issueCertificate'])->name('issue');
+        Route::get('/certificates/{id}', [\App\Http\Controllers\TrainingProviderController::class, 'viewCertificate'])->name('view-certificate');
+        Route::post('/certificates/{id}/revoke', [\App\Http\Controllers\TrainingProviderController::class, 'revokeCertificate'])->name('revoke-certificate');
+        Route::post('/certificates/{id}/reactivate', [\App\Http\Controllers\TrainingProviderController::class, 'reactivateCertificate'])->name('reactivate-certificate');
+        Route::get('/certificates/{id}/download', [\App\Http\Controllers\TrainingProviderController::class, 'downloadCertificate'])->name('download-certificate');
+        Route::post('/bulk-issue', [\App\Http\Controllers\TrainingProviderController::class, 'bulkIssueCertificates'])->name('bulk-issue');
+    });
+
+// Analytics Routes
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale'])
+    ->prefix('analytics')->name('analytics.')->group(function () {
+        Route::get('/user-dashboard', [\App\Http\Controllers\AnalyticsController::class, 'userDashboard'])->name('user-dashboard');
+        Route::get('/employer-dashboard', [\App\Http\Controllers\AnalyticsController::class, 'employerDashboard'])->name('employer-dashboard');
+        Route::get('/report-builder', [\App\Http\Controllers\AnalyticsController::class, 'reportBuilder'])->name('report-builder');
+        Route::post('/export-report', [\App\Http\Controllers\AnalyticsController::class, 'exportReport'])->name('export-report');
+    });
+
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale'])
     ->group(function () {
         Route::get('/admin/waitlist', [WaitlistAdminController::class, 'index'])->name('admin.waitlist');
@@ -338,6 +389,7 @@ Route::middleware([
         Route::get('/{document}/view', [\App\Http\Controllers\DocumentDownloadController::class, 'view'])->name('view');
         Route::get('/{document}/versions', [\App\Http\Controllers\CareerHistoryController::class, 'showVersions'])->name('versions.show');
         Route::post('/{document}/restore-version/{version}', [\App\Http\Controllers\CareerHistoryController::class, 'restoreVersion'])->name('restore-version');
+        Route::get('/{document}/verification-certificate', [\App\Http\Controllers\CareerHistoryController::class, 'downloadVerificationCertificate'])->name('verification-certificate');
         Route::get('/versions/{version}/download', [\App\Http\Controllers\DocumentDownloadController::class, 'downloadVersion'])->name('versions.download');
     });
 

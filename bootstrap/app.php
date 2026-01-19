@@ -18,10 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'subscribed' => EnsureUserIsSubscribed::class,
             'setlocale' => SetLocale::class,
             'financial.admin' => \App\Http\Middleware\EnsureFinancialAdmin::class,
-            // Spatie permission middleware aliases
-            'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
+            // Spatie permission middleware aliases (fixed namespace - Middleware not Middlewares)
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

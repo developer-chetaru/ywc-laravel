@@ -22,6 +22,7 @@ use App\Jobs\ProcessDocumentOcr;
 use App\Services\Documents\VersionService;
 use Carbon\Carbon;
 use Imagick;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CareerHistoryController extends Controller
 {
@@ -692,6 +693,42 @@ class CareerHistoryController extends Controller
             'success' => true,
             'message' => 'OCR processing has been restarted. Please wait a few moments.',
         ]);
+    }
+
+    /**
+     * Download verification certificate PDF
+     */
+    public function downloadVerificationCertificate(Document $document)
+    {
+        // Check authorization
+        if ($document->user_id !== Auth::id() && !Auth::user()->hasRole(['super_admin', 'admin'])) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Get the latest approved verification
+        $verification = \App\Models\DocumentVerification::where('document_id', $document->id)
+            ->where('status', 'approved')
+            ->with(['verificationLevel', 'verifier'])
+            ->latest('verified_at')
+            ->first();
+
+        if (!$verification) {
+            return redirect()->back()->with('error', 'No verification found for this document.');
+        }
+
+        // Generate certificate number
+        $certificateNumber = 'YWC-' . strtoupper(substr(md5($document->id . $verification->id), 0, 12));
+
+        // Generate PDF
+        $pdf = Pdf::loadView('documents.verification-certificate', [
+            'document' => $document,
+            'verification' => $verification,
+            'certificateNumber' => $certificateNumber
+        ]);
+
+        $fileName = 'verification-certificate-' . $document->id . '-' . now()->format('Y-m-d') . '.pdf';
+
+        return $pdf->download($fileName);
     }
 
     /**

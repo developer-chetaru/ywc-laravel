@@ -141,6 +141,46 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             @endhasanyrole
 
 
+            {{-- EMPLOYER DASHBOARD --}}
+            @role('employer')
+            <li>
+                <a href="{{ route('employer.dashboard') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                        {{ request()->is('employer*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                    <i class="fas fa-users {{ request()->is('employer*') ? 'text-black' : 'text-white' }}"></i>
+                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('employer*') ? 'text-black' : 'text-white' }}">
+                        Employer Dashboard
+                    </span>
+                </a>
+            </li>
+            @endrole
+
+            {{-- RECRUITMENT AGENCY DASHBOARD --}}
+            @role('recruitment_agency')
+            <li>
+                <a href="{{ route('agency.dashboard') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                        {{ request()->is('agency*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                    <i class="fas fa-briefcase {{ request()->is('agency*') ? 'text-black' : 'text-white' }}"></i>
+                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('agency*') ? 'text-black' : 'text-white' }}">
+                        Agency Dashboard
+                    </span>
+                </a>
+            </li>
+            @endrole
+
+            {{-- ANALYTICS --}}
+            <li>
+                <a href="{{ route('analytics.user-dashboard') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                        {{ request()->is('analytics*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+                    <i class="fas fa-chart-bar {{ request()->is('analytics*') ? 'text-black' : 'text-white' }}"></i>
+                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('analytics*') ? 'text-black' : 'text-white' }}">
+                        Analytics
+                    </span>
+                </a>
+            </li>
+
             {{-- USER LIST (Super Admin Only) --}}
             @role('super_admin')
             <li>

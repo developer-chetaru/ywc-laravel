@@ -14,6 +14,8 @@ class DocumentDetailsModal extends Component
     public bool $showModal = false;
     public ?Document $document = null;
     public ?string $signedUrl = null;
+    public bool $editingOcrFields = false;
+    public array $ocrFields = [];
 
     #[On('openDocumentDetails')]
     public function openModal(int $documentId): void
@@ -39,6 +41,10 @@ class DocumentDetailsModal extends Component
             $this->signedUrl = route('documents.signed-url', ['document' => $this->document->id]);
         }
 
+        // Initialize OCR fields for editing
+        $this->ocrFields = $this->document->ocr_data['fields'] ?? [];
+        $this->editingOcrFields = false;
+
         $this->showModal = true;
     }
 
@@ -47,6 +53,45 @@ class DocumentDetailsModal extends Component
         $this->showModal = false;
         $this->document = null;
         $this->signedUrl = null;
+        $this->editingOcrFields = false;
+        $this->ocrFields = [];
+    }
+
+    public function toggleEditOcrFields(): void
+    {
+        $this->editingOcrFields = !$this->editingOcrFields;
+        
+        if ($this->editingOcrFields) {
+            // Re-initialize fields from document when starting edit
+            $this->ocrFields = $this->document->ocr_data['fields'] ?? [];
+        }
+    }
+
+    public function saveOcrCorrections(): void
+    {
+        if (!$this->document) {
+            return;
+        }
+
+        // Update OCR data with corrected fields
+        $ocrData = $this->document->ocr_data;
+        $ocrData['fields'] = $this->ocrFields;
+        $ocrData['manually_corrected'] = true;
+        $ocrData['corrected_at'] = now()->toDateTimeString();
+        $ocrData['corrected_by'] = Auth::id();
+
+        $this->document->update([
+            'ocr_data' => $ocrData
+        ]);
+
+        // Refresh document
+        $this->document->refresh();
+
+        $this->editingOcrFields = false;
+
+        session()->flash('ocr_message', 'OCR fields updated successfully!');
+        
+        $this->dispatch('ocrFieldsUpdated');
     }
 
     #[On('closeDocumentDetails')]

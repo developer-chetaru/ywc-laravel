@@ -160,6 +160,22 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
+     * Get employer-crew relationships where this user is the employer
+     */
+    public function employedCrew()
+    {
+        return $this->hasMany(EmployerCrew::class, 'employer_id');
+    }
+
+    /**
+     * Get employer-crew relationships where this user is the crew member
+     */
+    public function employers()
+    {
+        return $this->hasMany(EmployerCrew::class, 'crew_id');
+    }
+
+    /**
      * Get career history entries for this user (Phase 1)
      */
     public function careerHistoryEntries()

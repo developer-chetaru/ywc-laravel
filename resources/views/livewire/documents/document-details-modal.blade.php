@@ -197,16 +197,52 @@
                             @endif
                             @if(isset($document->ocr_data['fields']) && !empty($document->ocr_data['fields']))
                             <div>
-                                <label class="block text-sm font-medium text-gray-600 mb-1">Extracted Fields</label>
-                                <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                    <div class="space-y-1 text-xs">
-                                        @foreach($document->ocr_data['fields'] as $key => $value)
-                                            @if($value)
-                                            <p><span class="font-semibold text-gray-700">{{ ucfirst(str_replace('_', ' ', $key)) }}:</span> <span class="text-gray-600">{{ $value }}</span></p>
-                                            @endif
-                                        @endforeach
-                                    </div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="block text-sm font-medium text-gray-600">Extracted Fields</label>
+                                    <button wire:click="toggleEditOcrFields" 
+                                            class="text-xs px-3 py-1 rounded-md transition-colors {{ $editingOcrFields ? 'bg-gray-200 text-gray-700' : 'bg-blue-600 text-white hover:bg-blue-700' }}">
+                                        <i class="fas {{ $editingOcrFields ? 'fa-times' : 'fa-edit' }} mr-1"></i>
+                                        {{ $editingOcrFields ? 'Cancel' : 'Edit Fields' }}
+                                    </button>
                                 </div>
+                                
+                                @if($editingOcrFields)
+                                    {{-- Editable Form --}}
+                                    <div class="bg-white p-4 rounded-md border border-blue-200 space-y-3">
+                                        @foreach($document->ocr_data['fields'] as $key => $value)
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                                    {{ ucwords(str_replace('_', ' ', $key)) }}
+                                                </label>
+                                                <input type="text" 
+                                                       wire:model="ocrFields.{{ $key }}" 
+                                                       class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                       placeholder="Enter {{ strtolower(str_replace('_', ' ', $key)) }}">
+                                            </div>
+                                        @endforeach
+                                        <div class="flex gap-2 pt-2">
+                                            <button wire:click="saveOcrCorrections" 
+                                                    class="flex-1 px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors font-medium">
+                                                <i class="fas fa-check mr-1"></i>Save Corrections
+                                            </button>
+                                            <button wire:click="toggleEditOcrFields" 
+                                                    class="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300 transition-colors">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- Read-only Display --}}
+                                    <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                        <div class="space-y-1 text-xs">
+                                            @foreach($document->ocr_data['fields'] as $key => $value)
+                                                @if($value)
+                                                <p><span class="font-semibold text-gray-700">{{ ucfirst(str_replace('_', ' ', $key)) }}:</span> <span class="text-gray-600">{{ $value }}</span></p>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                             @endif
                         @endif
