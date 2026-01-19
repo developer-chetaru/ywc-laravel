@@ -122,6 +122,52 @@
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Create Document Share</h3>
                 
                 <form wire:submit.prevent="createShare">
+                    {{-- Template Selection --}}
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Use Template (Optional)</label>
+                        <select wire:model="selectedTemplateId" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#0053FF] focus:border-[#0053FF]">
+                            <option value="">-- Select a template --</option>
+                            @foreach($templates as $template)
+                            <option value="{{ $template->id }}">
+                                {{ $template->name }}
+                                @if($template->is_default) (Default) @endif
+                            </option>
+                            @endforeach
+                        </select>
+                        <div class="flex items-center justify-between mt-1">
+                            <a href="{{ route('share-templates.index') }}" 
+                               target="_blank"
+                               class="text-xs text-blue-600 hover:text-blue-800 inline-block">
+                                <i class="fas fa-cog mr-1"></i>Manage Templates
+                            </a>
+                            @if($templates->count() === 0)
+                            <span class="text-xs text-gray-500">No templates yet</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Template Preview --}}
+                    @if($showTemplatePreview && $selectedTemplate)
+                    <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <div class="flex items-start justify-between mb-2">
+                            <h4 class="text-sm font-semibold text-blue-900">Template Preview: {{ $selectedTemplate->name }}</h4>
+                            <button type="button" wire:click="$set('selectedTemplateId', null)" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="text-xs text-blue-700 space-y-1">
+                            <p><strong>Expiry:</strong> {{ $selectedTemplate->expiry_duration_days }} days</p>
+                            @if($selectedTemplate->default_message)
+                            <p><strong>Default Message:</strong> {{ $selectedTemplate->default_message }}</p>
+                            @endif
+                            @if($selectedTemplate->description)
+                            <p><strong>Description:</strong> {{ $selectedTemplate->description }}</p>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+
                     {{-- Document Selection --}}
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Select Documents <span class="text-red-500">*</span></label>

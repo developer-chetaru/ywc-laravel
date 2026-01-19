@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\DocumentShare;
 use App\Models\ShareAuditLog;
 use App\Services\Documents\DocumentShareService;
+use App\Services\Documents\WatermarkService;
 use Carbon\Carbon;
 
 class DocumentShareController extends Controller
@@ -103,8 +104,12 @@ class DocumentShareController extends Controller
         // Record download
         $this->shareService->recordDownload($share);
 
+        // Add watermark for shared documents
+        $watermarkedPath = $this->watermarkService->addWatermarkToShared($document);
+        $filePath = $watermarkedPath ?? $document->file_path;
+
         return \Storage::disk('public')->download(
-            $document->file_path,
+            $filePath,
             ($document->document_name ?? 'document') . '.' . pathinfo($document->file_path, PATHINFO_EXTENSION)
         );
     }

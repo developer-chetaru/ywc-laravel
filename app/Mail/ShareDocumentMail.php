@@ -13,6 +13,7 @@ use App\Models\PassportDetail;
 use App\Models\IdvisaDetail;
 use App\Models\Certificate;
 use App\Models\OtherDocument;
+use App\Services\Documents\WatermarkService;
 use ZipArchive;
 use Illuminate\Support\Facades\Storage;
 
@@ -112,9 +113,18 @@ class ShareDocumentMail extends Mailable
     public function attachments(): array
     {
         $attachments = [];
+        $watermarkService = app(WatermarkService::class);
 
         foreach ($this->documents as $document) {
-            $filePath = storage_path('app/public/' . $document->file_path);
+            // Add watermark to shared documents
+            $watermarkedPath = $watermarkService->addWatermarkToShared($document);
+            
+            if ($watermarkedPath) {
+                $filePath = storage_path('app/public/' . $watermarkedPath);
+            } else {
+                $filePath = storage_path('app/public/' . $document->file_path);
+            }
+            
             if (file_exists($filePath)) {
                 $attachments[] = Attachment::fromPath($filePath)
                     ->as($document->name . '.' . pathinfo($filePath, PATHINFO_EXTENSION))

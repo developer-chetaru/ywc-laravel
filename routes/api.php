@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\MasterDataController;
 use App\Http\Controllers\Api\WorkLogController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\MentalHealthController;
+use App\Models\VerificationLevel;
 use App\Http\Controllers\Api\TrainingController;
 use App\Http\Controllers\Api\JobBoardController;
 
@@ -47,6 +48,11 @@ Route::get('/master-data/countries', [MasterDataController::class, 'getCountries
 Route::apiResource('itineraries', ItineraryController::class);
 Route::put('/itineraries/{itinerary}/status', [ItineraryController::class, 'updateStatus']);
 Route::post('/itineraries/ai-generate', [ItineraryController::class, 'generateWithAI']);
+
+// Verification Levels API (public endpoint)
+Route::get('/verification-levels', function () {
+    return VerificationLevel::active()->ordered()->get();
+});
 
 Route::prefix('itinerary')->group(function () {
     // Route CRUD operations (index and show are public, others require auth)

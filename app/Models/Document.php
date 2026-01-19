@@ -36,6 +36,8 @@ class Document extends Model
         'ocr_confidence',
         'ocr_data',
         'ocr_error',
+        'verification_level_id',
+        'highest_verification_level',
     ];
 
     protected $casts = [
@@ -46,6 +48,7 @@ class Document extends Model
         'dob' => 'date',
         'ocr_data' => 'array',
         'ocr_confidence' => 'float',
+        'highest_verification_level' => 'integer',
     ];
 
     /* 🔗 Relationships */
@@ -78,6 +81,22 @@ class Document extends Model
         return $this->hasMany(DocumentStatusChange::class);
     }
 
+    /**
+     * Get all versions of this document
+     */
+    public function versions()
+    {
+        return $this->hasMany(DocumentVersion::class)->latest('version_number');
+    }
+
+    /**
+     * Get the latest version
+     */
+    public function latestVersion()
+    {
+        return $this->hasOne(DocumentVersion::class)->latest('version_number');
+    }
+
     public function passportDetail()
     {
         return $this->hasOne(PassportDetail::class);
@@ -96,6 +115,33 @@ class Document extends Model
     public function otherDocument()
     {
         return $this->hasOne(OtherDocument::class);
+    }
+
+    /**
+     * Get the current verification level
+     */
+    public function verificationLevel()
+    {
+        return $this->belongsTo(VerificationLevel::class);
+    }
+
+    /**
+     * Get all verifications for this document
+     */
+    public function verifications()
+    {
+        return $this->hasMany(DocumentVerification::class);
+    }
+
+    /**
+     * Get the highest verification achieved
+     */
+    public function highestVerification()
+    {
+        return $this->hasOne(DocumentVerification::class)
+            ->where('status', 'approved')
+            ->orderBy('verification_level_id', 'desc')
+            ->latest();
     }
 
     public function uploader()

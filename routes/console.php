@@ -26,3 +26,10 @@ Schedule::command('documents:cleanup-permanent-deletes')
 // Schedule cleanup of failed uploads (24 hours retention)
 Schedule::command('documents:cleanup-failed-uploads')
     ->hourly();
+
+// Schedule automatic version cleanup (weekly, keep last 10 versions per document)
+Schedule::command('documents:cleanup-versions --keep=10')
+    ->weekly()
+    ->sundays()
+    ->at('02:00')
+    ->timezone('UTC');

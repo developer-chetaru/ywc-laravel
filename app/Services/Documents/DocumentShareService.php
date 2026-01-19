@@ -22,7 +22,8 @@ class DocumentShareService
         ?string $recipientEmail = null,
         ?string $recipientName = null,
         ?string $personalMessage = null,
-        ?Carbon $expiresAt = null
+        ?Carbon $expiresAt = null,
+        ?array $permissions = null
     ): DocumentShare {
         // Validate that user owns all documents
         $documents = Document::whereIn('id', $documentIds)

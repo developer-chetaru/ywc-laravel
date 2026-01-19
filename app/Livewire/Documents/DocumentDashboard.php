@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\Document;
 use App\Models\DocumentType;
 use Illuminate\Support\Facades\Auth;
+use App\Jobs\ProcessDocumentOcr;
 use Carbon\Carbon;
 
 class DocumentDashboard extends Component
@@ -77,7 +78,7 @@ class DocumentDashboard extends Component
         return Auth::user()
             ->documents()
             ->expiringSoonOrExpired()
-            ->with('documentType')
+            ->with(['documentType', 'verificationLevel'])
             ->select('documents.*') // Ensure all fields including status are loaded
             ->orderBy('expiry_date', 'asc')
             ->limit(10)
@@ -86,7 +87,7 @@ class DocumentDashboard extends Component
 
     public function getDocumentsProperty()
     {
-        $query = Auth::user()->documents()->with('documentType');
+        $query = Auth::user()->documents()->with(['documentType', 'verificationLevel']);
 
         // Filter by type
         if ($this->selectedType !== 'all') {
@@ -136,6 +137,22 @@ class DocumentDashboard extends Component
     public function getDocumentTypesProperty()
     {
         return DocumentType::active()->ordered()->get();
+    }
+
+    public function retryOcr($documentId)
+    {
+        $document = Auth::user()->documents()->findOrFail($documentId);
+        
+        // Reset OCR status
+        $document->update([
+            'ocr_status' => 'pending',
+            'ocr_error' => null,
+        ]);
+        
+        // Dispatch OCR job
+        ProcessDocumentOcr::dispatch($document);
+        
+        session()->flash('message', 'OCR processing has been restarted. Please wait a few moments.');
     }
 
     public function render()

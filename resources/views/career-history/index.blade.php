@@ -157,6 +157,13 @@
                                                 @endphp
                                                 <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3">
 
+                                                    <!-- History Button (Top Right) -->
+                                                    <button onclick="openVersionHistoryModal({{ $doc->id }}); event.stopPropagation();" 
+                                                            class="absolute top-2 right-2 z-10 p-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors shadow-md"
+                                                            title="View Version History">
+                                                        <i class="fas fa-history text-xs"></i>
+                                                    </button>
+
                                                     <!-- Document Image -->
                                                     <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card hover:bg-[#D0E7FF] transition-colors group relative" data-doc='@json($doc)'>
 
@@ -222,6 +229,43 @@
                                                                 <div class="text-[14px]">
                                                                     Status: <span class="{{ $statusColor }} font-semibold">{{ ucfirst($doc->status ?? 'pending') }}</span>
                                                                 </div>
+
+                                                                <!-- OCR Status Display -->
+                                                                @if($doc->ocr_status)
+                                                                <div class="text-[12px] mt-1">
+                                                                    <span class="px-2 py-0.5 text-xs font-medium rounded
+                                                                        @if($doc->ocr_status === 'completed') bg-blue-100 text-blue-800
+                                                                        @elseif($doc->ocr_status === 'processing') bg-yellow-100 text-yellow-800
+                                                                        @elseif($doc->ocr_status === 'failed') bg-red-100 text-red-800
+                                                                        @else bg-gray-100 text-gray-800
+                                                                        @endif"
+                                                                        title="@if($doc->ocr_status === 'completed' && $doc->ocr_confidence)OCR Confidence: {{ number_format($doc->ocr_confidence, 1) }}%@elseif($doc->ocr_status === 'failed'){{ $doc->ocr_error ?? 'OCR processing failed' }}@else OCR {{ ucfirst($doc->ocr_status) }}@endif">
+                                                                        <i class="fas fa-eye mr-1"></i>
+                                                                        @if($doc->ocr_status === 'completed' && $doc->ocr_confidence)
+                                                                            OCR {{ number_format($doc->ocr_confidence, 0) }}%
+                                                                        @else
+                                                                            OCR {{ ucfirst($doc->ocr_status) }}
+                                                                        @endif
+                                                                    </span>
+                                                                </div>
+                                                                @endif
+
+                                                                <!-- Verification Level Badge -->
+                                                                @if($doc->verificationLevel)
+                                                                <div class="text-[12px] mt-1">
+                                                                    <span class="px-2 py-0.5 text-xs font-medium rounded
+                                                                        @if($doc->verificationLevel->badge_color === 'gold') bg-yellow-100 text-yellow-800
+                                                                        @elseif($doc->verificationLevel->badge_color === 'purple') bg-purple-100 text-purple-800
+                                                                        @elseif($doc->verificationLevel->badge_color === 'green') bg-green-100 text-green-800
+                                                                        @elseif($doc->verificationLevel->badge_color === 'blue') bg-blue-100 text-blue-800
+                                                                        @else bg-gray-100 text-gray-800
+                                                                        @endif"
+                                                                        title="{{ $doc->verificationLevel->description }}">
+                                                                        <i class="{{ $doc->verificationLevel->badge_icon }} mr-1"></i>
+                                                                        {{ $doc->verificationLevel->name }} (Level {{ $doc->verificationLevel->level }})
+                                                                    </span>
+                                                                </div>
+                                                                @endif
                                                             </div>
                                                         </div>
 
@@ -308,6 +352,13 @@
                         @endphp
                         <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3">
 
+                            <!-- History Button (Top Right) -->
+                            <button onclick="openVersionHistoryModal({{ $doc->id }}); event.stopPropagation();" 
+                                    class="absolute top-2 right-2 z-10 p-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors shadow-md"
+                                    title="View Version History">
+                                <i class="fas fa-history text-xs"></i>
+                            </button>
+
                             <!-- Document Image/Thumbnail -->
                             <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card hover:bg-[#D0E7FF] transition-colors group relative" data-doc='@json($doc)'>
                                 @if($doc->file_path)
@@ -387,6 +438,43 @@
                                         <div class="text-[14px]">
                                             Status: <span class="{{ $statusColor }} font-semibold">{{ ucfirst($doc->status ?? 'pending') }}</span>
                                         </div>
+
+                                        <!-- OCR Status Display -->
+                                        @if($doc->ocr_status)
+                                        <div class="text-[12px] mt-1">
+                                            <span class="px-2 py-0.5 text-xs font-medium rounded
+                                                @if($doc->ocr_status === 'completed') bg-blue-100 text-blue-800
+                                                @elseif($doc->ocr_status === 'processing') bg-yellow-100 text-yellow-800
+                                                @elseif($doc->ocr_status === 'failed') bg-red-100 text-red-800
+                                                @else bg-gray-100 text-gray-800
+                                                @endif"
+                                                title="@if($doc->ocr_status === 'completed' && $doc->ocr_confidence)OCR Confidence: {{ number_format($doc->ocr_confidence, 1) }}%@elseif($doc->ocr_status === 'failed'){{ $doc->ocr_error ?? 'OCR processing failed' }}@else OCR {{ ucfirst($doc->ocr_status) }}@endif">
+                                                <i class="fas fa-eye mr-1"></i>
+                                                @if($doc->ocr_status === 'completed' && $doc->ocr_confidence)
+                                                    OCR {{ number_format($doc->ocr_confidence, 0) }}%
+                                                @else
+                                                    OCR {{ ucfirst($doc->ocr_status) }}
+                                                @endif
+                                            </span>
+                                        </div>
+                                        @endif
+
+                                        <!-- Verification Level Badge -->
+                                        @if($doc->verificationLevel)
+                                        <div class="text-[12px] mt-1">
+                                            <span class="px-2 py-0.5 text-xs font-medium rounded
+                                                @if($doc->verificationLevel->badge_color === 'gold') bg-yellow-100 text-yellow-800
+                                                @elseif($doc->verificationLevel->badge_color === 'purple') bg-purple-100 text-purple-800
+                                                @elseif($doc->verificationLevel->badge_color === 'green') bg-green-100 text-green-800
+                                                @elseif($doc->verificationLevel->badge_color === 'blue') bg-blue-100 text-blue-800
+                                                @else bg-gray-100 text-gray-800
+                                                @endif"
+                                                title="{{ $doc->verificationLevel->description }}">
+                                                <i class="{{ $doc->verificationLevel->badge_icon }} mr-1"></i>
+                                                {{ $doc->verificationLevel->name }} (Level {{ $doc->verificationLevel->level }})
+                                            </span>
+                                        </div>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -429,14 +517,23 @@
                                 </div>
                             </div>
 
-                            {{-- Action Buttons for Rejected Documents --}}
-                            @if($isRejected)
-                            <div class="mt-auto pt-3 border-t border-gray-200 w-full">
+                            {{-- Action Buttons for Rejected Documents and OCR Retry --}}
+                            @if($isRejected || $doc->ocr_status === 'failed')
+                            <div class="mt-auto pt-3 border-t border-gray-200 w-full space-y-2">
+                                @if($isRejected)
                                 <button type="button" 
                                         onclick="editDocument({{ $doc->id }})"
                                         class="w-full px-3 py-2 bg-orange-600 text-white text-xs rounded-md hover:bg-orange-700 transition-colors font-medium shadow-sm">
                                     <i class="fas fa-redo mr-1"></i>Re-Submit
                                 </button>
+                                @endif
+                                @if($doc->ocr_status === 'failed')
+                                <button type="button" 
+                                        onclick="retryOcr({{ $doc->id }})"
+                                        class="w-full px-3 py-2 bg-purple-600 text-white text-xs rounded-md hover:bg-purple-700 transition-colors font-medium shadow-sm">
+                                    <i class="fas fa-sync-alt mr-1"></i>Retry OCR
+                                </button>
+                                @endif
                             </div>
                             @endif
 
@@ -470,8 +567,8 @@
 @endrole
 
 <!-- Add Document Modal -->
-<div id="addDocumentModal" class="popup hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-lg shadow-lg w-[95%] sm:w-[90%] h-[95%] sm:h-[90%] max-w-6xl flex flex-col relative">
+<div id="addDocumentModal" class="popup hidden fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg w-[95%] sm:w-[90%] h-[95%] sm:h-[90%] max-w-6xl flex flex-col relative" style="isolation: isolate;">
 
         <!-- Top header: Left text + Right close -->
         <div class="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-300">
@@ -705,23 +802,30 @@
                             <i class="fas fa-redo mr-1"></i>Re-Submit Document
                         </button>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 flex-wrap">
+                        <button type="button" 
+                                id="historyDocumentButton"
+                                onclick="openVersionHistoryModal(window.currentViewDocId || 0);"
+                                class="flex-1 px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors font-medium min-w-[120px]"
+                                aria-label="View version history">
+                            <i class="fas fa-history mr-1" aria-hidden="true"></i>History
+                        </button>
                         <button type="button" 
                                 id="editDocumentButton"
                                 onclick="editDocument(0)"
-                                class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors font-medium"
+                                class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors font-medium min-w-[120px]"
                                 aria-label="Edit document">
                             <i class="fas fa-edit mr-1" aria-hidden="true"></i>Edit
                         </button>
                         <button type="button" 
                                 id="downloadDocumentButton"
-                                class="flex-1 px-4 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 transition-colors font-medium"
+                                class="flex-1 px-4 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 transition-colors font-medium min-w-[120px]"
                                 aria-label="Download document">
                             <i class="fas fa-download mr-1" aria-hidden="true"></i>Download
                         </button>
                         <button type="button" 
                                 id="printDocumentButton"
-                                class="flex-1 px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors font-medium"
+                                class="flex-1 px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors font-medium min-w-[120px]"
                                 aria-label="Print document">
                             <i class="fas fa-print mr-1" aria-hidden="true"></i>Print
                         </button>
@@ -746,6 +850,46 @@
         <form id="shareDocumentForm" method="POST" action="{{ route('documents.share') }}">
             @csrf
             <div>
+                {{-- Template Selection --}}
+                <div class="mb-4">
+                    <label class="block mb-2">Use Template (Optional)</label>
+                    <select id="shareTemplateSelect" class="w-full border p-2 rounded outline-none">
+                        <option value="">-- Select a template --</option>
+                        @php
+                            $templates = \App\Models\ShareTemplate::forUser(auth()->id())
+                                ->orderBy('is_default', 'desc')
+                                ->orderBy('name', 'asc')
+                                ->get();
+                        @endphp
+                        @foreach($templates as $template)
+                        <option value="{{ $template->id }}" 
+                                data-expiry="{{ $template->expiry_duration_days }}"
+                                data-message="{{ $template->default_message ?? '' }}">
+                            {{ $template->name }}
+                            @if($template->is_default) (Default) @endif
+                        </option>
+                        @endforeach
+                    </select>
+                    <a href="{{ route('share-templates.index') }}" 
+                       target="_blank"
+                       class="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-block">
+                        <i class="fas fa-cog mr-1"></i>Manage Templates
+                    </a>
+                    {{-- Template Preview --}}
+                    <div id="templatePreview" class="hidden mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <div class="flex items-start justify-between mb-2">
+                            <h4 class="text-sm font-semibold text-blue-900">Template Preview</h4>
+                            <button type="button" onclick="clearTemplate()" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="text-xs text-blue-700 space-y-1">
+                            <p><strong>Expiry:</strong> <span id="templateExpiry">-</span> days</p>
+                            <p><strong>Default Message:</strong> <span id="templateMessage">-</span></p>
+                        </div>
+                    </div>
+                </div>
+
                 <label class="block mb-2">To</label>
                 <div class="w-full mb-4">
                     <input type="text" id="emailInput" placeholder="Enter emails" class="w-full border p-2 rounded outline-none" />
@@ -856,6 +1000,26 @@
 .animate-scan {
   animation: scan-move 2s linear infinite;
 }
+
+/* Fix date picker positioning in modal */
+#addDocumentModal {
+    isolation: isolate;
+}
+
+#addDocumentModal input[type="date"] {
+    position: relative;
+    z-index: 10;
+}
+
+#addDocumentModal input[type="date"]::-webkit-calendar-picker-indicator {
+    position: relative;
+    z-index: 20;
+    cursor: pointer;
+}
+
+#addDocumentModal .relative {
+    isolation: isolate;
+}
 </style>
 
 <!-- jQuery & JS -->
@@ -863,6 +1027,34 @@
 <!-- <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script> -->
 <script>
   
+  // Retry OCR Function
+  function retryOcr(docId) {
+      if (!confirm('Retry OCR processing for this document?')) {
+          return;
+      }
+      
+      $.ajax({
+          url: "/documents/" + docId + "/retry-ocr",
+          method: "POST",
+          headers: {
+              'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+          },
+          success: function(response) {
+              if (response.success) {
+                  alert(response.message || 'OCR processing has been restarted. Please wait a few moments.');
+                  // Reload page after 2 seconds to show updated status
+                  setTimeout(function() {
+                      window.location.reload();
+                  }, 2000);
+              }
+          },
+          error: function(xhr) {
+              const message = xhr.responseJSON?.message || 'Failed to retry OCR. Please try again.';
+              alert(message);
+          }
+      });
+  }
+
   // Re-Submit Document Function - Opens edit modal (must be globally accessible)
   function editDocument(docId) {
       $.ajax({
@@ -893,20 +1085,48 @@
                   
                   // Populate document-specific fields
                   setTimeout(function() {
-                      if (doc.type === 'passport' && doc.passport_detail) {
-                          $("#passportNumber").val(doc.passport_detail.passport_number || '');
-                          $("#passportDob").val(doc.passport_detail.dob || '');
-                          $("#passportIssueDate").val(doc.passport_detail.issue_date || '');
-                          $("#passportExpiryDate").val(doc.passport_detail.expiry_date || '');
-                          $("#passportIssuingAuthority").val(doc.passport_detail.issuing_authority || '');
-                          $("#passportIssuingCountry").val(doc.passport_detail.issuing_country || '');
-                      } else if (doc.type === 'idvisa' && doc.idvisa_detail) {
-                          $("#idvisaDocumentNumber").val(doc.idvisa_detail.document_number || '');
-                          $("#idvisaDob").val(doc.idvisa_detail.dob || '');
-                          $("#idvisaIssueDate").val(doc.idvisa_detail.issue_date || '');
-                          $("#idvisaExpiryDate").val(doc.idvisa_detail.expiry_date || '');
-                          $("#idvisaIssuingAuthority").val(doc.idvisa_detail.issuing_authority || '');
-                          $("#idvisaIssuingCountry").val(doc.idvisa_detail.issuing_country || '');
+                      // Support both snake_case and camelCase from API
+                      const passportDetail = doc.passportDetail || doc.passport_detail;
+                      const idvisaDetail = doc.idvisaDetail || doc.idvisa_detail;
+                      
+                      if (doc.type === 'passport' && passportDetail) {
+                          // Use correct field IDs that match the dynamic form
+                          const passportNumber = passportDetail.passport_number || '';
+                          const nationality = passportDetail.nationality || '';
+                          const countryCode = passportDetail.country_code || '';
+                          const dob = passportDetail.dob || '';
+                          const issueDate = passportDetail.issue_date || '';
+                          const expiryDate = passportDetail.expiry_date || '';
+                          
+                          // Set passport-specific fields
+                          $("input[name='passport_number']").val(passportNumber);
+                          $("input[name='nationality']").val(nationality);
+                          $("input[name='country_code']").val(countryCode);
+                          
+                          // Set date fields (common IDs)
+                          $("input[name='dob']").val(dob);
+                          $("input[name='issue_date']").val(issueDate);
+                          $("input[name='expiry_date']").val(expiryDate);
+                          
+                          console.log("Populated passport fields:", {passportNumber, nationality, countryCode, dob, issueDate, expiryDate});
+                      } else if (doc.type === 'idvisa' && idvisaDetail) {
+                          const documentName = idvisaDetail.document_name || '';
+                          const documentNumber = idvisaDetail.document_number || '';
+                          const dob = idvisaDetail.dob || '';
+                          const issueDate = idvisaDetail.issue_date || '';
+                          const expiryDate = idvisaDetail.expiry_date || '';
+                          const issueCountry = idvisaDetail.issue_country || '';
+                          const countryCode = idvisaDetail.country_code || '';
+                          
+                          $("select[name='document_name']").val(documentName);
+                          $("input[name='document_number']").val(documentNumber);
+                          $("input[name='dob']").val(dob);
+                          $("input[name='issue_date']").val(issueDate);
+                          $("input[name='expiry_date']").val(expiryDate);
+                          $("input[name='issue_country']").val(issueCountry);
+                          $("input[name='country_code']").val(countryCode);
+                          
+                          console.log("Populated idvisa fields:", {documentName, documentNumber, dob, issueDate, expiryDate});
                       } else if (doc.type === 'certificate' && doc.certificates && doc.certificates.length > 0) {
                           const cert = doc.certificates[0];
                           $("#certificateType").val(cert.type_id || '');
@@ -1397,15 +1617,13 @@ function renderDynamicFields(type, callback) {
                     <label class="block font-medium">Date of Birth</label>
                     <input type="date" id="dob" name="dob" class="w-full border p-2 rounded-md">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block font-medium">Issue Date</label>
-                        <input type="date" id="issueDate" name="issue_date" class="w-full border p-2 rounded-md">
-                    </div>
-                    <div id="expiryDateWrapper" style="display:none;">
-                        <label class="block font-medium">Expiry Date</label>
-                        <input type="date" id="expiryDate" name="expiry_date" class="w-full border p-2 rounded-md">
-                    </div>
+                <div>
+                    <label class="block font-medium">Issue Date</label>
+                    <input type="date" id="issueDate" name="issue_date" class="w-full border p-2 rounded-md">
+                </div>
+                <div id="expiryDateWrapper" style="display:none;">
+                    <label class="block font-medium">Expiry Date</label>
+                    <input type="date" id="expiryDate" name="expiry_date" class="w-full border p-2 rounded-md">
                 </div>
                 <div>
                     <label class="block font-medium">Country</label>
@@ -2127,6 +2345,9 @@ document.querySelectorAll('.toggle-share').forEach(span => {
 
 
         // Show popup
+        // Store document ID for History button
+        window.currentViewDocId = doc.id;
+        
         $("#viewDocumentModal").removeClass("hidden").addClass("flex");
     });
 
@@ -2702,6 +2923,36 @@ function showResultPopup(title, message, type) {
     }, 3000);
 }
 
+// Template Selection Handler
+$(document).ready(function() {
+    $('#shareTemplateSelect').on('change', function() {
+        const selectedOption = $(this).find('option:selected');
+        const templateId = $(this).val();
+        
+        if (templateId) {
+            const expiry = selectedOption.data('expiry');
+            const message = selectedOption.data('message');
+            
+            // Show preview
+            $('#templatePreview').removeClass('hidden');
+            $('#templateExpiry').text(expiry);
+            $('#templateMessage').text(message || 'No default message');
+            
+            // Auto-fill message if empty
+            if (message && !$('#messageInput').val().trim()) {
+                $('#messageInput').val(message);
+            }
+        } else {
+            $('#templatePreview').addClass('hidden');
+        }
+    });
+});
+
+function clearTemplate() {
+    $('#shareTemplateSelect').val('');
+    $('#templatePreview').addClass('hidden');
+}
+
 
     // Continue button closes popup
     $("#continueBtn").on("click", function() {
@@ -2788,5 +3039,122 @@ function showResultPopup(title, message, type) {
     }
 
   });
+
+  // Listen for Livewire events to open edit modal
+  document.addEventListener('livewire:init', () => {
+    Livewire.on('openUploadModal', (event) => {
+      const data = Array.isArray(event) ? event[0] : event;
+      const documentId = data?.documentId || data?.document_id;
+      const mode = data?.mode || 'add';
+      
+      // Close view modal if open (Livewire modal)
+      if (window.Livewire) {
+        Livewire.dispatch('closeDocumentDetails');
+      }
+      
+      // Small delay to ensure modal closes, then open edit modal with higher z-index
+      setTimeout(() => {
+        const editModal = document.getElementById('addDocumentModal');
+        if (editModal) {
+          editModal.classList.remove('hidden');
+          editModal.style.zIndex = '60'; // Higher than view modal (z-50)
+          editModal.style.display = 'flex';
+          
+          // If edit mode, load document data
+          if (mode === 'edit' && documentId) {
+            window.editDocumentId = documentId;
+            // Load document for editing - you may need to implement this
+            // For now, the modal should handle edit mode
+          }
+        }
+      }, 150);
+    });
+  });
+
+  // Make openVersionHistoryModal available globally if not already defined
+  if (typeof window.openVersionHistoryModal === 'undefined') {
+    window.openVersionHistoryModal = function(documentId) {
+      if (!documentId || documentId === 0) {
+        alert('Document ID not available. Please try again.');
+        return;
+      }
+      
+      // Close current modal if open
+      $("#viewDocumentModal").addClass("hidden").removeClass("flex");
+      
+      // Open version history modal with higher z-index
+      setTimeout(() => {
+        let historyModal = document.getElementById('versionHistoryModal');
+        if (!historyModal) {
+          historyModal = document.createElement('div');
+          historyModal.id = 'versionHistoryModal';
+          historyModal.className = 'fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50';
+          historyModal.style.zIndex = '60';
+          document.body.appendChild(historyModal);
+          historyModal.addEventListener('click', function(e) {
+            if (e.target === historyModal) {
+              closeVersionHistoryModal();
+            }
+          });
+        }
+        
+        // Show loading state
+        historyModal.innerHTML = `
+          <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-gray-900">Version History</h3>
+              <button onclick="closeVersionHistoryModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            <div class="flex-1 overflow-auto p-4">
+              <div id="versionHistoryContent">
+                <div class="text-center py-8">
+                  <i class="fas fa-spinner fa-spin text-2xl text-gray-400 mb-2"></i>
+                  <p class="text-gray-600">Loading version history...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        historyModal.style.display = 'flex';
+        
+        // Load version history via AJAX
+        fetch(`/documents/${documentId}/versions`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'text/html'
+          }
+        })
+          .then(res => {
+            if (!res.ok) throw new Error('Failed to load');
+            return res.text();
+          })
+          .then(html => {
+            const contentDiv = document.getElementById('versionHistoryContent');
+            if (contentDiv) {
+              contentDiv.innerHTML = html;
+            }
+          })
+          .catch(err => {
+            console.error('Failed to load version history:', err);
+            const contentDiv = document.getElementById('versionHistoryContent');
+            if (contentDiv) {
+              contentDiv.innerHTML = '<div class="text-center py-8 text-red-600"><i class="fas fa-exclamation-circle text-2xl mb-2"></i><p>Failed to load version history. Please try again.</p></div>';
+            }
+          });
+      }, 200);
+    };
+  }
+
+  // Close version history modal function
+  function closeVersionHistoryModal() {
+    const modal = document.getElementById('versionHistoryModal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.innerHTML = '';
+    }
+  }
 </script>
 

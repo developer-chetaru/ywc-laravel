@@ -5,6 +5,7 @@ namespace App\Livewire\Documents;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\DocumentShare;
+use App\Models\ShareTemplate;
 use App\Services\Documents\DocumentShareService;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,6 +19,8 @@ class ShareManagement extends Component
     public $recipientName = '';
     public $personalMessage = '';
     public $expiresInDays = null;
+    public $selectedTemplateId = null;
+    public $showTemplatePreview = false;
 
     protected $shareService;
 
@@ -49,6 +52,32 @@ class ShareManagement extends Component
         ]);
 
         try {
+            // If template is selected, use template's settings
+            if ($this->selectedTemplateId) {
+                $template = ShareTemplate::where('user_id', Auth::id())->findOrFail($this->selectedTemplateId);
+                
+                // Use template's expiry if not manually set
+                $expiresInDays = $this->expiresInDays ?? $template->expiry_duration_days;
+                // Use template's message if personal message not provided
+                $message = $this->personalMessage ?: $template->default_message;
+                
+                $share = $this->shareService->createShare(
+                    Auth::user(),
+                    $this->selectedDocuments,
+                    $this->recipientEmail ?: null,
+                    $this->recipientName ?: null,
+                    $message,
+                    $expiresInDays ? \Carbon\Carbon::now()->addDays($expiresInDays) : null,
+                    $template->permissions ?? []
+                );
+
+                session()->flash('message', 'Share created successfully using template!');
+                $this->closeCreateModal();
+                $this->resetPage();
+                return;
+            }
+
+            // Fallback to regular share creation
             $share = $this->shareService->createShare(
                 Auth::user(),
                 $this->selectedDocuments,
@@ -100,11 +129,20 @@ class ShareManagement extends Component
             ->get();
     }
 
+    public function getTemplatesProperty()
+    {
+        return ShareTemplate::forUser(Auth::id())
+            ->orderBy('is_default', 'desc')
+            ->orderBy('name', 'asc')
+            ->get();
+    }
+
     public function render()
     {
         return view('livewire.documents.share-management', [
             'shares' => $this->shares,
             'availableDocuments' => $this->availableDocuments,
+            'templates' => $this->templates,
         ])->layout('layouts.app-laravel');
     }
 }

@@ -297,6 +297,7 @@ Route::middleware([
   	})->name('career-history');
     Route::get('/certificate-type/{id}/issuers', [CareerHistoryController::class, 'getIssuersByType']);
     Route::post('/documents/scan', [CareerHistoryController::class, 'scan'])->name('documents.scan');
+    Route::post('/documents/{id}/retry-ocr', [CareerHistoryController::class, 'retryOcr'])->name('documents.retry-ocr');
     Route::post('/career-history', [CareerHistoryController::class, 'store'])->name('career-history.store');
   	Route::post('/documents/toggle-share', [CareerHistoryController::class, 'toggleShare'])->name('documents.toggleShare');
 	
@@ -310,6 +311,19 @@ Route::middleware([
   	Route::post('/admin/documents/{document}/verify', [CocCheckerController::class, 'verify']);
     Route::patch('/admin/documents/{document}/status', [CareerHistoryController::class, 'updateStatus']);
     
+    // Document Verification Routes
+    Route::post('/documents/{document}/request-verification', [\App\Http\Controllers\DocumentVerificationController::class, 'requestVerification'])->name('documents.request-verification');
+    Route::post('/documents/{document}/verify', [\App\Http\Controllers\DocumentVerificationController::class, 'verify'])->name('documents.verify');
+    Route::get('/verification/queue', [\App\Http\Controllers\DocumentVerificationController::class, 'queue'])->name('verification.queue');
+    
+    // Share Template Routes
+    Route::get('/share-templates', \App\Livewire\Documents\ShareTemplateManagement::class)->name('share-templates.index');
+    Route::get('/share-templates/api', [\App\Http\Controllers\ShareTemplateController::class, 'index'])->name('share-templates.api');
+    Route::post('/share-templates', [\App\Http\Controllers\ShareTemplateController::class, 'store'])->name('share-templates.store');
+    Route::put('/share-templates/{shareTemplate}', [\App\Http\Controllers\ShareTemplateController::class, 'update'])->name('share-templates.update');
+    Route::delete('/share-templates/{shareTemplate}', [\App\Http\Controllers\ShareTemplateController::class, 'destroy'])->name('share-templates.destroy');
+    Route::post('/share-templates/{shareTemplate}/apply', [\App\Http\Controllers\ShareTemplateController::class, 'apply'])->name('share-templates.apply');
+    
     // Admin Document Approval
     Route::get('/admin/documents/approval', \App\Livewire\Documents\Admin\DocumentApproval::class)->name('admin.documents.approval');
   
@@ -322,6 +336,9 @@ Route::middleware([
         Route::get('/{document}/signed-url', [\App\Http\Controllers\DocumentDownloadController::class, 'signedUrl'])->name('signed-url');
         Route::get('/{document}/download', [\App\Http\Controllers\DocumentDownloadController::class, 'download'])->name('download');
         Route::get('/{document}/view', [\App\Http\Controllers\DocumentDownloadController::class, 'view'])->name('view');
+        Route::get('/{document}/versions', [\App\Http\Controllers\CareerHistoryController::class, 'showVersions'])->name('versions.show');
+        Route::post('/{document}/restore-version/{version}', [\App\Http\Controllers\CareerHistoryController::class, 'restoreVersion'])->name('restore-version');
+        Route::get('/versions/{version}/download', [\App\Http\Controllers\DocumentDownloadController::class, 'downloadVersion'])->name('versions.download');
     });
 
     // New token-based sharing routes

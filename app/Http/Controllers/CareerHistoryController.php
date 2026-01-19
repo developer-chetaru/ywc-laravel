@@ -19,11 +19,33 @@ use App\Models\Certificate;
 use App\Models\OtherDocument;
 use App\Models\User;
 use App\Jobs\ProcessDocumentOcr;
+use App\Services\Documents\VersionService;
 use Carbon\Carbon;
 use Imagick;
 
 class CareerHistoryController extends Controller
 {
+    /**
+     * Show version history for a document
+     */
+    public function showVersions(Document $document)
+    {
+        // Check authorization
+        if ($document->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $versions = \App\Models\DocumentVersion::where('document_id', $document->id)
+            ->with('creator')
+            ->latest('version_number')
+            ->get();
+
+        return view('documents.version-history-view', [
+            'document' => $document,
+            'versions' => $versions
+        ]);
+    }
+
     /**
      * Show the Career History page
      */
@@ -40,6 +62,7 @@ class CareerHistoryController extends Controller
             'certificates.type',
             'certificates.issuer',
             'otherDocument',
+            'verificationLevel',
             'statusChanges' => function($q) {
                 $q->latest()->limit(1); // Get latest status change for notes
             },
@@ -269,6 +292,43 @@ class CareerHistoryController extends Controller
 
         $validated = $request->validate($rules);
 
+        // Always create version before updating to track all changes
+        try {
+            $versionService = app(VersionService::class);
+            
+            // Detect what changed for better change notes
+            $changes = [];
+            if ($request->hasFile('file')) {
+                $changes[] = 'file uploaded';
+            }
+            if ($oldType !== $validated['type']) {
+                $changes[] = 'document type changed';
+            }
+            
+            // Check for metadata changes
+            $metadataChanged = false;
+            $metadataFields = ['passport_number', 'nationality', 'country_code', 'issue_date', 
+                              'expiry_date', 'dob', 'document_name', 'document_number'];
+            foreach ($metadataFields as $field) {
+                if ($request->has($field)) {
+                    $metadataChanged = true;
+                    break;
+                }
+            }
+            
+            if ($metadataChanged) {
+                $changes[] = 'metadata updated';
+            }
+            
+            $changeNotes = $request->input('change_notes') ?: 
+                          (!empty($changes) ? ucfirst(implode(', ', $changes)) : 'Document updated');
+            
+            $versionService->createVersion($document, $changeNotes);
+        } catch (\Exception $e) {
+            \Log::warning('Version creation failed for document ' . $document->id . ': ' . $e->getMessage());
+            // Don't fail the update if version creation fails
+        }
+
         // Delete old details if type changed
         if ($oldType !== $validated['type']) {
             switch ($oldType) {
@@ -382,9 +442,13 @@ class CareerHistoryController extends Controller
                 break;
         }
 
+        // Refresh document to get latest version
+        $document->refresh();
+
         return response()->json([
             'success' => true,
-            'message' => 'Document updated successfully'
+            'message' => 'Document updated successfully',
+            'version' => $document->version
         ]);
     }
   
@@ -584,6 +648,49 @@ class CareerHistoryController extends Controller
             'success' => true,
             'text' => $text,
             'detected_type' => $isPassport ? 'passport' : null,
+        ]);
+    }
+
+    /**
+     * Retry OCR processing for a document
+     */
+    public function restoreVersion(Request $request, Document $document, $versionId)
+    {
+        $version = \App\Models\DocumentVersion::where('document_id', $document->id)
+            ->where('id', $versionId)
+            ->firstOrFail();
+
+        // Check authorization
+        if ($document->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        try {
+            $versionService = app(\App\Services\Documents\VersionService::class);
+            $versionService->restoreVersion($document, $version);
+            
+            return redirect()->back()->with('success', 'Document restored to version ' . $version->version_number . ' successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to restore version: ' . $e->getMessage());
+        }
+    }
+
+    public function retryOcr(Request $request, $id)
+    {
+        $document = Document::where('user_id', auth()->id())->findOrFail($id);
+        
+        // Reset OCR status
+        $document->update([
+            'ocr_status' => 'pending',
+            'ocr_error' => null,
+        ]);
+        
+        // Dispatch OCR job
+        \App\Jobs\ProcessDocumentOcr::dispatch($document);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'OCR processing has been restarted. Please wait a few moments.',
         ]);
     }
 

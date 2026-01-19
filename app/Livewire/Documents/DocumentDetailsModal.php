@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Document;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Jobs\ProcessDocumentOcr;
 use Livewire\Attributes\On;
 
 class DocumentDetailsModal extends Component
@@ -27,7 +28,9 @@ class DocumentDetailsModal extends Component
                 'otherDocument',
                 'uploader',
                 'updater',
-                'statusChanges.changedBy'
+                'statusChanges.changedBy',
+                'verificationLevel',
+                'versions'
             ])
             ->findOrFail($documentId);
 
@@ -46,6 +49,12 @@ class DocumentDetailsModal extends Component
         $this->signedUrl = null;
     }
 
+    #[On('closeDocumentDetails')]
+    public function handleClose(): void
+    {
+        $this->closeModal();
+    }
+
     public function download(): void
     {
         if ($this->document && $this->document->file_path) {
@@ -56,7 +65,19 @@ class DocumentDetailsModal extends Component
     public function edit(): void
     {
         if ($this->document) {
+            // Close current modal first, then open edit modal with higher z-index
+            $this->closeModal();
+            // Use setTimeout to ensure modal closes before opening edit
             $this->dispatch('openUploadModal', documentId: $this->document->id, mode: 'edit');
+        }
+    }
+
+    public function showHistory(): void
+    {
+        if ($this->document) {
+            // Open version history in a modal or new page
+            $this->dispatch('openVersionHistory', documentId: $this->document->id);
+            // Also close current modal
             $this->closeModal();
         }
     }
@@ -83,6 +104,25 @@ class DocumentDetailsModal extends Component
             $this->dispatch('openShareDocumentsModal', selectedDocuments: [$this->document->id]);
             $this->closeModal();
         }
+    }
+
+    public function retryOcr($documentId): void
+    {
+        $document = Auth::user()->documents()->findOrFail($documentId);
+        
+        // Reset OCR status
+        $document->update([
+            'ocr_status' => 'pending',
+            'ocr_error' => null,
+        ]);
+        
+        // Dispatch OCR job
+        ProcessDocumentOcr::dispatch($document);
+        
+        // Refresh document data
+        $this->openModal($documentId);
+        
+        session()->flash('ocr_message', 'OCR processing has been restarted. Please wait a few moments.');
     }
 
     public function getFileExtension(): ?string

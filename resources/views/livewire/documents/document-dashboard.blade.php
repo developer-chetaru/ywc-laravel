@@ -84,13 +84,31 @@
                                         </p>
                                         @endif
                                     </div>
-                                    <span class="px-2 py-1 text-xs font-bold rounded
-                                        @if($monthsRemaining <= 0) bg-red-100 text-red-800
-                                        @elseif($monthsRemaining <= 3) bg-yellow-100 text-yellow-800
-                                        @else bg-orange-100 text-orange-800
-                                        @endif">
-                                        {{ $monthsRemaining > 0 ? $monthsRemaining : 0 }} MONTHS
-                                    </span>
+                                    <div class="flex flex-col gap-1 items-end">
+                                        <span class="px-2 py-1 text-xs font-bold rounded
+                                            @if($monthsRemaining <= 0) bg-red-100 text-red-800
+                                            @elseif($monthsRemaining <= 3) bg-yellow-100 text-yellow-800
+                                            @else bg-orange-100 text-orange-800
+                                            @endif">
+                                            {{ $monthsRemaining > 0 ? $monthsRemaining : 0 }} MONTHS
+                                        </span>
+                                        @if($doc->ocr_status)
+                                        <span class="px-2 py-1 text-xs font-medium rounded
+                                            @if($doc->ocr_status === 'completed') bg-blue-100 text-blue-800
+                                            @elseif($doc->ocr_status === 'processing') bg-yellow-100 text-yellow-800
+                                            @elseif($doc->ocr_status === 'failed') bg-red-100 text-red-800
+                                            @else bg-gray-100 text-gray-800
+                                            @endif"
+                                            title="@if($doc->ocr_status === 'completed' && $doc->ocr_confidence)OCR Confidence: {{ number_format($doc->ocr_confidence, 1) }}%@else OCR {{ ucfirst($doc->ocr_status) }}@endif">
+                                            <i class="fas fa-eye mr-1"></i>
+                                            @if($doc->ocr_status === 'completed' && $doc->ocr_confidence)
+                                                {{ number_format($doc->ocr_confidence, 0) }}%
+                                            @else
+                                                {{ ucfirst($doc->ocr_status) }}
+                                            @endif
+                                        </span>
+                                        @endif
+                                    </div>
                                 </div>
                                 
                                 @if($doc->thumbnail_path)
@@ -125,6 +143,13 @@
                                                 class="w-full text-center bg-orange-600 text-white px-3 py-2 rounded-md hover:bg-orange-700 transition-colors text-xs font-medium shadow-sm"
                                                 style="display: block !important; opacity: 1 !important; visibility: visible !important;">
                                             <i class="fas fa-redo mr-1"></i>Re-Submit
+                                        </button>
+                                        @endif
+                                        @if($doc->ocr_status === 'failed')
+                                        <button type="button" 
+                                                wire:click="retryOcr({{ $doc->id }})" 
+                                                class="w-full text-center bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition-colors text-xs font-medium shadow-sm">
+                                            <i class="fas fa-sync-alt mr-1"></i>Retry OCR
                                         </button>
                                         @endif
                                     </div>
@@ -208,13 +233,44 @@
                                     <p class="text-sm text-gray-600">#{{ $document->document_number }}</p>
                                     @endif
                                 </div>
-                                <span class="px-2 py-1 text-xs font-medium rounded
-                                    @if($document->status === 'approved') bg-green-100 text-green-800
-                                    @elseif($document->status === 'rejected') bg-red-100 text-red-800
-                                    @else bg-yellow-100 text-yellow-800
-                                    @endif">
-                                    {{ ucfirst($document->status) }}
-                                </span>
+                                <div class="flex flex-col gap-1 items-end">
+                                    <span class="px-2 py-1 text-xs font-medium rounded
+                                        @if($document->status === 'approved') bg-green-100 text-green-800
+                                        @elseif($document->status === 'rejected') bg-red-100 text-red-800
+                                        @else bg-yellow-100 text-yellow-800
+                                        @endif">
+                                        {{ ucfirst($document->status) }}
+                                    </span>
+                                    @if($document->ocr_status)
+                                    <span class="px-2 py-1 text-xs font-medium rounded
+                                        @if($document->ocr_status === 'completed') bg-blue-100 text-blue-800
+                                        @elseif($document->ocr_status === 'processing') bg-yellow-100 text-yellow-800
+                                        @elseif($document->ocr_status === 'failed') bg-red-100 text-red-800
+                                        @else bg-gray-100 text-gray-800
+                                        @endif"
+                                        title="@if($document->ocr_status === 'completed' && $document->ocr_confidence)OCR Confidence: {{ number_format($document->ocr_confidence, 1) }}%@elseif($document->ocr_status === 'failed'){{ $document->ocr_error ?? 'OCR processing failed' }}@else OCR {{ ucfirst($document->ocr_status) }}@endif">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        @if($document->ocr_status === 'completed' && $document->ocr_confidence)
+                                            OCR {{ number_format($document->ocr_confidence, 0) }}%
+                                        @else
+                                            OCR {{ ucfirst($document->ocr_status) }}
+                                        @endif
+                                    </span>
+                                    @endif
+                                    @if($document->verificationLevel)
+                                    <span class="px-2 py-1 text-xs font-medium rounded
+                                        @if($document->verificationLevel->badge_color === 'gold') bg-yellow-100 text-yellow-800
+                                        @elseif($document->verificationLevel->badge_color === 'purple') bg-purple-100 text-purple-800
+                                        @elseif($document->verificationLevel->badge_color === 'green') bg-green-100 text-green-800
+                                        @elseif($document->verificationLevel->badge_color === 'blue') bg-blue-100 text-blue-800
+                                        @else bg-gray-100 text-gray-800
+                                        @endif"
+                                        title="{{ $document->verificationLevel->description }}">
+                                        <i class="{{ $document->verificationLevel->badge_icon }} mr-1"></i>
+                                        Level {{ $document->verificationLevel->level }}
+                                    </span>
+                                    @endif
+                                </div>
                             </div>
                             
                             @if($document->thumbnail_path)
@@ -256,6 +312,12 @@
                                 <button wire:click="$dispatch('openUploadModal', { documentId: {{ $document->id }}, mode: 'edit' })" 
                                     class="flex-1 text-center bg-orange-600 text-white px-3 py-2 rounded-md hover:bg-orange-700 transition-colors text-sm font-medium">
                                     <i class="fas fa-redo mr-1"></i>Re-Submit
+                                </button>
+                                @endif
+                                @if($document->ocr_status === 'failed')
+                                <button wire:click="retryOcr({{ $document->id }})" 
+                                    class="w-full text-center bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
+                                    <i class="fas fa-sync-alt mr-1"></i>Retry OCR
                                 </button>
                                 @endif
                             </div>

@@ -3,13 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Models\DocumentVersion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Gate;
+use App\Services\Documents\WatermarkService;
 
 class DocumentDownloadController extends Controller
 {
+    protected $watermarkService;
+
+    public function __construct(WatermarkService $watermarkService)
+    {
+        $this->watermarkService = $watermarkService;
+    }
+
     /**
      * Generate a signed URL for document access
      * URL expires after 15 minutes
@@ -41,7 +50,7 @@ class DocumentDownloadController extends Controller
     /**
      * Download document with authorization check
      */
-    public function download(Document $document)
+    public function download(Request $request, Document $document)
     {
         // Check authorization
         if (!Gate::allows('view', $document)) {
@@ -65,8 +74,19 @@ class DocumentDownloadController extends Controller
             'ip_address' => request()->ip(),
         ]);
 
+        // Check if watermarking is requested (for shared documents)
+        $addWatermark = $request->has('watermark') && $request->boolean('watermark');
+        $filePath = $document->file_path;
+        
+        if ($addWatermark) {
+            $watermarkedPath = $this->watermarkService->addWatermarkToShared($document);
+            if ($watermarkedPath) {
+                $filePath = $watermarkedPath;
+            }
+        }
+
         return Storage::disk('public')->download(
-            $document->file_path,
+            $filePath,
             $downloadFilename
         );
     }
@@ -100,5 +120,41 @@ class DocumentDownloadController extends Controller
         return response($file, 200)
             ->header('Content-Type', $mimeType)
             ->header('Content-Disposition', 'inline; filename="' . ($document->document_name ?? 'document') . '"');
+    }
+
+    /**
+     * Download a specific document version
+     */
+    public function downloadVersion(DocumentVersion $version)
+    {
+        // Check authorization - user must own the document
+        $document = $version->document;
+        if (!$document || $document->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized to download this version');
+        }
+
+        // Check if file exists
+        if (!$version->file_path || !Storage::disk('public')->exists($version->file_path)) {
+            abort(404, 'Version file not found');
+        }
+
+        // Generate filename
+        $filename = ($version->metadata['document_name'] ?? 'document') . '_v' . $version->version_number;
+        $extension = $version->file_type ?? pathinfo($version->file_path, PATHINFO_EXTENSION);
+        $downloadFilename = $filename . '.' . $extension;
+
+        // Log download access
+        \Log::info('Document version downloaded', [
+            'version_id' => $version->id,
+            'document_id' => $document->id,
+            'version_number' => $version->version_number,
+            'user_id' => Auth::id(),
+            'ip_address' => request()->ip(),
+        ]);
+
+        return Storage::disk('public')->download(
+            $version->file_path,
+            $downloadFilename
+        );
     }
 }
