@@ -86,6 +86,86 @@ class DocumentShare extends Model
     }
 
     /**
+     * Check if share is accessible now (within access window)
+     */
+    public function isAccessible(): bool
+    {
+        if (!$this->is_active) {
+            return false;
+        }
+
+        if ($this->isExpired()) {
+            return false;
+        }
+
+        // Check access window
+        if ($this->access_start_date && now()->lt($this->access_start_date)) {
+            return false;
+        }
+
+        if ($this->access_end_date && now()->gt($this->access_end_date)) {
+            return false;
+        }
+
+        // Check max views
+        if ($this->max_views && $this->view_count >= $this->max_views) {
+            return false;
+        }
+
+        // Check one-time access
+        if ($this->is_one_time && $this->view_count > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if password is required
+     */
+    public function requiresPassword(): bool
+    {
+        return !empty($this->password);
+    }
+
+    /**
+     * Verify password
+     */
+    public function verifyPassword(string $password): bool
+    {
+        return \Hash::check($password, $this->password);
+    }
+
+    /**
+     * Increment view count
+     */
+    public function incrementViewCount(): void
+    {
+        $this->increment('view_count');
+
+        // Deactivate if one-time or max views reached
+        if ($this->is_one_time || ($this->max_views && $this->view_count >= $this->max_views)) {
+            $this->update(['is_active' => false]);
+        }
+    }
+
+    /**
+     * Check if user can download
+     */
+    public function canDownload(): bool
+    {
+        return $this->can_download && $this->isAccessible();
+    }
+
+    /**
+     * Check if user can print
+     */
+    public function canPrint(): bool
+    {
+        return $this->can_print && $this->isAccessible();
+    }
+
+    /**
      * Check if share is valid (active and not expired)
      */
     public function isValid(): bool

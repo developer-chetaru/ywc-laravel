@@ -34,7 +34,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
         industryReviewOpen: {{ request()->is('industry-review*') ? 'true' : 'false' }},
         itineraryOpen: {{ request()->is('itinerary*') ? 'true' : 'false' }},
         crewDiscoveryOpen: {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'true' : 'false' }},
-        documentsCareerOpen: {{ request()->is('documents*') || request()->is('career-history*') || request()->is('share-templates*') ? 'true' : 'false' }},
+        documentsCareerOpen: {{ request()->is('documents*') || request()->is('career-history*') || request()->is('share-templates-new*') || request()->is('ocr/accuracy*') || request()->is('verification/appeals*') ? 'true' : 'false' }},
         trainingOpen: {{ request()->is('training*') ? 'true' : 'false' }},
         financialPlanningOpen: {{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? 'true' : 'false' }}
     }"
@@ -181,6 +181,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                 </a>
             </li>
 
+
             {{-- USER LIST (Super Admin Only) --}}
             @role('super_admin')
             <li>
@@ -252,7 +253,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         <li>
                             <a href="{{ route('documents') }}"
                                 class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
-                                {{ request()->is('documents*') && !request()->is('career-history*') && !request()->is('share-templates*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                {{ request()->is('documents*') && !request()->is('career-history*') && !request()->is('share-templates-new*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
@@ -270,15 +271,49 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('share-templates.index') }}"
+                            <a href="{{ route('share-templates-new.index') }}"
                                 class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
-                                {{ request()->is('share-templates*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                {{ request()->is('share-templates-new*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z"></path>
                                 </svg>
                                 <span class="text-sm font-medium">Share Templates</span>
                             </a>
                         </li>
+                        
+                        {{-- My Appeals --}}
+                        <li>
+                            <a href="{{ route('verification.appeals.my-appeals') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('verification/appeals/my-appeals') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <i class="fas fa-gavel w-4 h-4"></i>
+                                <span class="text-sm font-medium">My Appeals</span>
+                            </a>
+                        </li>
+                        
+                        {{-- OCR Accuracy (Admin Only) --}}
+                        @role('super_admin|admin')
+                        <li>
+                            <a href="{{ route('ocr.accuracy.index') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('ocr/accuracy*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <i class="fas fa-search w-4 h-4"></i>
+                                <span class="text-sm font-medium">OCR Accuracy</span>
+                            </a>
+                        </li>
+                        @endrole
+                        
+                        {{-- Appeals Management (Admin Only) --}}
+                        @role('super_admin|admin|verifier')
+                        <li>
+                            <a href="{{ route('verification.appeals.index') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('verification/appeals') && !request()->is('verification/appeals/my-appeals') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <i class="fas fa-tasks w-4 h-4"></i>
+                                <span class="text-sm font-medium">Appeals Management</span>
+                            </a>
+                        </li>
+                        @endrole
                         @hasanyrole('super_admin|admin')
                         <li>
                             <a href="{{ route('admin.documents.approval') }}"

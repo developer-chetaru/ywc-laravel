@@ -2,210 +2,159 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\ShareTemplate;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 
 class ShareTemplateController extends Controller
 {
     /**
-     * Get all templates for the authenticated user
+     * List all templates
      */
     public function index()
     {
-        $templates = ShareTemplate::forUser(Auth::id())
+        $templates = ShareTemplate::where('user_id', Auth::id())
+            ->orWhere('is_default', true)
             ->orderBy('is_default', 'desc')
-            ->orderBy('name', 'asc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'templates' => $templates
-        ]);
+        return view('shares.templates.index', compact('templates'));
     }
 
     /**
-     * Store a new template
+     * Show create form
+     */
+    public function create()
+    {
+        return view('shares.templates.create');
+    }
+
+    /**
+     * Store new template
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:500',
-            'document_criteria' => 'nullable|array',
-            'permissions' => 'nullable|array',
-            'expiry_duration_days' => 'required|integer|min:1|max:3650',
-            'default_message' => 'nullable|string|max:1000',
-            'is_default' => 'nullable|boolean',
+            'description' => 'nullable|string|max:1000',
+            
+            // Permissions
+            'can_download' => 'boolean',
+            'can_print' => 'boolean',
+            'can_share' => 'boolean',
+            'can_comment' => 'boolean',
+            
+            // Access Control
+            'is_one_time' => 'boolean',
+            'max_views' => 'nullable|integer|min:1',
+            'require_password' => 'boolean',
+            'require_watermark' => 'boolean',
+            
+            // Time Settings
+            'duration_days' => 'nullable|integer|min:1|max:365',
+            'has_access_window' => 'boolean',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        // If this is set as default, unset other defaults
-        if ($request->is_default) {
-            ShareTemplate::forUser(Auth::id())
-                ->where('is_default', true)
-                ->update(['is_default' => false]);
-        }
-
-        $template = ShareTemplate::create([
+        ShareTemplate::create([
             'user_id' => Auth::id(),
-            'name' => $request->name,
-            'description' => $request->description,
-            'document_criteria' => $request->document_criteria ?? [],
-            'permissions' => $request->permissions ?? [],
-            'expiry_duration_days' => $request->expiry_duration_days,
-            'default_message' => $request->default_message,
-            'is_default' => $request->is_default ?? false,
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            
+            'can_download' => $request->boolean('can_download', true),
+            'can_print' => $request->boolean('can_print', true),
+            'can_share' => $request->boolean('can_share', false),
+            'can_comment' => $request->boolean('can_comment', false),
+            
+            'is_one_time' => $request->boolean('is_one_time', false),
+            'max_views' => $validated['max_views'] ?? null,
+            'require_password' => $request->boolean('require_password', false),
+            'require_watermark' => $request->boolean('require_watermark', false),
+            
+            'duration_days' => $validated['duration_days'] ?? 30,
+            'has_access_window' => $request->boolean('has_access_window', false),
+            
+            'is_default' => false,
+            'usage_count' => 0,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Template created successfully',
-            'template' => $template
-        ]);
+        return redirect()->route('share-templates.index')
+            ->with('success', 'Template created successfully!');
     }
 
     /**
-     * Update a template
+     * Show edit form
      */
-    public function update(Request $request, ShareTemplate $shareTemplate)
+    public function edit($id)
     {
-        // Ensure user owns the template
-        if ($shareTemplate->user_id !== Auth::id()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You can only update your own templates.'
-            ], 403);
+        $template = ShareTemplate::where('user_id', Auth::id())
+            ->orWhere('is_default', true)
+            ->findOrFail($id);
+
+        // Prevent editing default templates
+        if ($template->is_default && $template->user_id !== Auth::id()) {
+            abort(403, 'Cannot edit default templates.');
         }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string|max:500',
-            'document_criteria' => 'nullable|array',
-            'permissions' => 'nullable|array',
-            'expiry_duration_days' => 'sometimes|required|integer|min:1|max:3650',
-            'default_message' => 'nullable|string|max:1000',
-            'is_default' => 'nullable|boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        // If this is set as default, unset other defaults
-        if ($request->is_default) {
-            ShareTemplate::forUser(Auth::id())
-                ->where('id', '!=', $shareTemplate->id)
-                ->where('is_default', true)
-                ->update(['is_default' => false]);
-        }
-
-        $shareTemplate->update($request->only([
-            'name',
-            'description',
-            'document_criteria',
-            'permissions',
-            'expiry_duration_days',
-            'default_message',
-            'is_default',
-        ]));
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Template updated successfully',
-            'template' => $shareTemplate->fresh()
-        ]);
+        return view('shares.templates.edit', compact('template'));
     }
 
     /**
-     * Delete a template
+     * Update template
      */
-    public function destroy(ShareTemplate $shareTemplate)
+    public function update(Request $request, $id)
     {
-        // Ensure user owns the template
-        if ($shareTemplate->user_id !== Auth::id()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You can only delete your own templates.'
-            ], 403);
-        }
+        $template = ShareTemplate::where('user_id', Auth::id())->findOrFail($id);
 
-        $shareTemplate->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Template deleted successfully'
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            
+            'can_download' => 'boolean',
+            'can_print' => 'boolean',
+            'can_share' => 'boolean',
+            'can_comment' => 'boolean',
+            
+            'is_one_time' => 'boolean',
+            'max_views' => 'nullable|integer|min:1',
+            'require_password' => 'boolean',
+            'require_watermark' => 'boolean',
+            
+            'duration_days' => 'nullable|integer|min:1|max:365',
+            'has_access_window' => 'boolean',
         ]);
+
+        $template->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            
+            'can_download' => $request->boolean('can_download', true),
+            'can_print' => $request->boolean('can_print', true),
+            'can_share' => $request->boolean('can_share', false),
+            'can_comment' => $request->boolean('can_comment', false),
+            
+            'is_one_time' => $request->boolean('is_one_time', false),
+            'max_views' => $validated['max_views'] ?? null,
+            'require_password' => $request->boolean('require_password', false),
+            'require_watermark' => $request->boolean('require_watermark', false),
+            
+            'duration_days' => $validated['duration_days'] ?? 30,
+            'has_access_window' => $request->boolean('has_access_window', false),
+        ]);
+
+        return redirect()->route('share-templates.index')
+            ->with('success', 'Template updated successfully!');
     }
 
     /**
-     * Apply template to create a share
+     * Delete template
      */
-    public function apply(Request $request, ShareTemplate $shareTemplate)
+    public function destroy($id)
     {
-        // Ensure user owns the template
-        if ($shareTemplate->user_id !== Auth::id()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You can only use your own templates.'
-            ], 403);
-        }
+        $template = ShareTemplate::where('user_id', Auth::id())->findOrFail($id);
+        $template->delete();
 
-        $validator = Validator::make($request->all(), [
-            'document_ids' => 'required|array|min:1',
-            'document_ids.*' => 'exists:documents,id',
-            'recipient_email' => 'required|email',
-            'recipient_name' => 'nullable|string|max:255',
-            'personal_message' => 'nullable|string|max:1000',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        // Use DocumentShareService to create share with template settings
-        $shareService = app(\App\Services\Documents\DocumentShareService::class);
-        
-        $expiresAt = \Carbon\Carbon::now()->addDays($shareTemplate->expiry_duration_days);
-        $message = $request->personal_message ?? $shareTemplate->default_message ?? 'Shared documents for your reference.';
-
-        try {
-            $share = $shareService->createShare(
-                Auth::user(),
-                $request->document_ids,
-                $request->recipient_email,
-                $request->recipient_name,
-                $message,
-                $expiresAt,
-                $shareTemplate->permissions ?? []
-            );
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Documents shared successfully using template',
-            'share' => $share
-        ]);
+        return redirect()->route('share-templates.index')
+            ->with('success', 'Template deleted successfully!');
     }
 }

@@ -233,6 +233,49 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::post('/export-report', [\App\Http\Controllers\AnalyticsController::class, 'exportReport'])->name('export-report');
     });
 
+// Share Wizard & Templates Routes
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale'])->group(function () {
+    Route::get('/documents/{document}/share-wizard', [\App\Http\Controllers\ShareWizardController::class, 'showWizard'])->name('share-wizard.show');
+    Route::post('/documents/{document}/share-wizard', [\App\Http\Controllers\ShareWizardController::class, 'createShare'])->name('share-wizard.create');
+    
+    Route::prefix('share-templates-new')->name('share-templates-new.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ShareTemplateController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\ShareTemplateController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\ShareTemplateController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [\App\Http\Controllers\ShareTemplateController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [\App\Http\Controllers\ShareTemplateController::class, 'update'])->name('update');
+        Route::delete('/{id}', [\App\Http\Controllers\ShareTemplateController::class, 'destroy'])->name('destroy');
+    });
+});
+
+// Public Share Routes (no auth required)
+Route::prefix('shared')->name('shared.')->group(function () {
+    Route::get('/{token}', [\App\Http\Controllers\ShareWizardController::class, 'viewShared'])->name('view');
+    Route::post('/{token}/verify-password', [\App\Http\Controllers\ShareWizardController::class, 'verifyPassword'])->name('verify-password');
+    Route::get('/{token}/download', [\App\Http\Controllers\ShareWizardController::class, 'downloadShared'])->name('download');
+});
+
+// OCR Accuracy Routes
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale'])->prefix('ocr')->name('ocr.')->group(function () {
+    Route::get('/accuracy', [\App\Http\Controllers\OcrAccuracyController::class, 'index'])->name('accuracy.index');
+    Route::get('/accuracy/{id}', [\App\Http\Controllers\OcrAccuracyController::class, 'show'])->name('accuracy.show');
+    Route::get('/accuracy/export', [\App\Http\Controllers\OcrAccuracyController::class, 'export'])->name('accuracy.export');
+    Route::get('/accuracy/stats', [\App\Http\Controllers\OcrAccuracyController::class, 'stats'])->name('accuracy.stats');
+});
+
+// Verification Appeals Routes
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale'])->prefix('verification/appeals')->name('verification.appeals.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\VerificationAppealController::class, 'index'])->name('index')->middleware('role:super_admin|admin|verifier');
+    Route::get('/my-appeals', [\App\Http\Controllers\VerificationAppealController::class, 'myAppeals'])->name('my-appeals');
+    Route::get('/create/{verification}', [\App\Http\Controllers\VerificationAppealController::class, 'create'])->name('create');
+    Route::post('/{verification}', [\App\Http\Controllers\VerificationAppealController::class, 'store'])->name('store');
+    Route::get('/{id}', [\App\Http\Controllers\VerificationAppealController::class, 'show'])->name('show');
+    Route::post('/{id}/assign', [\App\Http\Controllers\VerificationAppealController::class, 'assign'])->name('assign')->middleware('role:super_admin|admin');
+    Route::post('/{id}/review', [\App\Http\Controllers\VerificationAppealController::class, 'review'])->name('review')->middleware('role:super_admin|admin|verifier');
+    Route::post('/{id}/withdraw', [\App\Http\Controllers\VerificationAppealController::class, 'withdraw'])->name('withdraw');
+    Route::get('/{id}/evidence/{fileIndex}', [\App\Http\Controllers\VerificationAppealController::class, 'downloadEvidence'])->name('download-evidence');
+});
+
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale'])
     ->group(function () {
         Route::get('/admin/waitlist', [WaitlistAdminController::class, 'index'])->name('admin.waitlist');

@@ -73,6 +73,9 @@ class DocumentDetailsModal extends Component
             return;
         }
 
+        // Get original OCR data
+        $originalFields = $this->document->ocr_data['fields'] ?? [];
+
         // Update OCR data with corrected fields
         $ocrData = $this->document->ocr_data;
         $ocrData['fields'] = $this->ocrFields;
@@ -84,13 +87,23 @@ class DocumentDetailsModal extends Component
             'ocr_data' => $ocrData
         ]);
 
+        // Log accuracy if there were changes
+        if ($originalFields !== $this->ocrFields) {
+            \App\Models\OcrAccuracyLog::logCorrection(
+                $this->document->id,
+                $originalFields,
+                $this->ocrFields,
+                Auth::id()
+            );
+        }
+
         // Refresh document
         $this->document->refresh();
 
         $this->editingOcrFields = false;
 
         session()->flash('ocr_message', 'OCR fields updated successfully!');
-        
+
         $this->dispatch('ocrFieldsUpdated');
     }
 
