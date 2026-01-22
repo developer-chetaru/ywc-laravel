@@ -35,38 +35,45 @@
     <div class="flex items-center space-x-4 ml-auto">
         
         {{-- 🌐 Language Switcher --}}
-        <div>
+        <!-- <div>
             <livewire:language-switcher />
-        </div>
+        </div> -->
    
         {{-- Right Side Navigation (Profile Dropdown or Login) --}}
         @auth
-            <div x-data="{ open: false }" class="relative ml-auto">
+            <div x-data="{ 
+                open: false,
+                photoUrl: '{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : '' }}',
+                firstName: '{{ Auth::user()->first_name }}',
+                lastName: '{{ Auth::user()->last_name }}',
+                initials: '{{ strtoupper(substr(Auth::user()->first_name ?? '', 0, 1) . substr(Auth::user()->last_name ?? '', 0, 1)) }}'
+            }" class="relative ml-auto">
                 <!-- Trigger: Profile Picture + Arrow -->
                 <div @click="open = !open" class="flex items-center space-x-2">
-                    @if (Laravel\Jetstream\Jetstream::managesProfilePhotos() && Auth::user() && Auth::user()->profile_photo_path)
-                        <img src="{{ Auth::user()->profile_photo_url }}"
-                            alt="{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}"
-                            class="w-8 h-8 rounded-full object-cover border cursor-pointer">
-                    @else
-                        <svg class="w-8 h-8 text-gray-600 cursor-pointer" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 12c2.67 0 8 1.34 8 4v2H4v-2c0-2.66 5.33-4 8-4z"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                    @endif
+                    <!-- Profile Picture -->
+                    <div class="relative">
+                        <img x-show="photoUrl" 
+                             :src="photoUrl"
+                             :alt="firstName + ' ' + lastName"
+                             class="w-8 h-8 rounded-full object-cover border cursor-pointer"
+                             @profile-photo-updated.window="photoUrl = $event.detail.photo_url">
+                        <div x-show="!photoUrl" 
+                             class="w-8 h-8 rounded-full bg-[#EBF4FF] flex items-center justify-center text-xs font-semibold text-[#0043EF] cursor-pointer"
+                             x-text="initials"
+                             @profile-photo-updated.window="photoUrl = $event.detail.photo_url">
+                        </div>
+                    </div>
 
                     <!-- User name (not clickable, no pointer, not selectable) -->
-                    <span class="text-sm font-medium text-gray-800 select-none cursor-default">
+                    <span class="text-sm font-medium text-gray-800 select-none cursor-default"
+                          x-text="firstName && lastName ? firstName + ' ' + lastName : '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}'"
+                          @profile-updated.window="
+                            firstName = $event.detail.first_name || '{{ Auth::user()->first_name }}';
+                            lastName = $event.detail.last_name || '{{ Auth::user()->last_name }}';
+                            initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+                          ">
                         {{ Auth::user()->first_name }} {{ Auth::user()->last_name }}
                     </span>
-
-                    <!-- Arrow (clickable) -->
-                    <svg @click="open = !open"
-                        class="w-4 h-4 text-gray-600 cursor-pointer"
-                        xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
-                    </svg>
                 </div>
 
                 <!-- Dropdown -->

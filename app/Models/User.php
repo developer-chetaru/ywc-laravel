@@ -53,6 +53,16 @@ class User extends Authenticatable implements JWTSubject
         'looking_for_work',
         'sea_service_time_months',
         'previous_yachts',
+        // Additional profile fields
+        'professional_summary',
+        'current_position',
+        'employment_type',
+        'expected_salary',
+        'vessel_preference',
+        'special_services',
+        'available_from',
+        'passport_validity',
+        'visas',
         'rating',
         'total_reviews',
         // Location tracking fields

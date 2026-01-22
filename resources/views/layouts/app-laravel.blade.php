@@ -111,32 +111,78 @@
                         </div>
                 
                         {{-- Right Side Navigation (Profile Dropdown) --}}
-                        <div x-data="{ open: false }" class="relative ml-auto">
-                            <!-- Trigger: Profile Picture + Arrow -->
-                            <div @click="open = !open" class="flex items-center space-x-2">
-                                @if (Laravel\Jetstream\Jetstream::managesProfilePhotos() && Auth::user()->profile_photo_path)
-                                    <img src="{{ Auth::user()->profile_photo_url }}"
-                                        alt="{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}"
-                                        class="w-8 h-8 rounded-full object-cover border cursor-pointer">
-                                @else
-                                    <svg class="w-8 h-8 text-gray-600 cursor-pointer" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 12c2.67 0 8 1.34 8 4v2H4v-2c0-2.66 5.33-4 8-4z"/>
-                                        <circle cx="12" cy="7" r="4"/>
-                                    </svg>
-                                @endif
+                        <div x-data="{ 
+                            open: false,
+                            photoUrl: '{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : '' }}',
+                            firstName: '{{ Auth::user()->first_name ?? '' }}',
+                            lastName: '{{ Auth::user()->last_name ?? '' }}',
+                            initials: '{{ strtoupper(substr(Auth::user()->first_name ?? '', 0, 1) . substr(Auth::user()->last_name ?? '', 0, 1)) }}',
+                            updateName(data) {
+                                if (data && data.first_name) this.firstName = data.first_name;
+                                if (data && data.last_name) this.lastName = data.last_name;
+                                if (this.firstName && this.lastName) {
+                                    this.initials = (this.firstName.charAt(0) + this.lastName.charAt(0)).toUpperCase();
+                                }
+                            },
+                            updatePhoto(data) {
+                                if (data && data.photo_url) {
+                                    // Force update with full URL
+                                    this.photoUrl = data.photo_url;
+                                    // Force image reload by updating src attribute
+                                    this.$nextTick(() => {
+                                        const img = this.$el.querySelector('img');
+                                        if (img) {
+                                            img.src = data.photo_url;
+                                            img.style.display = 'block';
+                                        }
+                                    });
+                                }
+                            }
+                        }" 
+                        x-init="
+                            // Listen for Livewire events
+                            Livewire.on('profile-updated', (data) => {
+                                updateName(data);
+                            });
+                            Livewire.on('profile-photo-updated', (data) => {
+                                console.log('Livewire event received:', data);
+                                updatePhoto(data);
+                            });
+                            
+                            // Also listen for window events (fallback)
+                            window.addEventListener('profile-updated', (e) => {
+                                if (e.detail) updateName(e.detail);
+                            });
+                            window.addEventListener('profile-photo-updated', (e) => {
+                                console.log('Window event received:', e.detail);
+                                if (e.detail) updatePhoto(e.detail);
+                            });
+                        "
+                        class="relative ml-auto">
+                            <!-- Trigger: Profile Picture -->
+                            <div @click="open = !open" class="flex items-center space-x-2 cursor-pointer">
+                                <!-- Profile Picture -->
+                                <div class="relative">
+                                    <img x-show="photoUrl && photoUrl !== ''" 
+                                         :src="photoUrl"
+                                         :alt="(firstName || '') + ' ' + (lastName || '')"
+                                         class="w-8 h-8 rounded-full object-cover border"
+                                         @error="photoUrl = ''"
+                                         @profile-photo-updated.window="updatePhoto($event.detail)"
+                                         @load="console.log('Image loaded:', photoUrl)">
+                                    <div x-show="!photoUrl || photoUrl === ''" 
+                                         class="w-8 h-8 rounded-full bg-[#EBF4FF] flex items-center justify-center text-xs font-semibold text-[#0043EF]"
+                                         x-text="initials"
+                                         @profile-photo-updated.window="updatePhoto($event.detail)">
+                                    </div>
+                                </div>
 
                                 <!-- User name (not clickable, no pointer, not selectable) -->
-                                <span class="text-sm font-medium text-gray-800 select-none cursor-default">
+                                <span class="text-sm font-medium text-gray-800 select-none cursor-default" 
+                                      x-text="(firstName && lastName) ? (firstName + ' ' + lastName) : '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}'"
+                                      @profile-updated.window="updateName($event.detail)">
                                     {{ Auth::user()->first_name }} {{ Auth::user()->last_name }}
                                 </span>
-
-                                <!-- Arrow (clickable) -->
-                                <svg @click="open = !open"
-                                    class="w-4 h-4 text-gray-600 cursor-pointer"
-                                    xmlns="http://www.w3.org/2000/svg" fill="none"
-                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
-                                </svg>
                             </div>
 
                             <!-- Dropdown -->
@@ -241,6 +287,29 @@
                         }
                     });
                 }
+            });
+        }
+        
+        // Listen for Livewire events globally for header updates
+        document.addEventListener('livewire:init', () => {
+            // Listen for Livewire events and forward to window events
+            Livewire.on('profile-updated', (data) => {
+                console.log('Global listener - profile-updated:', data);
+                window.dispatchEvent(new CustomEvent('profile-updated', { detail: data }));
+            });
+            Livewire.on('profile-photo-updated', (data) => {
+                console.log('Global listener - profile-photo-updated:', data);
+                window.dispatchEvent(new CustomEvent('profile-photo-updated', { detail: data }));
+            });
+        });
+        
+        // Also listen after Livewire loads (fallback)
+        if (window.Livewire) {
+            Livewire.on('profile-updated', (data) => {
+                window.dispatchEvent(new CustomEvent('profile-updated', { detail: data }));
+            });
+            Livewire.on('profile-photo-updated', (data) => {
+                window.dispatchEvent(new CustomEvent('profile-photo-updated', { detail: data }));
             });
         }
     </script>

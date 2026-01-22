@@ -1,625 +1,667 @@
-<main class="p-2 md:p-4 flex-1 overflow-y-auto bg-gray-50">
-    <div class="w-full gap-5 grid grid-cols-1 md:grid-cols-4">
+<div class="h-full w-full flex flex-col" 
+     x-data
+     @refresh-page.window="setTimeout(() => window.location.reload(), 500)">
+    <!-- Flash Messages -->
+    @if (session()->has('profile-message'))
+        <div x-data="{ show: true }" 
+             x-init="setTimeout(() => show = false, 5000)" 
+             x-show="show" 
+             x-transition
+             class="fixed top-4 right-4 z-50 bg-[#0043EF] text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+            <span>{{ session('profile-message') }}</span>
+            <button @click="show = false" class="text-white hover:text-gray-200 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    @endif
+
+    <div class="flex-1 min-h-0 w-full flex gap-x-[18px] px-2 pt-3" style="padding-bottom: 0px;">
         <!-- Sidebar -->
-        @php
-            $currentRoute = Route::currentRouteName();
-        @endphp
-
-        <div class="flex bg-white p-4 md:p-5 rounded-xl shadow-lg border border-gray-100 main-nav-left flex-wrap flex-col mb-4 md:mb-0">
-            <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Personal account</h4>
-            <ul class="mb-4">
-                <li class="{{ $currentRoute == 'profile' ? 'active' : '' }}">
-                    <a href="{{ route('profile') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
-                        {{ $currentRoute == 'profile' ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 shadow-sm' : 'text-gray-700 hover:bg-gray-50' }}">
-                        
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="{{ $currentRoute == 'profile' ? 'stroke-blue-600' : 'stroke-black' }}">
-                            <path d="M15 9C15 7.34315 13.6569 6 12 6C10.3431 6 9 7.34315 9 9C9 10.6569 10.3431 12 12 12C13.6569 12 15 10.6569 15 9Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M17 17C17 14.2386 14.7614 12 12 12C9.23858 12 7 14.2386 7 17" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <div class="w-72 max-[1750px]:w-64 bg-white rounded-xl flex flex-col p-5 max-[1750px]:p-4 overflow-y-auto [scrollbar-width:none] shrink-0 h-full">
+            @php
+                $currentRoute = Route::currentRouteName();
+            @endphp
+            
+            <div class="mb-4">
+                <h4 class="mb-4 text-[#616161] text-sm">Personal account</h4>
+                <ul>
+                    <li class="flex items-center gap-2 cursor-pointer group hover:bg-[#F5F6FA] rounded-md text-md text-[#1B1B1B] hover:text-[#0043EF] py-3 px-3 mb-3 {{ $currentRoute == 'profile' ? 'bg-[#F5F6FA] text-[#0043EF]' : '' }}">
+                        <svg class="w-6 h-6 block {{ $currentRoute == 'profile' ? 'text-[#0043EF]' : 'text-[#1B1B1B] group-hover:hidden' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
-
-                        <span class="text-base font-medium">
-                            Your profile
-                        </span>
-                    </a>
-                </li>
-
-                <li class="{{ $currentRoute == 'profile.password' ? 'active' : '' }}">
-                    <a href="{{ route('profile.password') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
-                        {{ $currentRoute == 'profile.password' ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 shadow-sm' : 'text-gray-700 hover:bg-gray-50' }}">
-                        
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="{{ $currentRoute == 'profile.password' ? 'stroke-blue-600' : 'stroke-black' }}">
-                            <path d="M4.26781 18.8447C4.49269 20.515 5.87613 21.8235 7.55966 21.9009C8.97627 21.966 10.4153 22 12 22C13.5847 22 15.0237 21.966 16.4403 21.9009C18.1239 21.8235 19.5073 20.515 19.7322 18.8447C19.879 17.7547 20 16.6376 20 15.5C20 14.3624 19.879 13.2453 19.7322 12.1553C19.5073 10.485 18.1239 9.17649 16.4403 9.09909C15.0237 9.03397 13.5847 9 12 9C10.4153 9 8.97627 9.03397 7.55966 9.09909C5.87613 9.17649 4.49269 10.485 4.26781 12.1553C4.12105 13.2453 4 14.3624 4 15.5C4 16.6376 4.12105 17.7547 4.26781 18.8447Z" stroke-width="1.5"/>
-                            <path d="M7.5 9V6.5C7.5 4.01472 9.51472 2 12 2C14.4853 2 16.5 4.01472 16.5 6.5V9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M16 15.4902V15.5002" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M12 15.4902V15.5002" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M8 15.4902V15.5002" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg class="w-6 h-6 hidden {{ $currentRoute == 'profile' ? 'block text-[#0043EF]' : 'group-hover:block text-[#0043EF]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
-
-                        <span class="text-base font-medium">
-                            Change Password
-                        </span>
-                    </a>
-                </li>
-            </ul>
+                        <a href="{{ route('profile') }}" class="flex-1">Your profile</a>
+                    </li>
+                    <li class="flex items-center gap-2 cursor-pointer group hover:bg-[#F5F6FA] rounded-md text-md text-[#1B1B1B] hover:text-[#0043EF] py-3 px-3 mb-3 {{ $currentRoute == 'profile.password' ? 'bg-[#F5F6FA] text-[#0043EF]' : '' }}">
+                        <svg class="w-6 h-6 block {{ $currentRoute == 'profile.password' ? 'text-[#0043EF]' : 'text-[#1B1B1B] group-hover:hidden' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <svg class="w-6 h-6 hidden {{ $currentRoute == 'profile.password' ? 'block text-[#0043EF]' : 'group-hover:block text-[#0043EF]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <a href="{{ route('profile.password') }}" class="flex-1">Change Password</a>
+                    </li>
+                </ul>
+            </div>
 
             @unlessrole('super_admin')
-            <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 mt-6">Payment and plans</h4>
-            <ul>
-                <li class="{{ $currentRoute == 'subscription.page' ? 'active' : '' }}">
-                    <a href="{{ route('subscription.page') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
-                        {{ $currentRoute == 'subscription.page' ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 shadow-sm' : 'text-gray-700 hover:bg-gray-50' }}">
-                        
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="{{ $currentRoute == 'subscription.page' ? 'stroke-blue-600' : 'stroke-black' }}">
-                            <path d="M2 12C2 8.46252 2 6.69377 3.0528 5.5129C3.22119 5.32403 3.40678 5.14935 3.60746 4.99087C4.86213 4 6.74142 4 10.5 4H13.5C17.2586 4 19.1379 4 20.3925 4.99087C20.5932 5.14935 20.7788 5.32403 20.9472 5.5129C22 6.69377 22 8.46252 22 12C22 15.5375 22 17.3062 20.9472 18.4871C20.7788 18.676 20.5932 18.8506 20.3925 19.0091C19.1379 20 17.2586 20 13.5 20H10.5C6.74142 20 4.86213 20 3.60746 19.0091C3.40678 18.8506 3.22119 18.676 3.0528 18.4871C2 17.3062 2 15.5375 2 12Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M10 16H11.5" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M14.5 16H18" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M2 9H22" stroke-width="1.5" stroke-linejoin="round"/>
+            <div>
+                <h4 class="mb-4 text-[#616161] text-sm">Payment and plans</h4>
+                <ul>
+                    <li class="flex items-center gap-2 cursor-pointer group hover:bg-[#F5F6FA] rounded-md text-md text-[#1B1B1B] hover:text-[#0043EF] py-3 px-3 mb-3 {{ $currentRoute == 'subscription.page' ? 'bg-[#F5F6FA] text-[#0043EF]' : '' }}">
+                        <svg class="w-6 h-6 block {{ $currentRoute == 'subscription.page' ? 'text-[#0043EF]' : 'text-[#1B1B1B] group-hover:hidden' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                         </svg>
-
-                        <span class="text-base font-medium">
-                            Subscription
-                        </span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="{{ route('purchase.history') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
-                                   text-gray-700 hover:bg-gray-50">
-                                   
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 18.6458V8.05426C4 5.20025 4 3.77325 4.87868 2.88663C5.75736 2 7.17157 2 10 2H14C16.8284 2 18.2426 2 19.1213 2.88663C20 3.77325 20 5.20025 20 8.05426V18.6458C20 20.1575 20 20.9133 19.538 21.2108C18.7831 21.6971 17.6161 20.6774 17.0291 20.3073C16.5441 20.0014 16.3017 19.8485 16.0325 19.8397C15.7417 19.8301 15.4949 19.9768 14.9709 20.3073L13.06 21.5124C12.5445 21.8374 12.2868 22 12 22C11.7132 22 11.4555 21.8374 10.94 21.5124L9.02913 20.3073C8.54415 20.0014 8.30166 19.8485 8.03253 19.8397C7.74172 19.8301 7.49493 19.9768 6.97087 20.3073C6.38395 20.6774 5.21687 21.6971 4.46195 21.2108C4 20.9133 4 20.1575 4 18.6458Z" stroke="#1B1B1B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M11 11H8" stroke="#1B1B1B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M14 7H8" stroke="#1B1B1B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg class="w-6 h-6 hidden {{ $currentRoute == 'subscription.page' ? 'block text-[#0043EF]' : 'group-hover:block text-[#0043EF]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                         </svg>
-
-                        <span class="text-base font-medium" :class="isOpen ? 'text-blue-600' : 'text-black'">Purchase History</span>
-                    </a>
-                </li>
-            </ul>
+                        <a href="{{ route('subscription.page') }}" class="flex-1">Subscription</a>
+                    </li>
+                    <li class="flex items-center gap-2 cursor-pointer group hover:bg-[#F5F6FA] rounded-md text-md text-[#1B1B1B] hover:text-[#0043EF] py-3 px-3 mb-3 {{ $currentRoute == 'purchase.history' ? 'bg-[#F5F6FA] text-[#0043EF]' : '' }}">
+                        <svg class="w-6 h-6 block {{ $currentRoute == 'purchase.history' ? 'text-[#0043EF]' : 'text-[#1B1B1B] group-hover:hidden' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <svg class="w-6 h-6 hidden {{ $currentRoute == 'purchase.history' ? 'block text-[#0043EF]' : 'group-hover:block text-[#0043EF]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <a href="{{ route('purchase.history') }}" class="flex-1">Purchase History</a>
+                    </li>
+                </ul>
+            </div>
             @endunlessrole
         </div>
 
+        <!-- Main Content -->
+        <div class="flex-1 min-w-0 overflow-y-auto flex flex-col gap-[11px] [scrollbar-width:none] h-full">
+            @php
+                $user = Auth::user();
+                $initials = strtoupper(substr($user->first_name ?? '', 0, 1) . substr($user->last_name ?? '', 0, 1));
+                $profilePhoto = $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : null;
+            @endphp
 
-        <div class="bg-white p-4 md:p-6 rounded-xl shadow-lg border border-gray-100 md:col-span-3">
-            <div class="w-full">
-                <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
-                    <h2 class="text-xl md:text-2xl font-bold text-[#0053FF]">Your profile</h2>
-                    <div class="hidden md:flex items-center space-x-2 px-3 py-1 bg-blue-50 rounded-full">
-                        <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                        </svg>
-                        <span class="text-xs font-medium text-blue-600">Profile Settings</span>
+            <!-- Header -->
+            <div class="flex max-[1550px]:flex-col items-center justify-between max-[1550px]:items-start max-[1550px]:gap-4 bg-white p-6 rounded-xl py-8 max-[1750px]:py-6">
+                <div class="flex items-center gap-[20px] max-[1750px]:gap-[15px]">
+                    <div class="relative">
+                        @if($profilePhoto)
+                            <img src="{{ $profilePhoto }}" alt="Profile" class="w-22 h-22 rounded-full object-cover max-[1750px]:w-16 max-[1750px]:h-16 border-4 border-white shadow-lg ring-2 ring-[#0043EF] ring-offset-2">
+                        @else
+                            <div class="w-22 h-22 max-[1750px]:w-16 max-[1750px]:h-16 rounded-full bg-[#EBF4FF] flex items-center justify-center text-2xl font-semibold text-[#0043EF] border-4 border-white shadow-lg ring-2 ring-[#0043EF] ring-offset-2">
+                                {{ $initials }}
+                            </div>
+                        @endif
+                        <!-- Edit Photo Button -->
+                        <label for="profile-photo-upload" class="absolute bottom-0 right-0 bg-white border border-[#0043EF] text-[#0043EF] p-1 rounded-full cursor-pointer hover:bg-[#0043EF] hover:text-white transition-all duration-200 shadow-md hover:shadow-lg group z-10">
+                            <svg class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </label>
+                        <input id="profile-photo-upload" type="file" class="hidden" wire:model="photo" accept="image/*">
+                        @error('photo') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <div class="flex gap-2 items-center mb-1">
+                            <h1 class="text-2xl max-[1750px]:text-xl font-medium text-[#0043EF]">
+                                @if($editingProfile)
+                                    <form wire:submit.prevent="updateProfile" class="flex gap-2 items-center">
+                                        <input type="text" wire:model.defer="first_name" class="border border-gray-300 rounded px-2 py-1 text-xl font-medium text-[#0043EF] w-32">
+                                        <input type="text" wire:model.defer="last_name" class="border border-gray-300 rounded px-2 py-1 text-xl font-medium text-[#0043EF] w-32">
+                                        <button type="submit" class="text-green-600 hover:text-green-700">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </button>
+                                        <button type="button" wire:click="$set('editingProfile', false)" class="text-red-600 hover:text-red-700">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @else
+                                    {{ $first_name }} {{ $last_name }}
+                                @endif
+                            </h1>
+                            @if(!$editingProfile)
+                                <button wire:click="$set('editingProfile', true)" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
+                                    <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                            @endif
+                        </div>
+                        <div class="flex gap-[14px]">
+                            <p class="text-sm flex items-center text-[#616161] gap-1">
+                                <span class="text-[#21B36A] w-[10px] h-[10px] rounded-full bg-[#21B36A]"></span>
+                                {{ ucfirst($availability_status ?? 'Available') }}
+                            </p>
+                            <a class="text-sm text-[#616161]" href="mailto:{{ $email }}">{{ $email }}</a>
+                        </div>
                     </div>
                 </div>
+                <div class="grid grid-cols-4 gap-4 text-sm">
+                    <div class="bg-[#F5F6FA] p-6 max-[1750px]:p-4 rounded-md text-center flex flex-col justify-center gap-1">
+                        <p class="text-sm max-[1750px]:text-xs text-[#616161]">Current Position</p>
+                        <p class="text-sm max-[1750px]:text-xs font-semibold text-[#1B1B1B]">{{ $user->roles->first()->name ?? 'N/A' }}</p>
+                    </div>
+                    <div class="bg-[#F5F6FA] p-6 max-[1750px]:p-4 rounded-md text-center flex flex-col justify-center gap-1">
+                        <p class="text-sm max-[1750px]:text-xs text-[#616161]">Current Yacht</p>
+                        <p class="text-sm max-[1750px]:text-xs font-semibold text-[#1B1B1B]">{{ $current_yacht ?? 'N/A' }}</p>
+                    </div>
+                    <div class="bg-[#F5F6FA] p-6 max-[1750px]:p-4 rounded-md text-center flex flex-col justify-center gap-1">
+                        <p class="text-sm max-[1750px]:text-xs text-[#616161]">Team Experience</p>
+                        <p class="text-sm max-[1750px]:text-xs font-semibold text-[#1B1B1B]">{{ $years_experience ?? 0 }} Years</p>
+                    </div>
+                    <div class="bg-[#F5F6FA] p-6 max-[1750px]:p-4 rounded-md text-center flex flex-col justify-center gap-1">
+                        <p class="text-sm max-[1750px]:text-xs text-[#616161]">Available From</p>
+                        <p class="text-sm max-[1750px]:text-xs font-semibold text-[#1B1B1B]">{{ $available_from ? \Carbon\Carbon::parse($available_from)->format('d M Y') : 'N/A' }}</p>
+                    </div>
+                </div>
+            </div>
 
-                <div class="rounded-xl bg-gradient-to-br from-gray-50 to-blue-50 p-6 md:p-8 mt-6 border border-gray-100">
-                    <div class="flex items-center space-x-2 mb-6">
-                        <div class="p-2 bg-blue-100 rounded-lg">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            <!-- Professional Summary -->
+            <section class="bg-white p-6 py-7 rounded-xl">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-xl font-semibold mb-2 text-[#1B1B1B]">Professional Summary</h2>
+                    @if(!$editingProfile && !$editingSummary)
+                        <button wire:click="$set('editingSummary', true)" class="cursor-pointer">
+                            <img class="w-[16px] h-[16px]" src="{{ asset('images/edit-03.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <svg class="w-[16px] h-[16px] hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
-                        </div>
-                        <h4 class="text-base font-semibold text-gray-800">Profile Photo</h4>
-                    </div>
-
-                    <!-- Flash Messages -->
-                    @if (session()->has('profile-message'))
-                        <div 
-                            x-data="{ show: true }" 
-                            x-init="setTimeout(() => show = false, 3000)" 
-                            x-show="show"
-                            x-transition
-                            class="mb-3 text-green-600 text-md font-semibold"
-                        >
-                            {{ session('profile-message') }}
-                        </div>
+                        </button>
                     @endif
-                    @if (session()->has('message'))
-                        <div 
-                            x-data="{ show: true }" 
-                            x-init="setTimeout(() => show = false, 3000)" 
-                            x-show="show"
-                            x-transition
-                            class="mb-3 text-blue-600 text-md font-semibold"
-                        >
-                            {{ session('message') }}
-                        </div>
-                    @endif
-
-                    <!-- Profile Photo Section - Using Standard Laravel Upload (works without tmpfile()) -->
-                    <div x-data="{ photoPreview: null }" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                        <!-- Profile Image Preview -->
-                        <div class="overflow-hidden rounded-full w-24 h-24 md:w-32 md:h-32 border-4 border-white shadow-lg flex-shrink-0 ring-2 ring-blue-100">
-                            {{-- Preview from Alpine (file selected) --}}
-                            <template x-if="photoPreview">
-                                <img :src="photoPreview" class="object-cover w-full h-full rounded-full" alt="New Profile Photo Preview">
-                            </template>
-
-                            {{-- Saved Profile Photo --}}
-                            <template x-if="!photoPreview && @js($profile_photo_path)">
-                                <img src="{{ $profile_photo_path ? asset('storage/' . $profile_photo_path) : '' }}" class="object-cover w-full h-full rounded-full" alt="Profile">
-                            </template>
-
-                            {{-- Default Avatar --}}
-                            <template x-if="!photoPreview && !@js($profile_photo_path)">
-                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&color=7F9CF5&background=EBF4FF"
-                                    class="object-cover w-full h-full rounded-full" alt="Default">
-                            </template>
-                        </div>
-
-                        <!-- Buttons -->
-                        <div class="profile-btns flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                            @if ($profile_photo_path)
-                                <!-- Remove Button -->
-                                <form action="{{ route('profile.photo.remove') }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="px-4 md:px-5 py-2.5 text-sm md:text-base text-red-600 border-2 border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all duration-200 font-medium flex-1 sm:flex-initial shadow-sm">
-                                        <i class="fa-solid fa-trash mr-2"></i>Remove
-                                    </button>
-                                </form>
-                            @endif
-
-                            <!-- Upload / Change Button - Standard Form Submission -->
-                            <form action="{{ route('profile.photo.upload') }}" method="POST" enctype="multipart/form-data" class="inline" x-on:submit="if (!document.getElementById('photo-input').files.length) { event.preventDefault(); alert('Please select a photo first.'); }">
-                                @csrf
-                                <label class="px-4 md:px-5 py-2.5 flex justify-center items-center text-sm md:text-base text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium flex-1 sm:flex-initial shadow-md hover:shadow-lg">
-                                    <i class="fa-solid fa-upload mr-2"></i>
-                                    {{ $profile_photo_path ? 'Change Photo' : 'Add Photo' }}
-                                    <input id="photo-input" type="file" name="photo" class="hidden" accept="image/*" required
-                                        x-on:change="
-                                            const file = $event.target.files[0];
-                                            if (file) {
-                                                const reader = new FileReader();
-                                                reader.onload = (e) => { photoPreview = e.target.result };
-                                                reader.readAsDataURL(file);
-                                                // Auto-submit form when file is selected
-                                                $event.target.closest('form').submit();
-                                            }
-                                        ">
-                                </label>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Form -->
-                    <form wire:submit.prevent="updateProfile" class="grid mt-6 relative z-10">
-                        <div x-data="{ editing: false }" class="relative max-w-[650px] space-y-6">
-
-                                <!-- Flash Message -->
-                                @if (session()->has('profile-message'))
-                                    <div 
-                                        x-data="{ show: true }" 
-                                        x-init="setTimeout(() => show = false, 3000)" 
-                                        x-show="show"
-                                        x-transition
-                                        class="mb-3 text-blue-600 text-md font-semibold"
-                                    >
-                                        {{ session('profile-message') }}
-                                    </div>
-                                @endif
-
-                                <!-- First & Last Name -->
-                                <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl p-5 md:p-6 border border-gray-200 shadow-sm">
-                                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-                                        <div class="flex flex-col sm:flex-row gap-4 sm:space-x-4 flex-1">
-                                            <div class="flex-1">
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                                    <i class="fa-solid fa-user mr-2 text-blue-500"></i>First Name
-                                                </label>
-                                                <input type="text" wire:model.defer="first_name"
-                                                    x-ref="first_name"
-                                                    :readonly="!editing"
-                                                    class="w-full border-2 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                                    :class="editing ? 'bg-white border-gray-300 shadow-sm' : 'bg-gray-50 border-gray-200 cursor-not-allowed'">
-                                                @error('first_name') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
-                                            </div>
-
-                                            <div class="flex-1">
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                                    <i class="fa-solid fa-user mr-2 text-blue-500"></i>Last Name
-                                                </label>
-                                                <input type="text" wire:model.defer="last_name"
-                                                    :readonly="!editing"
-                                                    class="w-full border-2 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                                    :class="editing ? 'bg-white border-gray-300 shadow-sm' : 'bg-gray-50 border-gray-200 cursor-not-allowed'">
-                                                @error('last_name') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
-                                            </div>
-                                        </div>
-
-                                        <!-- Button -->
-                                        <div class="flex-shrink-0">
-                                            <button type="button"  x-show="!editing" @click="editing = true; $nextTick(() => $refs.first_name.focus())" class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm md:text-base shadow-md hover:shadow-lg">
-                                                <i class="fa-solid fa-pen mr-2"></i>Edit
-                                            </button>
-
-                                            <button type="submit" x-show="editing" @click="editing = false" class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm md:text-base shadow-md hover:shadow-lg">
-                                                <i class="fa-solid fa-check mr-2"></i>Update
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Email -->
-                                <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl p-5 md:p-6 border border-gray-200 shadow-sm">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                        <i class="fa-solid fa-envelope mr-2 text-blue-500"></i>Email
-                                    </label>
-                                    <input type="email" readonly wire:model="email"
-                                        class="w-full bg-gray-50 border-2 border-gray-200 rounded-lg px-4 py-3 text-sm md:text-base cursor-not-allowed">
-                                </div>
-
-                                <!-- Role -->
-                                <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl p-5 md:p-6 border border-gray-200 shadow-sm">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                        <i class="fa-solid fa-user-tag mr-2 text-blue-500"></i>Role
-                                    </label>
-                                    <div class="flex items-center gap-2">
-                                        <span class="px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold capitalize text-sm md:text-base shadow-md">
-                                            <i class="fa-solid fa-shield-halved mr-2"></i>{{ Auth::user()->roles->pluck('name')->join(', ') ?: 'No role assigned' }}
-                                        </span>
-                                    </div>
-                                </div>
-                            
+                </div>
+                @if($editingProfile || $editingSummary)
+                    <form wire:submit.prevent="updateProfessionalSummary" class="space-y-3">
+                        <textarea wire:model.defer="professional_summary" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-[#616161] text-md focus:outline-none focus:ring-2 focus:ring-[#0043EF]"></textarea>
+                        <div class="flex gap-2">
+                            <button type="submit" class="px-4 py-2 bg-[#0043EF] text-white rounded-lg hover:bg-[#003399]">Save</button>
+                            <button type="button" wire:click="$set('editingSummary', false); $set('editingProfile', false)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancel</button>
                         </div>
                     </form>
+                @else
+                    <p class="text-[#616161] text-md">{{ $professional_summary ?? 'No professional summary available. Click edit to add one.' }}</p>
+                @endif
+            </section>
 
-                    <!-- Crew Profile Section -->
-                    <div class="mt-8 md:mt-10 border-t-2 border-gray-200 pt-8 md:pt-10">
-                        <div class="flex items-center space-x-3 mb-6 md:mb-8">
-                            <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
-                                <i class="fa-solid fa-ship text-white text-xl"></i>
+            <!-- Career Profile -->
+            <section class="bg-white p-5 rounded-xl space-y-4">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-xl font-semibold text-[#1B1B1B]">Career Profile</h2>
+                    @if(!$editingProfile && !$editingCareerProfile)
+                        <button wire:click="$set('editingCareerProfile', true)" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
+                            <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </button>
+                    @endif
+                </div>
+                @if($editingProfile || $editingCareerProfile)
+                    <form wire:submit.prevent="updateCareerProfile" class="space-y-4">
+                        <div class="grid grid-cols-3 gap-4 text-sm">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Current Position</label>
+                                <input type="text" value="{{ $user->roles->first()->name ?? 'N/A' }}" disabled class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B] bg-gray-100 cursor-not-allowed">
+                                <p class="text-xs text-[#616161] mt-1">Role-based (cannot be edited here)</p>
                             </div>
-                            <div>
-                                <h3 class="text-xl md:text-2xl font-bold text-gray-900">Crew Profile Information</h3>
-                                <p class="text-sm text-gray-500 mt-1">Complete your professional profile</p>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Employment Type</label>
+                                <input type="text" wire:model.defer="employment_type" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
                             </div>
-                        </div>
-                        
-                        <form wire:submit.prevent="updateCrewProfile" class="space-y-6">
-                            <!-- Years of Experience & Current Yacht -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                                <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                                        <div class="p-2 bg-yellow-100 rounded-lg mr-2">
-                                            <i class="fa-solid fa-star text-yellow-600"></i>
-                                        </div>
-                                        Years of Experience
-                                    </label>
-                                    <input type="number" wire:model.defer="years_experience" min="0" max="100"
-                                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm">
-                                    @error('years_experience') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
-                                </div>
-                                
-                                <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                                        <div class="p-2 bg-blue-100 rounded-lg mr-2">
-                                            <i class="fa-solid fa-ship text-blue-600"></i>
-                                        </div>
-                                        Current Yacht
-                                    </label>
-                                    <select wire:model.defer="current_yacht"
-                                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm mb-3">
-                                        <option value="">Select yacht...</option>
-                                        @foreach($yachts as $yacht)
-                                            <option value="{{ $yacht->name }}">{{ $yacht->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <input type="date" wire:model.defer="current_yacht_start_date"
-                                        placeholder="Start Date"
-                                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm">
-                                    @error('current_yacht') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
-                                    @error('current_yacht_start_date') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
-                                </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Expected Salary</label>
+                                <input type="text" wire:model.defer="expected_salary" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
                             </div>
-
-                            <!-- Sea Service Time -->
-                            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                                    <div class="p-2 bg-purple-100 rounded-lg mr-2">
-                                        <i class="fa-solid fa-clock text-purple-600"></i>
-                                    </div>
-                                    Sea Service Time (Months)
-                                </label>
-                                <input type="number" wire:model.defer="sea_service_time_months" min="0"
-                                    class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm">
-                                @error('sea_service_time_months') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Current Yacht</label>
+                                <input type="text" wire:model.defer="current_yacht" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
                             </div>
-
-                            <!-- Availability Status -->
-                            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                                    <div class="p-2 bg-green-100 rounded-lg mr-2">
-                                        <i class="fa-solid fa-circle-check text-green-600"></i>
-                                    </div>
-                                    Availability Status
-                                </label>
-                                <select wire:model.defer="availability_status"
-                                    class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm">
-                                    <option value="">Select status...</option>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Vessel Preference</label>
+                                <input type="text" wire:model.defer="vessel_preference" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Available Status</label>
+                                <select wire:model.defer="availability_status" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
+                                    <option value="">Select Status</option>
                                     <option value="available">Available</option>
                                     <option value="busy">Busy</option>
                                     <option value="looking_for_work">Looking for Work</option>
                                     <option value="on_leave">On Leave</option>
                                 </select>
-                                @error('availability_status') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                             </div>
-
-                            <!-- Availability Message -->
-                            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                                    <div class="p-2 bg-indigo-100 rounded-lg mr-2">
-                                        <i class="fa-solid fa-message text-indigo-600"></i>
-                                    </div>
-                                    Availability Message
-                                </label>
-                                <textarea wire:model.defer="availability_message" rows="3" maxlength="500"
-                                    placeholder="Tell others about your availability..."
-                                    class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"></textarea>
-                                @error('availability_message') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Team Experience (Years)</label>
+                                <input type="number" wire:model.defer="years_experience" min="0" max="100" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
                             </div>
-
-                            <!-- Looking For -->
-                            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                                    <div class="p-2 bg-pink-100 rounded-lg mr-2">
-                                        <i class="fa-solid fa-search text-pink-600"></i>
-                                    </div>
-                                    Looking For
-                                </label>
-                                <div class="space-y-3">
-                                    <label class="flex items-center p-3 rounded-lg border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer">
-                                        <input type="checkbox" wire:model.defer="looking_to_meet" class="mr-3 w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                                        <span class="text-gray-700 font-medium">Looking to meet other crew members</span>
-                                    </label>
-                                    <label class="flex items-center p-3 rounded-lg border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer">
-                                        <input type="checkbox" wire:model.defer="looking_for_work" class="mr-3 w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                                        <span class="text-gray-700 font-medium">Looking for work opportunities</span>
-                                    </label>
-                                </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Special Services</label>
+                                <input type="text" wire:model.defer="special_services" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
                             </div>
-
-                            <!-- Languages -->
-                            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                                    <div class="p-2 bg-blue-100 rounded-lg mr-2">
-                                        <i class="fa-solid fa-language text-blue-600"></i>
-                                    </div>
-                                    Languages
-                                </label>
-                                <div class="flex gap-2 mb-4">
-                                    <input type="text" wire:model="newLanguage" 
-                                        placeholder="Add language (e.g., English)"
-                                        class="flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
-                                        wire:keydown.enter.prevent="addLanguage">
-                                    <button type="button" wire:click="addLanguage"
-                                        class="px-5 py-3 text-sm md:text-base bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 whitespace-nowrap transition-all duration-200 shadow-md hover:shadow-lg font-medium">
-                                        <i class="fa-solid fa-plus mr-1"></i> <span class="hidden sm:inline">Add</span>
-                                    </button>
-                                </div>
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($languages as $index => $language)
-                                        <span class="px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm border border-blue-200">
-                                            <i class="fa-solid fa-language text-blue-600"></i>
-                                            {{ $language }}
-                                            <button type="button" wire:click="removeLanguage({{ $index }})" class="text-blue-700 hover:text-red-600 transition-colors ml-1">
-                                                <i class="fa-solid fa-times text-xs"></i>
-                                            </button>
-                                        </span>
-                                    @endforeach
-                                </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Available From</label>
+                                <input type="date" wire:model.defer="available_from" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
                             </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="px-4 py-2 bg-[#0043EF] text-white rounded-lg hover:bg-[#003399]">Save</button>
+                            <button type="button" wire:click="$set('editingCareerProfile', false); $set('editingProfile', false)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancel</button>
+                        </div>
+                    </form>
+                @else
+                    <div class="grid grid-cols-3 gap-4 text-sm">
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Current Position</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $user->roles->first()->name ?? 'N/A' }}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Employment Type</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $employment_type ?? 'N/A' }}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Expected Salary</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $expected_salary ?? 'N/A' }}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Current Yacht</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $current_yacht ?? 'N/A' }}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Vessel Preference</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $vessel_preference ?? 'N/A' }}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Available Status</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ ucfirst($availability_status ?? 'N/A') }}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Team Experience</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $years_experience ?? 0 }} Years</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Special Services</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $special_services ?? 'N/A' }}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Available From</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $available_from ? \Carbon\Carbon::parse($available_from)->format('d M Y') : 'N/A' }}</p>
+                        </div>
+                    </div>
+                @endif
+            </section>
 
-                            <!-- Certifications -->
-                            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                                    <div class="p-2 bg-green-100 rounded-lg mr-2">
-                                        <i class="fa-solid fa-certificate text-green-600"></i>
-                                    </div>
-                                    Certifications
-                                </label>
-                                <div class="flex gap-2 mb-4">
-                                    <input type="text" wire:model="newCertification" 
-                                        placeholder="Add certification (e.g., STCW)"
-                                        class="flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all shadow-sm"
-                                        wire:keydown.enter.prevent="addCertification">
-                                    <button type="button" wire:click="addCertification"
-                                        class="px-5 py-3 text-sm md:text-base bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 whitespace-nowrap transition-all duration-200 shadow-md hover:shadow-lg font-medium">
-                                        <i class="fa-solid fa-plus mr-1"></i> <span class="hidden sm:inline">Add</span>
-                                    </button>
-                                </div>
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($certifications as $index => $cert)
-                                        <span class="px-4 py-2 bg-gradient-to-r from-green-50 to-green-100 text-green-700 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm border border-green-200">
-                                            <i class="fa-solid fa-certificate text-green-600"></i>
-                                            {{ $cert }}
-                                            <button type="button" wire:click="removeCertification({{ $index }})" class="text-green-700 hover:text-red-600 transition-colors ml-1">
-                                                <i class="fa-solid fa-times text-xs"></i>
-                                            </button>
-                                        </span>
-                                    @endforeach
-                                </div>
+            <!-- Career History -->
+            <section class="bg-white p-5 rounded-xl space-y-4">
+                <div class="flex gap-4 justify-between">
+                    <div class="flex items-center gap-2 mb-5">
+                        <h2 class="text-xl font-semibold text-[#1B1B1B]">Career History</h2>
+                    </div>
+                    <a href="{{ route('career-history.manage') }}" class="cursor-pointer h-fit flex items-center gap-[12px] bg-[#F5F6FA] px-4 py-2 rounded-lg text-sm text-[#0043EF] hover:bg-gray-200 font-medium">
+                        <img src="{{ asset('images/add-circle-blue.svg') }}" alt="" class="h-[11px] w-[11px]">
+                        Add Career History
+                    </a>
+                </div>
+                @if(count($careerHistoryEntries) > 0)
+                    @foreach($careerHistoryEntries as $entry)
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-semibold text-md text-[#1B1B1B]">{{ $entry->vessel_name }}</h3>
+                                <a href="{{ route('career-history.manage') }}" class="cursor-pointer">
+                                    <img class="w-[16px] h-[16px]" src="{{ asset('images/edit.svg') }}" alt="Edit">
+                                </a>
                             </div>
+                            @php
+                                $start = $entry->start_date;
+                                $end = $entry->end_date ?? now();
+                                $duration = $entry->getFormattedDuration();
+                            @endphp
+                            <p class="text-sm text-[#616161]">
+                                {{ $entry->position_title }} | 
+                                {{ $start->format('M Y') }} – 
+                                {{ $entry->end_date ? $end->format('M Y') : 'Present' }} 
+                                ({{ $duration }})
+                            </p>
+                            @if($entry->key_duties)
+                                <p class="mt-1 text-md text-[#616161]">{{ $entry->key_duties }}</p>
+                            @endif
+                            @if($entry->notable_achievements)
+                                <p class="mt-1 text-sm text-[#616161]"><strong>Achievements:</strong> {{ $entry->notable_achievements }}</p>
+                            @endif
+                        </div>
+                    @endforeach
+                @else
+                    <p class="text-[#616161]">No career history available. Click "Add Career History" to add one.</p>
+                @endif
+            </section>
 
-                            <!-- Specializations -->
-                            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                                    <div class="p-2 bg-purple-100 rounded-lg mr-2">
-                                        <i class="fa-solid fa-tools text-purple-600"></i>
-                                    </div>
-                                    Specializations
-                                </label>
-                                <div class="flex gap-2 mb-4">
-                                    <input type="text" wire:model="newSpecialization" 
-                                        placeholder="Add specialization"
-                                        class="flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all shadow-sm"
-                                        wire:keydown.enter.prevent="addSpecialization">
-                                    <button type="button" wire:click="addSpecialization"
-                                        class="px-5 py-3 text-sm md:text-base bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 whitespace-nowrap transition-all duration-200 shadow-md hover:shadow-lg font-medium">
-                                        <i class="fa-solid fa-plus mr-1"></i> <span class="hidden sm:inline">Add</span>
-                                    </button>
-                                </div>
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($specializations as $index => $spec)
-                                        <span class="px-4 py-2 bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm border border-purple-200">
-                                            <i class="fa-solid fa-tools text-purple-600"></i>
-                                            {{ $spec }}
-                                            <button type="button" wire:click="removeSpecialization({{ $index }})" class="text-purple-700 hover:text-red-600 transition-colors ml-1">
-                                                <i class="fa-solid fa-times text-xs"></i>
-                                            </button>
-                                        </span>
-                                    @endforeach
-                                </div>
+            <!-- Certifications -->
+            <section class="bg-white p-5 rounded-xl space-y-4">
+                <div class="flex gap-4 justify-between">
+                    <div class="flex items-center gap-2 mb-5">
+                        <h2 class="text-xl font-semibold text-[#1B1B1B]">Certifications</h2>
+                    </div>
+                    <button wire:click="openCertificationModal()" class="cursor-pointer h-fit flex items-center gap-[12px] bg-[#F5F6FA] px-4 py-2 rounded-lg text-sm text-[#0043EF] hover:bg-gray-200 font-medium">
+                        <img src="{{ asset('images/add-circle-blue.svg') }}" alt="" class="h-[11px] w-[11px]">
+                        {{ $showCertificationModal ? 'Cancel' : 'Add Certifications' }}
+                    </button>
+                </div>
+                
+                <!-- Certification Form (Inline) -->
+                @if($showCertificationModal)
+                    <div class="border border-gray-300 rounded-lg p-5 bg-gray-50">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-[#1B1B1B]">
+                                {{ $editingCertificationIndex !== null ? 'Edit Certification' : 'Add Certification' }}
+                            </h3>
+                        </div>
+                        
+                        <form wire:submit.prevent="saveCertification" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-[#616161] mb-2">Certification Name *</label>
+                                <input type="text" wire:model.defer="certificationName" 
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0043EF]"
+                                    placeholder="e.g., STCW, ENG1, Food & Hygiene">
+                                @error('certificationName') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                             </div>
-
-                            <!-- Interests -->
-                            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                                    <div class="p-2 bg-pink-100 rounded-lg mr-2">
-                                        <i class="fa-solid fa-heart text-pink-600"></i>
-                                    </div>
-                                    Interests
-                                </label>
-                                <div class="flex gap-2 mb-4">
-                                    <input type="text" wire:model="newInterest" 
-                                        placeholder="Add interest"
-                                        class="flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all shadow-sm"
-                                        wire:keydown.enter.prevent="addInterest">
-                                    <button type="button" wire:click="addInterest"
-                                        class="px-5 py-3 text-sm md:text-base bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:from-pink-600 hover:to-pink-700 whitespace-nowrap transition-all duration-200 shadow-md hover:shadow-lg font-medium">
-                                        <i class="fa-solid fa-plus mr-1"></i> <span class="hidden sm:inline">Add</span>
-                                    </button>
-                                </div>
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($interests as $index => $interest)
-                                        <span class="px-4 py-2 bg-gradient-to-r from-pink-50 to-pink-100 text-pink-700 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm border border-pink-200">
-                                            <i class="fa-solid fa-heart text-pink-600"></i>
-                                            {{ $interest }}
-                                            <button type="button" wire:click="removeInterest({{ $index }})" class="text-pink-700 hover:text-red-600 transition-colors ml-1">
-                                                <i class="fa-solid fa-times text-xs"></i>
-                                            </button>
-                                        </span>
-                                    @endforeach
-                                </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-[#616161] mb-2">Issued By</label>
+                                <input type="text" wire:model.defer="certificationIssuedBy" 
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0043EF]"
+                                    placeholder="e.g., Whitehorse Academy, Abu Dhabi Maritime Academy">
+                                @error('certificationIssuedBy') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                             </div>
-
-                            <!-- Previous Yachts -->
-                            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                                    <div class="p-2 bg-indigo-100 rounded-lg mr-2">
-                                        <i class="fa-solid fa-ship text-indigo-600"></i>
-                                    </div>
-                                    Previous Yachts
-                                </label>
-                                <div class="space-y-2 mb-4">
-                                    @if(session()->has('yacht-error'))
-                                        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm">
-                                            {{ session('yacht-error') }}
-                                        </div>
-                                    @endif
-                                    
-                                    <select wire:model.live="newPreviousYachtId" 
-                                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm">
-                                        <option value="">Select yacht...</option>
-                                        @foreach($yachts as $yacht)
-                                            <option value="{{ $yacht->id }}">{{ $yacht->name }}</option>
-                                        @endforeach
-                                        <option value="other">Other (Manual Entry)</option>
-                                    </select>
-                                    
-                                    @if($showOtherInput)
-                                        <div class="mt-2">
-                                            <label class="block text-xs text-gray-600 mb-1 font-medium">Enter Yacht Name</label>
-                                            <input type="text" wire:model="newPreviousYachtName" 
-                                                placeholder="e.g., M/Y Ocean Dream, S/Y Wind Dancer"
-                                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm">
-                                        </div>
-                                    @endif
-                                    
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <div>
-                                            <input type="date" wire:model="newPreviousYachtStartDate" 
-                                                placeholder="Start Date"
-                                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
-                                                x-on:change="$wire.set('newPreviousYachtEndDate', '')">
-                                            <label class="text-xs font-medium text-gray-600 mt-2 block">Start Date</label>
-                                        </div>
-                                        <div>
-                                            <input type="date" wire:model="newPreviousYachtEndDate" 
-                                                placeholder="End Date"
-                                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
-                                                @if($newPreviousYachtStartDate) min="{{ $newPreviousYachtStartDate }}" @endif>
-                                            <label class="text-xs font-medium text-gray-600 mt-2 block">End Date</label>
-                                        </div>
-                                    </div>
-                                    
-                                    <button type="button" wire:click="addPreviousYacht"
-                                        class="w-full px-5 py-3 text-sm md:text-base bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
-                                        <i class="fa-solid fa-plus mr-2"></i> Add Yacht
-                                    </button>
-                                </div>
-                                
-                                <div class="space-y-2">
-                                    @foreach($previous_yachts as $index => $yacht)
-                                        @php
-                                            $yachtName = is_array($yacht) ? ($yacht['name'] ?? '') : $yacht;
-                                            $startDate = is_array($yacht) && !empty($yacht['start_date']) ? \Carbon\Carbon::parse($yacht['start_date']) : null;
-                                            $endDate = is_array($yacht) && !empty($yacht['end_date']) ? \Carbon\Carbon::parse($yacht['end_date']) : null;
-                                            $isInvalid = $startDate && $endDate && $endDate->lt($startDate);
-                                        @endphp
-                                        <div class="bg-gradient-to-r from-gray-50 to-indigo-50 border-2 {{ $isInvalid ? 'border-red-300 bg-red-50' : 'border-indigo-200' }} rounded-xl p-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-                                            <div class="flex-1">
-                                                <div class="flex items-center space-x-2 mb-2">
-                                                    <i class="fa-solid fa-ship text-indigo-600"></i>
-                                                    <div class="font-semibold text-gray-900">{{ $yachtName }}</div>
-                                                </div>
-                                                @if($startDate || $endDate)
-                                                    <div class="text-sm {{ $isInvalid ? 'text-red-600' : 'text-gray-600' }} flex items-center space-x-2">
-                                                        @if($startDate)
-                                                            <span class="px-2 py-1 bg-white rounded text-xs font-medium">Start: {{ $startDate->format('M Y') }}</span>
-                                                        @endif
-                                                        @if($startDate && $endDate)
-                                                            <i class="fa-solid fa-arrow-right text-xs"></i>
-                                                        @endif
-                                                        @if($endDate)
-                                                            <span class="px-2 py-1 bg-white rounded text-xs font-medium">End: {{ $endDate->format('M Y') }}</span>
-                                                        @endif
-                                                        @if($isInvalid)
-                                                            <span class="ml-2 px-2 py-1 bg-red-100 text-red-600 rounded text-xs font-semibold">Invalid dates</span>
-                                                        @endif
-                                                    </div>
-                                                @endif
-                                            </div>
-                                            <button type="button" wire:click="removePreviousYacht({{ $index }})" 
-                                                class="ml-4 p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
-                                                <i class="fa-solid fa-times"></i>
-                                            </button>
-                                        </div>
-                                    @endforeach
-                                </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-[#616161] mb-2">Expiry Date</label>
+                                <input type="date" wire:model.defer="certificationExpiryDate" 
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0043EF]">
+                                @error('certificationExpiryDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                             </div>
-
-                            <!-- Submit Button -->
-                            <div class="pt-6 border-t-2 border-gray-200">
-                                <button type="submit" 
-                                    class="w-full sm:w-auto px-8 py-3.5 text-base md:text-lg bg-gradient-to-r from-[#0053FF] to-[#0046CC] text-white rounded-xl hover:from-[#0046CC] hover:to-[#003399] transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                                    <i class="fa-solid fa-save mr-2"></i>Save Crew Profile
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-[#616161] mb-2">Status *</label>
+                                <select wire:model.defer="certificationStatus" 
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0043EF]">
+                                    <option value="pending">Pending</option>
+                                    <option value="verified">Verified</option>
+                                    <option value="expired">Expired</option>
+                                </select>
+                                @error('certificationStatus') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            
+                            <div class="flex gap-2 pt-2">
+                                <button type="submit" class="px-4 py-2 bg-[#0043EF] text-white rounded-lg hover:bg-[#003399] font-medium">
+                                    Save
+                                </button>
+                                <button type="button" wire:click="closeCertificationModal" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
+                                    Cancel
                                 </button>
                             </div>
                         </form>
                     </div>
+                @endif
+                
+                @if(count($certifications) > 0)
+                    @foreach($certifications as $index => $cert)
+                        <div class="border border-[#616161] rounded-lg p-4 flex justify-between items-center">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="font-semibold text-md text-[#1B1B1B]">{{ is_array($cert) ? ($cert['name'] ?? 'N/A') : $cert }}</h3>
+                                    <button wire:click="openCertificationModal({{ $index }})" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
+                                        <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </button>
+                                    <button wire:click="removeCertification({{ $index }})" class="cursor-pointer text-red-600 hover:text-red-800">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                @if(is_array($cert))
+                                    <p class="text-sm text-[#616161]">
+                                        Issued: {{ $cert['issued_by'] ?: 'N/A' }} • 
+                                        Expiry: {{ isset($cert['expiry_date']) && $cert['expiry_date'] ? \Carbon\Carbon::parse($cert['expiry_date'])->format('d M Y') : 'N/A' }}
+                                    </p>
+                                @else
+                                    <p class="text-sm text-[#616161]">Click edit to add details</p>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-2">
+                                @php
+                                    $status = is_array($cert) ? ($cert['status'] ?? 'pending') : 'pending';
+                                    $statusColor = $status === 'verified' ? '#21B36A' : ($status === 'expired' ? '#EF4444' : '#E9A561');
+                                @endphp
+                                <span class="w-[10px] h-[10px] rounded-full" style="background-color: {{ $statusColor }}"></span>
+                                <span class="text-sm" style="color: {{ $statusColor }}">{{ ucfirst($status) }}</span>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <p class="text-[#616161]">No certifications available. Click "Add Certifications" to add one.</p>
+                @endif
+            </section>
 
+            <!-- Skills -->
+            <section class="bg-white p-5 rounded-xl">
+                <div class="flex items-center gap-2 mb-5">
+                    <h2 class="text-xl font-semibold text-[#1B1B1B]">Skills & Competencies</h2>
+                    @if(!$editingSkills)
+                        <button wire:click="$set('editingSkills', true)" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
+                            <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </button>
+                    @endif
                 </div>
-            </div>
+                @if($editingSkills)
+                    <div class="space-y-3">
+                        <div class="flex gap-2">
+                            <div class="flex-1">
+                                <input type="text" wire:model="newSpecialization" wire:keydown.enter.prevent="addSpecialization" 
+                                    placeholder="Add skill" 
+                                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0043EF] {{ $errors->has('newSpecialization') ? 'border-red-500' : 'border-gray-300' }}">
+                                @error('newSpecialization')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <button wire:click="addSpecialization" class="px-4 py-2 bg-[#0043EF] text-white rounded-lg hover:bg-[#003399]">Add</button>
+                        </div>
+                        <div class="flex flex-wrap gap-[12px]">
+                            @foreach($specializations as $index => $skill)
+                                <span class="px-4 py-2 bg-[#EEF6FF] text-[#0043EF] rounded-full text-sm flex items-center gap-2">
+                                    {{ $skill }}
+                                    <button wire:click="removeSpecialization({{ $index }})" class="text-red-600 hover:text-red-800">×</button>
+                                </span>
+                            @endforeach
+                        </div>
+                        <div class="flex gap-2">
+                            <button wire:click="updateSkills" class="px-4 py-2 bg-[#0043EF] text-white rounded-lg hover:bg-[#003399]">Save</button>
+                            <button wire:click="$set('editingSkills', false)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancel</button>
+                        </div>
+                    </div>
+                @else
+                    <div class="flex flex-wrap gap-[12px]">
+                        @if(count($specializations) > 0)
+                            @foreach($specializations as $skill)
+                                <span class="px-4 py-2 bg-[#EEF6FF] text-[#0043EF] rounded-full text-sm">{{ $skill }}</span>
+                            @endforeach
+                        @else
+                            <span class="text-[#616161]">No skills added yet. Click edit to add skills.</span>
+                        @endif
+                    </div>
+                @endif
+            </section>
+
+            <!-- Personal Details -->
+            <section class="bg-white p-5 rounded-xl space-y-4">
+                <div class="flex items-center gap-2 mb-5">
+                    <h2 class="text-xl font-semibold text-[#1B1B1B]">Personal Details</h2>
+                    @if(!$editingPersonalDetails)
+                        <button wire:click="$set('editingPersonalDetails', true)" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
+                            <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </button>
+                    @endif
+                </div>
+                @if($editingPersonalDetails)
+                    <form wire:submit.prevent="updatePersonalDetails" class="space-y-4">
+                        <div class="grid max-w-2xl grid-cols-2 gap-6 text-sm">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Nationality</label>
+                                <input type="text" wire:model.defer="nationality" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Passport Validity</label>
+                                <input type="date" wire:model.defer="passport_validity" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Date of Birth</label>
+                                <input type="date" wire:model.defer="date_of_birth" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[#616161] text-sm">Visas</label>
+                                <input type="text" wire:model.defer="visas" class="border border-gray-300 rounded px-3 py-2 font-semibold text-[16px] text-[#1B1B1B]">
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="px-4 py-2 bg-[#0043EF] text-white rounded-lg hover:bg-[#003399]">Save</button>
+                            <button type="button" wire:click="$set('editingPersonalDetails', false)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancel</button>
+                        </div>
+                    </form>
+                @else
+                    <div class="grid max-w-2xl grid-cols-2 gap-6 text-sm">
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Nationality</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $nationality ?? 'N/A' }}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Passport Validity</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $passport_validity ? 'Valid until ' . \Carbon\Carbon::parse($passport_validity)->format('d M Y') : 'N/A' }}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Date of Birth</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $date_of_birth ? \Carbon\Carbon::parse($date_of_birth)->format('d M Y') : 'N/A' }}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[#616161] text-sm">Visas</p>
+                            <p class="font-semibold text-[16px] text-[#1B1B1B]">{{ $visas ?? 'N/A' }}</p>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Languages Section -->
+                <div class="space-y-4 border-t border-gray-300 mt-5 pt-5">
+                    <div class="flex gap-4 justify-between">
+                        <div class="flex items-center gap-2 mb-5">
+                            <h2 class="text-xl font-semibold text-[#1B1B1B]">Languages</h2>
+                            @if(!$editingLanguages)
+                                <button wire:click="$set('editingLanguages', true)" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
+                                    <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                            @endif
+                        </div>
+                        @if($editingLanguages)
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1">
+                                    <input type="text" wire:model="newLanguage" wire:keydown.enter.prevent="addLanguage" 
+                                        placeholder="Language name" 
+                                        class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0043EF] {{ $errors->has('newLanguage') ? 'border-red-500' : 'border-gray-300' }}">
+                                    @error('newLanguage')
+                                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <button wire:click="addLanguage" class="cursor-pointer h-fit flex items-center gap-[12px] bg-[#F5F6FA] px-4 py-2 rounded-lg text-sm text-[#0043EF] hover:bg-gray-200 font-medium">
+                                    <img src="{{ asset('images/add-circle-blue.svg') }}" alt="" class="h-[11px] w-[11px]">
+                                    Add Languages
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                    @if(count($languages) > 0)
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-gray-300 text-left text-[#616161]">
+                                    <th class="text-sm font-normal pb-3 w-20">Language</th>
+                                    <th class="text-sm font-normal pb-3 w-20">Proficiency</th>
+                                    <th class="text-sm font-normal pb-3 w-15">Read</th>
+                                    <th class="text-sm font-normal pb-3 w-15">Write</th>
+                                    <th class="text-sm font-normal pb-3 w-20">Speak</th>
+                                    @if($editingLanguages)
+                                        <th class="text-sm font-normal pb-3">Actions</th>
+                                    @endif
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($languages as $index => $lang)
+                                    @php
+                                        $langData = is_array($lang) ? $lang : ['name' => $lang, 'proficiency' => 'Proficient', 'read' => true, 'write' => true, 'speak' => true];
+                                    @endphp
+                                    <tr>
+                                        <td class="py-3 font-medium text-[16px]">{{ $langData['name'] ?? $lang }}</td>
+                                        <td class="py-3 font-medium text-[16px]">{{ $langData['proficiency'] ?? 'Proficient' }}</td>
+                                        <td class="py-3 font-medium text-[16px]">
+                                            <label class="inline-flex items-center cursor-pointer relative">
+                                                <input type="checkbox" wire:model.live="languages.{{ $index }}.read" class="peer hidden">
+                                                <span class="w-5 h-5 rounded-full border border-[#616161]"></span>
+                                                <svg class="hidden peer-checked:block w-5 h-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#0043EF]" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </label>
+                                        </td>
+                                        <td class="py-3 font-medium text-[16px]">
+                                            <label class="inline-flex items-center cursor-pointer relative">
+                                                <input type="checkbox" wire:model.live="languages.{{ $index }}.write" class="peer hidden">
+                                                <span class="w-5 h-5 rounded-full border border-[#616161]"></span>
+                                                <svg class="hidden peer-checked:block w-5 h-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#0043EF]" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </label>
+                                        </td>
+                                        <td class="py-3 font-medium text-[16px]">
+                                            <label class="inline-flex items-center cursor-pointer relative">
+                                                <input type="checkbox" wire:model.live="languages.{{ $index }}.speak" class="peer hidden">
+                                                <span class="w-5 h-5 rounded-full border border-[#616161]"></span>
+                                                <svg class="hidden peer-checked:block w-5 h-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#0043EF]" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </label>
+                                        </td>
+                                        @if($editingLanguages)
+                                            <td class="py-3">
+                                                <button wire:click="removeLanguage({{ $index }})" class="text-red-600 hover:text-red-800">Remove</button>
+                                            </td>
+                                        @endif
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        @if($editingLanguages)
+                            <div class="flex gap-2">
+                                <button wire:click="updateLanguages" class="px-4 py-2 bg-[#0043EF] text-white rounded-lg hover:bg-[#003399]">Save Languages</button>
+                                <button wire:click="$set('editingLanguages', false)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancel</button>
+                            </div>
+                        @endif
+                    @else
+                        <p class="text-[#616161]">No languages added yet. Click edit to add languages.</p>
+                    @endif
+                </div>
+            </section>
         </div>
-
-
+        </div>
     </div>
-</main>
-       
+</div>
