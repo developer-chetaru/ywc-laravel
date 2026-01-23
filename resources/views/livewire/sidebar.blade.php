@@ -73,7 +73,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             }
         });
     "
-    class="h-screen bg-[#0066FF] text-white flex flex-col transition-all duration-300 z-50 fixed inset-y-0 left-0"
+    class="h-screen bg-[#0066FF] text-white flex flex-col transition-all duration-300 z-50 fixed inset-y-0 left-0 group"
     :class="{
         'w-72': isOpen && !isMobile,
         'w-16': !isOpen && !isMobile,
@@ -83,7 +83,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
     @click.stop
     style="will-change: transform, width;">
     <!-- Header -->
-    <div class="flex items-center justify-between p-4 py-5 border-b border-blue-300 flex-shrink-0">
+    <div class="flex items-center justify-between p-4 py-5 border-b border-blue-300 flex-shrink-0" :class="{ 'justify-center': !isOpen && !isMobile }">
         <div x-show="isOpen && !isMobile" x-transition class="flex items-center space-x-2">
             <img src="/images/ywc-logo-white.svg" alt="Logo" class="w-8 h-8">
             <span class="text-white font-semibold text-[10px] uppercase tracking-wide mt-2">
@@ -104,17 +104,32 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             <!-- Desktop toggle buttons -->
             <template x-if="!isMobile">
                 <template x-if="isOpen">
-                    <button @click="isOpen = !isOpen" class="text-white z-10">
-                        <img src="{{ asset('images/right-icon.svg') }}" alt="">
+                    <button @click="isOpen = !isOpen" class="text-white z-10 p-2 hover:bg-white/10 rounded transition-colors" title="Hide Sidebar">
+                        <img src="{{ asset('images/right-icon.svg') }}" alt="Hide Sidebar">
                     </button>
                 </template>
                 <template x-if="!isOpen">
-                    <button @click="isOpen = !isOpen" class="text-white cursor-pointer text-xl">
-                        ☰
+                    <button @click.stop="isOpen = !isOpen" class="text-white cursor-pointer p-2 hover:bg-white/10 rounded transition-colors flex items-center justify-center" title="Show Sidebar">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
                     </button>
                 </template>
             </template>
         </div>
+    </div>
+
+    <!-- Reopen Button (visible when collapsed, always visible for easy access) -->
+    <div x-show="!isOpen && !isMobile" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-x-0"
+         x-transition:enter-end="opacity-100 translate-x-0"
+         class="absolute right-0 top-20 transform translate-x-full bg-[#0066FF] hover:bg-[#0052CC] rounded-r-lg p-3 shadow-lg cursor-pointer transition-all duration-200 z-50 border-l-2 border-blue-400"
+         @click.stop="isOpen = true"
+         title="Show Sidebar">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
     </div>
 
     <!-- Scrollable Navigation -->
