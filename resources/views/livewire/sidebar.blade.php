@@ -507,7 +507,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                 </a>
             </li>
             @else
-            @hasanyrole($nonAdminRoles)
+            @hasanyrole(implode('|', $nonAdminRoles))
             <li>
                 <a href="{{ route('mental-health.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
                     {{ request()->is('mental-health*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">

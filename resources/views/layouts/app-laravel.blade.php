@@ -167,20 +167,20 @@
                                          :src="photoUrl"
                                          :alt="(firstName || '') + ' ' + (lastName || '')"
                                          class="w-8 h-8 rounded-full object-cover border"
-                                         @error="photoUrl = ''"
-                                         @profile-photo-updated.window="updatePhoto($event.detail)"
-                                         @load="console.log('Image loaded:', photoUrl)">
+                                         x-on:error="photoUrl = ''"
+                                         x-on:profile-photo-updated.window="updatePhoto($event.detail)"
+                                         x-on:load="console.log('Image loaded:', photoUrl)">
                                     <div x-show="!photoUrl || photoUrl === ''" 
                                          class="w-8 h-8 rounded-full bg-[#EBF4FF] flex items-center justify-center text-xs font-semibold text-[#0043EF]"
                                          x-text="initials"
-                                         @profile-photo-updated.window="updatePhoto($event.detail)">
+                                         x-on:profile-photo-updated.window="updatePhoto($event.detail)">
                                     </div>
                                 </div>
 
                                 <!-- User name (not clickable, no pointer, not selectable) -->
                                 <span class="text-sm font-medium text-gray-800 select-none cursor-default" 
                                       x-text="(firstName && lastName) ? (firstName + ' ' + lastName) : '{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}'"
-                                      @profile-updated.window="updateName($event.detail)">
+                                      x-on:profile-updated.window="updateName($event.detail)">
                                     {{ Auth::user()->first_name }} {{ Auth::user()->last_name }}
                                 </span>
                             </div>
