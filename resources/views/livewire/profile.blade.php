@@ -1,5 +1,5 @@
 <div class="h-full w-full flex flex-col" 
-     x-data
+     x-data="{ imageModal: { open: false, src: '', alt: '' }, openImage(src, alt = '') { this.imageModal = { open: true, src: src, alt: alt }; }, closeImage() { this.imageModal = { open: false, src: '', alt: '' }; } }"
      @refresh-page.window="setTimeout(() => window.location.reload(), 500)">
     <!-- Flash Messages -->
     @if (session()->has('profile-message'))
@@ -19,61 +19,108 @@
 
     <div class="flex-1 min-h-0 w-full flex gap-x-[18px] px-2 pt-3" style="padding-bottom: 0px;">
         <!-- Sidebar -->
-        <div class="w-72 max-[1750px]:w-64 bg-white rounded-xl flex flex-col p-5 max-[1750px]:p-4 overflow-y-auto [scrollbar-width:none] shrink-0 h-full">
-            @php
-                $currentRoute = Route::currentRouteName();
-            @endphp
-            
-            <div class="mb-4">
-                <h4 class="mb-4 text-[#616161] text-sm">Personal account</h4>
-                <ul>
-                    <li class="flex items-center gap-2 cursor-pointer group hover:bg-[#F5F6FA] rounded-md text-md text-[#1B1B1B] hover:text-[#0043EF] py-3 px-3 mb-3 {{ $currentRoute == 'profile' ? 'bg-[#F5F6FA] text-[#0043EF]' : '' }}">
-                        <svg class="w-6 h-6 block {{ $currentRoute == 'profile' ? 'text-[#0043EF]' : 'text-[#1B1B1B] group-hover:hidden' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        @if($showSidebarCard)
+        <div class="w-72 max-[1750px]:w-64 bg-[#0066FF] rounded-xl flex flex-col shadow-lg border border-blue-400/30 overflow-hidden shrink-0 h-full">
+            <!-- Settings Header -->
+            <div class="px-6 py-4 flex items-center justify-between border-b border-blue-300/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
-                        <svg class="w-6 h-6 hidden {{ $currentRoute == 'profile' ? 'block text-[#0043EF]' : 'group-hover:block text-[#0043EF]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
-                        <a href="{{ route('profile') }}" class="flex-1">Your profile</a>
-                    </li>
-                    <li class="flex items-center gap-2 cursor-pointer group hover:bg-[#F5F6FA] rounded-md text-md text-[#1B1B1B] hover:text-[#0043EF] py-3 px-3 mb-3 {{ $currentRoute == 'profile.password' ? 'bg-[#F5F6FA] text-[#0043EF]' : '' }}">
-                        <svg class="w-6 h-6 block {{ $currentRoute == 'profile.password' ? 'text-[#0043EF]' : 'text-[#1B1B1B] group-hover:hidden' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
-                        <svg class="w-6 h-6 hidden {{ $currentRoute == 'profile.password' ? 'block text-[#0043EF]' : 'group-hover:block text-[#0043EF]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
-                        <a href="{{ route('profile.password') }}" class="flex-1">Change Password</a>
-                    </li>
-                </ul>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white">Settings</h3>
+                </div>
+                <button wire:click="$set('showSidebarCard', false)" class="p-1.5 rounded-lg hover:bg-white/10 transition-colors group" title="Hide Settings">
+                    <svg class="w-5 h-5 text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
 
-            @unlessrole('super_admin')
-            <div>
-                <h4 class="mb-4 text-[#616161] text-sm">Payment and plans</h4>
-                <ul>
-                    <li class="flex items-center gap-2 cursor-pointer group hover:bg-[#F5F6FA] rounded-md text-md text-[#1B1B1B] hover:text-[#0043EF] py-3 px-3 mb-3 {{ $currentRoute == 'subscription.page' ? 'bg-[#F5F6FA] text-[#0043EF]' : '' }}">
-                        <svg class="w-6 h-6 block {{ $currentRoute == 'subscription.page' ? 'text-[#0043EF]' : 'text-[#1B1B1B] group-hover:hidden' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                        </svg>
-                        <svg class="w-6 h-6 hidden {{ $currentRoute == 'subscription.page' ? 'block text-[#0043EF]' : 'group-hover:block text-[#0043EF]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                        </svg>
-                        <a href="{{ route('subscription.page') }}" class="flex-1">Subscription</a>
-                    </li>
-                    <li class="flex items-center gap-2 cursor-pointer group hover:bg-[#F5F6FA] rounded-md text-md text-[#1B1B1B] hover:text-[#0043EF] py-3 px-3 mb-3 {{ $currentRoute == 'purchase.history' ? 'bg-[#F5F6FA] text-[#0043EF]' : '' }}">
-                        <svg class="w-6 h-6 block {{ $currentRoute == 'purchase.history' ? 'text-[#0043EF]' : 'text-[#1B1B1B] group-hover:hidden' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <svg class="w-6 h-6 hidden {{ $currentRoute == 'purchase.history' ? 'block text-[#0043EF]' : 'group-hover:block text-[#0043EF]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <a href="{{ route('purchase.history') }}" class="flex-1">Purchase History</a>
-                    </li>
-                </ul>
+            <!-- Settings Content -->
+            <div class="flex-1 overflow-y-auto p-5 max-[1750px]:p-4 [scrollbar-width:none]">
+                @php
+                    $currentRoute = Route::currentRouteName();
+                @endphp
+                
+                <!-- Personal Account Section -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-1 h-5 bg-white/30 rounded-full"></div>
+                        <h4 class="text-sm font-semibold text-white/80 uppercase tracking-wide">Personal account</h4>
+                    </div>
+                    <div class="space-y-1">
+                        <a href="{{ route('profile') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group {{ $currentRoute == 'profile' ? 'bg-white text-black shadow-sm' : 'text-white hover:bg-white/10' }}">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center {{ $currentRoute == 'profile' ? 'bg-white/20' : 'bg-white/10 group-hover:bg-white/15' }} transition-colors">
+                                <svg class="w-5 h-5 {{ $currentRoute == 'profile' ? 'text-black' : 'text-white' }}" fill="{{ $currentRoute == 'profile' ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                            <span class="font-medium flex-1">Your profile</span>
+                            @if($currentRoute == 'profile')
+                                <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            @endif
+                        </a>
+                        <a href="{{ route('profile.password') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group {{ $currentRoute == 'profile.password' ? 'bg-white text-black shadow-sm' : 'text-white hover:bg-white/10' }}">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center {{ $currentRoute == 'profile.password' ? 'bg-white/20' : 'bg-white/10 group-hover:bg-white/15' }} transition-colors">
+                                <svg class="w-5 h-5 {{ $currentRoute == 'profile.password' ? 'text-black' : 'text-white' }}" fill="{{ $currentRoute == 'profile.password' ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                            </div>
+                            <span class="font-medium flex-1">Change Password</span>
+                            @if($currentRoute == 'profile.password')
+                                <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            @endif
+                        </a>
+                    </div>
+                </div>
+
+                @unlessrole('super_admin')
+                <!-- Payment and Plans Section -->
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-1 h-5 bg-white/30 rounded-full"></div>
+                        <h4 class="text-sm font-semibold text-white/80 uppercase tracking-wide">Payment and plans</h4>
+                    </div>
+                    <div class="space-y-1">
+                        <a href="{{ route('subscription.page') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group {{ $currentRoute == 'subscription.page' ? 'bg-white text-black shadow-sm' : 'text-white hover:bg-white/10' }}">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center {{ $currentRoute == 'subscription.page' ? 'bg-white/20' : 'bg-white/10 group-hover:bg-white/15' }} transition-colors">
+                                <svg class="w-5 h-5 {{ $currentRoute == 'subscription.page' ? 'text-black' : 'text-white' }}" fill="{{ $currentRoute == 'subscription.page' ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                </svg>
+                            </div>
+                            <span class="font-medium flex-1">Subscription</span>
+                            @if($currentRoute == 'subscription.page')
+                                <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            @endif
+                        </a>
+                        <a href="{{ route('purchase.history') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group {{ $currentRoute == 'purchase.history' ? 'bg-white text-black shadow-sm' : 'text-white hover:bg-white/10' }}">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center {{ $currentRoute == 'purchase.history' ? 'bg-white/20' : 'bg-white/10 group-hover:bg-white/15' }} transition-colors">
+                                <svg class="w-5 h-5 {{ $currentRoute == 'purchase.history' ? 'text-black' : 'text-white' }}" fill="{{ $currentRoute == 'purchase.history' ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <span class="font-medium flex-1">Purchase History</span>
+                            @if($currentRoute == 'purchase.history')
+                                <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            @endif
+                        </a>
+                    </div>
+                </div>
+                @endunlessrole
             </div>
-            @endunlessrole
         </div>
+        @endif
 
         <!-- Main Content -->
         <div class="flex-1 min-w-0 overflow-y-auto flex flex-col gap-[11px] [scrollbar-width:none] h-full">
@@ -86,9 +133,16 @@
             <!-- Header -->
             <div class="flex max-[1550px]:flex-col items-center justify-between max-[1550px]:items-start max-[1550px]:gap-4 bg-white p-6 rounded-xl py-8 max-[1750px]:py-6">
                 <div class="flex items-center gap-[20px] max-[1750px]:gap-[15px]">
+                    <!-- Settings Icon Button -->
+                    <button wire:click="$set('showSidebarCard', {{ $showSidebarCard ? 'false' : 'true' }})" class="p-2 rounded-lg hover:bg-gray-100 transition-colors" title="{{ $showSidebarCard ? 'Hide Settings' : 'Show Settings' }}">
+                        <svg class="w-6 h-6 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
                     <div class="relative">
                         @if($profilePhoto)
-                            <img src="{{ $profilePhoto }}" alt="Profile" class="w-22 h-22 rounded-full object-cover max-[1750px]:w-16 max-[1750px]:h-16 border-4 border-white shadow-lg ring-2 ring-[#0043EF] ring-offset-2">
+                            <img src="{{ $profilePhoto }}" alt="Profile" class="w-22 h-22 rounded-full object-cover max-[1750px]:w-16 max-[1750px]:h-16 border-4 border-white shadow-lg ring-2 ring-[#0043EF] ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity" @click="openImage('{{ $profilePhoto }}', '{{ $first_name }} {{ $last_name }} Profile Photo')">
                         @else
                             <div class="w-22 h-22 max-[1750px]:w-16 max-[1750px]:h-16 rounded-full bg-[#EBF4FF] flex items-center justify-center text-2xl font-semibold text-[#0043EF] border-4 border-white shadow-lg ring-2 ring-[#0043EF] ring-offset-2">
                                 {{ $initials }}
@@ -165,17 +219,31 @@
 
             <!-- Professional Summary -->
             <section class="bg-white p-6 py-7 rounded-xl">
-                <div class="flex items-center gap-2">
-                    <h2 class="text-xl font-semibold mb-2 text-[#1B1B1B]">Professional Summary</h2>
-                    @if(!$editingProfile && !$editingSummary)
-                        <button wire:click="$set('editingSummary', true)" class="cursor-pointer">
-                            <img class="w-[16px] h-[16px]" src="{{ asset('images/edit-03.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            <svg class="w-[16px] h-[16px] hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-xl font-semibold text-[#1B1B1B]">Professional Summary</h2>
+                        @if(!$editingProfile && !$editingSummary)
+                            <button wire:click="$set('editingSummary', true)" class="cursor-pointer">
+                                <img class="w-[16px] h-[16px]" src="{{ asset('images/edit-03.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <svg class="w-[16px] h-[16px] hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+                    <button wire:click="$set('showProfessionalSummary', {{ $showProfessionalSummary ? 'false' : 'true' }})" class="p-1.5 rounded-md hover:bg-gray-100 transition-colors" title="{{ $showProfessionalSummary ? 'Hide' : 'Show' }}">
+                        @if($showProfessionalSummary)
+                            <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                             </svg>
-                        </button>
-                    @endif
+                        @else
+                            <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        @endif
+                    </button>
                 </div>
+                @if($showProfessionalSummary)
                 @if($editingProfile || $editingSummary)
                     <form wire:submit.prevent="updateProfessionalSummary" class="space-y-3">
                         <textarea wire:model.defer="professional_summary" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-[#616161] text-md focus:outline-none focus:ring-2 focus:ring-[#0043EF]"></textarea>
@@ -187,21 +255,338 @@
                 @else
                     <p class="text-[#616161] text-md">{{ $professional_summary ?? 'No professional summary available. Click edit to add one.' }}</p>
                 @endif
+                @endif
+            </section>
+
+            <!-- Reviews & Itineraries Section -->
+            <section class="bg-white p-6 rounded-xl">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-[#1B1B1B]">Activity</h2>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm text-[#616161]">{{ ($yachtReviews->count() ?? 0) + ($marinaReviews->count() ?? 0) + ($itineraryRoutes->count() ?? 0) }} items</span>
+                        <button wire:click="$set('showActivityCard', {{ $showActivityCard ? 'false' : 'true' }})" class="p-1.5 rounded-md hover:bg-gray-100 transition-colors" title="{{ $showActivityCard ? 'Hide Activity' : 'Show Activity' }}">
+                            @if($showActivityCard)
+                                <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                </svg>
+                            @else
+                                <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            @endif
+                        </button>
+                    </div>
+                </div>
+
+                @if($showActivityCard)
+
+                <!-- Tabs -->
+                <div class="flex gap-4 border-b border-gray-200 mb-6">
+                    <button wire:click="$set('activeTab', 'reviews')" 
+                            class="pb-3 px-2 text-sm font-medium transition-colors {{ $activeTab === 'reviews' ? 'text-[#21B36A] border-b-2 border-[#21B36A]' : 'text-[#616161] hover:text-[#0043EF]' }}">
+                        Reviews ({{ ($yachtReviews->count() ?? 0) + ($marinaReviews->count() ?? 0) }})
+                    </button>
+                    <button wire:click="$set('activeTab', 'itineraries')" 
+                            class="pb-3 px-2 text-sm font-medium transition-colors {{ $activeTab === 'itineraries' ? 'text-[#21B36A] border-b-2 border-[#21B36A]' : 'text-[#616161] hover:text-[#0043EF]' }}">
+                        Itineraries ({{ $itineraryRoutes->count() ?? 0 }})
+                    </button>
+                </div>
+
+                <!-- Reviews Tab Content -->
+                @if($activeTab === 'reviews')
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @php
+                            $allReviews = collect($yachtReviews ?? [])->concat($marinaReviews ?? [])->sortByDesc('created_at');
+                            $displayReviews = $showAllReviews ? $allReviews : $allReviews->take(4);
+                            $totalReviews = $allReviews->count();
+                        @endphp
+                        @forelse($displayReviews as $review)
+                            @php
+                                $isYachtReview = isset($review->yacht_id) || $review->yacht_id !== null;
+                                $reviewType = $isYachtReview ? 'Yacht' : 'Marina';
+                                if ($isYachtReview) {
+                                    $reviewTitle = $review->yacht->name ?? 'Unknown Yacht';
+                                } else {
+                                    $reviewTitle = $review->marina->name ?? 'Unknown Marina';
+                                }
+                                $reviewDate = $review->created_at ? \Carbon\Carbon::parse($review->created_at)->diffForHumans() : 'Recently';
+                            @endphp
+                            <div class="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                                <!-- Card Header -->
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-[#EBF4FF] flex items-center justify-center text-sm font-semibold text-[#0043EF]">
+                                            {{ strtoupper(substr($first_name ?? '', 0, 1) . substr($last_name ?? '', 0, 1)) }}
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <h3 class="font-semibold text-[#1B1B1B]">{{ $first_name }} {{ $last_name }}</h3>
+                                                <span class="text-[#21B36A] text-xs">✓</span>
+                                                <span class="text-[#616161] text-xs">• You</span>
+                                            </div>
+                                            <p class="text-xs text-[#616161]">{{ $user->roles->first()->name ?? 'Member' }}</p>
+                                            <p class="text-xs text-[#616161]">{{ $reviewDate }}</p>
+                                        </div>
+                                    </div>
+                                    <button class="text-[#616161] hover:text-[#1B1B1B]">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Card Content -->
+                                <div class="mb-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <a href="{{ $isYachtReview ? route('yacht-reviews.show', $review->yacht->slug ?? '') : route('marina-reviews.show', $review->marina->slug ?? '') }}" class="text-sm font-medium text-[#0043EF] hover:underline">{{ $reviewType }} Review</a>
+                                        <span class="text-sm text-[#616161]">•</span>
+                                        <a href="{{ $isYachtReview ? route('yacht-reviews.show', $review->yacht->slug ?? '') : route('marina-reviews.show', $review->marina->slug ?? '') }}" class="text-sm text-[#616161] hover:text-[#0043EF] hover:underline">{{ $reviewTitle }}</a>
+                                    </div>
+                                    <h4 class="font-semibold text-[#1B1B1B] mb-2">{{ $review->title ?? 'Review' }}</h4>
+                                    <div class="flex items-center gap-1 mb-2">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <svg class="w-4 h-4 {{ $i <= ($review->overall_rating ?? 0) ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                            </svg>
+                                        @endfor
+                                        <span class="text-sm text-[#616161] ml-1">({{ $review->overall_rating ?? 0 }}/5)</span>
+                                    </div>
+                                    <div x-data="{ expanded: false }">
+                                        <p class="text-sm text-[#616161]" :class="expanded ? '' : 'line-clamp-3'">{{ $review->review ?? '' }}</p>
+                                        @if(strlen($review->review ?? '') > 150)
+                                            <button @click="expanded = !expanded" class="text-sm text-[#0043EF] hover:underline mt-1">
+                                                <span x-show="!expanded">...more</span>
+                                                <span x-show="expanded">...less</span>
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Card Footer -->
+                                <div x-data="{ showComments{{ $review->id }}: false, showShare{{ $review->id }}: false }" class="pt-3 border-t border-gray-100">
+                                    <div class="flex items-center gap-4 text-[#616161] mb-0">
+                                        @php
+                                            $hasLiked = $this->hasUserLiked($review->id, $isYachtReview ? 'yacht' : 'marina');
+                                            $reviewUrl = $isYachtReview ? route('yacht-reviews.show', $review->yacht->slug ?? '') : route('marina-reviews.show', $review->marina->slug ?? '');
+                                        @endphp
+                                        <button wire:click="toggleLike({{ $review->id }}, '{{ $isYachtReview ? 'yacht' : 'marina' }}')" class="flex items-center gap-1 hover:text-[#0043EF] transition-colors {{ $hasLiked ? 'text-[#0043EF]' : '' }}">
+                                            <svg class="w-4 h-4 {{ $hasLiked ? 'fill-current' : '' }}" fill="{{ $hasLiked ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                                            </svg>
+                                            <span class="text-xs">{{ $review->helpful_count ?? 0 }}</span>
+                                        </button>
+                                        <button @click="showComments{{ $review->id }} = !showComments{{ $review->id }}" class="flex items-center gap-1 hover:text-[#0043EF] transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                            </svg>
+                                            <span class="text-xs">Comment</span>
+                                        </button>
+                                        <div class="relative">
+                                            <button @click="showShare{{ $review->id }} = !showShare{{ $review->id }}" class="flex items-center gap-1 hover:text-[#0043EF] transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                                                </svg>
+                                                <span class="text-xs">Share</span>
+                                            </button>
+                                            <div x-show="showShare{{ $review->id }}" @click.away="showShare{{ $review->id }} = false" x-transition class="absolute bottom-full mb-2 right-0 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-10 p-3">
+                                                <div class="space-y-2">
+                                                    <button @click="navigator.clipboard.writeText('{{ $reviewUrl }}'); showShare{{ $review->id }} = false; alert('Link copied!')" class="w-full text-left px-3 py-2 text-sm text-[#616161] hover:bg-gray-100 rounded">Copy Link</button>
+                                                    <button class="w-full text-left px-3 py-2 text-sm text-[#616161] hover:bg-gray-100 rounded">Share on Facebook</button>
+                                                    <button class="w-full text-left px-3 py-2 text-sm text-[#616161] hover:bg-gray-100 rounded">Share on Twitter</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Comment Section (appears below footer buttons when expanded) -->
+                                    <div x-show="showComments{{ $review->id }}" x-transition x-init="$watch('showComments{{ $review->id }}', value => { if (value) { $nextTick(() => { const input = $el.querySelector('input'); if (input) input.focus(); }); } })" class="mt-3 pt-3 border-t border-gray-100">
+                                        <div class="flex gap-2 mb-2">
+                                            <input type="text" placeholder="Write a comment..." class="flex-1 px-3 py-2 border border-[#0043EF] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0043EF]">
+                                            <button class="px-4 py-2 bg-[#0043EF] text-white rounded-lg hover:bg-[#003399] text-sm font-medium">Post</button>
+                                        </div>
+                                        <p class="text-xs text-[#616161]">Comments feature coming soon...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-span-2 text-center py-8">
+                                <p class="text-[#616161]">No reviews yet. Start reviewing to see them here!</p>
+                            </div>
+                        @endforelse
+                    </div>
+                    @if($totalReviews > 4 && !$showAllReviews)
+                        <div class="mt-6 text-center">
+                            <button wire:click="$set('showAllReviews', true)" class="text-sm text-[#0043EF] hover:underline font-medium">Show all →</button>
+                        </div>
+                    @elseif($totalReviews > 4 && $showAllReviews)
+                        <div class="mt-6 text-center">
+                            <button wire:click="$set('showAllReviews', false)" class="text-sm text-[#0043EF] hover:underline font-medium">Show less ↑</button>
+                        </div>
+                    @endif
+                @endif
+
+                <!-- Itineraries Tab Content -->
+                @if($activeTab === 'itineraries')
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @php
+                            $allItineraries = collect($itineraryRoutes ?? []);
+                            $displayItineraries = $showAllItineraries ? $allItineraries : $allItineraries->take(4);
+                            $totalItineraries = $allItineraries->count();
+                        @endphp
+                        @forelse($displayItineraries as $itinerary)
+                            @php
+                                $itineraryDate = $itinerary->created_at ? \Carbon\Carbon::parse($itinerary->created_at)->diffForHumans() : 'Recently';
+                                $routeTitle = $itinerary->title ?? 'Untitled Route';
+                                $routeDescription = $itinerary->description ?? '';
+                                $durationDays = $itinerary->duration_days ?? 0;
+                                $region = $itinerary->region ?? '';
+                                $itineraryUrl = url('/itinerary/routes/' . ($itinerary->id ?? ''));
+                            @endphp
+                            <div class="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                                <!-- Card Header -->
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-[#EBF4FF] flex items-center justify-center text-sm font-semibold text-[#0043EF]">
+                                            {{ strtoupper(substr($first_name ?? '', 0, 1) . substr($last_name ?? '', 0, 1)) }}
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <h3 class="font-semibold text-[#1B1B1B]">{{ $first_name }} {{ $last_name }}</h3>
+                                                <span class="text-[#21B36A] text-xs">✓</span>
+                                                <span class="text-[#616161] text-xs">• You</span>
+                                            </div>
+                                            <p class="text-xs text-[#616161]">{{ $user->roles->first()->name ?? 'Member' }}</p>
+                                            <p class="text-xs text-[#616161]">{{ $itineraryDate }}</p>
+                                        </div>
+                                    </div>
+                                    <div x-data="{ open: false }" class="relative">
+                                        <button @click="open = !open" class="text-[#616161] hover:text-[#1B1B1B]">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                                            </svg>
+                                        </button>
+                                        <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                                            <div class="py-1">
+                                                <a href="{{ $itineraryUrl }}" class="block px-4 py-2 text-sm text-[#616161] hover:bg-gray-100">View Details</a>
+                                                @if($itinerary->user_id === Auth::id())
+                                                    <button class="block w-full text-left px-4 py-2 text-sm text-[#616161] hover:bg-gray-100">Edit</button>
+                                                    <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete</button>
+                                                @else
+                                                    <button class="block w-full text-left px-4 py-2 text-sm text-[#616161] hover:bg-gray-100">Report</button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Card Content -->
+                                <div class="mb-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="text-sm font-medium text-[#0043EF]">Itinerary Route</span>
+                                        @if($region)
+                                            <span class="text-sm text-[#616161]">•</span>
+                                            <span class="text-sm text-[#616161]">{{ $region }}</span>
+                                        @endif
+                                    </div>
+                                    <h4 class="font-semibold text-[#1B1B1B] mb-2">{{ $routeTitle }}</h4>
+                                    @if($durationDays > 0)
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <svg class="w-4 h-4 text-[#616161]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            </svg>
+                                            <span class="text-sm text-[#616161]">{{ $durationDays }} {{ $durationDays === 1 ? 'Day' : 'Days' }}</span>
+                                        </div>
+                                    @endif
+                                    <div x-data="{ expanded: false }">
+                                        <p class="text-sm text-[#616161]" :class="expanded ? '' : 'line-clamp-3'">{{ $routeDescription }}</p>
+                                        @if(strlen($routeDescription) > 150)
+                                            <button @click="expanded = !expanded" class="text-sm text-[#0043EF] hover:underline mt-1">
+                                                <span x-show="!expanded">...more</span>
+                                                <span x-show="expanded">...less</span>
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Card Footer -->
+                                <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                                    <div class="flex items-center gap-4 text-[#616161]">
+                                        <button class="flex items-center gap-1 hover:text-[#0043EF] transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                            </svg>
+                                            <span class="text-xs">Save</span>
+                                        </button>
+                                        <div x-data="{ showShare: false }" class="relative">
+                                            <button @click="showShare = !showShare" class="flex items-center gap-1 hover:text-[#0043EF] transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                                                </svg>
+                                                <span class="text-xs">Share</span>
+                                            </button>
+                                            <div x-show="showShare" @click.away="showShare = false" x-transition class="absolute bottom-full mb-2 right-0 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-10 p-3">
+                                                <div class="space-y-2">
+                                                    <button @click="navigator.clipboard.writeText('{{ $itineraryUrl }}'); showShare = false; alert('Link copied!')" class="w-full text-left px-3 py-2 text-sm text-[#616161] hover:bg-gray-100 rounded">Copy Link</button>
+                                                    <button class="w-full text-left px-3 py-2 text-sm text-[#616161] hover:bg-gray-100 rounded">Share on Facebook</button>
+                                                    <button class="w-full text-left px-3 py-2 text-sm text-[#616161] hover:bg-gray-100 rounded">Share on Twitter</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <a href="{{ $itineraryUrl }}" class="flex items-center gap-1 hover:text-[#0043EF] transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                            <span class="text-xs">View</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-span-2 text-center py-8">
+                                <p class="text-[#616161]">No itineraries yet. Create your first itinerary to see it here!</p>
+                            </div>
+                        @endforelse
+                    </div>
+                    @if($totalItineraries > 4 && !$showAllItineraries)
+                        <div class="mt-6 text-center">
+                            <button wire:click="$set('showAllItineraries', true)" class="text-sm text-[#0043EF] hover:underline font-medium">Show all →</button>
+                        </div>
+                    @elseif($totalItineraries > 4 && $showAllItineraries)
+                        <div class="mt-6 text-center">
+                            <button wire:click="$set('showAllItineraries', false)" class="text-sm text-[#0043EF] hover:underline font-medium">Show less ↑</button>
+                        </div>
+                    @endif
+                @endif
+                @endif
             </section>
 
             <!-- Career Profile -->
             <section class="bg-white p-5 rounded-xl space-y-4">
-                <div class="flex items-center gap-2">
-                    <h2 class="text-xl font-semibold text-[#1B1B1B]">Career Profile</h2>
-                    @if(!$editingProfile && !$editingCareerProfile)
-                        <button wire:click="$set('editingCareerProfile', true)" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
-                            <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-xl font-semibold text-[#1B1B1B]">Career Profile</h2>
+                        @if(!$editingProfile && !$editingCareerProfile)
+                            <button wire:click="$set('editingCareerProfile', true)" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
+                                <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+                    <button wire:click="$set('showCareerProfile', {{ $showCareerProfile ? 'false' : 'true' }})" class="p-1.5 rounded-md hover:bg-gray-100 transition-colors" title="{{ $showCareerProfile ? 'Hide' : 'Show' }}">
+                        @if($showCareerProfile)
+                            <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                             </svg>
-                        </button>
-                    @endif
+                        @else
+                            <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        @endif
+                    </button>
                 </div>
+                @if($showCareerProfile)
                 @if($editingProfile || $editingCareerProfile)
                     <form wire:submit.prevent="updateCareerProfile" class="space-y-4">
                         <div class="grid grid-cols-3 gap-4 text-sm">
@@ -294,6 +679,7 @@
                         </div>
                     </div>
                 @endif
+                @endif
             </section>
 
             <!-- Career History -->
@@ -302,11 +688,25 @@
                     <div class="flex items-center gap-2 mb-5">
                         <h2 class="text-xl font-semibold text-[#1B1B1B]">Career History</h2>
                     </div>
-                    <a href="{{ route('career-history.manage') }}" class="cursor-pointer h-fit flex items-center gap-[12px] bg-[#F5F6FA] px-4 py-2 rounded-lg text-sm text-[#0043EF] hover:bg-gray-200 font-medium">
-                        <img src="{{ asset('images/add-circle-blue.svg') }}" alt="" class="h-[11px] w-[11px]">
-                        Add Career History
-                    </a>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('career-history.manage') }}" class="cursor-pointer h-fit flex items-center gap-[12px] bg-[#F5F6FA] px-4 py-2 rounded-lg text-sm text-[#0043EF] hover:bg-gray-200 font-medium">
+                            <img src="{{ asset('images/add-circle-blue.svg') }}" alt="" class="h-[11px] w-[11px]">
+                            Add Career History
+                        </a>
+                        <button wire:click="$set('showCareerHistory', {{ $showCareerHistory ? 'false' : 'true' }})" class="p-1.5 rounded-md hover:bg-gray-100 transition-colors" title="{{ $showCareerHistory ? 'Hide' : 'Show' }}">
+                            @if($showCareerHistory)
+                                <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                </svg>
+                            @else
+                                <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            @endif
+                        </button>
+                    </div>
                 </div>
+                @if($showCareerHistory)
                 @if(count($careerHistoryEntries) > 0)
                     @foreach($careerHistoryEntries as $entry)
                         <div>
@@ -338,6 +738,7 @@
                 @else
                     <p class="text-[#616161]">No career history available. Click "Add Career History" to add one.</p>
                 @endif
+                @endif
             </section>
 
             <!-- Certifications -->
@@ -346,11 +747,25 @@
                     <div class="flex items-center gap-2 mb-5">
                         <h2 class="text-xl font-semibold text-[#1B1B1B]">Certifications</h2>
                     </div>
-                    <button wire:click="openCertificationModal()" class="cursor-pointer h-fit flex items-center gap-[12px] bg-[#F5F6FA] px-4 py-2 rounded-lg text-sm text-[#0043EF] hover:bg-gray-200 font-medium">
-                        <img src="{{ asset('images/add-circle-blue.svg') }}" alt="" class="h-[11px] w-[11px]">
-                        {{ $showCertificationModal ? 'Cancel' : 'Add Certifications' }}
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button wire:click="openCertificationModal()" class="cursor-pointer h-fit flex items-center gap-[12px] bg-[#F5F6FA] px-4 py-2 rounded-lg text-sm text-[#0043EF] hover:bg-gray-200 font-medium">
+                            <img src="{{ asset('images/add-circle-blue.svg') }}" alt="" class="h-[11px] w-[11px]">
+                            {{ $showCertificationModal ? 'Cancel' : 'Add Certifications' }}
+                        </button>
+                        <button wire:click="$set('showCertifications', {{ $showCertifications ? 'false' : 'true' }})" class="p-1.5 rounded-md hover:bg-gray-100 transition-colors" title="{{ $showCertifications ? 'Hide' : 'Show' }}">
+                            @if($showCertifications)
+                                <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                </svg>
+                            @else
+                                <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            @endif
+                        </button>
+                    </div>
                 </div>
+                @if($showCertifications)
                 
                 <!-- Certification Form (Inline) -->
                 @if($showCertificationModal)
@@ -448,21 +863,36 @@
                 @else
                     <p class="text-[#616161]">No certifications available. Click "Add Certifications" to add one.</p>
                 @endif
+                @endif
             </section>
 
             <!-- Skills -->
             <section class="bg-white p-5 rounded-xl">
-                <div class="flex items-center gap-2 mb-5">
-                    <h2 class="text-xl font-semibold text-[#1B1B1B]">Skills & Competencies</h2>
-                    @if(!$editingSkills)
-                        <button wire:click="$set('editingSkills', true)" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
-                            <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-xl font-semibold text-[#1B1B1B]">Skills & Competencies</h2>
+                        @if(!$editingSkills)
+                            <button wire:click="$set('editingSkills', true)" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
+                                <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+                    <button wire:click="$set('showSkills', {{ $showSkills ? 'false' : 'true' }})" class="p-1.5 rounded-md hover:bg-gray-100 transition-colors" title="{{ $showSkills ? 'Hide' : 'Show' }}">
+                        @if($showSkills)
+                            <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                             </svg>
-                        </button>
-                    @endif
+                        @else
+                            <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        @endif
+                    </button>
                 </div>
+                @if($showSkills)
                 @if($editingSkills)
                     <div class="space-y-3">
                         <div class="flex gap-2">
@@ -500,21 +930,36 @@
                         @endif
                     </div>
                 @endif
+                @endif
             </section>
 
             <!-- Personal Details -->
             <section class="bg-white p-5 rounded-xl space-y-4">
-                <div class="flex items-center gap-2 mb-5">
-                    <h2 class="text-xl font-semibold text-[#1B1B1B]">Personal Details</h2>
-                    @if(!$editingPersonalDetails)
-                        <button wire:click="$set('editingPersonalDetails', true)" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
-                            <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-xl font-semibold text-[#1B1B1B]">Personal Details</h2>
+                        @if(!$editingPersonalDetails)
+                            <button wire:click="$set('editingPersonalDetails', true)" class="cursor-pointer p-1.5 rounded-md hover:bg-[#EEF6FF] transition-all duration-200 group">
+                                <img class="w-[16px] h-[16px] group-hover:scale-110 transition-transform" src="{{ asset('images/edit.svg') }}" alt="Edit" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <svg class="w-[16px] h-[16px] hidden group-hover:text-[#0043EF] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+                    <button wire:click="$set('showPersonalDetails', {{ $showPersonalDetails ? 'false' : 'true' }})" class="p-1.5 rounded-md hover:bg-gray-100 transition-colors" title="{{ $showPersonalDetails ? 'Hide' : 'Show' }}">
+                        @if($showPersonalDetails)
+                            <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                             </svg>
-                        </button>
-                    @endif
+                        @else
+                            <svg class="w-5 h-5 text-[#616161] hover:text-[#0043EF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        @endif
+                    </button>
                 </div>
+                @if($showPersonalDetails)
                 @if($editingPersonalDetails)
                     <form wire:submit.prevent="updatePersonalDetails" class="space-y-4">
                         <div class="grid max-w-2xl grid-cols-2 gap-6 text-sm">
@@ -659,9 +1104,43 @@
                     @else
                         <p class="text-[#616161]">No languages added yet. Click edit to add languages.</p>
                     @endif
-                </div>
-            </section>
+                    @endif
         </div>
+        </div>
+    </div>
+
+    <!-- Image Modal/Lightbox -->
+    <div x-show="imageModal.open" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click.self="closeImage()"
+         @keydown.escape.window="closeImage()"
+         class="fixed inset-0 bg-black bg-opacity-90 z-[9999] flex items-center justify-center p-4"
+         x-cloak>
+        <div class="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center">
+            <!-- Close Button -->
+            <button @click="closeImage()" 
+                    class="absolute top-4 right-4 z-10 bg-white/20 hover:bg-white/30 text-white rounded-full p-2 transition-colors backdrop-blur-sm">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            
+            <!-- Image -->
+            <img :src="imageModal.src" 
+                 :alt="imageModal.alt"
+                 class="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                 @click.self="closeImage()">
+            
+            <!-- Image Info (optional) -->
+            <div x-show="imageModal.alt" 
+                 class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
+                <p class="text-sm" x-text="imageModal.alt"></p>
+            </div>
         </div>
     </div>
 </div>

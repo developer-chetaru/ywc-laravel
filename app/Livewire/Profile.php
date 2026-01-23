@@ -8,6 +8,11 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Yacht;
 use App\Models\CareerHistoryEntry;
+use App\Models\YachtReview;
+use App\Models\MarinaReview;
+use App\Models\ItineraryRoute;
+use App\Models\ReviewVote;
+use Illuminate\Support\Str;
 
 class Profile extends Component
 {
@@ -81,6 +86,25 @@ class Profile extends Component
     
     // Career History Entries
     public $careerHistoryEntries = [];
+    
+    // Reviews and Itineraries
+    public $yachtReviews = [];
+    public $marinaReviews = [];
+    public $itineraryRoutes = [];
+    public $activeTab = 'reviews'; // 'reviews' or 'itineraries'
+    public $showAllReviews = false;
+    public $showAllItineraries = false;
+    public $showActivityCard = true; // Show/hide Activity card section
+    
+    // Card visibility states
+    public $showProfessionalSummary = true;
+    public $showCareerProfile = true;
+    public $showCareerHistory = true;
+    public $showCertifications = true;
+    public $showSkills = true;
+    public $showPersonalDetails = true;
+    public $showLanguages = true;
+    public $showSidebarCard = false; // Show/hide sidebar navigation card (hidden by default)
 
     public function mount()
     {
@@ -207,6 +231,33 @@ class Profile extends Component
         
         // Load career history entries from career_history_entries table
         $this->loadCareerHistory();
+        
+        // Load reviews and itineraries
+        $this->loadReviewsAndItineraries();
+    }
+    
+    public function loadReviewsAndItineraries()
+    {
+        $user = Auth::user();
+        
+        // Load yacht reviews - remove limit to get all, we'll limit in the view
+        $this->yachtReviews = $user->yachtReviews()
+            ->where('is_approved', true)
+            ->with(['yacht'])
+            ->latest()
+            ->get();
+        
+        // Load marina reviews - remove limit to get all, we'll limit in the view
+        $this->marinaReviews = $user->marinaReviews()
+            ->where('is_approved', true)
+            ->with(['marina'])
+            ->latest()
+            ->get();
+        
+        // Load itinerary routes - remove limit to get all, we'll limit in the view
+        $this->itineraryRoutes = $user->itineraryRoutes()
+            ->latest('created_at')
+            ->get();
     }
     
     public function loadCareerHistory()
@@ -795,6 +846,79 @@ class Profile extends Component
     {
         unset($this->previous_yachts[$index]);
         $this->previous_yachts = array_values($this->previous_yachts);
+    }
+
+    public function toggleLike($reviewId, $reviewType)
+    {
+        $user = Auth::user();
+        
+        if ($reviewType === 'yacht') {
+            $review = YachtReview::find($reviewId);
+        } else {
+            $review = MarinaReview::find($reviewId);
+        }
+        
+        if (!$review) {
+            return;
+        }
+        
+        // Check if user already voted
+        $existingVote = ReviewVote::where('reviewable_type', get_class($review))
+            ->where('reviewable_id', $review->id)
+            ->where('review_id', $review->id)
+            ->where('user_id', $user->id)
+            ->first();
+        
+        if ($existingVote) {
+            // Toggle: if helpful, remove; if not helpful, change to helpful
+            if ($existingVote->is_helpful) {
+                // Remove like
+                $existingVote->delete();
+                $review->decrement('helpful_count');
+            } else {
+                // Change to helpful
+                $existingVote->update(['is_helpful' => true]);
+                $review->increment('helpful_count');
+                if ($review->not_helpful_count > 0) {
+                    $review->decrement('not_helpful_count');
+                }
+            }
+        } else {
+            // Create new helpful vote
+            ReviewVote::create([
+                'reviewable_type' => get_class($review),
+                'reviewable_id' => $review->id,
+                'review_id' => $review->id,
+                'user_id' => $user->id,
+                'is_helpful' => true,
+            ]);
+            $review->increment('helpful_count');
+        }
+        
+        // Reload reviews to get updated counts
+        $this->loadReviewsAndItineraries();
+    }
+    
+    public function hasUserLiked($reviewId, $reviewType)
+    {
+        $user = Auth::user();
+        
+        if ($reviewType === 'yacht') {
+            $review = YachtReview::find($reviewId);
+        } else {
+            $review = MarinaReview::find($reviewId);
+        }
+        
+        if (!$review) {
+            return false;
+        }
+        
+        return ReviewVote::where('reviewable_type', get_class($review))
+            ->where('reviewable_id', $review->id)
+            ->where('review_id', $review->id)
+            ->where('user_id', $user->id)
+            ->where('is_helpful', true)
+            ->exists();
     }
 
     public function render()
