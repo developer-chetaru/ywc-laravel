@@ -106,9 +106,9 @@
                     <div class="flex items-center space-x-4 ml-auto">
                         
                         {{-- 🌐 Language Switcher --}}
-                        <div>
+                        <!-- <div>
                             <livewire:language-switcher />
-                        </div>
+                        </div> -->
                 
                         {{-- Right Side Navigation (Profile Dropdown) --}}
                         <div x-data="{ 
