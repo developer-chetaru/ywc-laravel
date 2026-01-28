@@ -235,6 +235,25 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             </li>
             @endrole
 
+            {{-- SUBSCRIPTION ADMIN (Super Admin Only) --}}
+            @role('super_admin')
+            <li>
+                <a href="{{ route('admin.subscriptions') }}"
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
+                        {{ request()->is('admin/subscriptions*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
+
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                    </svg>
+
+                    <span x-show="isOpen"
+                        class="text-base font-medium {{ request()->is('admin/subscriptions*') ? 'text-black' : 'text-white' }}">
+                        Subscription Admin
+                    </span>
+                </a>
+            </li>
+            @endrole
+
 
             {{-- DOCUMENTS & CAREER HISTORY --}}
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))

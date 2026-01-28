@@ -1,6 +1,19 @@
 @role('super_admin')
 
     <div class="space-y-4">
+        <!-- Flash Messages -->
+        @if (session()->has('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span class="block sm:inline">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session()->has('error'))
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span class="block sm:inline">{{ session('error') }}</span>
+            </div>
+        @endif
+
         <h2 class="text-xl border-b border-gray-100 font-medium text-[#0053FF] pb-2">User List</h2>
             
         <div class="h-[calc(100vh-100px)] bg-gray-100">
@@ -87,7 +100,7 @@
                                     <th class="px-4 py-6 font-medium text-[#020202]">Membership</th>
                                     <th class="px-4 py-6 font-medium text-[#020202]">Last Login</th>
                                     <th class="px-4 py-6 font-medium text-[#020202]">First Login</th>
-                                    <th class="px-4 py-6"></th>
+                                    <th class="px-4 py-6 font-medium text-[#020202]">Actions</th>
                                 </tr>
                             </thead>
 
@@ -97,19 +110,21 @@
                                         <td class="px-4 py-6"><input type="checkbox" /></td>
 
                                         <!-- User info -->
-                                        <td class="flex items-center gap-3 px-4 py-6 cursor-pointer"
-                                            wire:click="showProfileDetails({{ $user->id }})">
-                                            @if($user->profile_photo_path)
-                                                <img src="{{ asset('storage/'.$user->profile_photo_path) }}"
-                                                    class="w-8 h-8 rounded-full object-cover" alt="">
-                                            @else
-                                                <div class="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 font-medium rounded-full">
-                                                    {{ strtoupper(substr($user->first_name,0,1).substr($user->last_name,0,1)) }}
-                                                </div>
-                                            @endif
-                                            <span class="text-[#1B1B1B] font-medium">
-                                                {{ $user->first_name }} {{ $user->last_name }}
-                                            </span>
+                                        <td class="px-4 py-6">
+                                            <div class="flex items-center gap-3 cursor-pointer"
+                                                wire:click="showProfileDetails({{ $user->id }})">
+                                                @if($user->profile_photo_path)
+                                                    <img src="{{ asset('storage/'.$user->profile_photo_path) }}"
+                                                        class="w-8 h-8 rounded-full object-cover" alt="">
+                                                @else
+                                                    <div class="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 font-medium rounded-full">
+                                                        {{ strtoupper(substr($user->first_name,0,1).substr($user->last_name,0,1)) }}
+                                                    </div>
+                                                @endif
+                                                <span class="text-[#1B1B1B] font-medium">
+                                                    {{ $user->first_name }} {{ $user->last_name }}
+                                                </span>
+                                            </div>
                                         </td>
 
                                         <td class="px-4 py-6 text-[#616161]">{{ $user->email }}</td>
@@ -149,7 +164,28 @@
                                         </td>
                                         <td class="px-4 py-6 text-[#616161]">{{ $user->last_login ?? '–' }}</td>
                                         <td class="px-4 py-6 text-[#616161]">{{ $user->first_login ?? '–' }}</td>
-                                        <td class="px-4 py-6 text-[#616161]">⋮</td>
+                                        <td class="px-4 py-6">
+                                            <div class="flex items-center gap-2 justify-end">
+                                                @if(!$user->is_active)
+                                                    <button wire:click="manualVerify({{ $user->id }})" 
+                                                            wire:confirm="Are you sure you want to verify this user?"
+                                                            class="px-2 py-1 text-xs font-medium bg-green-500 text-white rounded hover:bg-green-600 transition-colors whitespace-nowrap"
+                                                            title="Verify User">
+                                                        ✓ Verify
+                                                    </button>
+                                                @else
+                                                    <button wire:click="manualUnverify({{ $user->id }})" 
+                                                            wire:confirm="Are you sure you want to unverify this user?"
+                                                            class="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded hover:bg-red-600 transition-colors whitespace-nowrap"
+                                                            title="Unverify User">
+                                                        ✗ Unverify
+                                                    </button>
+                                                @endif
+                                                <button class="text-[#616161] hover:text-[#020202] cursor-pointer p-1" title="More options">
+                                                    ⋮
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -160,76 +196,6 @@
                                 @endforelse
                             </tbody>
                         </table>
-                    </div>
-
-                    <!-- Mobile cards -->
-                    <div class="divide-y divide-gray-100 md:hidden">
-                        @forelse($users as $user)
-                            <div class="px-4 py-4 flex gap-3">
-                                <div class="mt-1">
-                                    <input type="checkbox" />
-                                </div>
-                                <button class="flex-1 text-left" wire:click="showProfileDetails({{ $user->id }})">
-                                    <div class="flex items-center gap-3 mb-2">
-                                        @if($user->profile_photo_path)
-                                            <img src="{{ asset('storage/'.$user->profile_photo_path) }}"
-                                                class="w-10 h-10 rounded-full object-cover" alt="">
-                                        @else
-                                            <div class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 font-medium rounded-full">
-                                                {{ strtoupper(substr($user->first_name,0,1).substr($user->last_name,0,1)) }}
-                                            </div>
-                                        @endif
-                                        <div>
-                                            <p class="font-semibold text-[#1B1B1B] text-sm">
-                                                {{ $user->first_name }} {{ $user->last_name }}
-                                            </p>
-                                            <p class="text-xs text-[#616161] truncate">{{ $user->email }}</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex flex-wrap gap-2 text-xs mb-2">
-                                        @if(count($user->user_roles) > 0)
-                                            @foreach($user->user_roles as $roleName)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-medium">
-                                                    {{ $roleName }}
-                                                </span>
-                                            @endforeach
-                                        @endif
-
-                                        @if($user->is_active)
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-[#0C7B24]">
-                                                <span class="w-1.5 h-1.5 bg-[#0C7B24] rounded-full"></span>
-                                                Verified
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-[#EB1C24]">
-                                                <span class="w-1.5 h-1.5 bg-[#EB1C24] rounded-full"></span>
-                                                Unverified
-                                            </span>
-                                        @endif
-                                    </div>
-
-                                    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-[#616161]">
-                                        <div>
-                                            <dt class="font-medium">Membership</dt>
-                                            <dd>{{ $user->membership_type ?? '–' }}</dd>
-                                        </div>
-                                        <div>
-                                            <dt class="font-medium">Last login</dt>
-                                            <dd>{{ $user->last_login ?? '–' }}</dd>
-                                        </div>
-                                        <div>
-                                            <dt class="font-medium">First login</dt>
-                                            <dd>{{ $user->first_login ?? '–' }}</dd>
-                                        </div>
-                                    </dl>
-                                </button>
-                            </div>
-                        @empty
-                            <div class="px-4 py-6 text-center text-gray-500 text-sm">
-                                No users found.
-                            </div>
-                        @endforelse
                     </div>
                 </div>
                 

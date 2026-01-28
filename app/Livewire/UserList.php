@@ -90,6 +90,66 @@ class UserList extends Component
         $this->closeProfilePopup();
     }
 
+    public function manualVerify($userId)
+    {
+        // Check if user is super admin
+        if (!auth()->user()->hasRole('super_admin')) {
+            session()->flash('error', 'Unauthorized action.');
+            return;
+        }
+
+        $user = User::find($userId);
+        
+        if (!$user) {
+            session()->flash('error', 'User not found.');
+            return;
+        }
+
+        if ($user->is_active) {
+            session()->flash('error', 'User is already verified.');
+            return;
+        }
+
+        $user->is_active = true;
+        $user->email_verified_at = now();
+        $user->save();
+
+        session()->flash('success', 'User ' . $user->email . ' has been manually verified.');
+        
+        // Refresh the list
+        $this->resetPage();
+    }
+
+    public function manualUnverify($userId)
+    {
+        // Check if user is super admin
+        if (!auth()->user()->hasRole('super_admin')) {
+            session()->flash('error', 'Unauthorized action.');
+            return;
+        }
+
+        $user = User::find($userId);
+        
+        if (!$user) {
+            session()->flash('error', 'User not found.');
+            return;
+        }
+
+        if (!$user->is_active) {
+            session()->flash('error', 'User is already unverified.');
+            return;
+        }
+
+        $user->is_active = false;
+        $user->email_verified_at = null;
+        $user->save();
+
+        session()->flash('success', 'User ' . $user->email . ' has been unverified.');
+        
+        // Refresh the list
+        $this->resetPage();
+    }
+
     public function render()
     {
         $query = User::query()

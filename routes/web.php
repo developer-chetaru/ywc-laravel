@@ -54,6 +54,7 @@ use App\Livewire\Training\Admin\ManageReviews;
 use App\Models\Order as InternalOrder;
 use App\Livewire\SubscriptionPage;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
@@ -64,6 +65,10 @@ use Stripe\Checkout\Session as CheckoutSession;
 
 Route::get('/', [LandingPageController::class, 'index'])->name('landing');
 Route::post('/waitlist/join', [LandingPageController::class, 'joinWaitlist'])->name('waitlist.join');
+
+// Stripe Webhook (must be outside auth middleware)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])
+    ->name('stripe.webhook');
 
 // Financial Future Planning - Public route (accessible to all)
 Route::get('/financial-future-planning', function () {
@@ -224,8 +229,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::post('/bulk-issue', [\App\Http\Controllers\TrainingProviderController::class, 'bulkIssueCertificates'])->name('bulk-issue');
     });
 
-// Analytics Routes
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale'])
+// Analytics Routes - Requires Subscription
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale', 'subscribed'])
     ->prefix('analytics')->name('analytics.')->group(function () {
         Route::get('/user-dashboard', [\App\Http\Controllers\AnalyticsController::class, 'userDashboard'])->name('user-dashboard');
         Route::get('/employer-dashboard', [\App\Http\Controllers\AnalyticsController::class, 'employerDashboard'])->name('employer-dashboard');
@@ -294,6 +299,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('/subscription/cancel', function () {
         return redirect()->route('subscription.page')->with('failed', 'Payment cancelled or failed!');
     })->name('subscription.cancel');
+
+    // Admin Subscription Dashboard (role check done in component)
+    Route::get('/admin/subscriptions', \App\Livewire\Admin\SubscriptionAdmin::class)->name('admin.subscriptions');
     });
 
 
