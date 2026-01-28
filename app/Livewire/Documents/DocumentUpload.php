@@ -12,6 +12,7 @@ use App\Services\Documents\ThumbnailService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 
 #[Layout('layouts.app-laravel')]
 class DocumentUpload extends Component
@@ -46,19 +47,6 @@ class DocumentUpload extends Component
     public function mount()
     {
         // Component initialization
-    }
-
-    public function openModal()
-    {
-        $this->resetForm();
-        $this->showModal = true;
-    }
-
-    protected function getListeners()
-    {
-        return [
-            'openUploadModal' => 'openModal',
-        ];
     }
 
     #[On('openUploadModal')]

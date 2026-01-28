@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\MentalHealthController;
 use App\Models\VerificationLevel;
 use App\Http\Controllers\Api\TrainingController;
 use App\Http\Controllers\Api\JobBoardController;
+use App\Http\Controllers\Api\SubscriptionController;
 
 // Master Data API - Public endpoints for mobile developers
 Route::get('/master-data', [MasterDataController::class, 'index']);
@@ -126,6 +127,9 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 // Waitlist (public endpoint)
 Route::post('/waitlist/join', [\App\Http\Controllers\LandingPageController::class, 'joinWaitlist']);
 
+// Subscription Plans (public endpoint)
+Route::get('/subscriptions/plans', [SubscriptionController::class, 'getPlans']);
+
 require base_path('vendor/riari/laravel-forum/routes/api.php');
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -135,6 +139,16 @@ Route::middleware('auth:sanctum')->group(function () {
 	Route::get('/profile', [ProfileController::class, 'profile']);
     Route::post('/profile', [ProfileController::class, 'updateProfile']); 
     Route::post('/change-password', [ChangePasswordController::class, 'changePassword']);
+
+    // Subscription Management
+    Route::prefix('subscriptions')->group(function () {
+        Route::get('/current', [SubscriptionController::class, 'getCurrentSubscription']);
+        Route::get('/purchase-history', [SubscriptionController::class, 'getPurchaseHistory']);
+        Route::post('/checkout', [SubscriptionController::class, 'createCheckoutSession']);
+        Route::get('/customer-portal', [SubscriptionController::class, 'getCustomerPortalUrl']);
+        Route::post('/cancel', [SubscriptionController::class, 'cancel']);
+        Route::post('/reactivate', [SubscriptionController::class, 'reactivate']);
+    });
 
     Route::post('/career-history/upload', [CareerHistoryApiController::class, 'uploadDocument']);
     

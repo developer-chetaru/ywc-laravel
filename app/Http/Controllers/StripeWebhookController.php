@@ -12,8 +12,41 @@ use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
 use Carbon\Carbon;
 
+/**
+ * @OA\Tag(
+ *     name="Webhooks",
+ *     description="Stripe webhook endpoints (internal use only)"
+ * )
+ */
 class StripeWebhookController extends Controller
 {
+    /**
+     * @OA\Post(
+     *     path="/api/webhooks/stripe",
+     *     summary="Handle Stripe webhook events",
+     *     description="This endpoint is called by Stripe to notify about subscription events. Not for direct API use.",
+     *     tags={"Webhooks"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Stripe webhook payload",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="type", type="string", example="checkout.session.completed"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Webhook processed successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="received", type="boolean", example=true)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid payload or signature"
+     *     )
+     * )
+     */
     public function handleWebhook(Request $request)
     {
         $payload = $request->getContent();
