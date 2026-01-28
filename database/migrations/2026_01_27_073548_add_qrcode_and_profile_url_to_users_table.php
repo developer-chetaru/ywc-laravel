@@ -12,8 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('qrcode', 2048)->nullable()->after('profile_photo_path');
-            $table->string('profile_url', 2048)->nullable()->after('qrcode');
+            if (!Schema::hasColumn('users', 'qrcode')) {
+                $table->string('qrcode', 2048)->nullable()->after('profile_photo_path');
+            }
+        });
+        
+        Schema::table('users', function (Blueprint $table) {
+            if (!Schema::hasColumn('users', 'profile_url')) {
+                // Add profile_url after qrcode if qrcode exists, otherwise after profile_photo_path
+                if (Schema::hasColumn('users', 'qrcode')) {
+                    $table->string('profile_url', 2048)->nullable()->after('qrcode');
+                } else {
+                    $table->string('profile_url', 2048)->nullable()->after('profile_photo_path');
+                }
+            }
         });
     }
 
@@ -23,7 +35,12 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['qrcode', 'profile_url']);
+            if (Schema::hasColumn('users', 'qrcode')) {
+                $table->dropColumn('qrcode');
+            }
+            if (Schema::hasColumn('users', 'profile_url')) {
+                $table->dropColumn('profile_url');
+            }
         });
     }
 };
