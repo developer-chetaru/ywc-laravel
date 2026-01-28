@@ -8,6 +8,12 @@ use App\Mail\ShareProfileMail;
 use Illuminate\Support\Facades\Crypt;
 use App\Models\User;
 
+/**
+ * @OA\Tag(
+ *     name="Profile",
+ *     description="User profile management endpoints"
+ * )
+ */
 class ProfileController extends Controller
 {
     public function share(Request $request)
@@ -68,6 +74,56 @@ class ProfileController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/profile",
+     *     summary="Get authenticated user's profile",
+     *     tags={"Profile"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="first_name", type="string", example="John"),
+     *             @OA\Property(property="last_name", type="string", example="Doe"),
+     *             @OA\Property(property="email", type="string", example="john.doe@example.com"),
+     *             @OA\Property(property="dob", type="string", example="01/01/1990", description="Date of birth in d/m/Y format"),
+     *             @OA\Property(property="phone", type="string", example="+1234567890"),
+     *             @OA\Property(property="gender", type="string", example="Male"),
+     *             @OA\Property(property="nationality", type="string", example="British"),
+     *             @OA\Property(property="marital_status", type="string", example="Single"),
+     *             @OA\Property(property="birth_country", type="string", example="United Kingdom"),
+     *             @OA\Property(property="birth_province", type="string", example="London"),
+     *             @OA\Property(property="user_id", type="integer", example=1),
+     *             @OA\Property(property="image", type="string", nullable=true, example="http://example.com/uploads/profile/photo.jpg"),
+     *             @OA\Property(property="years_experience", type="integer", example=5),
+     *             @OA\Property(property="current_yacht", type="string", example="Yacht Name"),
+     *             @OA\Property(property="current_yacht_start_date", type="string", example="01/01/2024", description="Date in m/d/Y format"),
+     *             @OA\Property(property="sea_service_time_months", type="integer", example=60),
+     *             @OA\Property(property="availability_status", type="string", enum={"available", "busy", "looking_for_work", "on_leave"}, example="available"),
+     *             @OA\Property(property="availability_message", type="string", example="Available for work"),
+     *             @OA\Property(property="looking_to_meet", type="boolean", example=false),
+     *             @OA\Property(property="looking_for_work", type="boolean", example=true),
+     *             @OA\Property(property="languages", type="array", @OA\Items(type="object")),
+     *             @OA\Property(property="certifications", type="array", @OA\Items(type="object")),
+     *             @OA\Property(property="specializations", type="array", @OA\Items(type="string")),
+     *             @OA\Property(property="interests", type="array", @OA\Items(type="string")),
+     *             @OA\Property(property="previous_yachts", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Failed to fetch user profile")
+     *         )
+     *     )
+     * )
+     */
 	public function profile(Request $request)
     {
         try {
@@ -158,10 +214,74 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the authenticated user's profile details and image.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @OA\Post(
+     *     path="/api/profile",
+     *     summary="Update authenticated user's profile",
+     *     tags={"Profile"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="first_name", type="string", example="John"),
+     *                 @OA\Property(property="last_name", type="string", example="Doe"),
+     *                 @OA\Property(property="email", type="string", format="email", example="john.doe@example.com"),
+     *                 @OA\Property(property="dob", type="string", example="01/01/1990", description="Date format: d/m/Y"),
+     *                 @OA\Property(property="phone", type="string", example="+1234567890"),
+     *                 @OA\Property(property="gender", type="string", example="Male"),
+     *                 @OA\Property(property="nationality", type="string", example="British"),
+     *                 @OA\Property(property="marital_status", type="string", example="Single"),
+     *                 @OA\Property(property="birth_country", type="string", example="United Kingdom"),
+     *                 @OA\Property(property="birth_province", type="string", example="London"),
+     *                 @OA\Property(property="years_experience", type="integer", example=5),
+     *                 @OA\Property(property="current_yacht", type="string", example="Yacht Name"),
+     *                 @OA\Property(property="current_yacht_start_date", type="string", example="01/01/2024", description="Date format: m/d/Y"),
+     *                 @OA\Property(property="sea_service_time_months", type="integer", example=60),
+     *                 @OA\Property(property="availability_status", type="string", enum={"available", "busy", "looking_for_work", "on_leave"}, example="available"),
+     *                 @OA\Property(property="availability_message", type="string", example="Available for work"),
+     *                 @OA\Property(property="looking_to_meet", type="boolean", example=false),
+     *                 @OA\Property(property="looking_for_work", type="boolean", example=true),
+     *                 @OA\Property(property="languages", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="certifications", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="specializations", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="interests", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="previous_yachts", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="image", type="string", format="binary", description="Profile photo (jpeg, png, jpg, gif, max 2MB)")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Profile updated successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="error", type="string", example="Validation failed"),
+     *             @OA\Property(property="details", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="error", type="string", example="Update failed"),
+     *             @OA\Property(property="details", type="string")
+     *         )
+     *     )
+     * )
      */
  	public function updateProfile(Request $request)
   {

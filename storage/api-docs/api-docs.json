@@ -595,6 +595,543 @@
                 }
             }
         },
+        "/api/crew-profile/update": {
+            "post": {
+                "tags": [
+                    "Crew Profile"
+                ],
+                "summary": "Update crew profile information",
+                "operationId": "4c3b7efd6cb07c310a6ff94fb768d4d0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "years_experience": {
+                                        "description": "Years of experience (0-100)",
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "current_yacht": {
+                                        "type": "string",
+                                        "example": "Yacht Name"
+                                    },
+                                    "languages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "certifications": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "specializations": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "interests": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "availability_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "available",
+                                            "busy",
+                                            "looking_for_work",
+                                            "on_leave"
+                                        ],
+                                        "example": "available"
+                                    },
+                                    "availability_message": {
+                                        "type": "string",
+                                        "maxLength": 500,
+                                        "example": "Available for work"
+                                    },
+                                    "looking_to_meet": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "looking_for_work": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "sea_service_time_months": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "example": 60
+                                    },
+                                    "previous_yachts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile updated successfully"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/crew-profile/privacy": {
+            "post": {
+                "tags": [
+                    "Crew Profile"
+                ],
+                "summary": "Update privacy settings",
+                "operationId": "c1ee5f04da2c67e3c2a22a730b041324",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "location_privacy": {
+                                        "type": "string",
+                                        "enum": [
+                                            "exact",
+                                            "approximate",
+                                            "city_only",
+                                            "hidden"
+                                        ],
+                                        "example": "city_only"
+                                    },
+                                    "share_location": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "auto_hide_at_sea": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "visibility": {
+                                        "type": "string",
+                                        "enum": [
+                                            "everyone",
+                                            "connections_only",
+                                            "verified_only",
+                                            "invisible"
+                                        ],
+                                        "example": "everyone"
+                                    },
+                                    "show_in_discovery": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Privacy settings updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Privacy settings updated"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/crew-profile": {
+            "get": {
+                "tags": [
+                    "Crew Profile"
+                ],
+                "summary": "Get authenticated user's crew profile",
+                "operationId": "9a8056a8f32893c91c70810fae2707fc",
+                "responses": {
+                    "200": {
+                        "description": "Profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile retrieved"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "first_name": {
+                                                    "type": "string",
+                                                    "example": "John"
+                                                },
+                                                "last_name": {
+                                                    "type": "string",
+                                                    "example": "Doe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john.doe@example.com"
+                                                },
+                                                "profile_photo_url": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "position": {
+                                                    "type": "string",
+                                                    "example": "Captain"
+                                                },
+                                                "years_experience": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "current_yacht": {
+                                                    "type": "string",
+                                                    "example": "Yacht Name"
+                                                },
+                                                "languages": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "certifications": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "specializations": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "interests": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "availability_status": {
+                                                    "type": "string",
+                                                    "example": "available"
+                                                },
+                                                "availability_message": {
+                                                    "type": "string",
+                                                    "example": "Available for work"
+                                                },
+                                                "looking_to_meet": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "looking_for_work": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "sea_service_time_months": {
+                                                    "type": "integer",
+                                                    "example": 60
+                                                },
+                                                "previous_yachts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "rating": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4.5
+                                                },
+                                                "total_reviews": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                },
+                                                "nationality": {
+                                                    "type": "string",
+                                                    "example": "British"
+                                                },
+                                                "privacy": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/crew-profile/{user}": {
+            "get": {
+                "tags": [
+                    "Crew Profile"
+                ],
+                "summary": "Get another user's public profile",
+                "operationId": "fbb1b72c6c2ebb2d993430b2177859f3",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile retrieved"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "first_name": {
+                                                    "type": "string",
+                                                    "example": "John"
+                                                },
+                                                "last_name": {
+                                                    "type": "string",
+                                                    "example": "Doe"
+                                                },
+                                                "profile_photo_url": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "position": {
+                                                    "type": "string",
+                                                    "example": "Captain"
+                                                },
+                                                "years_experience": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "current_yacht": {
+                                                    "type": "string",
+                                                    "example": "Yacht Name"
+                                                },
+                                                "languages": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "nationality": {
+                                                    "type": "string",
+                                                    "example": "British"
+                                                },
+                                                "availability_status": {
+                                                    "type": "string",
+                                                    "example": "available"
+                                                },
+                                                "availability_message": {
+                                                    "type": "string",
+                                                    "example": "Available for work"
+                                                },
+                                                "rating": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4.5
+                                                },
+                                                "total_reviews": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                },
+                                                "is_online": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "last_seen_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                },
+                                                "latitude": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "nullable": true
+                                                },
+                                                "longitude": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "nullable": true
+                                                },
+                                                "location_name": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied (connection required or profile not visible)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You must be connected to view this profile"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Profile not available",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile not available"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/mental-health/therapists": {
             "get": {
                 "tags": [
@@ -4264,6 +4801,383 @@
                 ]
             }
         },
+        "/api/profile": {
+            "get": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get authenticated user's profile",
+                "operationId": "03cf4eee24834360232ff2cf06b3077e",
+                "responses": {
+                    "200": {
+                        "description": "Profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "first_name": {
+                                            "type": "string",
+                                            "example": "John"
+                                        },
+                                        "last_name": {
+                                            "type": "string",
+                                            "example": "Doe"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "example": "john.doe@example.com"
+                                        },
+                                        "dob": {
+                                            "description": "Date of birth in d/m/Y format",
+                                            "type": "string",
+                                            "example": "01/01/1990"
+                                        },
+                                        "phone": {
+                                            "type": "string",
+                                            "example": "+1234567890"
+                                        },
+                                        "gender": {
+                                            "type": "string",
+                                            "example": "Male"
+                                        },
+                                        "nationality": {
+                                            "type": "string",
+                                            "example": "British"
+                                        },
+                                        "marital_status": {
+                                            "type": "string",
+                                            "example": "Single"
+                                        },
+                                        "birth_country": {
+                                            "type": "string",
+                                            "example": "United Kingdom"
+                                        },
+                                        "birth_province": {
+                                            "type": "string",
+                                            "example": "London"
+                                        },
+                                        "user_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "image": {
+                                            "type": "string",
+                                            "example": "http://example.com/uploads/profile/photo.jpg",
+                                            "nullable": true
+                                        },
+                                        "years_experience": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "current_yacht": {
+                                            "type": "string",
+                                            "example": "Yacht Name"
+                                        },
+                                        "current_yacht_start_date": {
+                                            "description": "Date in m/d/Y format",
+                                            "type": "string",
+                                            "example": "01/01/2024"
+                                        },
+                                        "sea_service_time_months": {
+                                            "type": "integer",
+                                            "example": 60
+                                        },
+                                        "availability_status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "available",
+                                                "busy",
+                                                "looking_for_work",
+                                                "on_leave"
+                                            ],
+                                            "example": "available"
+                                        },
+                                        "availability_message": {
+                                            "type": "string",
+                                            "example": "Available for work"
+                                        },
+                                        "looking_to_meet": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "looking_for_work": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "languages": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "certifications": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "specializations": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "interests": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "previous_yachts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Failed to fetch user profile"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update authenticated user's profile",
+                "operationId": "208cfb239bf9b404b65bc40eb6b45032",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john.doe@example.com"
+                                    },
+                                    "dob": {
+                                        "description": "Date format: d/m/Y",
+                                        "type": "string",
+                                        "example": "01/01/1990"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+1234567890"
+                                    },
+                                    "gender": {
+                                        "type": "string",
+                                        "example": "Male"
+                                    },
+                                    "nationality": {
+                                        "type": "string",
+                                        "example": "British"
+                                    },
+                                    "marital_status": {
+                                        "type": "string",
+                                        "example": "Single"
+                                    },
+                                    "birth_country": {
+                                        "type": "string",
+                                        "example": "United Kingdom"
+                                    },
+                                    "birth_province": {
+                                        "type": "string",
+                                        "example": "London"
+                                    },
+                                    "years_experience": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "current_yacht": {
+                                        "type": "string",
+                                        "example": "Yacht Name"
+                                    },
+                                    "current_yacht_start_date": {
+                                        "description": "Date format: m/d/Y",
+                                        "type": "string",
+                                        "example": "01/01/2024"
+                                    },
+                                    "sea_service_time_months": {
+                                        "type": "integer",
+                                        "example": 60
+                                    },
+                                    "availability_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "available",
+                                            "busy",
+                                            "looking_for_work",
+                                            "on_leave"
+                                        ],
+                                        "example": "available"
+                                    },
+                                    "availability_message": {
+                                        "type": "string",
+                                        "example": "Available for work"
+                                    },
+                                    "looking_to_meet": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "looking_for_work": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "languages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "certifications": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "specializations": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "interests": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "previous_yachts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "image": {
+                                        "description": "Profile photo (jpeg, png, jpg, gif, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "details": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Update failed"
+                                        },
+                                        "details": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/webhooks/stripe": {
             "post": {
                 "tags": [
@@ -4448,12 +5362,20 @@
     },
     "tags": [
         {
+            "name": "Crew Profile",
+            "description": "Crew profile management endpoints"
+        },
+        {
             "name": "Mental Health",
             "description": "Mental Health & Wellness Support APIs"
         },
         {
             "name": "Subscriptions",
             "description": "Subscription management endpoints"
+        },
+        {
+            "name": "Profile",
+            "description": "User profile management endpoints"
         },
         {
             "name": "Webhooks",

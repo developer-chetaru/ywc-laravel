@@ -8,10 +8,55 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * @OA\Tag(
+ *     name="Crew Profile",
+ *     description="Crew profile management endpoints"
+ * )
+ */
 class CrewProfileController extends Controller
 {
     /**
-     * Update crew profile information
+     * @OA\Post(
+     *     path="/api/crew-profile/update",
+     *     summary="Update crew profile information",
+     *     tags={"Crew Profile"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="years_experience", type="integer", example=5, description="Years of experience (0-100)"),
+     *             @OA\Property(property="current_yacht", type="string", example="Yacht Name"),
+     *             @OA\Property(property="languages", type="array", @OA\Items(type="object")),
+     *             @OA\Property(property="certifications", type="array", @OA\Items(type="object")),
+     *             @OA\Property(property="specializations", type="array", @OA\Items(type="string")),
+     *             @OA\Property(property="interests", type="array", @OA\Items(type="string")),
+     *             @OA\Property(property="availability_status", type="string", enum={"available", "busy", "looking_for_work", "on_leave"}, example="available"),
+     *             @OA\Property(property="availability_message", type="string", example="Available for work", maxLength=500),
+     *             @OA\Property(property="looking_to_meet", type="boolean", example=false),
+     *             @OA\Property(property="looking_for_work", type="boolean", example=true),
+     *             @OA\Property(property="sea_service_time_months", type="integer", example=60, minimum=0),
+     *             @OA\Property(property="previous_yachts", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Profile updated successfully"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
      */
     public function updateProfile(Request $request): JsonResponse
     {
@@ -69,7 +114,39 @@ class CrewProfileController extends Controller
     }
 
     /**
-     * Update privacy settings
+     * @OA\Post(
+     *     path="/api/crew-profile/privacy",
+     *     summary="Update privacy settings",
+     *     tags={"Crew Profile"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="location_privacy", type="string", enum={"exact", "approximate", "city_only", "hidden"}, example="city_only"),
+     *             @OA\Property(property="share_location", type="boolean", example=true),
+     *             @OA\Property(property="auto_hide_at_sea", type="boolean", example=false),
+     *             @OA\Property(property="visibility", type="string", enum={"everyone", "connections_only", "verified_only", "invisible"}, example="everyone"),
+     *             @OA\Property(property="show_in_discovery", type="boolean", example=true)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Privacy settings updated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Privacy settings updated"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
      */
     public function updatePrivacySettings(Request $request): JsonResponse
     {
@@ -119,7 +196,51 @@ class CrewProfileController extends Controller
     }
 
     /**
-     * Get user's crew profile
+     * @OA\Get(
+     *     path="/api/crew-profile",
+     *     summary="Get authenticated user's crew profile",
+     *     tags={"Crew Profile"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Profile retrieved"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="John Doe"),
+     *                 @OA\Property(property="first_name", type="string", example="John"),
+     *                 @OA\Property(property="last_name", type="string", example="Doe"),
+     *                 @OA\Property(property="email", type="string", example="john.doe@example.com"),
+     *                 @OA\Property(property="profile_photo_url", type="string", nullable=true),
+     *                 @OA\Property(property="position", type="string", example="Captain"),
+     *                 @OA\Property(property="years_experience", type="integer", example=5),
+     *                 @OA\Property(property="current_yacht", type="string", example="Yacht Name"),
+     *                 @OA\Property(property="languages", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="certifications", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="specializations", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="interests", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="availability_status", type="string", example="available"),
+     *                 @OA\Property(property="availability_message", type="string", example="Available for work"),
+     *                 @OA\Property(property="looking_to_meet", type="boolean", example=false),
+     *                 @OA\Property(property="looking_for_work", type="boolean", example=true),
+     *                 @OA\Property(property="sea_service_time_months", type="integer", example=60),
+     *                 @OA\Property(property="previous_yachts", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="rating", type="number", format="float", example=4.5),
+     *                 @OA\Property(property="total_reviews", type="integer", example=20),
+     *                 @OA\Property(property="nationality", type="string", example="British"),
+     *                 @OA\Property(property="privacy", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
      */
     public function getProfile(Request $request): JsonResponse
     {
@@ -164,7 +285,70 @@ class CrewProfileController extends Controller
     }
 
     /**
-     * Get another user's public profile
+     * @OA\Get(
+     *     path="/api/crew-profile/{user}",
+     *     summary="Get another user's public profile",
+     *     tags={"Crew Profile"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="user",
+     *         in="path",
+     *         required=true,
+     *         description="User ID",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Profile retrieved"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="John Doe"),
+     *                 @OA\Property(property="first_name", type="string", example="John"),
+     *                 @OA\Property(property="last_name", type="string", example="Doe"),
+     *                 @OA\Property(property="profile_photo_url", type="string", nullable=true),
+     *                 @OA\Property(property="position", type="string", example="Captain"),
+     *                 @OA\Property(property="years_experience", type="integer", example=5),
+     *                 @OA\Property(property="current_yacht", type="string", example="Yacht Name"),
+     *                 @OA\Property(property="languages", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="nationality", type="string", example="British"),
+     *                 @OA\Property(property="availability_status", type="string", example="available"),
+     *                 @OA\Property(property="availability_message", type="string", example="Available for work"),
+     *                 @OA\Property(property="rating", type="number", format="float", example=4.5),
+     *                 @OA\Property(property="total_reviews", type="integer", example=20),
+     *                 @OA\Property(property="is_online", type="boolean", example=true),
+     *                 @OA\Property(property="last_seen_at", type="string", format="date-time", nullable=true),
+     *                 @OA\Property(property="latitude", type="number", format="float", nullable=true),
+     *                 @OA\Property(property="longitude", type="number", format="float", nullable=true),
+     *                 @OA\Property(property="location_name", type="string", nullable=true)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Access denied (connection required or profile not visible)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="You must be connected to view this profile")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Profile not available",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Profile not available")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
      */
     public function getPublicProfile(User $user): JsonResponse
     {
