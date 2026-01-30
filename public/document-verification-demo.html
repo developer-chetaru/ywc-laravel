@@ -249,6 +249,11 @@
                 <strong>GET</strong> {{base_url}}/api/document-verification/verify/{certificateNumber}
             </div>
             <div class="form-group">
+                <label for="verifyDocumentId">Document ID (Optional - to get certificate number):</label>
+                <input type="number" id="verifyDocumentId" placeholder="Enter Document ID (e.g., 112)" onchange="fillCertificateNumber()">
+                <small style="color: #666; display: block; margin-top: 5px;">Enter Document ID to auto-fill certificate number</small>
+            </div>
+            <div class="form-group">
                 <label for="certificateNumber">Certificate Number:</label>
                 <input type="text" id="certificateNumber" placeholder="YWC-A1B2C3D4E5F6" value="YWC-">
             </div>
@@ -438,8 +443,9 @@
                         html += `<strong>Documents:</strong><br>`;
                         displayData.documents.forEach(doc => {
                             html += `<div class="document-item">`;
-                            html += `<h4>${doc.document_name || 'N/A'} (Verification ID: ${doc.verification_id})</h4>`;
-                            html += `<p><strong>Document ID:</strong> ${doc.document_id || 'N/A'}</p>`;
+                            html += `<h4>${doc.document_name || 'N/A'} (Document ID: ${doc.document_id})</h4>`;
+                            html += `<p><strong>Document ID:</strong> <strong style="color: #667eea; cursor: pointer;" onclick="fillDocumentId(${doc.document_id})">${doc.document_id}</strong> <small style="color: #666;">(Click to auto-fill)</small></p>`;
+                            html += `<p><strong>Verification ID:</strong> ${doc.verification_id || 'N/A (Will be created on approve/reject)'}</p>`;
                             html += `<p><strong>Type:</strong> ${doc.document_type || 'N/A'}</p>`;
                             html += `<p><strong>Document Number:</strong> ${doc.document_number || 'N/A'}</p>`;
                             html += `<p><strong>Issue Date:</strong> ${doc.issue_date || 'N/A'}</p>`;
@@ -529,12 +535,24 @@
             }
         }
 
+        // Fill document ID in API 3 form
+        function fillDocumentId(documentId) {
+            document.getElementById('documentId').value = documentId;
+            document.getElementById('verifyDocumentId').value = documentId;
+            // Scroll to API 3 section
+            document.getElementById('documentId').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
         // Allow Enter key to submit forms
         document.getElementById('certificateNumber').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') verifyDocument();
         });
 
         document.getElementById('verificationId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') decideDocument();
+        });
+
+        document.getElementById('documentId').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') decideDocument();
         });
     </script>

@@ -15,11 +15,72 @@ class DocumentVerificationApiController extends Controller
     /**
      * Verify document by certificate number (public API for 3rd parties).
      * No auth required – certificate number acts as proof.
+     * 
+     * Also supports document_id parameter: ?document_id=112
      *
      * GET /api/document-verification/verify/{certificateNumber}
+     * GET /api/document-verification/verify/{certificateNumber}?document_id=112
      */
-    public function verifyByCertificateNumber(string $certificateNumber): JsonResponse
+    public function verifyByCertificateNumber(Request $request, string $certificateNumber): JsonResponse
     {
+        // If document_id is provided, find certificate number from that document
+        if ($request->has('document_id')) {
+            $documentId = $request->get('document_id');
+            $document = Document::find($documentId);
+            
+            if (! $document) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Document not found.',
+                ], 404);
+            }
+
+            // Find approved verification for this document
+            $verification = DocumentVerification::where('document_id', $documentId)
+                ->where('status', 'approved')
+                ->with(['document:id,user_id,document_type_id,document_name,issue_date,expiry_date,status', 'document.documentType:id,name', 'verificationLevel:id,name,level,description'])
+                ->first();
+
+            if (! $verification) {
+                return response()->json([
+                    'success' => false,
+                    'verified' => false,
+                    'message' => 'Document is not verified yet. Please approve the document first.',
+                ], 404);
+            }
+
+            // Get or generate certificate number
+            if (! $verification->certificate_number) {
+                $certificateNumber = 'YWC-'.strtoupper(substr(md5($documentId.$verification->id), 0, 12));
+                $verification->update(['certificate_number' => $certificateNumber]);
+            } else {
+                $certificateNumber = $verification->certificate_number;
+            }
+
+            $document = $verification->document;
+
+            return response()->json([
+                'success' => true,
+                'verified' => true,
+                'certificate_number' => $certificateNumber,
+                'document' => [
+                    'id' => $document->id,
+                    'document_name' => $document->document_name,
+                    'document_type' => $document->documentType?->name,
+                    'issue_date' => $document->issue_date?->format('Y-m-d'),
+                    'expiry_date' => $document->expiry_date?->format('Y-m-d'),
+                    'status' => $document->status,
+                ],
+                'verification' => [
+                    'level' => $verification->verificationLevel->level,
+                    'level_name' => $verification->verificationLevel->name,
+                    'description' => $verification->verificationLevel->description,
+                    'verified_at' => $verification->verified_at?->toIso8601String(),
+                ],
+            ]);
+        }
+
+        // Original logic: verify by certificate number
         $certificateNumber = strtoupper(trim($certificateNumber));
 
         if (empty($certificateNumber) || ! str_starts_with($certificateNumber, 'YWC-')) {
