@@ -141,9 +141,19 @@ class CareerHistoryApiController extends Controller
             $storedPath = $request->file('file')->store('documents', 'public');
             $publicPath = Storage::url($storedPath);
 
+            // Get user ID from authenticated user or fallback to request
+            $userId = $request->user()?->id ?? $request->input('user_id');
+            
+            if (!$userId) {
+                return response()->json([
+                    'status' => false,
+                    'error'  => 'User authentication required. Please provide a valid authentication token or user_id.',
+                ], 401);
+            }
+
             // Save main document
             $document = Document::create([
-                'user_id'     => auth('api')->id(),
+                'user_id'     => $userId,
                 'type'        => $documentType,
                 'file_path'   => $storedPath,
                 'file_type'   => $request->file->getClientOriginalExtension(),
