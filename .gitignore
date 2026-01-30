@@ -5,6 +5,11 @@
 /public/storage
 /storage/*.key
 /storage/app/google-cloud-vision-key.json
+/storage/debugbar
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
 /vendor
 .env
 .env.backup

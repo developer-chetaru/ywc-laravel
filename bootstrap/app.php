@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Restore Authorization header when server (Nginx/proxy) strips it – fixes 401 on production
+        $middleware->api(prepend: [\App\Http\Middleware\EnsureAuthorizationHeader::class]);
         $middleware->alias([
             'subscribed' => EnsureUserIsSubscribed::class,
             'setlocale' => SetLocale::class,
