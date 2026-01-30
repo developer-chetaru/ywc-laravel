@@ -36,6 +36,7 @@ use App\Models\VerificationLevel;
 use App\Http\Controllers\Api\TrainingController;
 use App\Http\Controllers\Api\JobBoardController;
 use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\DocumentVerificationApiController;
 
 // Master Data API - Public endpoints for mobile developers
 Route::get('/master-data', [MasterDataController::class, 'index']);
@@ -53,6 +54,14 @@ Route::post('/itineraries/ai-generate', [ItineraryController::class, 'generateWi
 // Verification Levels API (public endpoint)
 Route::get('/verification-levels', function () {
     return VerificationLevel::active()->ordered()->get();
+});
+
+// Document Verification API – 3rd party
+Route::get('/document-verification/verify/{certificateNumber}', [DocumentVerificationApiController::class, 'verifyByCertificateNumber'])
+    ->name('api.document-verification.verify');
+Route::prefix('document-verification')->middleware('auth:sanctum')->group(function () {
+    Route::get('/list', [DocumentVerificationApiController::class, 'list'])->name('api.document-verification.list');
+    Route::post('/decide', [DocumentVerificationApiController::class, 'decide'])->name('api.document-verification.decide');
 });
 
 // Vessel Flags API (public endpoint)

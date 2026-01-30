@@ -716,8 +716,12 @@ class CareerHistoryController extends Controller
             return redirect()->back()->with('error', 'No verification found for this document.');
         }
 
-        // Generate certificate number
-        $certificateNumber = 'YWC-' . strtoupper(substr(md5($document->id . $verification->id), 0, 12));
+        // Generate and persist certificate number for 3rd party verification API
+        $certificateNumber = $verification->certificate_number
+            ?? ('YWC-' . strtoupper(substr(md5($document->id . $verification->id), 0, 12)));
+        if (empty($verification->certificate_number)) {
+            $verification->update(['certificate_number' => $certificateNumber]);
+        }
 
         // Generate PDF
         $pdf = Pdf::loadView('documents.verification-certificate', [

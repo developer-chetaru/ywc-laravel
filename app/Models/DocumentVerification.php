@@ -17,6 +17,7 @@ class DocumentVerification extends Model
         'status',
         'notes',
         'verified_at',
+        'certificate_number',
     ];
 
     protected $casts = [
