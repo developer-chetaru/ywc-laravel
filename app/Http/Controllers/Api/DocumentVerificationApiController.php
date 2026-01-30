@@ -88,51 +88,109 @@ class DocumentVerificationApiController extends Controller
     public function list(Request $request): JsonResponse
     {
         $perPage = min((int) $request->get('per_page', 20), 100);
+        
+        // Optional: allow filtering by status (default: pending)
+        $status = $request->get('status', 'pending');
+        
+        // Debug mode: if debug=1 or debug=true, return all statuses
+        $debug = $request->get('debug', false);
+        $debug = filter_var($debug, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? ($debug === '1' || $debug === 1 || $debug === 'true');
 
-        $verifications = DocumentVerification::with([
-            'document:id,user_id,document_type_id,document_name,issue_date,expiry_date,status,document_number',
+        // Load verifications with all relationships
+        $query = DocumentVerification::with([
+            'document' => function ($query) {
+                $query->withTrashed(); // Include soft-deleted documents
+            },
             'document.user:id,first_name,last_name,email',
             'document.documentType:id,name',
             'verificationLevel:id,name,level,description',
         ])
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'asc')
+            ->whereHas('document', function ($query) {
+                // Ensure document exists (even if soft-deleted)
+                $query->withTrashed();
+            });
+        
+        // Apply status filter only if not in debug mode
+        if (! $debug) {
+            $query->whereRaw('LOWER(status) = ?', [strtolower($status)]);
+        }
+        
+        $verifications = $query->orderBy('created_at', 'asc')
             ->paginate($perPage);
 
         $items = $verifications->getCollection()->map(function ($v) {
             $doc = $v->document;
 
+            // Skip if document is null (shouldn't happen due to whereHas, but safety check)
+            if (! $doc) {
+                return null;
+            }
+
             return [
                 'verification_id' => $v->id,
                 'document_id' => $doc->id,
-                'document_name' => $doc->document_name,
-                'document_type' => $doc->documentType?->name,
-                'document_number' => $doc->document_number,
+                'document_name' => $doc->document_name ?? 'N/A',
+                'document_type' => $doc->documentType?->name ?? 'N/A',
+                'document_number' => $doc->document_number ?? null,
                 'issue_date' => $doc->issue_date?->format('Y-m-d'),
                 'expiry_date' => $doc->expiry_date?->format('Y-m-d'),
-                'document_status' => $doc->status,
-                'verification_level' => $v->verificationLevel->name,
+                'document_status' => $doc->status ?? 'pending',
+                'verification_level' => $v->verificationLevel?->name ?? 'N/A',
                 'verification_level_id' => $v->verification_level_id,
                 'requested_notes' => $v->notes,
                 'created_at' => $v->created_at->toIso8601String(),
                 'owner' => $doc->user ? [
                     'id' => $doc->user->id,
-                    'name' => $doc->user->first_name.' '.$doc->user->last_name,
-                    'email' => $doc->user->email,
+                    'name' => trim(($doc->user->first_name ?? '').' '.($doc->user->last_name ?? '')),
+                    'email' => $doc->user->email ?? null,
                 ] : null,
             ];
-        });
+        })->filter(); // Remove null items
 
-        return response()->json([
+        $response = [
             'success' => true,
-            'data' => $items,
+            'data' => $items->values(), // Re-index array after filtering
             'meta' => [
                 'current_page' => $verifications->currentPage(),
                 'last_page' => $verifications->lastPage(),
                 'per_page' => $verifications->perPage(),
                 'total' => $verifications->total(),
             ],
-        ]);
+        ];
+        
+        // Add debug info if debug mode is enabled
+        if ($debug) {
+            // Get total count without any filters
+            $totalAllVerifications = DocumentVerification::count();
+            $totalWithDocuments = DocumentVerification::whereHas('document', function ($query) {
+                $query->withTrashed();
+            })->count();
+            
+            $response['debug'] = [
+                'debug_mode_enabled' => true,
+                'status_filter' => $status,
+                'total_verifications_found' => $verifications->total(),
+                'items_after_filtering' => $items->count(),
+                'total_all_verifications_in_db' => $totalAllVerifications,
+                'total_verifications_with_documents' => $totalWithDocuments,
+                'all_statuses_in_db' => DocumentVerification::distinct()
+                    ->pluck('status')
+                    ->toArray(),
+                'total_verifications_by_status' => DocumentVerification::selectRaw('status, COUNT(*) as count')
+                    ->groupBy('status')
+                    ->pluck('count', 'status')
+                    ->toArray(),
+                'total_verifications_by_status_with_documents' => DocumentVerification::whereHas('document', function ($query) {
+                    $query->withTrashed();
+                })
+                    ->selectRaw('status, COUNT(*) as count')
+                    ->groupBy('status')
+                    ->pluck('count', 'status')
+                    ->toArray(),
+            ];
+        }
+        
+        return response()->json($response);
     }
 
     /**

@@ -734,5 +734,10 @@ Route::middleware([
 
 Route::get('/verify-user/{id}', [VerificationController::class, 'verify'])
     ->name('user.verify')
-    ->middleware('signed'); 
+    ->middleware('signed');
+
+// Document Verification API Demo Page
+Route::get('/document-verification-demo', function () {
+    return response()->file(public_path('document-verification-demo.html'));
+})->name('document-verification-demo');
     

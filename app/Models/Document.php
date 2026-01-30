@@ -74,6 +74,14 @@ class Document extends Model
     }
 
     /**
+     * Get document verifications
+     */
+    public function documentVerifications()
+    {
+        return $this->hasMany(DocumentVerification::class);
+    }
+
+    /**
      * Get status change history for this document
      */
     public function statusChanges()

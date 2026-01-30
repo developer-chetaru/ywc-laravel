@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Verification API Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .api-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .api-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .api-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .response.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .response.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .response.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge.public {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge.auth {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .config-section {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ffc107;
+        }
+
+        .config-section h3 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+
+        .token-input {
+            font-family: 'Courier New', monospace;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pagination-info {
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .document-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .document-item h4 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .document-item p {
+            color: #666;
+            font-size: 14px;
+            margin: 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 Document Verification API Demo</h1>
+            <p>This demo allows you to test all three Document Verification APIs. Configure your base URL and authentication token below, then test each API endpoint.</p>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="config-section">
+            <h3>⚙️ Configuration</h3>
+            <div class="form-group">
+                <label for="baseUrl">Base URL:</label>
+                <input type="text" id="baseUrl" value="https://console-ywc.nativeappdev.com" placeholder="https://your-domain.com">
+            </div>
+            <div class="form-group">
+                <label for="authToken">Bearer Token (for List & Decide APIs):</label>
+                <input type="text" id="authToken" class="token-input" placeholder="Enter your Sanctum API token">
+                <small style="color: #666; display: block; margin-top: 5px;">Required only for authenticated endpoints (List & Decide)</small>
+            </div>
+        </div>
+
+        <!-- API 1: Verify Document -->
+        <div class="api-section">
+            <h2>
+                API 1: Verify Document by Certificate Number
+                <span class="badge public">PUBLIC</span>
+            </h2>
+            <div class="api-info">
+                <strong>GET</strong> {{base_url}}/api/document-verification/verify/{certificateNumber}
+            </div>
+            <div class="form-group">
+                <label for="certificateNumber">Certificate Number:</label>
+                <input type="text" id="certificateNumber" placeholder="YWC-A1B2C3D4E5F6" value="YWC-">
+            </div>
+            <button onclick="verifyDocument()">Verify Document</button>
+            <div id="verifyResponse"></div>
+        </div>
+
+        <!-- API 2: List Pending Documents -->
+        <div class="api-section">
+            <h2>
+                API 2: List Pending Documents
+                <span class="badge auth">AUTH REQUIRED</span>
+            </h2>
+            <div class="api-info">
+                <strong>GET</strong> {{base_url}}/api/document-verification/list?page=1&per_page=20
+            </div>
+            <div class="form-group">
+                <label for="page">Page:</label>
+                <input type="number" id="page" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label for="perPage">Per Page (max 100):</label>
+                <input type="number" id="perPage" value="20" min="1" max="100">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="debugMode" style="width: auto; margin-right: 5px;">
+                    Debug Mode (Show all statuses)
+                </label>
+            </div>
+            <button onclick="listDocuments()">List Pending Documents</button>
+            <div id="listResponse"></div>
+        </div>
+
+        <!-- API 3: Approve/Reject Document -->
+        <div class="api-section">
+            <h2>
+                API 3: Approve / Reject Document
+                <span class="badge auth">AUTH REQUIRED</span>
+            </h2>
+            <div class="api-info">
+                <strong>POST</strong> {{base_url}}/api/document-verification/decide
+            </div>
+            <div class="form-group">
+                <label for="verificationId">Verification ID:</label>
+                <input type="number" id="verificationId" placeholder="Enter verification ID from list">
+            </div>
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <select id="status">
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="remark">Remark (Optional):</label>
+                <textarea id="remark" placeholder="Enter your remark or leave empty"></textarea>
+            </div>
+            <button onclick="decideDocument()">Submit Decision</button>
+            <div id="decideResponse"></div>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = () => {
+            const url = document.getElementById('baseUrl').value.trim();
+            return url.replace(/\/$/, ''); // Remove trailing slash
+        };
+
+        const authToken = () => {
+            return document.getElementById('authToken').value.trim();
+        };
+
+        const showResponse = (elementId, data, isError = false, isInfo = false) => {
+            const element = document.getElementById(elementId);
+            let className = 'response success';
+            if (isError) className = 'response error';
+            else if (isInfo) className = 'response info';
+
+            element.className = className;
+            element.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        };
+
+        const showLoading = (elementId) => {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '<div class="loading"></div> Loading...';
+        };
+
+        // API 1: Verify Document
+        async function verifyDocument() {
+            const certificateNumber = document.getElementById('certificateNumber').value.trim();
+            const responseDiv = document.getElementById('verifyResponse');
+
+            if (!certificateNumber) {
+                showResponse('verifyResponse', 'Please enter a certificate number', true);
+                return;
+            }
+
+            showLoading('verifyResponse');
+
+            try {
+                const response = await fetch(`${baseUrl()}/api/document-verification/verify/${encodeURIComponent(certificateNumber)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResponse('verifyResponse', data, false);
+                } else {
+                    showResponse('verifyResponse', data, true);
+                }
+            } catch (error) {
+                showResponse('verifyResponse', `Error: ${error.message}`, true);
+            }
+        }
+
+        // API 2: List Pending Documents
+        async function listDocuments() {
+            const token = authToken();
+            const page = document.getElementById('page').value;
+            const perPage = document.getElementById('perPage').value;
+            const debugMode = document.getElementById('debugMode').checked;
+            const responseDiv = document.getElementById('listResponse');
+
+            if (!token) {
+                showResponse('listResponse', 'Please enter your Bearer token in the configuration section', true);
+                return;
+            }
+
+            showLoading('listResponse');
+
+            try {
+                let url = `${baseUrl()}/api/document-verification/list?page=${page}&per_page=${perPage}`;
+                if (debugMode) {
+                    url += '&debug=1';
+                }
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    let displayData = {
+                        success: data.success,
+                        total: data.meta?.total || 0,
+                        current_page: data.meta?.current_page || 1,
+                        last_page: data.meta?.last_page || 1,
+                        per_page: data.meta?.per_page || 20,
+                        documents: data.data || [],
+                        debug: data.debug || null
+                    };
+
+                    let html = `<div class="response success">`;
+                    html += `<strong>Total Documents: ${displayData.total}</strong><br>`;
+                    html += `<strong>Page: ${displayData.current_page} of ${displayData.last_page}</strong><br><br>`;
+                    
+                    // Show debug info if available
+                    if (displayData.debug) {
+                        html += `<div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #ffc107;">`;
+                        html += `<strong>🔍 Debug Information:</strong><br>`;
+                        html += `<strong>Status Filter:</strong> ${displayData.debug.status_filter || 'pending'}<br>`;
+                        html += `<strong>Total Verifications Found:</strong> ${displayData.debug.total_verifications_found || 0}<br>`;
+                        html += `<strong>Items After Filtering:</strong> ${displayData.debug.items_after_filtering || 0}<br>`;
+                        if (displayData.debug.all_statuses_in_db && displayData.debug.all_statuses_in_db.length > 0) {
+                            html += `<strong>All Statuses in DB:</strong> ${displayData.debug.all_statuses_in_db.join(', ')}<br>`;
+                        }
+                        if (displayData.debug.total_verifications_by_status) {
+                            html += `<strong>Count by Status:</strong><br>`;
+                            for (let [status, count] of Object.entries(displayData.debug.total_verifications_by_status)) {
+                                html += `&nbsp;&nbsp;- ${status}: ${count}<br>`;
+                            }
+                        }
+                        html += `</div>`;
+                    }
+                    
+                    if (displayData.documents.length > 0) {
+                        html += `<strong>Documents:</strong><br>`;
+                        displayData.documents.forEach(doc => {
+                            html += `<div class="document-item">`;
+                            html += `<h4>${doc.document_name || 'N/A'} (Verification ID: ${doc.verification_id})</h4>`;
+                            html += `<p><strong>Document ID:</strong> ${doc.document_id || 'N/A'}</p>`;
+                            html += `<p><strong>Type:</strong> ${doc.document_type || 'N/A'}</p>`;
+                            html += `<p><strong>Document Number:</strong> ${doc.document_number || 'N/A'}</p>`;
+                            html += `<p><strong>Issue Date:</strong> ${doc.issue_date || 'N/A'}</p>`;
+                            html += `<p><strong>Expiry Date:</strong> ${doc.expiry_date || 'N/A'}</p>`;
+                            html += `<p><strong>Document Status:</strong> ${doc.document_status || 'N/A'}</p>`;
+                            html += `<p><strong>Owner:</strong> ${doc.owner?.name || 'N/A'} (${doc.owner?.email || 'N/A'})</p>`;
+                            html += `<p><strong>Verification Level:</strong> ${doc.verification_level || 'N/A'}</p>`;
+                            html += `<p><strong>Requested Notes:</strong> ${doc.requested_notes || 'N/A'}</p>`;
+                            html += `<p><strong>Created At:</strong> ${doc.created_at || 'N/A'}</p>`;
+                            html += `</div>`;
+                        });
+                    } else {
+                        html += `<p><strong>No documents found.</strong></p>`;
+                        if (displayData.debug) {
+                            html += `<p style="color: #856404;">💡 Tip: Check the debug information above to see if data exists with different status values.</p>`;
+                        }
+                    }
+                    html += `</div>`;
+
+                    responseDiv.innerHTML = html;
+                } else {
+                    showResponse('listResponse', data, true);
+                }
+            } catch (error) {
+                showResponse('listResponse', `Error: ${error.message}`, true);
+            }
+        }
+
+        // API 3: Approve/Reject Document
+        async function decideDocument() {
+            const token = authToken();
+            const verificationId = document.getElementById('verificationId').value.trim();
+            const status = document.getElementById('status').value;
+            const remark = document.getElementById('remark').value.trim();
+            const responseDiv = document.getElementById('decideResponse');
+
+            if (!token) {
+                showResponse('decideResponse', 'Please enter your Bearer token in the configuration section', true);
+                return;
+            }
+
+            if (!verificationId) {
+                showResponse('decideResponse', 'Please enter a verification ID', true);
+                return;
+            }
+
+            showLoading('decideResponse');
+
+            try {
+                const requestBody = {
+                    verification_id: parseInt(verificationId),
+                    status: status,
+                    remark: remark || null
+                };
+
+                const response = await fetch(`${baseUrl()}/api/document-verification/decide`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResponse('decideResponse', data, false);
+                    // Clear the form after successful submission
+                    document.getElementById('verificationId').value = '';
+                    document.getElementById('remark').value = '';
+                } else {
+                    showResponse('decideResponse', data, true);
+                }
+            } catch (error) {
+                showResponse('decideResponse', `Error: ${error.message}`, true);
+            }
+        }
+
+        // Allow Enter key to submit forms
+        document.getElementById('certificateNumber').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') verifyDocument();
+        });
+
+        document.getElementById('verificationId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') decideDocument();
+        });
+    </script>
+</body>
+</html>

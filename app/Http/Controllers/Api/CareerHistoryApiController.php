@@ -168,6 +168,30 @@ class CareerHistoryApiController extends Controller
             // Queue OCR processing
             ProcessDocumentOcr::dispatch($document);
 
+            // Automatically create DocumentVerification record for third-party verification
+            // Default to level 3 (Employer Verified) if available, otherwise use the first active level
+            $defaultVerificationLevel = \App\Models\VerificationLevel::where('level', 3)
+                ->where('is_active', true)
+                ->first();
+            
+            if (!$defaultVerificationLevel) {
+                // Fallback to first active level
+                $defaultVerificationLevel = \App\Models\VerificationLevel::where('is_active', true)
+                    ->orderBy('level', 'asc')
+                    ->first();
+            }
+
+            if ($defaultVerificationLevel) {
+                \App\Models\DocumentVerification::create([
+                    'document_id' => $document->id,
+                    'verification_level_id' => $defaultVerificationLevel->id,
+                    'verifier_id' => null, // Will be set when verified by third party
+                    'verifier_type' => 'employer', // Default for level 3
+                    'status' => 'pending',
+                    'notes' => null,
+                ]);
+            }
+
             // Type-specific save
             switch ($documentType) {
                 case 'passport':
