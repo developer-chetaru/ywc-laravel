@@ -351,21 +351,45 @@
         // API 1: Verify Document
         async function verifyDocument() {
             const certificateNumber = document.getElementById('certificateNumber').value.trim();
+            const documentId = document.getElementById('verifyDocumentId').value.trim();
             const responseDiv = document.getElementById('verifyResponse');
 
-            if (!certificateNumber) {
-                showResponse('verifyResponse', 'Please enter a certificate number', true);
+            // Allow verification with either certificate number OR document ID
+            if (!certificateNumber && !documentId) {
+                showResponse('verifyResponse', 'Please enter either Certificate Number or Document ID', true);
                 return;
             }
 
             showLoading('verifyResponse');
 
             try {
-                const response = await fetch(`${baseUrl()}/api/document-verification/verify/${encodeURIComponent(certificateNumber)}`);
+                let url;
+                // If document_id is provided and certificate number is empty or just "YWC-", use document_id
+                if (documentId && (!certificateNumber || certificateNumber === 'YWC-' || certificateNumber === '')) {
+                    // Use document_id parameter - any placeholder will work since we're using query param
+                    url = `${baseUrl()}/api/document-verification/verify/YWC-PLACEHOLDER?document_id=${documentId}`;
+                } else if (certificateNumber && certificateNumber !== 'YWC-') {
+                    // Use certificate number
+                    url = `${baseUrl()}/api/document-verification/verify/${encodeURIComponent(certificateNumber)}`;
+                } else {
+                    // Fallback: use document_id if provided
+                    if (documentId) {
+                        url = `${baseUrl()}/api/document-verification/verify/YWC-PLACEHOLDER?document_id=${documentId}`;
+                    } else {
+                        showResponse('verifyResponse', 'Please enter a valid Certificate Number or Document ID', true);
+                        return;
+                    }
+                }
+
+                const response = await fetch(url);
                 const data = await response.json();
 
                 if (response.ok) {
                     showResponse('verifyResponse', data, false);
+                    // Auto-fill certificate number if document_id was used and certificate number was returned
+                    if (documentId && data.certificate_number) {
+                        document.getElementById('certificateNumber').value = data.certificate_number;
+                    }
                 } else {
                     showResponse('verifyResponse', data, true);
                 }
