@@ -170,25 +170,38 @@ class CareerHistoryApiController extends Controller
 
             // Automatically create DocumentVerification record for third-party verification
             // Default to level 3 (Employer Verified) if available, otherwise use the first active level
-            $defaultVerificationLevel = \App\Models\VerificationLevel::where('level', 3)
-                ->where('is_active', true)
-                ->first();
-            
-            if (!$defaultVerificationLevel) {
-                // Fallback to first active level
-                $defaultVerificationLevel = \App\Models\VerificationLevel::where('is_active', true)
-                    ->orderBy('level', 'asc')
+            try {
+                $defaultVerificationLevel = \App\Models\VerificationLevel::where('level', 3)
+                    ->where('is_active', true)
                     ->first();
-            }
+                
+                if (!$defaultVerificationLevel) {
+                    // Fallback to first active level
+                    $defaultVerificationLevel = \App\Models\VerificationLevel::where('is_active', true)
+                        ->orderBy('level', 'asc')
+                        ->first();
+                }
 
-            if ($defaultVerificationLevel) {
-                \App\Models\DocumentVerification::create([
+                if ($defaultVerificationLevel) {
+                    \App\Models\DocumentVerification::create([
+                        'document_id' => $document->id,
+                        'verification_level_id' => $defaultVerificationLevel->id,
+                        'verifier_id' => null, // Will be set when verified by third party
+                        'verifier_type' => 'employer', // Default for level 3
+                        'status' => 'pending',
+                        'notes' => null,
+                    ]);
+                } else {
+                    // Log warning if no verification level found
+                    \Log::warning('DocumentVerification not created: No active verification level found', [
+                        'document_id' => $document->id
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Log error but don't fail document upload
+                \Log::error('Failed to create DocumentVerification', [
                     'document_id' => $document->id,
-                    'verification_level_id' => $defaultVerificationLevel->id,
-                    'verifier_id' => null, // Will be set when verified by third party
-                    'verifier_type' => 'employer', // Default for level 3
-                    'status' => 'pending',
-                    'notes' => null,
+                    'error' => $e->getMessage()
                 ]);
             }
 
