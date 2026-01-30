@@ -183,12 +183,13 @@ class DocumentVerificationApiController extends Controller
      * Requires auth:sanctum (Bearer token).
      *
      * POST /api/document-verification/decide
-     * Body: verification_id, status (approved|rejected), remark (optional)
+     * Body: verification_id (optional if document_id provided), document_id (optional if verification_id provided), status (approved|rejected), remark (optional)
      */
     public function decide(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'verification_id' => 'required|exists:document_verifications,id',
+            'verification_id' => 'nullable|exists:document_verifications,id',
+            'document_id' => 'nullable|exists:documents,id',
             'status' => 'required|in:approved,rejected',
             'remark' => 'nullable|string|max:500',
         ]);
@@ -201,10 +202,61 @@ class DocumentVerificationApiController extends Controller
             ], 422);
         }
 
-        $verification = DocumentVerification::where('id', $request->verification_id)
-            ->where('status', 'pending')
-            ->with(['document', 'verificationLevel'])
-            ->first();
+        // Either verification_id or document_id must be provided
+        if (! $request->filled('verification_id') && ! $request->filled('document_id')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Either verification_id or document_id is required.',
+            ], 422);
+        }
+
+        // Find verification by verification_id or document_id
+        if ($request->filled('verification_id')) {
+            $verification = DocumentVerification::where('id', $request->verification_id)
+                ->where('status', 'pending')
+                ->with(['document', 'verificationLevel'])
+                ->first();
+        } else {
+            // Find or create verification for document_id
+            $document = Document::findOrFail($request->document_id);
+            
+            // Get default verification level (Level 3 - Employer Verified)
+            $defaultVerificationLevel = \App\Models\VerificationLevel::where('level', 3)
+                ->where('is_active', true)
+                ->first();
+            
+            if (! $defaultVerificationLevel) {
+                $defaultVerificationLevel = \App\Models\VerificationLevel::where('is_active', true)
+                    ->orderBy('level', 'asc')
+                    ->first();
+            }
+
+            if (! $defaultVerificationLevel) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active verification level found.',
+                ], 500);
+            }
+
+            // Find existing pending verification or create new one
+            $verification = DocumentVerification::where('document_id', $document->id)
+                ->where('status', 'pending')
+                ->where('verification_level_id', $defaultVerificationLevel->id)
+                ->with(['document', 'verificationLevel'])
+                ->first();
+
+            if (! $verification) {
+                $verification = DocumentVerification::create([
+                    'document_id' => $document->id,
+                    'verification_level_id' => $defaultVerificationLevel->id,
+                    'verifier_id' => null,
+                    'verifier_type' => 'employer',
+                    'status' => 'pending',
+                    'notes' => null,
+                ]);
+                $verification->load(['document', 'verificationLevel']);
+            }
+        }
 
         if (! $verification) {
             return response()->json([
@@ -230,6 +282,14 @@ class DocumentVerificationApiController extends Controller
                 $document->update([
                     'verification_level_id' => $verificationLevel->id,
                     'highest_verification_level' => $verificationLevel->level,
+                ]);
+            }
+
+            // Generate certificate number if not already set
+            if (! $verification->certificate_number) {
+                $certificateNumber = 'YWC-'.strtoupper(substr(md5($document->id.$verification->id), 0, 12));
+                $verification->update([
+                    'certificate_number' => $certificateNumber,
                 ]);
             }
         }

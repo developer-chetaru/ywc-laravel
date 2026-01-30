@@ -293,8 +293,14 @@
                 <strong>POST</strong> {{base_url}}/api/document-verification/decide
             </div>
             <div class="form-group">
-                <label for="verificationId">Verification ID:</label>
-                <input type="number" id="verificationId" placeholder="Enter verification ID from list">
+                <label for="verificationId">Verification ID (Optional):</label>
+                <input type="number" id="verificationId" placeholder="Enter verification ID from list (optional)">
+                <small style="color: #666; display: block; margin-top: 5px;">If not provided, use Document ID below</small>
+            </div>
+            <div class="form-group">
+                <label for="documentId">Document ID (Optional):</label>
+                <input type="number" id="documentId" placeholder="Enter document ID (e.g., 112)">
+                <small style="color: #666; display: block; margin-top: 5px;">Required if Verification ID is not provided</small>
             </div>
             <div class="form-group">
                 <label for="status">Status:</label>
@@ -466,6 +472,7 @@
         async function decideDocument() {
             const token = authToken();
             const verificationId = document.getElementById('verificationId').value.trim();
+            const documentId = document.getElementById('documentId').value.trim();
             const status = document.getElementById('status').value;
             const remark = document.getElementById('remark').value.trim();
             const responseDiv = document.getElementById('decideResponse');
@@ -475,8 +482,8 @@
                 return;
             }
 
-            if (!verificationId) {
-                showResponse('decideResponse', 'Please enter a verification ID', true);
+            if (!verificationId && !documentId) {
+                showResponse('decideResponse', 'Please enter either Verification ID or Document ID', true);
                 return;
             }
 
@@ -484,10 +491,17 @@
 
             try {
                 const requestBody = {
-                    verification_id: parseInt(verificationId),
                     status: status,
                     remark: remark || null
                 };
+                
+                // Add verification_id or document_id based on what's provided
+                if (verificationId) {
+                    requestBody.verification_id = parseInt(verificationId);
+                }
+                if (documentId) {
+                    requestBody.document_id = parseInt(documentId);
+                }
 
                 const response = await fetch(`${baseUrl()}/api/document-verification/decide`, {
                     method: 'POST',
@@ -505,6 +519,7 @@
                     showResponse('decideResponse', data, false);
                     // Clear the form after successful submission
                     document.getElementById('verificationId').value = '';
+                    document.getElementById('documentId').value = '';
                     document.getElementById('remark').value = '';
                 } else {
                     showResponse('decideResponse', data, true);
