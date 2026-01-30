@@ -26,12 +26,13 @@ class DocumentVerificationApiController extends Controller
         // If document_id is provided, find certificate number from that document
         if ($request->has('document_id')) {
             $documentId = $request->get('document_id');
-            $document = Document::find($documentId);
+            $document = Document::withTrashed()->find($documentId);
             
             if (! $document) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Document not found.',
+                    'verified' => false,
+                    'message' => 'Document not found. Please check the Document ID.',
                 ], 404);
             }
 
@@ -42,10 +43,26 @@ class DocumentVerificationApiController extends Controller
                 ->first();
 
             if (! $verification) {
+                // Check if there's a pending verification
+                $pendingVerification = DocumentVerification::where('document_id', $documentId)
+                    ->where('status', 'pending')
+                    ->first();
+                
+                if ($pendingVerification) {
+                    return response()->json([
+                        'success' => false,
+                        'verified' => false,
+                        'message' => 'Document verification is pending. Please approve the document first using API 3 (Approve/Reject).',
+                        'document_id' => $documentId,
+                        'verification_id' => $pendingVerification->id,
+                    ], 404);
+                }
+                
                 return response()->json([
                     'success' => false,
                     'verified' => false,
-                    'message' => 'Document is not verified yet. Please approve the document first.',
+                    'message' => 'Document is not verified yet. Please approve the document first using API 3 (Approve/Reject).',
+                    'document_id' => $documentId,
                 ], 404);
             }
 
