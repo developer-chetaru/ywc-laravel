@@ -11,6 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if table already exists (might have been created manually or in previous migration)
+        if (Schema::hasTable('certificate_type_issuer')) {
+            // Table already exists, skip creation
+            return;
+        }
+        
         Schema::create('certificate_type_issuer', function (Blueprint $table) {
             $table->id();
             $table->foreignId('certificate_type_id')->constrained('certificate_types')->onDelete('cascade');
