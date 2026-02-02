@@ -65,6 +65,7 @@ class User extends Authenticatable implements JWTSubject
         'visas',
         'rating',
         'total_reviews',
+        'forum_reputation_points',
         // Location tracking fields
         'latitude',
         'longitude',

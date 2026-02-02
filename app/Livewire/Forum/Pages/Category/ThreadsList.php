@@ -3,13 +3,22 @@
 namespace App\Livewire\Forum\Pages\Category;
 
 use Livewire\Component;
+use App\Services\Forum\ForumRoleAccessService;
 use TeamTeaTime\Forum\Models\Thread;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class ThreadsList extends Component
 {
     public string $search = '';
     public string $status = '';
+
+    protected ForumRoleAccessService $roleAccessService;
+
+    public function boot(ForumRoleAccessService $roleAccessService)
+    {
+        $this->roleAccessService = $roleAccessService;
+    }
 
     public function toggleStatus($id)
     {
@@ -47,6 +56,11 @@ class ThreadsList extends Component
     public function render()
     {
         $query = Thread::with('category');
+
+        // Apply role-based filtering (hide restricted threads from unauthorized users)
+        if (Auth::check()) {
+            $this->roleAccessService->filterThreadsByAccess($query, Auth::user());
+        }
 
         // Apply search filter
         if (!empty($this->search)) {

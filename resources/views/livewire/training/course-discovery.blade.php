@@ -198,6 +198,30 @@
                                        class="mt-2 w-full px-5 py-2.5 flex bg-[#fff] items-center border-[#0053FF] border rounded-lg text-[14px] text-[#0053FF] center font-[600] justify-center hover:bg-[#0053FF] hover:text-[#fff] transition-colors">
                                         View Details
                                     </a>
+                                    @php
+                                        $discussionService = app(\App\Services\Forum\ForumDiscussionService::class);
+                                        $defaultCategory = \TeamTeaTime\Forum\Models\Category::where('accepts_threads', true)->orderBy('id')->first();
+                                        $categoryId = $defaultCategory?->id ?? 1;
+                                        $category = \TeamTeaTime\Forum\Models\Category::find($categoryId);
+                                        $categorySlug = $category ? \Illuminate\Support\Str::slug($category->title) : 'general';
+                                        $forumUrl = route('forum.thread.create', [
+                                            'category_id' => $categoryId,
+                                            'category_slug' => $categorySlug
+                                        ]) . '?' . http_build_query([
+                                            'source_module' => 'training',
+                                            'source_item_id' => $course->id,
+                                            'source_item_type' => 'course',
+                                            'source_item_title' => $course->certification->name . ' - ' . $course->provider->name,
+                                            'source_item_url' => route('training.course.detail', $course->id),
+                                        ]);
+                                    @endphp
+                                    <a href="{{ $forumUrl }}" 
+                                       class="mt-2 w-full px-5 py-2 flex items-center gap-2 bg-blue-600 text-white rounded-lg text-[14px] center font-[600] justify-center hover:bg-blue-700 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                        </svg>
+                                        Start Discussion
+                                    </a>
                                 </div>
                             </div>
                         </div>

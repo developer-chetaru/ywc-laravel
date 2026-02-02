@@ -3,19 +3,35 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Services\Forum\ForumRoleAccessService;
 use TeamTeaTime\Forum\Models\Thread;
 
 class ThreadPolicy
 {
+    protected ForumRoleAccessService $roleAccessService;
+
+    public function __construct(ForumRoleAccessService $roleAccessService)
+    {
+        $this->roleAccessService = $roleAccessService;
+    }
+
     public function viewAny(User $user): bool
     {
-        // Sabko threads dikh sakte hain (agar chahiye to true karen)
+        // All authenticated users can view threads list
+        // But individual threads will be filtered by role access
         return true;
     }
 
     public function view(User $user, Thread $thread): bool
     {
-        // Sab log thread dekh sakte hain
+        // Check role-based access for this thread
+        $hasAccess = $this->roleAccessService->canAccessThread($user, $thread->id);
+        
+        if (!$hasAccess) {
+            // Redirect to access denied page
+            abort(403, 'Access denied');
+        }
+        
         return true;
     }
 

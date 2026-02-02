@@ -6,7 +6,7 @@
                 <h1 class="text-3xl font-bold text-gray-900">💰 Financial Dashboard</h1>
                 <p class="text-gray-600 mt-1">Track your net worth, goals, and financial progress</p>
             </div>
-                <div class="flex gap-3">
+                <div class="flex gap-3 flex-wrap">
                 <a href="{{ route('financial.calculators.index') }}" 
                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                     Use Calculators
@@ -19,6 +19,23 @@
                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
                     🏖️ Retirement
                 </a>
+                @php
+                    $discussionService = app(\App\Services\Forum\ForumDiscussionService::class);
+                    $activeDiscussion = $discussionService->getActiveDiscussion('financial_planning', auth()->id(), 'financial_module');
+                @endphp
+                @if($activeDiscussion)
+                    <a href="{{ $activeDiscussion->route }}" 
+                       class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg hover:bg-blue-200 transition-colors">
+                        💬 View Discussion →
+                    </a>
+                @else
+                    <x-start-discussion-button 
+                        module="financial_planning" 
+                        :itemId="auth()->id()" 
+                        itemType="financial_module" 
+                        itemTitle="Financial Planning"
+                        :itemUrl="request()->url()" />
+                @endif
                 @role('super_admin')
                     <a href="{{ route('financial.admin.index') }}" 
                        class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">

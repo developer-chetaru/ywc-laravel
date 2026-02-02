@@ -14,6 +14,8 @@ use TeamTeaTime\Forum\Support\Validation\CategoryRules;
 use TeamTeaTime\Forum\Events\UserCreatedCategory;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\DB;
+use App\Services\Forum\ForumRoleAccessService;
+use App\Services\Forum\ForumReputationService;
 
 class CreateForum extends Component
 {
@@ -141,6 +143,15 @@ class CreateForum extends Component
                 }
             }
 
+            // Set role restrictions for category if any roles selected
+            if (!empty($this->selectedRoles)) {
+                $roleAccessService = app(ForumRoleAccessService::class);
+                $roleNames = Role::whereIn('id', $this->selectedRoles)
+                    ->pluck('name')
+                    ->toArray();
+                $roleAccessService->setCategoryRoles($category->id, $roleNames);
+            }
+
             // Create initial thread if provided
             if (!empty($validated['threadTitle'])) {
                 $thread = Thread::create([
@@ -151,22 +162,24 @@ class CreateForum extends Component
                     'locked' => false,
                 ]);
 
+                // Award reputation for creating thread (badge checking happens automatically inside)
+                $reputationService = app(ForumReputationService::class);
+                $reputationService->awardThreadCreated($request->user(), $thread->id);
+
                 // Create first post (thread content) - threads require at least one post
                 $postContent = !empty($validated['threadDescription']) 
                     ? $validated['threadDescription'] 
                     : $validated['threadTitle']; // Use title as content if description is empty
                     
-                Post::create([
+                $post = Post::create([
                     'thread_id' => $thread->id,
                     'author_id' => $request->user()->id,
                     'content' => $postContent,
                 ]);
+                
+                // Award reputation for first post (reply)
+                $reputationService->awardReplyPosted($request->user(), $post->id);
             }
-
-            // Handle role assignments if needed
-            // Note: The forum package doesn't have built-in role support,
-            // so you might need to create a pivot table or use permissions
-            // For now, we'll skip role assignment or you can implement it separately
 
             // Dispatch event
             UserCreatedCategory::dispatch($request->user(), $category);

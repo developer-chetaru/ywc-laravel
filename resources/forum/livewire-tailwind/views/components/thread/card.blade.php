@@ -34,6 +34,14 @@
                         icon="trash-mini"
                         :text="trans('forum::general.deleted')" />
                 @endif
+                @if ($thread->source_module)
+                    <livewire:forum::components.pill
+                        bg-color="bg-indigo-400"
+                        text-color="text-indigo-950"
+                        margin="mr-2"
+                        icon="link-mini"
+                        :text="ucfirst(str_replace('_', ' ', $thread->source_module))" />
+                @endif
                 <span class="inline-block align-middle {{ !$showCategory ? 'text-category' : '' }}">
                     {{ $thread->title }}
                 </span>

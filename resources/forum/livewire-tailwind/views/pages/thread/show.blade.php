@@ -37,7 +37,9 @@
                     :text="trans('forum::general.deleted')" />
             @endif
         </div>
-
+        <div>
+            <livewire:forum.report-content reportable-type="thread" :reportable-id="$thread->id" />
+        </div>
     </div>
 
     <div class="flex flex-col lg:flex-row items-center">

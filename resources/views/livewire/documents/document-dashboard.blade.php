@@ -136,6 +136,23 @@
                                                 class="w-full text-center bg-[#0053FF] text-white px-3 py-2 rounded-md hover:bg-[#0044DD] transition-colors text-xs font-medium shadow-sm">
                                             <i class="fas fa-eye mr-1"></i>View Details
                                         </button>
+                                        @php
+                                            $discussionService = app(\App\Services\Forum\ForumDiscussionService::class);
+                                            $activeDiscussion = $discussionService->getActiveDiscussion('documents', $doc->id, 'document');
+                                        @endphp
+                                        @if($activeDiscussion)
+                                            <a href="{{ $activeDiscussion->route }}" 
+                                               class="w-full text-center bg-blue-100 text-blue-800 px-3 py-2 rounded-md hover:bg-blue-200 transition-colors text-xs font-medium shadow-sm">
+                                                <i class="fas fa-comments mr-1"></i>View Discussion →
+                                            </a>
+                                        @else
+                                            <x-start-discussion-button 
+                                                module="documents" 
+                                                :itemId="$doc->id" 
+                                                itemType="document" 
+                                                :itemTitle="$doc->document_name ?? ($doc->documentType->name ?? 'Document')"
+                                                :itemUrl="route('documents.show', $doc->id)" />
+                                        @endif
                                         {{-- Always show Re-Submit for rejected documents --}}
                                         @if($isRejected || strtolower(trim($doc->status ?? '')) === 'rejected')
                                         <button type="button" 
@@ -321,6 +338,27 @@
                                 </button>
                                 @endif
                             </div>
+                            @php
+                                $discussionService = app(\App\Services\Forum\ForumDiscussionService::class);
+                                $activeDiscussion = $discussionService->getActiveDiscussion('documents', $document->id, 'document');
+                            @endphp
+                            @if($activeDiscussion)
+                                <div class="mt-2">
+                                    <a href="{{ $activeDiscussion->route }}" 
+                                       class="w-full text-center bg-blue-100 text-blue-800 px-3 py-2 rounded-md hover:bg-blue-200 transition-colors text-xs font-medium shadow-sm block">
+                                        <i class="fas fa-comments mr-1"></i>View Discussion →
+                                    </a>
+                                </div>
+                            @else
+                                <div class="mt-2">
+                                    <x-start-discussion-button 
+                                        module="documents" 
+                                        :itemId="$document->id" 
+                                        itemType="document" 
+                                        :itemTitle="$document->document_name ?? ($document->documentType->name ?? 'Document')"
+                                        :itemUrl="route('documents.show', $document->id)" />
+                                </div>
+                            @endif
                         </div>
                         @endforeach
                     </div>

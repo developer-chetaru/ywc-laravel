@@ -23,6 +23,12 @@ Route::get('category/create', CategoryCreate::class)->name('category.create');
 
 Route::get('recent', RecentThreads::class)->name('recent');
 Route::get('unread', UnreadThreads::class)->name('unread');
+Route::get('leaderboard', \App\Livewire\Forum\Leaderboard::class)->name('leaderboard');
+Route::get('moderator/dashboard', \App\Livewire\Forum\ModeratorDashboard::class)->name('moderator.dashboard');
+
+// Private Messages
+Route::get('messages', \App\Livewire\Forum\MessageList::class)->name('messages.index');
+Route::get('messages/{messageId}', \App\Livewire\Forum\MessageConversation::class)->name('messages.conversation');
 
 Route::group(['prefix' => $prefix['category'] . '/{category_id}-{category_slug}'], function () use ($prefix) {
     Route::get('/', CategoryShow::class)->name('category.show');

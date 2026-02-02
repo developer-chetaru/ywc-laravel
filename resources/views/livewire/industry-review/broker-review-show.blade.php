@@ -39,7 +39,7 @@
                             </div>
                         @endif
                     </div>
-                    <div class="mt-4 flex gap-3">
+                    <div class="mt-4 flex gap-3 flex-wrap">
                         <a href="{{ route('broker-reviews.create', ['brokerId' => $broker->id]) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -53,6 +53,26 @@
                                 </svg>
                                 View Gallery
                             </a>
+                        @endif
+                        @php
+                            $discussionService = app(\App\Services\Forum\ForumDiscussionService::class);
+                            $activeDiscussion = $discussionService->getActiveDiscussion('industry_reviews', $broker->id, 'broker');
+                        @endphp
+                        @if($activeDiscussion)
+                            <a href="{{ $activeDiscussion->route }}" 
+                               class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                View Discussion →
+                            </a>
+                        @else
+                            <x-start-discussion-button 
+                                module="industry_reviews" 
+                                :itemId="$broker->id" 
+                                itemType="broker" 
+                                :itemTitle="$broker->name"
+                                :itemUrl="route('broker-reviews.show', $broker->slug)" />
                         @endif
                     </div>
                 </div>

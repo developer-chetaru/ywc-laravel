@@ -6,6 +6,7 @@ use Livewire\Component;
 use TeamTeaTime\Forum\Models\Thread;
 use TeamTeaTime\Forum\Models\Post;
 use Illuminate\Support\Facades\Auth;
+use App\Services\Forum\ForumReputationService;
 
 class QuickReply extends Component
 {
@@ -31,6 +32,10 @@ class QuickReply extends Component
             'content'   => $this->content,
             'sequence'  => $nextSequence,
         ]);
+
+        // Award reputation for posting reply (badge checking happens automatically inside)
+        $reputationService = app(ForumReputationService::class);
+        $reputationService->awardReplyPosted(Auth::user(), $post->id);
 
         // Reset textarea
         $this->reset('content');

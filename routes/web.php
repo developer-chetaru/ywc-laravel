@@ -50,6 +50,7 @@ use App\Livewire\Training\Admin\ManageProviders;
 use App\Livewire\Training\Admin\ProviderForm;
 use App\Livewire\Training\Admin\ManageCourses;
 use App\Livewire\Training\Admin\ManageReviews;
+use App\Livewire\Training\Admin\ManageCategories;
 
 use App\Models\Order as InternalOrder;
 use App\Livewire\SubscriptionPage;
@@ -511,6 +512,9 @@ Route::middleware([
   	// Training Admin Routes (Super Admin Only)
   	Route::middleware(['auth'])->group(function () {
   	    Route::get('/training/admin', TrainingAdminDashboard::class)->name('training.admin.dashboard');
+  	    
+  	    // Categories
+  	    Route::get('/training/admin/categories', ManageCategories::class)->name('training.admin.categories');
   	    
   	    // Certifications
   	    Route::get('/training/admin/certifications', ManageCertifications::class)->name('training.admin.certifications');

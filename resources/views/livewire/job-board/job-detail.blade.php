@@ -93,6 +93,37 @@
                         </ul>
                     </div>
                     @endif
+
+                    {{-- Discussion Section --}}
+                    @php
+                        $discussionService = app(\App\Services\Forum\ForumDiscussionService::class);
+                        $activeDiscussion = $discussionService->getActiveDiscussion('job_board', $job->id, 'job_post');
+                    @endphp
+                    @if($activeDiscussion)
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium text-blue-800">Active Discussion</span>
+                                </div>
+                                <a href="{{ $activeDiscussion->route }}" 
+                                   class="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline">
+                                    View Discussion →
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        <div class="bg-white shadow rounded-lg p-6">
+                            <x-start-discussion-button 
+                                module="job_board" 
+                                :itemId="$job->id" 
+                                itemType="job_post" 
+                                :itemTitle="$job->position_title . ($job->yacht ? ' - ' . $job->yacht->name : '')"
+                                :itemUrl="route('job-board.detail', $job->id)" />
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Sidebar -->

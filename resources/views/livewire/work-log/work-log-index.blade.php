@@ -3,8 +3,32 @@
     <div class="w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <!-- Header -->
         <div class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">Work & Rest Hours Log</h1>
-            <p class="text-gray-600 mt-1">Track your daily work hours and ensure MLC compliance</p>
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Work & Rest Hours Log</h1>
+                    <p class="text-gray-600 mt-1">Track your daily work hours and ensure MLC compliance</p>
+                </div>
+                @php
+                    $discussionService = app(\App\Services\Forum\ForumDiscussionService::class);
+                    $activeDiscussion = $discussionService->getActiveDiscussion('work_log', auth()->id(), 'work_log_module');
+                @endphp
+                @if($activeDiscussion)
+                    <a href="{{ $activeDiscussion->route }}" 
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                        </svg>
+                        View Discussion →
+                    </a>
+                @else
+                    <x-start-discussion-button 
+                        module="work_log" 
+                        :itemId="auth()->id()" 
+                        itemType="work_log_module" 
+                        itemTitle="Work & Rest Hours Log"
+                        :itemUrl="request()->url()" />
+                @endif
+            </div>
         </div>
 
         <!-- View Mode Tabs -->

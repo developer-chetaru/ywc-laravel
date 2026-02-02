@@ -3,6 +3,7 @@
 namespace App\Livewire\Forum\Pages\Thread;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View as ViewFactory;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
@@ -15,6 +16,9 @@ use TeamTeaTime\Forum\{
     Support\Authorization\CategoryAuthorization,
     Support\Validation\ThreadRules,
 };
+use App\Services\Forum\ForumRoleAccessService;
+use App\Services\Forum\ForumReputationService;
+use Spatie\Permission\Models\Role;
 
 class CreateThread extends Component
 {
@@ -27,6 +31,20 @@ class CreateThread extends Component
     // Form fields
     public string $title = '';
     public string $content = '';
+    public bool $is_question = false;
+    
+    // Source module tracking
+    public ?string $source_module = null;
+    public ?int $source_item_id = null;
+    public ?string $source_item_type = null;
+    public ?string $source_item_title = null;
+    public ?string $source_item_url = null;
+    
+    // Role management
+    public bool $showRoleSelector = false;
+    public string $searchRole = '';
+    public array $selectedRoles = [];
+    public $roles = [];
 
     public function mount(Request $request, $category_id = null, $category_slug = null)
     {
@@ -73,7 +91,7 @@ class CreateThread extends Component
 
         // If category is still null, abort with error
         if (!$category || !($category instanceof Category)) {
-            \Log::error('ThreadCreate: Category not found', [
+            Log::error('ThreadCreate: Category not found', [
                 'category_id_param' => $category_id,
                 'category_slug_param' => $category_slug,
                 'route_category' => $request->route('category') ? 'exists' : 'null',
@@ -92,7 +110,48 @@ class CreateThread extends Component
             abort(403, 'You do not have permission to create threads in this category.');
         }
 
+        // Get source module parameters from query string
+        $this->source_module = $request->query('source_module');
+        $this->source_item_id = $request->query('source_item_id') ? (int)$request->query('source_item_id') : null;
+        $this->source_item_type = $request->query('source_item_type');
+        $this->source_item_title = $request->query('source_item_title');
+        $this->source_item_url = $request->query('source_item_url');
+        
+        // Pre-populate title if source module data is available
+        if ($this->source_item_title) {
+            $this->title = "Discussion: " . $this->source_item_title;
+        }
+
         UserCreatingThread::dispatch($request->user(), $this->category);
+        
+        // Load available roles
+        $this->loadRoles();
+    }
+    
+    public function loadRoles()
+    {
+        $query = Role::where('guard_name', 'web');
+        
+        if (!empty($this->searchRole)) {
+            $query->where('name', 'like', '%' . $this->searchRole . '%');
+        }
+        
+        $this->roles = $query->orderBy('name')->get();
+    }
+    
+    public function updatedSearchRole()
+    {
+        $this->loadRoles();
+    }
+    
+    public function toggleRoleSelector()
+    {
+        $this->showRoleSelector = !$this->showRoleSelector;
+    }
+    
+    public function removeRole($roleId)
+    {
+        $this->selectedRoles = array_filter($this->selectedRoles, fn($id) => $id != $roleId);
     }
 
     public function create(Request $request)
@@ -110,6 +169,37 @@ class CreateThread extends Component
 
         $action = new Action($this->category, $request->user(), $validated['title'], $validated['content']);
         $thread = $action->execute();
+
+        // Update thread with additional fields
+        $updateData = [];
+        
+        if ($this->is_question) {
+            $updateData['is_question'] = true;
+        }
+        
+        // Add source module information if available
+        if ($this->source_module && $this->source_item_id) {
+            $updateData['source_module'] = $this->source_module;
+            $updateData['source_item_id'] = $this->source_item_id;
+            $updateData['source_item_type'] = $this->source_item_type;
+        }
+        
+        if (!empty($updateData)) {
+            $thread->update($updateData);
+        }
+
+        // Award reputation for creating thread
+        $reputationService = app(ForumReputationService::class);
+        $reputationService->awardThreadCreated($request->user(), $thread->id);
+
+        // Set role restrictions for thread if any roles selected
+        if (!empty($this->selectedRoles)) {
+            $roleAccessService = app(ForumRoleAccessService::class);
+            $roleNames = Role::whereIn('id', $this->selectedRoles)
+                ->pluck('name')
+                ->toArray();
+            $roleAccessService->setThreadRoles($thread->id, $roleNames);
+        }
 
         UserCreatedThread::dispatch($request->user(), $thread);
 

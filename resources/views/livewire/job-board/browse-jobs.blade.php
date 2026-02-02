@@ -106,9 +106,26 @@
                                 @endif
                             </div>
                             @endif
-                            <a href="{{ route('job-board.detail', $job->id) }}" class="text-indigo-600 hover:text-indigo-800 font-medium">
+                            <a href="{{ route('job-board.detail', $job->id) }}" class="text-indigo-600 hover:text-indigo-800 font-medium mb-2 block">
                                 View Details →
                             </a>
+                            @php
+                                $discussionService = app(\App\Services\Forum\ForumDiscussionService::class);
+                                $activeDiscussion = $discussionService->getActiveDiscussion('job_board', $job->id, 'job_post');
+                            @endphp
+                            @if($activeDiscussion)
+                                <a href="{{ $activeDiscussion->route }}" 
+                                   class="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline">
+                                    View Discussion →
+                                </a>
+                            @else
+                                <x-start-discussion-button 
+                                    module="job_board" 
+                                    :itemId="$job->id" 
+                                    itemType="job_post" 
+                                    :itemTitle="$job->position_title . ($job->yacht ? ' - ' . $job->yacht->name : '')"
+                                    :itemUrl="route('job-board.detail', $job->id)" />
+                            @endif
                         </div>
                     </div>
                 </div>

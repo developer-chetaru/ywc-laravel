@@ -49,6 +49,10 @@
             <div class="mb-6">
                 <h3 class="text-lg font-semibold mb-3">Quick Actions</h3>
                 <div class="flex flex-wrap gap-3">
+                    <a href="{{ route('training.admin.categories') }}" 
+                       class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                        Manage Categories
+                    </a>
                     <a href="{{ route('training.admin.certifications') }}" 
                        class="px-4 py-2 bg-[#0053FF] text-white rounded-lg hover:bg-blue-700">
                         Manage Certifications

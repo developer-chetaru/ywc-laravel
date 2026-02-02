@@ -217,6 +217,64 @@
                 </div>
             </div>
 
+            <!-- Forum Stats Section -->
+            @if(!empty($forumStats))
+            <section class="bg-white p-6 py-7 rounded-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-[#1B1B1B]">Forum Activity</h2>
+                    <a href="{{ route('forum.leaderboard') }}" class="text-sm text-[#0053FF] hover:underline">View Leaderboard →</a>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                        <p class="text-xs text-blue-600 mb-1">Reputation</p>
+                        <p class="text-2xl font-bold text-blue-800">{{ $forumStats['reputation']['points'] ?? 0 }}</p>
+                        <p class="text-xs text-blue-600 mt-1">
+                            <span class="px-2 py-0.5 rounded {{ $forumStats['reputation']['level_color'] ?? 'bg-gray-100 text-gray-800' }}">
+                                {{ $forumStats['reputation']['level'] ?? 'Newcomer' }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                        <p class="text-xs text-green-600 mb-1">Threads</p>
+                        <p class="text-2xl font-bold text-green-800">{{ $forumStats['thread_count'] ?? 0 }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                        <p class="text-xs text-purple-600 mb-1">Posts</p>
+                        <p class="text-2xl font-bold text-purple-800">{{ $forumStats['post_count'] ?? 0 }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+                        <p class="text-xs text-yellow-600 mb-1">Badges</p>
+                        <p class="text-2xl font-bold text-yellow-800">{{ count($forumStats['badges'] ?? []) }}</p>
+                    </div>
+                </div>
+                @if($forumStats['warning_count'] > 0)
+                <div class="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <p class="text-sm text-red-800">
+                        <span class="font-semibold">{{ $forumStats['warning_count'] }}</span> warning(s) on record
+                    </p>
+                </div>
+                @endif
+                @if(count($forumStats['badges'] ?? []) > 0)
+                <div class="mt-4">
+                    <p class="text-sm font-medium text-gray-700 mb-2">Earned Badges:</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($forumStats['badges'] as $badge)
+                        <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2" title="{{ $badge->description }}">
+                            @if($badge->icon)
+                            <span class="text-lg">{!! $badge->icon !!}</span>
+                            @endif
+                            <span class="text-sm font-medium text-gray-800">{{ $badge->name }}</span>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+            </section>
+            @endif
+
             <!-- Professional Summary -->
             <section class="bg-white p-6 py-7 rounded-xl">
                 <div class="flex items-center justify-between mb-2">

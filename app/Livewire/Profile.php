@@ -12,7 +12,10 @@ use App\Models\YachtReview;
 use App\Models\MarinaReview;
 use App\Models\ItineraryRoute;
 use App\Models\ReviewVote;
+use App\Services\Forum\ForumReputationService;
+use App\Services\Forum\BadgeService;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class Profile extends Component
 {
@@ -95,6 +98,9 @@ class Profile extends Component
     public $showAllReviews = false;
     public $showAllItineraries = false;
     public $showActivityCard = true; // Show/hide Activity card section
+    
+    // Forum stats
+    public $forumStats = [];
     
     // Card visibility states
     public $showProfessionalSummary = true;
@@ -234,6 +240,50 @@ class Profile extends Component
         
         // Load reviews and itineraries
         $this->loadReviewsAndItineraries();
+        
+        // Load forum stats
+        $this->loadForumStats();
+    }
+    
+    public function loadForumStats()
+    {
+        $user = Auth::user();
+        $reputationService = app(ForumReputationService::class);
+        $badgeService = app(BadgeService::class);
+        
+        // Get reputation summary
+        $reputationSummary = $reputationService->getUserReputationSummary($user);
+        
+        // Get user badges
+        $badges = DB::table('forum_user_badges')
+            ->join('forum_badges', 'forum_user_badges.badge_id', '=', 'forum_badges.id')
+            ->where('forum_user_badges.user_id', $user->id)
+            ->where('forum_badges.is_active', true)
+            ->select('forum_badges.*', 'forum_user_badges.earned_at')
+            ->orderBy('forum_user_badges.earned_at', 'desc')
+            ->get();
+        
+        // Get thread and post counts
+        $threadCount = DB::table('forum_threads')
+            ->where('author_id', $user->id)
+            ->count();
+        
+        $postCount = DB::table('forum_posts')
+            ->where('author_id', $user->id)
+            ->count();
+        
+        // Get warning count
+        $warningCount = DB::table('forum_warnings')
+            ->where('user_id', $user->id)
+            ->count();
+        
+        $this->forumStats = [
+            'reputation' => $reputationSummary,
+            'badges' => $badges,
+            'thread_count' => $threadCount,
+            'post_count' => $postCount,
+            'warning_count' => $warningCount,
+        ];
     }
     
     public function loadReviewsAndItineraries()

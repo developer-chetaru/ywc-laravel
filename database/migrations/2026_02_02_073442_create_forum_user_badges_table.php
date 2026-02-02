@@ -1,0 +1,38 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('forum_user_badges', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('badge_id')->constrained('forum_badges')->cascadeOnDelete();
+            $table->timestamp('earned_at');
+            $table->timestamps();
+
+            // Unique constraint: one badge per user
+            $table->unique(['user_id', 'badge_id'], 'user_badge_unique');
+
+            // Indexes
+            $table->index('user_id');
+            $table->index('badge_id');
+            $table->index('earned_at');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('forum_user_badges');
+    }
+};

@@ -194,6 +194,28 @@
                 @endif
             </div>
 
+            {{-- Discussion Section --}}
+            @php
+                $discussionService = app(\App\Services\Forum\ForumDiscussionService::class);
+                $activeDiscussion = $discussionService->getActiveDiscussion('training', $course->id, 'course');
+            @endphp
+            @if($activeDiscussion)
+                <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                            <span class="text-sm font-medium text-blue-800">Active Discussion</span>
+                        </div>
+                        <a href="{{ $activeDiscussion->route }}" 
+                           class="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline">
+                            View Discussion →
+                        </a>
+                    </div>
+                </div>
+            @endif
+
             {{-- Action Buttons --}}
             <div class="flex flex-col sm:flex-row gap-3">
                 @if($bookingUrl)
@@ -210,6 +232,30 @@
                         Visit Provider Website
                     </a>
                 @endif
+                @php
+                    $discussionService = app(\App\Services\Forum\ForumDiscussionService::class);
+                    $defaultCategory = \TeamTeaTime\Forum\Models\Category::where('accepts_threads', true)->orderBy('id')->first();
+                    $categoryId = $defaultCategory?->id ?? 1;
+                    $category = \TeamTeaTime\Forum\Models\Category::find($categoryId);
+                    $categorySlug = $category ? \Illuminate\Support\Str::slug($category->title) : 'general';
+                    $forumUrl = route('forum.thread.create', [
+                        'category_id' => $categoryId,
+                        'category_slug' => $categorySlug
+                    ]) . '?' . http_build_query([
+                        'source_module' => 'training',
+                        'source_item_id' => $course->id,
+                        'source_item_type' => 'course',
+                        'source_item_title' => $course->certification->name . ' - ' . $course->provider->name,
+                        'source_item_url' => route('training.course.detail', $course->id),
+                    ]);
+                @endphp
+                <a href="{{ $forumUrl }}" 
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm hover:shadow">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                    Start Discussion
+                </a>
             </div>
         </div>
     </main>

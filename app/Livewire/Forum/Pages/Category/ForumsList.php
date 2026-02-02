@@ -3,14 +3,23 @@
 namespace App\Livewire\Forum\Pages\Category;
 
 use Livewire\Component;
+use App\Services\Forum\ForumRoleAccessService;
 use TeamTeaTime\Forum\Models\Category;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class ForumsList extends Component
 {
     public string $search = '';
     public string $status = '';
+
+    protected ForumRoleAccessService $roleAccessService;
+
+    public function boot(ForumRoleAccessService $roleAccessService)
+    {
+        $this->roleAccessService = $roleAccessService;
+    }
 
     public function toggleStatus($id)
     {
@@ -30,6 +39,11 @@ class ForumsList extends Component
     public function render()
     {
         $query = Category::query();
+
+        // Apply role-based filtering (hide restricted categories from unauthorized users)
+        if (Auth::check()) {
+            $this->roleAccessService->filterCategoriesByAccess($query, Auth::user());
+        }
 
         // Apply search filter
         if (!empty($this->search)) {
