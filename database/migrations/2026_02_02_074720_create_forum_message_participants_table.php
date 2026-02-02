@@ -11,10 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (Schema::hasTable('forum_message_participants')) {
-            Schema::dropIfExists('forum_message_participants');
-        }
-        
         Schema::create('forum_message_participants', function (Blueprint $table) {
             $table->id();
             $table->foreignId('message_id')->constrained('forum_private_messages')->cascadeOnDelete();
