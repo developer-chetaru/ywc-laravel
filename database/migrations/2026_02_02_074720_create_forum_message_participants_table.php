@@ -11,6 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if table already exists (from failed previous migration)
+        if (Schema::hasTable('forum_message_participants')) {
+            // Drop existing table if it exists without proper foreign keys
+            Schema::dropIfExists('forum_message_participants');
+        }
+        
         Schema::create('forum_message_participants', function (Blueprint $table) {
             $table->id();
             $table->foreignId('message_id')->constrained('forum_private_messages')->cascadeOnDelete();
