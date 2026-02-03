@@ -1,5 +1,9 @@
 <div class="border border-gray-200 bg-gray-50 rounded-md p-6 mb-4">
-    {!! Forum::render($post->content) !!}
+    @php
+        $quoteService = app(\App\Services\Forum\QuoteService::class);
+        $formattedContent = $quoteService->formatQuotes($post->content);
+    @endphp
+    {!! Forum::render($formattedContent) !!}
     <div class="flex mt-4">
         <div class="grow">
             <span class="font-medium">

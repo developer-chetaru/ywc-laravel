@@ -33,3 +33,12 @@ Schedule::command('documents:cleanup-versions --keep=10')
     ->sundays()
     ->at('02:00')
     ->timezone('UTC');
+
+// Schedule forum digest emails
+Schedule::command('forum:send-digest daily')
+    ->dailyAt('08:00')
+    ->timezone('UTC');
+
+Schedule::command('forum:send-digest weekly')
+    ->weeklyOn(1, '08:00') // Monday at 8 AM
+    ->timezone('UTC');

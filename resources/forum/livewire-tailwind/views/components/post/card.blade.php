@@ -63,7 +63,11 @@
                 @if ($post->trashed())
                     @can ('viewTrashedPosts')
                         <div class="mb-4">
-                            {!! Forum::render($post->content) !!}
+                            @php
+                                $quoteService = app(\App\Services\Forum\QuoteService::class);
+                                $formattedContent = $quoteService->formatQuotes($post->content);
+                            @endphp
+                            {!! Forum::render($formattedContent) !!}
                         </div>
                     @endcan
 
@@ -76,7 +80,11 @@
                             :text="trans('forum::general.deleted')" />
                     </div>
                 @else
-                    {!! Forum::render($post->content) !!}
+                    @php
+                        $quoteService = app(\App\Services\Forum\QuoteService::class);
+                        $formattedContent = $quoteService->formatQuotes($post->content);
+                    @endphp
+                    {!! Forum::render($formattedContent) !!}
                 @endif
             </div>
 
@@ -114,6 +122,9 @@
                                     {{ trans('forum::general.reply') }}
                                 </a>
                             @endcan
+                            @if (!$post->trashed() && Auth::check())
+                                <livewire:forum.quote-post :post="$post" wire:key="quote-post-{{ $post->id }}" />
+                            @endif
                             @if (!$post->trashed())
                                 <div class="flex gap-2">
                                     @if ($author && Auth::check() && Auth::id() !== $author->id)

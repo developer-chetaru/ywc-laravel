@@ -7,6 +7,7 @@ use TeamTeaTime\Forum\Models\Thread;
 use TeamTeaTime\Forum\Models\Post;
 use Illuminate\Support\Facades\DB;
 use App\Services\Forum\ForumReputationService;
+use App\Services\Forum\ForumNotificationService;
 
 class BestAnswerService
 {
@@ -63,6 +64,10 @@ class BestAnswerService
                 // Only award if post author is different from thread author
                 // Badge checking happens automatically inside reputation service
                 $this->reputationService->awardBestAnswer($postAuthor, $post->id);
+                
+                // Send notification to post author
+                $notificationService = app(ForumNotificationService::class);
+                $notificationService->notifyBestAnswer($postAuthor, $thread, $post);
             }
 
             return true;

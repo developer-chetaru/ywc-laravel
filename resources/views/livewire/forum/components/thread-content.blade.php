@@ -8,7 +8,11 @@
         @endphp
         
         @if($firstPost)
-            {!! $firstPost->content !!}
+            @php
+                $quoteService = app(\App\Services\Forum\QuoteService::class);
+                $formattedContent = $quoteService->formatQuotes($firstPost->content);
+            @endphp
+            {!! $formattedContent !!}
         @else
             <p class="text-gray-500 italic">No content available for this thread.</p>
         @endif

@@ -28,6 +28,35 @@
     <!-- Tailwind (Designer style) -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 
+    <!-- Quill.js Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <style>
+        .ql-editor {
+            min-height: 200px;
+            font-size: 14px;
+        }
+        .ql-editor.ql-blank::before {
+            color: #9ca3af;
+            font-style: normal;
+        }
+        .ql-container {
+            font-family: 'DM Sans', sans-serif;
+        }
+        .ql-snow .ql-tooltip {
+            z-index: 1000;
+        }
+        .ql-snow .ql-picker {
+            color: #374151;
+        }
+        .ql-snow .ql-stroke {
+            stroke: #374151;
+        }
+        .ql-snow .ql-fill {
+            fill: #374151;
+        }
+    </style>
+    
     <!-- Compiled CSS/JS -->
     @vite([
         'resources/forum/livewire-tailwind/css/forum.css',

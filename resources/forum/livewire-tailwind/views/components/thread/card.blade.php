@@ -63,12 +63,26 @@
                 :text="trans('forum::general.replies') . ': ' . $thread->reply_count" />
         </div>
         <div class="min-w-30 sm:min-w-48 lg:min-w-96 xl:w-full xl:max-w-lg text-center sm:text-right mt-2 sm:mt-0">
-            <a href="{{ Forum::route('thread.show', $thread->lastPost) }}" class="text-lg font-medium">{{ trans('forum::posts.view') }} @include ("forum::components.icons.arrow-right-mini")</a>
-            <br>
-            {{ $thread->lastPost->authorName }}
-            <span class="text-slate-500">
-                <livewire:forum::components.timestamp :carbon="$thread->lastPost->created_at" />
-            </span>
+            @if($thread->lastPost)
+                @php
+                    // Ensure thread relationship is loaded on lastPost
+                    if (!$thread->lastPost->relationLoaded('thread')) {
+                        $thread->lastPost->load('thread');
+                    }
+                    // Generate route - Forum::route can handle Post if thread is loaded
+                    $viewUrl = $thread->lastPost->thread 
+                        ? Forum::route('thread.show', $thread->lastPost)
+                        : Forum::route('thread.show', $thread) . '#post-' . $thread->lastPost->sequence;
+                @endphp
+                <a href="{{ $viewUrl }}" class="text-lg font-medium">{{ trans('forum::posts.view') }} @include ("forum::components.icons.arrow-right-mini")</a>
+                <br>
+                {{ $thread->lastPost->authorName }}
+                <span class="text-slate-500">
+                    <livewire:forum::components.timestamp :carbon="$thread->lastPost->created_at" />
+                </span>
+            @else
+                <a href="{{ Forum::route('thread.show', $thread) }}" class="text-lg font-medium">{{ trans('forum::posts.view') }} @include ("forum::components.icons.arrow-right-mini")</a>
+            @endif
         </div>
         @if ($selectable)
             <div class="pl-4">

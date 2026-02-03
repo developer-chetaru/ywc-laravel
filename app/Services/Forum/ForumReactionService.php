@@ -6,6 +6,7 @@ use App\Models\User;
 use TeamTeaTime\Forum\Models\Post;
 use Illuminate\Support\Facades\DB;
 use App\Services\Forum\ForumReputationService;
+use App\Services\Forum\ForumNotificationService;
 
 class ForumReactionService
 {
@@ -84,6 +85,15 @@ class ForumReactionService
                     }
                 } else {
                     $reputationAwarded = false;
+                }
+                
+                // Send notification to post author (if not reacting to own post)
+                if ($post->author_id !== $user->id) {
+                    $postAuthor = User::find($post->author_id);
+                    if ($postAuthor) {
+                        $notificationService = app(ForumNotificationService::class);
+                        $notificationService->notifyReaction($postAuthor, $post, $user, $reactionType);
+                    }
                 }
             }
 

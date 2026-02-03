@@ -38,6 +38,13 @@
         <!-- <div>
             <livewire:language-switcher />
         </div> -->
+        
+        {{-- 🔔 Forum Notifications Bell --}}
+        @auth
+            @if(request()->is('forum*'))
+                <livewire:forum.notification-bell />
+            @endif
+        @endauth
    
         {{-- Right Side Navigation (Profile Dropdown or Login) --}}
         @auth

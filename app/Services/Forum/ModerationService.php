@@ -154,6 +154,14 @@ class ModerationService
         // Deduct reputation for warning
         $this->reputationService->deductWarning($user, $reason);
 
+        // Send notification
+        $notificationService = app(\App\Services\Forum\ForumNotificationService::class);
+        $notificationService->notifyModeration(
+            $user,
+            'warn',
+            "You received a warning: {$reason}" . ($policyCitation ? " (Policy: {$policyCitation})" : '')
+        );
+
         // Log moderation action
         $this->logModerationAction($moderator, 'warn', 'user', $user->id, $reason);
 
@@ -223,6 +231,13 @@ class ModerationService
             'updated_at' => now(),
         ]);
 
+        // Send notification
+        $notificationService = app(\App\Services\Forum\ForumNotificationService::class);
+        $banMessage = $type === 'permanent' 
+            ? "Your account has been permanently banned. Reason: {$reason}"
+            : "Your account has been temporarily banned for {$durationDays} days. Reason: {$reason}";
+        $notificationService->notifyModeration($user, 'ban', $banMessage);
+
         // Log moderation action
         $this->logModerationAction($moderator, 'ban', 'user', $user->id, $reason);
 
@@ -247,6 +262,10 @@ class ModerationService
             ]);
 
         // Log moderation action
+        // Send notification
+        $notificationService = app(\App\Services\Forum\ForumNotificationService::class);
+        $notificationService->notifyModeration($user, 'unban', 'Your account ban has been removed.');
+
         $this->logModerationAction($moderator, 'unban', 'user', $user->id, 'Ban removed');
 
         return true;

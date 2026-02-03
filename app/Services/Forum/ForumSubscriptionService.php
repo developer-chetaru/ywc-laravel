@@ -75,5 +75,16 @@ class ForumSubscriptionService
             }
         }
     }
+
+    /**
+     * Check if user is subscribed to a thread
+     */
+    public function isSubscribed(User $user, int $threadId): bool
+    {
+        return DB::table('forum_threads_read')
+            ->where('thread_id', $threadId)
+            ->where('user_id', $user->id)
+            ->exists();
+    }
 }
 

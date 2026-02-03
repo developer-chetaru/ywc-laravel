@@ -25,6 +25,9 @@ Route::get('recent', RecentThreads::class)->name('recent');
 Route::get('unread', UnreadThreads::class)->name('unread');
 Route::get('leaderboard', \App\Livewire\Forum\Leaderboard::class)->name('leaderboard');
 Route::get('moderator/dashboard', \App\Livewire\Forum\ModeratorDashboard::class)->name('moderator.dashboard');
+Route::get('search', \App\Livewire\Forum\SearchResults::class)->name('search');
+Route::get('notifications', \App\Livewire\Forum\NotificationsPage::class)->name('notifications.index');
+Route::get('notifications/preferences', \App\Livewire\Forum\NotificationPreferences::class)->name('notifications.preferences');
 
 // Private Messages
 Route::get('messages', \App\Livewire\Forum\MessageList::class)->name('messages.index');

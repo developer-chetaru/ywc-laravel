@@ -336,7 +336,9 @@ Route::middleware([
   
   	Route::prefix('forum')->name('forum.')->group(function () {
         // Use our custom routes file that uses our overridden components
-        require base_path('routes/forum-livewire.php');
+        Route::middleware([\App\Http\Middleware\ResolveForumParameters::class])->group(function () {
+            require base_path('routes/forum-livewire.php');
+        });
     });
   
     Route::get('/forums', [ManageDocumentController::class, 'forums'])->name('forum');

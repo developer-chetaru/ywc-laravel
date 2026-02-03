@@ -46,10 +46,15 @@
                         wire:model="title" />
                 </div>
 
-                <div class="mb-6">
-                    <x-forum::form.input-textarea
-                        id="content"
-                        wire:model="content" />
+                <div class="mb-6" x-data @editor-content-updated.window="if ($event.detail.editorId === 'create-thread-editor') { $wire.set('content', $event.detail.content); }">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ trans('forum::general.content') }}
+                    </label>
+                    @livewire('forum.rich-text-editor', [
+                        'editorId' => 'create-thread-editor',
+                        'content' => $content,
+                        'placeholder' => 'Write your thread content...'
+                    ])
                 </div>
 
                 {{-- Mark as Question --}}

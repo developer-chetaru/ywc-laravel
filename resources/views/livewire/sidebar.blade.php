@@ -36,7 +36,8 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
         crewDiscoveryOpen: {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'true' : 'false' }},
         documentsCareerOpen: {{ request()->is('documents*') || request()->is('career-history*') || request()->is('share-templates-new*') || request()->is('ocr/accuracy*') || request()->is('verification/appeals*') ? 'true' : 'false' }},
         trainingOpen: {{ request()->is('training*') ? 'true' : 'false' }},
-        financialPlanningOpen: {{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? 'true' : 'false' }}
+        financialPlanningOpen: {{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? 'true' : 'false' }},
+        forumOpen: {{ request()->is('forum*') ? 'true' : 'false' }}
     }"
     x-init="
         // Wait for Alpine to be ready
@@ -538,57 +539,105 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             @endrole
 
 
+            {{-- DEPARTMENT FORUMS (Collapsible Section) --}}
             @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
             <li>
-                <a href="/forum" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                    {{ request()->is('forum') && !request()->is('forum/moderator*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-                    <img
-                        src="{{ request()->is('forum') && !request()->is('forum/moderator*') ? '/images/message-multiple-01 (1).svg' : '/images/message-multiple-white.svg' }}"
-                        alt="Department Forums"
-                        class="w-5 h-5">
-                    <span x-show="isOpen" class="text-base font-medium">Department Forums</span>
-                </a>
-            </li>
-            @endhasanyrole
-
-            {{-- MODERATOR DASHBOARD (Super Admin Only) --}}
-            @role('super_admin')
-            <li>
-                <a href="{{ route('forum.moderator.dashboard') }}"
-                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                    {{ request()->is('forum/moderator*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                    </svg>
-                    <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('forum/moderator*') ? 'text-black' : 'text-white' }}">
-                        Moderator Dashboard
-                    </span>
-                </a>
-            </li>
-            @endrole
-
-            {{-- PRIVATE MESSAGES --}}
-            @hasanyrole('super_admin|' . implode('|', $nonAdminRoles))
-            <li>
-                <a href="{{ route('forum.messages.index') }}"
-                    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                    {{ request()->is('forum/messages*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
-                    <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('forum/messages*') ? 'text-black' : 'text-white' }}">
-                        Messages
-                        @php
-                            $messageService = app(\App\Services\Forum\PrivateMessageService::class);
-                            $unreadCount = auth()->check() ? $messageService->getUnreadCount(auth()->user()) : 0;
-                        @endphp
-                        @if($unreadCount > 0)
-                            <span class="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $unreadCount }}</span>
-                        @endif
-                    </span>
-                </a>
+                <div>
+                    <div class="w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition cursor-pointer
+                        {{ request()->is('forum*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}"
+                        @click.stop="forumOpen = !forumOpen">
+                        <div class="flex items-center space-x-3 flex-1">
+                            <img
+                                src="{{ request()->is('forum*') ? '/images/message-multiple-01 (1).svg' : '/images/message-multiple-white.svg' }}"
+                                alt="Department Forums"
+                                class="w-5 h-5">
+                            <span x-show="isOpen"
+                                class="text-base font-medium {{ request()->is('forum*') ? 'text-black' : 'text-white' }}">
+                                Department Forums
+                            </span>
+                        </div>
+                        <button @click.stop="forumOpen = !forumOpen" 
+                            x-show="isOpen"
+                            class="ml-2 p-1 hover:bg-white/10 rounded transition-colors">
+                            <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': forumOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    {{-- SUBMENU --}}
+                    <ul x-show="forumOpen && isOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                        <li>
+                            <a href="/forum"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('forum') && !request()->is('forum/*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Forums</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('forum.search') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('forum/search*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                                <span class="text-sm font-medium">Search</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('forum.leaderboard') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('forum/leaderboard*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                                </svg>
+                                <span class="text-sm font-medium">Leaderboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('forum.messages.index') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('forum/messages*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Messages</span>
+                                @php
+                                    $messageService = app(\App\Services\Forum\PrivateMessageService::class);
+                                    $unreadCount = auth()->check() ? $messageService->getUnreadCount(auth()->user()) : 0;
+                                @endphp
+                                @if($unreadCount > 0)
+                                    <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $unreadCount }}</span>
+                                @endif
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('forum.notifications.index') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('forum/notifications*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                <span class="text-sm font-medium">Notifications</span>
+                            </a>
+                        </li>
+                        @role('super_admin')
+                        <li>
+                            <a href="{{ route('forum.moderator.dashboard') }}"
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
+                                {{ request()->is('forum/moderator*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                                <span class="text-sm font-medium">Moderator Dashboard</span>
+                            </a>
+                        </li>
+                        @endrole
+                    </ul>
+                </div>
             </li>
             @endhasanyrole
 

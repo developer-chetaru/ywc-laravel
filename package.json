@@ -19,6 +19,7 @@
         "@fortawesome/fontawesome-free": "^7.0.0",
         "@melloware/coloris": "^0.25.0",
         "date-fns": "^4.1.0",
-        "nested-sort": "^5.2.0"
+        "nested-sort": "^5.2.0",
+        "quill": "^2.0.3"
     }
 }

@@ -18,6 +18,9 @@ use TeamTeaTime\Forum\{
 };
 use App\Services\Forum\ForumRoleAccessService;
 use App\Services\Forum\ForumReputationService;
+use App\Services\Forum\ForumNotificationService;
+use App\Services\Forum\HtmlSanitizerService;
+use App\Services\Forum\MentionService;
 use Spatie\Permission\Models\Role;
 
 class CreateThread extends Component
@@ -167,7 +170,11 @@ class CreateThread extends Component
 
         $validated = $this->validate(ThreadRules::create());
 
-        $action = new Action($this->category, $request->user(), $validated['title'], $validated['content']);
+        // Sanitize HTML content
+        $sanitizer = app(HtmlSanitizerService::class);
+        $sanitizedContent = $sanitizer->sanitize($validated['content']);
+
+        $action = new Action($this->category, $request->user(), $validated['title'], $sanitizedContent);
         $thread = $action->execute();
 
         // Update thread with additional fields
@@ -191,6 +198,24 @@ class CreateThread extends Component
         // Award reputation for creating thread
         $reputationService = app(ForumReputationService::class);
         $reputationService->awardThreadCreated($request->user(), $thread->id);
+
+        // Process mentions and send notifications
+        $mentionService = app(MentionService::class);
+        $mentionedUsers = $mentionService->processMentions($sanitizedContent);
+        $notificationService = app(ForumNotificationService::class);
+        $thread = $thread->fresh(['author', 'category']);
+        
+        foreach ($mentionedUsers as $mentionedUser) {
+            if ($mentionedUser->id !== $request->user()->id) {
+                $firstPost = $thread->posts()->first();
+                if ($firstPost) {
+                    $notificationService->notifyMention($mentionedUser, $thread, $firstPost, $request->user());
+                }
+            }
+        }
+
+        // Send notifications to category subscribers (optional - can be added later)
+        // For now, we'll skip this to avoid spam, but it can be enabled if needed
 
         // Set role restrictions for thread if any roles selected
         if (!empty($this->selectedRoles)) {
