@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Drop table if it exists (from previous failed migration)
+        Schema::dropIfExists('forum_post_quotes');
+        
         Schema::create('forum_post_quotes', function (Blueprint $table) {
             $table->id();
             // forum_posts uses unsigned integer, not bigInteger
