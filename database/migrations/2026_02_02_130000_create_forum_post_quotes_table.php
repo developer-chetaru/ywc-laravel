@@ -13,10 +13,22 @@ return new class extends Migration
     {
         Schema::create('forum_post_quotes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('quoted_post_id')->constrained('forum_posts')->cascadeOnDelete();
-            $table->foreignId('quoting_post_id')->constrained('forum_posts')->cascadeOnDelete();
+            // forum_posts uses unsigned integer, not bigInteger
+            $table->unsignedInteger('quoted_post_id');
+            $table->unsignedInteger('quoting_post_id');
             $table->text('quoted_content')->nullable(); // Store the quoted text snippet
             $table->timestamps();
+
+            // Add foreign key constraints with explicit column type
+            $table->foreign('quoted_post_id')
+                  ->references('id')
+                  ->on('forum_posts')
+                  ->onDelete('cascade');
+            
+            $table->foreign('quoting_post_id')
+                  ->references('id')
+                  ->on('forum_posts')
+                  ->onDelete('cascade');
 
             $table->index('quoted_post_id');
             $table->index('quoting_post_id');
