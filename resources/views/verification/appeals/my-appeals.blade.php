@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight p-[30px] pl-[60px] pr-[20px] max-[767px]:p-[15px] max-[767px]:pl-[25px]">
             My Appeals
         </h2>
     </x-slot>
@@ -10,7 +10,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <div class="mb-4">
-                        <p class="text-gray-600">Track the status of your verification appeals</p>
+                        <p class="text-gray-600 text-center">Track the status of your verification appeals</p>
                     </div>
 
                     @forelse($appeals as $appeal)

@@ -159,7 +159,7 @@
 
                                                     <!-- History Button (Top Right) -->
                                                     <button onclick="openVersionHistoryModal({{ $doc->id }}); event.stopPropagation();" 
-                                                            class="absolute top-2 right-2 z-10 p-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors shadow-md"
+                                                            class="w-[30px] h-[30px] absolute top-2 right-2 z-10 p-0 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors shadow-md"
                                                             title="View Version History">
                                                         <i class="fas fa-history text-xs"></i>
                                                     </button>
@@ -343,7 +343,7 @@
     {{-- Normal Documents by Type --}}
     @foreach($categories as $categoryName => $docs)
         @if(count($docs) > 0)
-            <div class="w-full mt-3">
+            <div class="w-full mt-3 mb-3">
                 <h4 class="text-md font-semibold mb-3">{{ $categoryName }}</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     @foreach($docs as $doc)
@@ -354,7 +354,7 @@
 
                             <!-- History Button (Top Right) -->
                             <button onclick="openVersionHistoryModal({{ $doc->id }}); event.stopPropagation();" 
-                                    class="absolute top-2 right-2 z-10 p-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors shadow-md"
+                                    class="w-[30px] h-[30px] absolute top-2 right-2 z-10 p-0 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors shadow-md"
                                     title="View Version History">
                                 <i class="fas fa-history text-xs"></i>
                             </button>

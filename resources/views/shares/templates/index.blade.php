@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between items-center p-[20px] pl-[60px] max-[767px]:pl-[20px] max-[767px]:flex-col max-[767px]:gap-4">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Share Templates
             </h2>
