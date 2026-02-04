@@ -142,8 +142,14 @@ Route::get('/subscriptions/plans', [SubscriptionController::class, 'getPlans']);
 require base_path('vendor/riari/laravel-forum/routes/api.php');
 
 Route::middleware('auth:sanctum')->group(function () {
-
-
+	// Document Approval API
+	Route::get('/documents/approval', [\App\Http\Controllers\DocumentApprovalController::class, 'index']);
+	Route::post('/documents/{documentId}/approve', [\App\Http\Controllers\DocumentApprovalController::class, 'approve']);
+	
+	// Get current user (for token authentication)
+	Route::get('/user', function (Request $request) {
+		return response()->json($request->user());
+	});
 
 	Route::get('/profile', [ProfileController::class, 'profile']);
     Route::post('/profile', [ProfileController::class, 'updateProfile']); 

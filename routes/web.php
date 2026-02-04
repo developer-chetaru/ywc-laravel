@@ -187,6 +187,11 @@ Route::prefix('financial-planning')->name('financial.')
 
 Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
 
+// Document Approval - PUBLIC ROUTE (no auth required, accessible via token or login form)
+// Must be before /documents/{id} route to avoid conflict
+Route::get('/documents/approval', function() {
+    return view('documents.approval');
+})->name('documents.approval');
 
 // Employer Dashboard Routes
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale', 'role:employer'])
