@@ -5,7 +5,7 @@
                 <div class="rounded-lg bg-white p-4 sm:p-6">
                     {{-- Header --}}
                     <div class="mb-6">
-                        <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center justify-between mb-4  max-[1200px]:flex-col max-[1200px]:items-start max-[1200px]:gap-4">
                             <div class="flex-1">
                                 <h1 class="text-2xl font-bold text-gray-900">Career History</h1>
                                 @if($isSuperAdmin)
@@ -32,31 +32,31 @@
                                 <p class="text-sm text-gray-600 mt-1">Manage your career history and sea service records</p>
                                 @endif
                             </div>
-                            <div class="flex gap-2">
+                            <div class="flex gap-2 max-[992px]:flex-col max-[992px]:w-full">
                                 @if($canEdit)
                                 <button wire:click="openModal" 
-                                    class="bg-[#0053FF] text-white px-4 py-2 rounded-md hover:bg-[#0044DD] transition-colors font-medium">
+                                    class="bg-[#0053FF] text-white px-4 py-2 rounded-md hover:bg-[#0044DD] transition-colors font-medium text-center">
                                     <i class="fas fa-plus mr-2"></i>Add Career Entry
                                 </button>
                                 @endif
                                 @if($isSuperAdmin && $viewingUser && $viewingUser->id !== Auth::id())
                                 <a href="{{ route('career-history.sea-service-report.user', ['userId' => $viewingUser->id]) }}" 
                                     target="_blank"
-                                    class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium">
+                                    class="text-center bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium">
                                     <i class="fas fa-file-pdf mr-2"></i>View Report
                                 </a>
                                 <a href="{{ route('career-history.sea-service-report.user.download', ['userId' => $viewingUser->id]) }}" 
-                                    class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors font-medium">
+                                    class="text-center bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors font-medium">
                                     <i class="fas fa-download mr-2"></i>Download PDF
                                 </a>
                                 @else
                                 <a href="{{ route('career-history.sea-service-report') }}" 
                                     target="_blank"
-                                    class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium">
+                                    class="text-center bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium">
                                     <i class="fas fa-file-pdf mr-2"></i>View Report
                                 </a>
                                 <a href="{{ route('career-history.sea-service-report.download') }}" 
-                                    class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors font-medium">
+                                    class="text-center bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors font-medium">
                                     <i class="fas fa-download mr-2"></i>Download PDF
                                 </a>
                                 @endif
@@ -115,12 +115,12 @@
                         @endif
 
                         {{-- Summary Cards --}}
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 max-[992px]:!grid-cols-1">
                             <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="text-sm text-gray-600">Total Sea Service</p>
-                                        <p class="text-2xl font-bold text-gray-900">{{ $totalSeaService }}</p>
+                                        <p class="text-2xl font-bold text-gray-900 max-[767px]:text-lg">{{ $totalSeaService }}</p>
                                     </div>
                                     <i class="fas fa-clock text-3xl text-blue-500"></i>
                                 </div>
@@ -130,7 +130,7 @@
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="text-sm text-gray-600">Total Entries</p>
-                                        <p class="text-2xl font-bold text-gray-900">{{ $summary['total_entries'] }}</p>
+                                        <p class="text-2xl font-bold text-gray-900 max-[767px]:text-lg">{{ $summary['total_entries'] }}</p>
                                     </div>
                                     <i class="fas fa-briefcase text-3xl text-green-500"></i>
                                 </div>
@@ -140,7 +140,7 @@
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="text-sm text-gray-600">Current Positions</p>
-                                        <p class="text-2xl font-bold text-gray-900">{{ $summary['current_positions'] }}</p>
+                                        <p class="text-2xl font-bold text-gray-900 max-[767px]:text-lg">{{ $summary['current_positions'] }}</p>
                                     </div>
                                     <i class="fas fa-ship text-3xl text-purple-500"></i>
                                 </div>

@@ -190,7 +190,7 @@
                                                     </div>
 
                                                     <!-- Document Details -->
-                                                    <div class="w-full flex flex-col sm:flex-row sm:justify-between items-start sm:pl-3 mb-1">
+                                                    <div class="w-full flex flex-col sm:flex-row sm:justify-between items-start sm:pl-3 mb-1 max-[1200px]:!flex-col max-[1200px]:!pl-0 max-[1200px]:gap-5">
                                                         <div class="flex-1">
                                                             <h3 class="text-md font-semibold mb-1 text-left">{{ $doc->name }}</h3>
                                                             <p class="text-sm font-semibold text-gray-800 mb-1">
