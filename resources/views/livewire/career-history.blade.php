@@ -112,11 +112,13 @@
                                                         <label class="block mb-1">Document Type</label>
                                                         <select class="w-full border border-gray-300 rounded-md p-2" x-model="docType" wire:model="type">
                                                             <option value="">Select document type</option>
-                                                            <option value="passport">Passport</option>
-                                                            <option value="idvisa">IDs & Visas</option>
-                                                            <option value="certificate">Certificate</option>
-                                                            <option value="resume">Resume</option>
-                                                            <option value="other">Other</option>
+                                                            @foreach($documentTypes as $category => $types)
+                                                                <optgroup label="{{ $category }}">
+                                                                    @foreach($types as $type)
+                                                                        <option value="{{ $type->slug }}">{{ $type->name }}</option>
+                                                                    @endforeach
+                                                                </optgroup>
+                                                            @endforeach
                                                         </select>
                                                     </div>
 

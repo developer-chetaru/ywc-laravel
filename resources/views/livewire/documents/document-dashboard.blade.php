@@ -53,8 +53,25 @@
                         </div>
                     </div>
 
-                    {{-- Expiring Within 6 Months Section --}}
-                    @if($expiringDocuments->count() > 0)
+                    {{-- Tabs --}}
+                    <div class="mb-6 border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-8">
+                            <button wire:click="$set('activeTab', 'all')" 
+                                class="@if($activeTab === 'all') border-[#0053FF] text-[#0053FF] @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 @endif whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                                All Documents
+                            </button>
+                            <button wire:click="$set('activeTab', 'expired')" 
+                                class="@if($activeTab === 'expired') border-[#0053FF] text-[#0053FF] @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 @endif whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                                Expired Documents
+                                @if($stats['expired'] > 0)
+                                <span class="ml-2 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded-full">{{ $stats['expired'] }}</span>
+                                @endif
+                            </button>
+                        </nav>
+                    </div>
+
+                    {{-- Expiring Within 6 Months Section (only show on All Documents tab) --}}
+                    @if($activeTab === 'all' && $expiringDocuments->count() > 0)
                     <div class="mb-6">
                         <h2 class="text-xl font-bold text-gray-900 mb-4">Expiring Within 6 Months</h2>
                         <div class="flex gap-4 overflow-x-auto pb-4" style="scrollbar-width: thin;">
@@ -177,7 +194,8 @@
                     </div>
                     @endif
 
-                    {{-- Filters --}}
+                    {{-- Filters for All Documents Tab --}}
+                    @if($activeTab === 'all')
                     <div class="bg-[#F5F6FA] p-4 rounded-lg mb-6">
                         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                             {{-- Search --}}
@@ -235,9 +253,71 @@
                             </select>
                         </div>
                     </div>
+                    @endif
 
-                    {{-- Documents Grid --}}
-                    @if($documents->count() > 0)
+                    {{-- Filters for Expired Documents Tab --}}
+                    @if($activeTab === 'expired')
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-exclamation-triangle text-red-600"></i>
+                                <h3 class="text-lg font-bold text-red-900">Expired Documents</h3>
+                                <span class="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full">{{ $stats['expired'] }}</span>
+                            </div>
+                            <button wire:click="$dispatch('openUploadModal')" 
+                                class="bg-[#0C7B24] text-white px-4 py-2 rounded-md hover:bg-[#0A6B1F] transition-colors text-sm font-medium">
+                                <i class="fas fa-plus mr-2"></i>Upload New Document
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {{-- Search --}}
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                                <input type="text" wire:model.live.debounce.300ms="expiredSearch" 
+                                    placeholder="Search expired documents..." 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#0053FF] focus:border-[#0053FF]">
+                            </div>
+                            
+                            {{-- Type Filter --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                <select wire:model.live="expiredSelectedType" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#0053FF] focus:border-[#0053FF]">
+                                    <option value="all">All Types</option>
+                                    @foreach($documentTypes as $type)
+                                    <option value="{{ $type->slug }}">{{ $type->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
+                            {{-- Status Filter --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <select wire:model.live="expiredSelectedStatus" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#0053FF] focus:border-[#0053FF]">
+                                    <option value="all">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        {{-- Sort --}}
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                            <select wire:model.live="expiredSortBy" 
+                                class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:ring-[#0053FF] focus:border-[#0053FF]">
+                                <option value="expiry_date">Expiry Date (Oldest First)</option>
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                            </select>
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Documents Grid (All Documents Tab) --}}
+                    @if($activeTab === 'all' && $documents->count() > 0)
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach($documents as $document)
                         <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -367,13 +447,147 @@
                     <div class="mt-6">
                         {{ $documents->links() }}
                     </div>
-                    @else
+                    @elseif($activeTab === 'all')
                     <div class="text-center py-12">
                         <i class="fas fa-folder-open text-4xl text-gray-400 mb-4"></i>
                         <p class="text-gray-600">No documents found</p>
                         <button wire:click="$dispatch('openUploadModal')" 
                             class="mt-4 bg-[#0053FF] text-white px-6 py-2 rounded-md hover:bg-[#0044DD] transition-colors">
                             Add Your First Document
+                        </button>
+                    </div>
+                    @endif
+
+                    {{-- Expired Documents Grid --}}
+                    @if($activeTab === 'expired' && $expiredDocuments->count() > 0)
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach($expiredDocuments as $document)
+                        <div class="bg-white border-2 border-red-300 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-900 mb-1">
+                                        {{ $document->document_name ?? ($document->documentType->name ?? 'Document') }}
+                                    </h3>
+                                    @if($document->document_number)
+                                    <p class="text-sm text-gray-600">#{{ $document->document_number }}</p>
+                                    @endif
+                                </div>
+                                <div class="flex flex-col gap-1 items-end">
+                                    <span class="px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-800">
+                                        EXPIRED
+                                    </span>
+                                    @if($document->ocr_status)
+                                    <span class="px-2 py-1 text-xs font-medium rounded
+                                        @if($document->ocr_status === 'completed') bg-blue-100 text-blue-800
+                                        @elseif($document->ocr_status === 'processing') bg-yellow-100 text-yellow-800
+                                        @elseif($document->ocr_status === 'failed') bg-red-100 text-red-800
+                                        @else bg-gray-100 text-gray-800
+                                        @endif"
+                                        title="@if($document->ocr_status === 'completed' && $document->ocr_confidence)OCR Confidence: {{ number_format($document->ocr_confidence, 1) }}%@elseif($document->ocr_status === 'failed'){{ $document->ocr_error ?? 'OCR processing failed' }}@else OCR {{ ucfirst($document->ocr_status) }}@endif">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        @if($document->ocr_status === 'completed' && $document->ocr_confidence)
+                                            OCR {{ number_format($document->ocr_confidence, 0) }}%
+                                        @else
+                                            OCR {{ ucfirst($document->ocr_status) }}
+                                        @endif
+                                    </span>
+                                    @endif
+                                    @if($document->verificationLevel)
+                                    <span class="px-2 py-1 text-xs font-medium rounded
+                                        @if($document->verificationLevel->badge_color === 'gold') bg-yellow-100 text-yellow-800
+                                        @elseif($document->verificationLevel->badge_color === 'purple') bg-purple-100 text-purple-800
+                                        @elseif($document->verificationLevel->badge_color === 'green') bg-green-100 text-green-800
+                                        @elseif($document->verificationLevel->badge_color === 'blue') bg-blue-100 text-blue-800
+                                        @else bg-gray-100 text-gray-800
+                                        @endif"
+                                        title="{{ $document->verificationLevel->description }}">
+                                        <i class="{{ $document->verificationLevel->badge_icon }} mr-1"></i>
+                                        Level {{ $document->verificationLevel->level }}
+                                    </span>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            @if($document->thumbnail_path)
+                            <div class="mb-3">
+                                <img src="{{ asset('storage/' . $document->thumbnail_path) }}" 
+                                    alt="Thumbnail" 
+                                    class="w-full h-32 object-cover rounded">
+                            </div>
+                            @endif
+                            
+                            <div class="space-y-1 text-sm text-gray-600 mb-3">
+                                @if($document->documentType)
+                                <p><i class="fas fa-tag mr-2"></i>{{ $document->documentType->name }}</p>
+                                @endif
+                                @if($document->issuing_authority)
+                                <p><i class="fas fa-building mr-2"></i>{{ $document->issuing_authority }}</p>
+                                @endif
+                                @if($document->expiry_date)
+                                <p class="text-red-600 font-semibold">
+                                    <i class="fas fa-calendar-times mr-2"></i>
+                                    Expired: {{ \Carbon\Carbon::parse($document->expiry_date)->format('M d, Y') }}
+                                    ({{ abs(\Carbon\Carbon::parse($document->expiry_date)->diffInDays(\Carbon\Carbon::now())) }} days ago)
+                                </p>
+                                @endif
+                            </div>
+                            
+                            <div class="flex gap-2 flex-wrap">
+                                @php
+                                    $docStatus = strtolower(trim($document->status ?? 'pending'));
+                                @endphp
+                                <button wire:click="$dispatch('openDocumentDetails', { documentId: {{ $document->id }} })" 
+                                    class="flex-1 text-center bg-[#0053FF] text-white px-3 py-2 rounded-md hover:bg-[#0044DD] transition-colors text-sm">
+                                    <i class="fas fa-eye mr-1"></i>View Details
+                                </button>
+                                <button wire:click="$dispatch('openUploadModal', { documentId: {{ $document->id }}, mode: 'edit' })" 
+                                    class="flex-1 text-center bg-orange-600 text-white px-3 py-2 rounded-md hover:bg-orange-700 transition-colors text-sm font-medium">
+                                    <i class="fas fa-redo mr-1"></i>Re-Upload
+                                </button>
+                                @if($document->ocr_status === 'failed')
+                                <button wire:click="retryOcr({{ $document->id }})" 
+                                    class="w-full text-center bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
+                                    <i class="fas fa-sync-alt mr-1"></i>Retry OCR
+                                </button>
+                                @endif
+                            </div>
+                            @php
+                                $discussionService = app(\App\Services\Forum\ForumDiscussionService::class);
+                                $activeDiscussion = $discussionService->getActiveDiscussion('documents', $document->id, 'document');
+                            @endphp
+                            @if($activeDiscussion)
+                                <div class="mt-2">
+                                    <a href="{{ $activeDiscussion->route }}" 
+                                       class="w-full text-center bg-blue-100 text-blue-800 px-3 py-2 rounded-md hover:bg-blue-200 transition-colors text-xs font-medium shadow-sm block">
+                                        <i class="fas fa-comments mr-1"></i>View Discussion →
+                                    </a>
+                                </div>
+                            @else
+                                <div class="mt-2">
+                                    <x-start-discussion-button 
+                                        module="documents" 
+                                        :itemId="$document->id" 
+                                        itemType="document" 
+                                        :itemTitle="$document->document_name ?? ($document->documentType->name ?? 'Document')"
+                                        :itemUrl="route('documents.show', $document->id)" />
+                                </div>
+                            @endif
+                        </div>
+                        @endforeach
+                    </div>
+                    
+                    {{-- Pagination for Expired Documents --}}
+                    <div class="mt-6">
+                        {{ $expiredDocuments->links() }}
+                    </div>
+                    @elseif($activeTab === 'expired')
+                    <div class="text-center py-12 bg-red-50 rounded-lg border border-red-200">
+                        <i class="fas fa-calendar-times text-4xl text-red-400 mb-4"></i>
+                        <p class="text-gray-600 font-medium">No expired documents found</p>
+                        <p class="text-sm text-gray-500 mt-2">All your documents are up to date!</p>
+                        <button wire:click="$dispatch('openUploadModal')" 
+                            class="mt-4 bg-[#0C7B24] text-white px-6 py-2 rounded-md hover:bg-[#0A6B1F] transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Upload New Document
                         </button>
                     </div>
                     @endif

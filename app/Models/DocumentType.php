@@ -9,6 +9,7 @@ class DocumentType extends Model
 {
     protected $fillable = [
         'name',
+        'category',
         'slug',
         'icon',
         'requires_expiry_date',

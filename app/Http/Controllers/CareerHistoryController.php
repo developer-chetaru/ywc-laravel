@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\CertificateType;
 use App\Models\CertificateIssuer;
 use App\Models\Document;
+use App\Models\DocumentType;
 use App\Models\PassportDetail;
 use App\Models\IdvisaDetail;
 use App\Models\Certificate;
@@ -59,6 +60,13 @@ class CareerHistoryController extends Controller
 
         $certificateIssuers = CertificateIssuer::where('is_active', true)->orderBy('name')->get();
 
+        // Load document types grouped by category
+        $documentTypes = DocumentType::where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('category');
+
         $documents = Document::with([
             'certificates.type',
             'certificates.issuer',
@@ -102,14 +110,19 @@ class CareerHistoryController extends Controller
                 // Expired
                 $doc->remaining_number = null;
                 $doc->remaining_type = 'EXPIRED';
-                $doc->is_expiring_soon = true;
+                $doc->is_expiring_soon = false;
+                $doc->is_expired = true;
             }
 
             return $doc;
         });
 
+        // Separate expired and expiring soon
+        $expiredDocs = $documents->filter(fn($doc) => isset($doc->is_expired) && $doc->is_expired)->values();
+        $expiringSoonDocs = $documents->filter(fn($doc) => $doc->is_expiring_soon && (!isset($doc->is_expired) || !$doc->is_expired))->values();
+        
         // Sort expired/expiring soon first
-        $documents = $documents->sortByDesc(fn($doc) => $doc->is_expiring_soon ? 1 : 0);
+        $documents = $documents->sortByDesc(fn($doc) => ($doc->is_expiring_soon || (isset($doc->is_expired) && $doc->is_expired)) ? 1 : 0);
 
         $share_documents = Document::with(['passportDetail', 'idvisaDetail', 'certificates.type', 'certificates.issuer', 'otherDocument'])
                 ->where('user_id', Auth::id())
@@ -167,6 +180,7 @@ class CareerHistoryController extends Controller
         return view('career-history.index', compact(
             'certificateTypes',
             'certificateIssuers',
+            'documentTypes',
             'documents',
             'share_documents',
             'users'

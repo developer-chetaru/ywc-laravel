@@ -121,8 +121,9 @@
                                 
 
                                 @php
-                                    $priorityDocs = $documents->filter(fn($doc) => $doc->is_expiring_soon)->values();
-                                    $normalDocs = $documents->filter(fn($doc) => !$doc->is_expiring_soon)->values();
+                                    $expiredDocs = $documents->filter(fn($doc) => isset($doc->is_expired) && $doc->is_expired)->values();
+                                    $priorityDocs = $documents->filter(fn($doc) => $doc->is_expiring_soon && (!isset($doc->is_expired) || !$doc->is_expired))->values();
+                                    $normalDocs = $documents->filter(fn($doc) => !$doc->is_expiring_soon && (!isset($doc->is_expired) || !$doc->is_expired))->values();
 
                                     $categories = [
                                         'Passport' => [],
@@ -143,6 +144,25 @@
                                     }
                                 @endphp
 
+                                {{-- Tabs --}}
+                                <div class="mb-6 border-b border-gray-200">
+                                    <nav class="-mb-px flex space-x-8">
+                                        <button onclick="showTab('all')" id="tab-all" 
+                                            class="tab-button border-[#0053FF] text-[#0053FF] whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                                            All Documents
+                                        </button>
+                                        <button onclick="showTab('expired')" id="tab-expired" 
+                                            class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                                            Expired Documents
+                                            @if($expiredDocs->count() > 0)
+                                            <span class="ml-2 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded-full">{{ $expiredDocs->count() }}</span>
+                                            @endif
+                                        </button>
+                                    </nav>
+                                </div>
+
+                                {{-- All Documents Tab Content --}}
+                                <div id="tab-content-all" class="tab-content">
                                 {{-- Expired / Expiring Soon --}}
                                 @if($priorityDocs->count() > 0)
                               		<hr class="border-t border-gray-400 my-5 w-full">
@@ -150,7 +170,7 @@
                                 	<h2 class="text-lg font-bold border-gray-300 mb-3">Expiring Within 6 Months</h2>
                               	
                                     <div class="w-full mt-5">
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                             @foreach($priorityDocs as $doc)
                                                 @php
                                                     $isRejected = strtolower(trim($doc->status ?? '')) === 'rejected';
@@ -337,15 +357,14 @@
 @endphp
 
 @if($hasNormalDocs)
-    <hr class="border-t border-gray-400 my-7 w-full">
-    <h2 class="text-lg font-bold border-gray-300 mb-3">All Documents</h2>
+<h2 class="text-lg font-bold border-gray-300 mb-3">All Documents</h2>
 
     {{-- Normal Documents by Type --}}
     @foreach($categories as $categoryName => $docs)
         @if(count($docs) > 0)
             <div class="w-full mt-3 mb-3">
                 <h4 class="text-md font-semibold mb-3">{{ $categoryName }}</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     @foreach($docs as $doc)
                         @php
                             $isRejected = strtolower(trim($doc->status ?? '')) === 'rejected';
@@ -550,6 +569,110 @@
                         </div>
                     </div>
                 </div>
+
+                                {{-- Close All Documents Tab --}}
+                                </div>
+
+                                {{-- Expired Documents Tab Content --}}
+                                <div id="tab-content-expired" class="tab-content hidden">
+                                    @if($expiredDocs->count() > 0)
+                                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                        <div class="overflow-x-auto">
+                                            <table class="w-full">
+                                                <thead class="bg-gray-50 border-b border-gray-200">
+                                                    <tr>
+                                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Document</th>
+                                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Type</th>
+                                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Expired Date</th>
+                                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                                                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-gray-200">
+                                                    @foreach($expiredDocs as $doc)
+                                                    @php
+                                                        $docName = $doc->type === 'passport' ? 'Passport' : ($doc->type === 'idvisa' ? 'ID / Visa' : ($doc->type === 'certificate' ? ($doc->certificates->first()->type->name ?? 'Certificate') : ($doc->type === 'resume' ? 'Resume' : ($doc->otherDocument->doc_name ?? 'Other Document'))));
+                                                        $daysAgo = $doc->expiry_date ? abs(\Carbon\Carbon::parse($doc->expiry_date)->diffInDays(\Carbon\Carbon::now())) : 0;
+                                                    @endphp
+                                                    <tr class="hover:bg-red-50 transition-colors">
+                                                        <td class="px-4 py-3 whitespace-nowrap">
+                                                            <div class="flex items-center gap-3">
+                                                                <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-md flex items-center justify-center cursor-pointer view-document-card" data-doc='@json($doc)'>
+                                                                    @if($doc->file_path)
+                                                                        @php
+                                                                            $filePath = asset('storage/' . $doc->file_path);
+                                                                            $extension = strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION));
+                                                                        @endphp
+                                                                        @if(in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp']))
+                                                                            <img src="{{ $filePath }}" alt="Document" class="w-full h-full object-cover rounded">
+                                                                        @elseif($extension === 'pdf')
+                                                                            <i class="fas fa-file-pdf text-red-600 text-sm"></i>
+                                                                        @else
+                                                                            <i class="fas fa-file text-red-600 text-sm"></i>
+                                                                        @endif
+                                                                    @else
+                                                                        <i class="fas fa-file text-red-600 text-sm"></i>
+                                                                    @endif
+                                                                </div>
+                                                                <div>
+                                                                    <div class="text-sm font-medium text-gray-900">{{ $docName }}</div>
+                                                                    @if($doc->document_number)
+                                                                    <div class="text-xs text-gray-500">#{{ $doc->document_number }}</div>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="px-4 py-3 whitespace-nowrap">
+                                                            <span class="text-sm text-gray-900">{{ ucfirst($doc->type) }}</span>
+                                                        </td>
+                                                        <td class="px-4 py-3 whitespace-nowrap">
+                                                            @if($doc->expiry_date)
+                                                            <div class="text-sm text-red-600 font-medium">
+                                                                {{ \Carbon\Carbon::parse($doc->expiry_date)->format('M d, Y') }}
+                                                            </div>
+                                                            <div class="text-xs text-gray-500">{{ $daysAgo }} days ago</div>
+                                                            @else
+                                                            <span class="text-sm text-gray-400">N/A</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="px-4 py-3 whitespace-nowrap">
+                                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                                                                EXPIRED
+                                                            </span>
+                                                        </td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                                                            <div class="flex items-center justify-center gap-2">
+                                                                <button onclick="viewDocument(@json($doc))" 
+                                                                        class="p-2 text-[#0053FF] hover:bg-blue-50 rounded-md transition-colors" 
+                                                                        title="View Details">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </button>
+                                                                <button onclick="editDocument({{ $doc->id }})" 
+                                                                        class="p-2 text-orange-600 hover:bg-orange-50 rounded-md transition-colors" 
+                                                                        title="Re-Upload">
+                                                                    <i class="fas fa-redo"></i>
+                                                                </button>
+                                                                <button onclick="openVersionHistoryModal({{ $doc->id }});" 
+                                                                        class="p-2 text-purple-600 hover:bg-purple-50 rounded-md transition-colors" 
+                                                                        title="History">
+                                                                    <i class="fas fa-history"></i>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    @else
+                                    <div class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                                        <i class="fas fa-check-circle text-3xl text-green-500 mb-3"></i>
+                                        <p class="text-gray-700 font-medium">No expired documents</p>
+                                        <p class="text-sm text-gray-500 mt-1">All your documents are up to date!</p>
+                                    </div>
+                                    @endif
+                                </div>
             </main>
         </div>
     </div>
@@ -627,11 +750,13 @@
                         <label class="block mb-1">Document Type</label>
                         <select id="docType" name="type" class="w-full border p-2 rounded-md">
                             <option value="">Select document type</option>
-                            <option value="passport">Passport</option>
-                            <option value="idvisa">IDs & Visas</option>
-                            <option value="certificate">Certificate</option>
-                            <option value="resume">Resume</option>
-                            <option value="other">Other</option>
+                            @foreach($documentTypes as $category => $types)
+                                <optgroup label="{{ $category }}">
+                                    @foreach($types as $type)
+                                        <option value="{{ $type->slug }}">{{ $type->name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endforeach
                         </select>
 
                         <!-- Notification for unmatched document -->
@@ -1057,6 +1182,12 @@
 
   // Re-Submit Document Function - Opens edit modal (must be globally accessible)
   function editDocument(docId) {
+      // Close view modal if open
+      const viewModal = $("#viewDocumentModal");
+      if (viewModal && !viewModal.hasClass("hidden")) {
+          viewModal.removeClass("flex").addClass("hidden");
+      }
+      
       $.ajax({
           url: "/career-history/documents/" + docId + "/edit",
           method: "GET",
@@ -3156,5 +3287,37 @@ function clearTemplate() {
       modal.innerHTML = '';
     }
   }
+
+  // Tab switching function
+  function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.add('hidden');
+    });
+    
+    // Remove active state from all tabs
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.classList.remove('border-[#0053FF]', 'text-[#0053FF]');
+      button.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected tab content
+    const content = document.getElementById('tab-content-' + tabName);
+    if (content) {
+      content.classList.remove('hidden');
+    }
+    
+    // Add active state to selected tab
+    const button = document.getElementById('tab-' + tabName);
+    if (button) {
+      button.classList.remove('border-transparent', 'text-gray-500');
+      button.classList.add('border-[#0053FF]', 'text-[#0053FF]');
+    }
+  }
+
+  // Initialize: Show 'all' tab by default
+  document.addEventListener('DOMContentLoaded', function() {
+    showTab('all');
+  });
 </script>
 

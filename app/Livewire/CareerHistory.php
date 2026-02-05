@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\CertificateType;
 use App\Models\CertificateIssuer;
 use App\Models\Document;
+use App\Models\DocumentType;
 use App\Models\PassportDetail;
 use App\Models\IdvisaDetail;
 use App\Models\Certificate;
@@ -24,6 +25,7 @@ class CareerHistory extends Component
     // Certificate Types
     public $certificateTypes = [];
     public $certificateIssuers = [];
+    public $documentTypes = [];
 
     // Document shared fields
     public ?string $type = null;
@@ -57,6 +59,11 @@ class CareerHistory extends Component
     {
         $this->certificateTypes = CertificateType::where('is_active', true)->orderBy('name')->get();
         $this->certificateIssuers = CertificateIssuer::where('is_active', true)->orderBy('name')->get();
+        $this->documentTypes = DocumentType::where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('category');
     }
 
     public function showModal(): void
