@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Validate;
 
 #[Layout('layouts.app-laravel')]
 class DocumentUpload extends Component
@@ -39,6 +40,7 @@ class DocumentUpload extends Component
     public $tags = [];
     public $tagInput = '';
     public $featured_on_profile = false;
+    #[Validate('required|file|mimes:pdf,jpg,jpeg,png,heic|max:5120', onUpdate: false, message: ['file.required' => 'Please upload a document file. File is required.'])]
     public $file = null;
     public $filePreview = null;
     public $uploadProgress = 0;
@@ -54,6 +56,12 @@ class DocumentUpload extends Component
     {
         $this->editingDocumentId = $documentId;
         $this->resetForm();
+        
+        // Explicitly ensure file is null for new documents
+        if ($mode === 'add' || !$documentId) {
+            $this->file = null;
+            $this->filePreview = null;
+        }
         
         if ($mode === 'edit' && $documentId) {
             $document = Auth::user()->documents()
@@ -118,11 +126,33 @@ class DocumentUpload extends Component
         $this->scanError = null;
         $this->rejectionNotes = null;
         $this->resetValidation();
+        // Dispatch event that file was removed
+        if (!$this->editingDocumentId) {
+            $this->dispatch('file-removed');
+        }
     }
 
     public function updatedFile()
     {
         if ($this->file) {
+            // Check if file is valid
+            if (!$this->file->isValid()) {
+                $this->addError('file', 'The uploaded file is not valid. Please try again.');
+                $this->file = null;
+                $this->filePreview = null;
+                $this->dispatch('file-removed');
+                return;
+            }
+            
+            // Validate file immediately
+            $this->validateFile();
+            
+            // Only proceed if validation passed
+            if ($this->getErrorBag()->has('file')) {
+                $this->dispatch('file-removed');
+                return;
+            }
+            
             // Auto-populate document name from filename
             if (!$this->document_name) {
                 $this->document_name = pathinfo($this->file->getClientOriginalName(), PATHINFO_FILENAME);
@@ -132,7 +162,59 @@ class DocumentUpload extends Component
             if (in_array($this->file->getMimeType(), ['image/jpeg', 'image/png', 'image/jpg'])) {
                 $this->filePreview = $this->file->temporaryUrl();
             }
+            
+            // Dispatch event that file is ready
+            $this->dispatch('file-ready');
+        } else {
+            // Clear preview if file is removed
+            $this->filePreview = null;
+            if (!$this->editingDocumentId) {
+                $this->dispatch('file-removed');
+            }
         }
+    }
+
+    protected function validateFile()
+    {
+        if (!$this->file) {
+            return;
+        }
+
+        // Validate file size (5MB = 5120 KB)
+        $maxSize = 5120; // 5MB in KB
+        $fileSizeKB = $this->file->getSize() / 1024;
+        
+        if ($fileSizeKB > $maxSize) {
+            $this->addError('file', 'File size must not exceed 5MB. Current file size: ' . number_format($fileSizeKB, 2) . ' KB');
+            $this->file = null;
+            $this->filePreview = null;
+            return;
+        }
+
+        // Validate file type
+        $allowedMimes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/heic'];
+        $fileMime = $this->file->getMimeType();
+        
+        if (!in_array($fileMime, $allowedMimes)) {
+            $this->addError('file', 'Invalid file type. Only PDF, JPG, PNG, and HEIC files are allowed.');
+            $this->file = null;
+            $this->filePreview = null;
+            return;
+        }
+
+        // Validate file extension
+        $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'heic'];
+        $fileExtension = strtolower($this->file->getClientOriginalExtension());
+        
+        if (!in_array($fileExtension, $allowedExtensions)) {
+            $this->addError('file', 'Invalid file extension. Only .pdf, .jpg, .jpeg, .png, and .heic files are allowed.');
+            $this->file = null;
+            $this->filePreview = null;
+            return;
+        }
+
+        // Clear any previous errors if validation passes
+        $this->resetErrorBag('file');
     }
 
     public function updatedDocumentTypeId()
@@ -233,18 +315,120 @@ class DocumentUpload extends Component
 
     public function save()
     {
+        // ABSOLUTE FIRST CHECK: For new documents, file is MANDATORY - NO EXCEPTIONS
+        if (!$this->editingDocumentId) {
+            // Check 1: Null check
+            if (is_null($this->file)) {
+                $this->addError('file', 'Please upload a document file. File is required.');
+                $this->dispatch('validation-failed', message: 'File is required');
+                session()->flash('error', 'Cannot save document without a file. Please upload a file first.');
+                Log::warning('BLOCKED: Attempt to save document without file. User: ' . Auth::id());
+                return;
+            }
+            
+            // Check 2: Existence check
+            if (!isset($this->file)) {
+                $this->addError('file', 'Please upload a document file. File is required.');
+                $this->dispatch('validation-failed', message: 'File is required');
+                session()->flash('error', 'Cannot save document without a file. Please upload a file first.');
+                Log::warning('BLOCKED: Attempt to save document without file (isset check). User: ' . Auth::id());
+                return;
+            }
+            
+            // Check 3: Empty check
+            if (empty($this->file)) {
+                $this->addError('file', 'Please upload a document file. File is required.');
+                $this->dispatch('validation-failed', message: 'File is required');
+                session()->flash('error', 'Cannot save document without a file. Please upload a file first.');
+                Log::warning('BLOCKED: Attempt to save document with empty file. User: ' . Auth::id());
+                return;
+            }
+            
+            // Check 4: Valid file object check
+            if (!($this->file instanceof \Illuminate\Http\UploadedFile || $this->file instanceof TemporaryUploadedFile)) {
+                $this->addError('file', 'Invalid file object. Please upload a file again.');
+                $this->dispatch('validation-failed', message: 'File is invalid');
+                session()->flash('error', 'Invalid file. Please upload a file again.');
+                Log::warning('BLOCKED: Attempt to save with invalid file object. User: ' . Auth::id());
+                return;
+            }
+            
+            // Check 5: File validity check
+            try {
+                if (!$this->file->isValid()) {
+                    $this->addError('file', 'The uploaded file is not valid. Please try again.');
+                    $this->dispatch('validation-failed', message: 'File is invalid');
+                    Log::warning('BLOCKED: Attempt to save with invalid file. User: ' . Auth::id());
+                    return;
+                }
+            } catch (\Exception $e) {
+                $this->addError('file', 'Error validating file: ' . $e->getMessage());
+                $this->dispatch('validation-failed', message: 'File validation error');
+                Log::error('File validation exception: ' . $e->getMessage() . ' | User: ' . Auth::id());
+                return;
+            }
+            
+            // Check 6: File size check
+            try {
+                if ($this->file->getSize() <= 0) {
+                    $this->addError('file', 'The uploaded file is empty. Please upload a valid file.');
+                    $this->dispatch('validation-failed', message: 'File is empty');
+                    Log::warning('BLOCKED: Attempt to save with empty file. User: ' . Auth::id());
+                    return;
+                }
+            } catch (\Exception $e) {
+                $this->addError('file', 'Error checking file size: ' . $e->getMessage());
+                $this->dispatch('validation-failed', message: 'File size check error');
+                Log::error('File size check exception: ' . $e->getMessage() . ' | User: ' . Auth::id());
+                return;
+            }
+        }
+
+        // Early validation: Document type must be selected BEFORE any other processing
+        if (empty($this->document_type_id) || $this->document_type_id === null || $this->document_type_id === '' || $this->document_type_id === 0) {
+            $this->addError('document_type_id', 'Please select a document type.');
+            session()->flash('error', 'Please select a document type before saving.');
+            return;
+        }
+        
         $documentType = DocumentType::find($this->document_type_id);
         
         if (!$documentType) {
+            $this->addError('document_type_id', 'Invalid document type selected. Please select a valid document type.');
+            session()->flash('error', 'Invalid document type. Please select a valid document type.');
+            return;
+        }
+
+        // Validate file before proceeding if file is present
+        if ($this->file) {
+            $this->validateFile();
+            if ($this->getErrorBag()->has('file')) {
+                return; // Stop validation if file is invalid
+            }
+        }
+
+        // Build validation rules
+        $rules = [
+            'document_type_id' => 'required|exists:document_types,id',
+            'document_name' => 'required|string|max:255',
+        ];
+        
+        // Early validation check for document_type_id
+        if (!$this->document_type_id || $this->document_type_id === '') {
             $this->addError('document_type_id', 'Please select a document type.');
             return;
         }
 
-        $rules = [
-            'document_type_id' => 'required|exists:document_types,id',
-            'document_name' => 'required|string|max:255',
-            'file' => $this->editingDocumentId ? 'nullable|file|mimes:pdf,jpg,jpeg,png,heic|max:10240' : 'required|file|mimes:pdf,jpg,jpeg,png,heic|max:10240', // 10MB
-        ];
+        // File validation - STRICT for new documents
+        if ($this->editingDocumentId) {
+            // For edit mode, file is optional
+            if ($this->file) {
+                $rules['file'] = 'required|file|mimes:pdf,jpg,jpeg,png,heic|max:5120';
+            }
+        } else {
+            // For new documents, file is MANDATORY
+            $rules['file'] = 'required|file|mimes:pdf,jpg,jpeg,png,heic|max:5120';
+        }
 
         // Conditional validation based on document type requirements
         if ($documentType->requires_document_number) {
@@ -267,7 +451,27 @@ class DocumentUpload extends Component
             $rules['expiry_date'] = 'date|after:issue_date';
         }
 
-        $validated = $this->validate($rules);
+        // Validate all rules
+        try {
+            $validated = $this->validate($rules);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Ensure file errors are properly displayed
+            if ($e->errors() && isset($e->errors()['file'])) {
+                foreach ($e->errors()['file'] as $error) {
+                    $this->addError('file', $error);
+                }
+            }
+            // Re-throw validation exception to show errors
+            throw $e;
+        }
+
+        // FINAL CHECK: For new documents, ensure file is still present after validation
+        if (!$this->editingDocumentId) {
+            if (!$this->file || !$this->file->isValid()) {
+                $this->addError('file', 'Document file is required. Please upload a file before saving.');
+                return;
+            }
+        }
 
         try {
             $documentService = app(DocumentService::class);
@@ -304,30 +508,75 @@ class DocumentUpload extends Component
                 
                 session()->flash('message', 'Document updated successfully!');
             } else {
-                // Create new document
-                $document = $documentService->uploadDocument(
-                    user: Auth::user(),
-                    file: $this->file,
-                    documentTypeId: $this->document_type_id,
-                    documentName: $this->document_name,
-                    documentNumber: $this->document_number,
-                    issuingAuthority: $this->issuing_authority,
-                    issuingCountry: $this->issuing_country,
-                    issueDate: $this->issue_date,
-                    expiryDate: $this->expiry_date,
-                    notes: $this->notes,
-                    tags: $this->tags,
-                    featuredOnProfile: $this->featured_on_profile
-                );
-
-                // Generate thumbnail
-                try {
-                    $thumbnailService->ensureThumbnail($document);
-                } catch (\Exception $e) {
-                    Log::warning('Thumbnail generation failed: ' . $e->getMessage());
+                // Create new document - ABSOLUTE FINAL file check before service call
+                // Triple-check: null, isset, empty, isValid, size
+                if (is_null($this->file) || !isset($this->file) || empty($this->file)) {
+                    $this->addError('file', 'Document file is required. Please upload a file before saving.');
+                    Log::error('CRITICAL: Attempted to create document without file despite validation. User: ' . Auth::id() . ' | File state: ' . var_export($this->file, true));
+                    session()->flash('error', 'Cannot save document without a file. Please upload a file first.');
+                    return;
                 }
                 
-                session()->flash('message', 'Document uploaded successfully!');
+                try {
+                    if (!$this->file->isValid()) {
+                        $this->addError('file', 'Document file is invalid. Please upload a valid file.');
+                        Log::error('CRITICAL: Attempted to create document with invalid file. User: ' . Auth::id());
+                        return;
+                    }
+                    
+                    if ($this->file->getSize() <= 0) {
+                        $this->addError('file', 'Document file is empty. Please upload a valid file.');
+                        Log::error('CRITICAL: Attempted to create document with empty file. User: ' . Auth::id());
+                        return;
+                    }
+                } catch (\Exception $e) {
+                    $this->addError('file', 'Error validating file: ' . $e->getMessage());
+                    Log::error('CRITICAL: File validation exception. User: ' . Auth::id() . ' | Error: ' . $e->getMessage());
+                    return;
+                }
+
+                // Final check: Ensure file is still valid before service call
+                if (!($this->file instanceof \Illuminate\Http\UploadedFile || $this->file instanceof TemporaryUploadedFile)) {
+                    $this->addError('file', 'Invalid file object. Please upload a file again.');
+                    Log::error('CRITICAL: File is not a valid UploadedFile instance. User: ' . Auth::id());
+                    return;
+                }
+
+                try {
+                    $document = $documentService->uploadDocument(
+                        user: Auth::user(),
+                        file: $this->file,
+                        documentTypeId: $this->document_type_id,
+                        documentName: $this->document_name,
+                        documentNumber: $this->document_number,
+                        issuingAuthority: $this->issuing_authority,
+                        issuingCountry: $this->issuing_country,
+                        issueDate: $this->issue_date,
+                        expiryDate: $this->expiry_date,
+                        notes: $this->notes,
+                        tags: $this->tags,
+                        featuredOnProfile: $this->featured_on_profile
+                    );
+
+                    // Generate thumbnail
+                    try {
+                        $thumbnailService->ensureThumbnail($document);
+                    } catch (\Exception $e) {
+                        Log::warning('Thumbnail generation failed: ' . $e->getMessage());
+                    }
+                    
+                    session()->flash('message', 'Document uploaded successfully!');
+                } catch (\InvalidArgumentException $e) {
+                    // Catch service-level validation errors (file is null/invalid)
+                    $this->addError('file', $e->getMessage());
+                    Log::error('Service validation failed: ' . $e->getMessage() . ' | User: ' . Auth::id());
+                    session()->flash('error', $e->getMessage());
+                    return;
+                } catch (\Exception $e) {
+                    Log::error('Document upload service error: ' . $e->getMessage() . ' | User: ' . Auth::id());
+                    $this->addError('file', 'Failed to save document: ' . $e->getMessage());
+                    return;
+                }
             }
             
             $this->closeModal();
@@ -352,6 +601,25 @@ class DocumentUpload extends Component
             return null;
         }
         return DocumentType::find($this->document_type_id);
+    }
+
+    public function getCanSaveProperty()
+    {
+        // For edit mode, always allow save
+        if ($this->editingDocumentId) {
+            return true;
+        }
+        
+        // For new documents, file must exist and be valid
+        if ($this->file === null || !isset($this->file)) {
+            return false;
+        }
+        
+        try {
+            return $this->file->isValid();
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     public function render()

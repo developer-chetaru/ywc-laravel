@@ -30,11 +30,31 @@ class DocumentService
         array $tags = [],
         bool $featuredOnProfile = false
     ): Document {
+        // STRICT VALIDATION: File is mandatory
+        if (is_null($file)) {
+            throw new \InvalidArgumentException('File is required to upload a document. Cannot create document without a file.');
+        }
+        
+        if (!$file->isValid()) {
+            throw new \InvalidArgumentException('The uploaded file is not valid. Please upload a valid file.');
+        }
+        
+        if ($file->getSize() <= 0) {
+            throw new \InvalidArgumentException('The uploaded file is empty. Please upload a valid file.');
+        }
+        
         // Get document type
         $documentType = DocumentType::findOrFail($documentTypeId);
 
         // Generate unique filename
         $extension = $file->getClientOriginalExtension();
+        
+        // Validate extension
+        $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'heic'];
+        if (!in_array(strtolower($extension), $allowedExtensions)) {
+            throw new \InvalidArgumentException('Invalid file extension. Only PDF, JPG, PNG, and HEIC files are allowed.');
+        }
+        
         $filename = Str::uuid() . '.' . $extension;
         
         // Organize by user_id/year/month

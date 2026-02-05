@@ -743,7 +743,7 @@ class CareerHistoryController extends Controller
         // Step 1: Base validation rules
         $base = [
             'type' => 'required|in:passport,idvisa,certificate,resume,other',
-            'file' => 'nullable|file|max:5120', // 5MB
+            'file' => 'required|file|max:5120', // 5MB
           	'dob'  => 'nullable|date|before_or_equal:today',
         ];
 
