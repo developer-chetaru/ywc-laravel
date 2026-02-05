@@ -24,6 +24,12 @@ use App\Services\Documents\VersionService;
 use Carbon\Carbon;
 use Imagick;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class CareerHistoryController extends Controller
 {
@@ -185,6 +191,95 @@ class CareerHistoryController extends Controller
             'share_documents',
             'users'
         ));
+    }
+
+    /**
+     * Share profile - web route (uses session auth)
+     * Returns QR code and profile URL for the authenticated user
+     * Automatically generates QR code and profile URL if they don't exist
+     */
+    public function shareProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        // Generate QR code and profile URL if they don't exist
+        if(empty($user->qrcode) || empty($user->profile_url)){
+            try {
+                $this->generateUserQrCode($user);
+            } catch (\Exception $e) {
+                Log::error('Failed to generate QR code for user ' . $user->id . ': ' . $e->getMessage());
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Failed to generate QR code. Please try again or contact admin.',
+                ], 500);
+            }
+        }
+
+        $qrUrl = asset($user->qrcode);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Share Profile Data',
+            'data' => [
+                'user_name'    => $user->first_name.' '.$user->last_name,
+                'profile_link' => $user->profile_url,
+                'qr_code_url'  => $qrUrl,
+            ]
+        ], 200);
+    }
+
+    /**
+     * Generate QR code and profile URL for a user
+     */
+    private function generateUserQrCode(User $user)
+    {
+        // Generate profile URL
+        $encryptedId = Crypt::encryptString($user->id);
+        $profileUrl = url('/p/' . urlencode($encryptedId));
+
+        // Generate QR code
+        $options = new QROptions([
+            'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel'   => QRCode::ECC_H,
+            'scale'      => 7,
+        ]);
+
+        $qrcode = new QRCode($options);
+        $qrImage = $qrcode->render($profileUrl);
+
+        $manager = new ImageManager(new Driver());
+        $qr = $manager->read($qrImage);
+
+        // Add logo if it exists
+        $logoPath = public_path('images/ywc-logo.png');
+        if (file_exists($logoPath)) {
+            $logo = $manager->read($logoPath);
+            $logoMaxWidth = intval($qr->width() * 0.28);
+            $logoMaxHeight = intval($qr->height() * 0.28);
+            $logo->scaleDown($logoMaxWidth, $logoMaxHeight);
+            $qr->place($logo, 'center');
+        }
+
+        $qrImage = $qr->encode()->toString();
+
+        // Save QR code
+        $filename = 'user_'.$user->id.'_'.Str::random(6).'.png';
+        $path = 'public/qrcodes/' . $filename;
+        Storage::put($path, $qrImage);
+
+        // Update user
+        $user->qrcode = Storage::url($path);
+        $user->profile_url = $profileUrl;
+        $user->save();
+
+        return $user;
     }
   
   	public function getDocumentForEdit($id)

@@ -24,6 +24,7 @@ class ShareDocumentMail extends Mailable
     public $documents;    // Collection of Document objects
     public $messageText;
   	public $senderName;
+    public $sender; // Full user object for email
 
     /**
      * Create a new message instance.
@@ -50,6 +51,7 @@ class ShareDocumentMail extends Mailable
 
         $this->messageText = $messageText;
         $this->senderName = $senderName;
+        $this->sender = \Auth::user(); // Store full user object
     }
 
     // public function __construct(array $documentIds, $messageText)
@@ -80,8 +82,12 @@ class ShareDocumentMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $senderEmail = $this->sender ? $this->sender->email : config('mail.from.address');
+        $senderNameForFrom = $this->sender ? ($this->sender->first_name . ' ' . $this->sender->last_name) : config('mail.from.name');
+        
         return new Envelope(
-            subject: 'Shared Documents',
+            from: new \Illuminate\Mail\Mailables\Address($senderEmail, $senderNameForFrom),
+            subject: "📄 {$this->senderName} shared documents with you on YWC",
         );
     }
 
@@ -101,38 +107,22 @@ class ShareDocumentMail extends Mailable
                 'messageText' => $this->messageText,
                 'documents' => $this->documents,
                 'senderName' => $this->senderName,
+                'sender' => $this->sender,
             ]
         );
     }
 
     /**
      * Get the attachments for the message.
+     * Files are NOT attached - they are encrypted and accessed via secure links
      *
      * @return array<int, \Illuminate\Mail\Mailables\Attachment>
      */
     public function attachments(): array
     {
-        $attachments = [];
-        $watermarkService = app(WatermarkService::class);
-
-        foreach ($this->documents as $document) {
-            // Add watermark to shared documents
-            $watermarkedPath = $watermarkService->addWatermarkToShared($document);
-            
-            if ($watermarkedPath) {
-                $filePath = storage_path('app/public/' . $watermarkedPath);
-            } else {
-                $filePath = storage_path('app/public/' . $document->file_path);
-            }
-            
-            if (file_exists($filePath)) {
-                $attachments[] = Attachment::fromPath($filePath)
-                    ->as($document->name . '.' . pathinfo($filePath, PATHINFO_EXTENSION))
-                    ->withMime(mime_content_type($filePath));
-            }
-        }
-
-        return $attachments;
+        // Documents are encrypted and accessed via secure links, not attached
+        // This ensures better security and compliance with data protection standards
+        return [];
     }
 
     // public function attachments(): array

@@ -249,7 +249,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('/documents/{document}/share-wizard', [\App\Http\Controllers\ShareWizardController::class, 'showWizard'])->name('share-wizard.show');
     Route::post('/documents/{document}/share-wizard', [\App\Http\Controllers\ShareWizardController::class, 'createShare'])->name('share-wizard.create');
     
-    Route::prefix('share-templates-new')->name('share-templates-new.')->group(function () {
+    Route::prefix('share-templates')->name('share-templates.')->group(function () {
         Route::get('/', [\App\Http\Controllers\ShareTemplateController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\ShareTemplateController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\ShareTemplateController::class, 'store'])->name('store');
@@ -391,6 +391,8 @@ Route::middleware([
   	Route::get('/documents', [CareerHistoryController::class, 'index'])->name('documents');
   	// Documents show route - must come before career-history route to avoid conflict
   	Route::get('/documents/{id}', [CareerHistoryController::class, 'show'])->name('documents.show');
+  	// Share Profile route for web (uses session auth)
+  	Route::get('/share-profile', [CareerHistoryController::class, 'shareProfile'])->name('share-profile');
   	// Career History routes - specific routes must come before parameterized routes
   	Route::get('/career-history/manage', \App\Livewire\CareerHistory\CareerHistoryManager::class)->name('career-history.manage');
   	Route::get('/career-history/manage/{userId}', \App\Livewire\CareerHistory\CareerHistoryManager::class)->name('career-history.manage.user');
@@ -426,12 +428,8 @@ Route::middleware([
     Route::post('/documents/{document}/verify', [\App\Http\Controllers\DocumentVerificationController::class, 'verify'])->name('documents.verify');
     Route::get('/verification/queue', [\App\Http\Controllers\DocumentVerificationController::class, 'queue'])->name('verification.queue');
     
-    // Share Template Routes
-    Route::get('/share-templates', \App\Livewire\Documents\ShareTemplateManagement::class)->name('share-templates.index');
+    // Share Template Routes - Legacy API routes (kept for backward compatibility)
     Route::get('/share-templates/api', [\App\Http\Controllers\ShareTemplateController::class, 'index'])->name('share-templates.api');
-    Route::post('/share-templates', [\App\Http\Controllers\ShareTemplateController::class, 'store'])->name('share-templates.store');
-    Route::put('/share-templates/{shareTemplate}', [\App\Http\Controllers\ShareTemplateController::class, 'update'])->name('share-templates.update');
-    Route::delete('/share-templates/{shareTemplate}', [\App\Http\Controllers\ShareTemplateController::class, 'destroy'])->name('share-templates.destroy');
     Route::post('/share-templates/{shareTemplate}/apply', [\App\Http\Controllers\ShareTemplateController::class, 'apply'])->name('share-templates.apply');
     
     // Admin Document Approval

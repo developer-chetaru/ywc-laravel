@@ -9,7 +9,29 @@
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <form action="{{ route('share-templates-new.update', $template->id) }}" method="POST">
+                    @if ($errors->any())
+                    <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 rounded">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-circle text-red-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">
+                                    There were {{ $errors->count() }} error(s) with your submission:
+                                </h3>
+                                <div class="mt-2 text-sm text-red-700">
+                                    <ul class="list-disc list-inside space-y-1">
+                                        @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <form action="{{ route('share-templates.update', $template->id) }}" method="POST">
                         @csrf
                         @method('PUT')
 
@@ -18,7 +40,7 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Template Name *</label>
                                 <input type="text" name="name" required value="{{ old('name', $template->name) }}"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 @error('name') border-red-500 @enderror">
                                 @error('name')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -27,7 +49,10 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                                 <textarea name="description" rows="3"
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">{{ old('description', $template->description) }}</textarea>
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 @error('description') border-red-500 @enderror">{{ old('description', $template->description) }}</textarea>
+                                @error('description')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Permissions -->
@@ -68,7 +93,10 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Maximum Views</label>
                                         <input type="number" name="max_views" min="1" value="{{ old('max_views', $template->max_views) }}"
-                                               class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md @error('max_views') border-red-500 @enderror">
+                                        @error('max_views')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
                                     </div>
 
                                     <label class="flex items-center">
@@ -90,7 +118,10 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Default Duration (Days)</label>
                                         <input type="number" name="duration_days" min="1" max="365" value="{{ old('duration_days', $template->duration_days) }}"
-                                               class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md @error('duration_days') border-red-500 @enderror">
+                                        @error('duration_days')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
                                     </div>
 
                                     <label class="flex items-center">
@@ -102,7 +133,7 @@
 
                             <!-- Actions -->
                             <div class="flex justify-end gap-3 pt-6 border-t">
-                                <a href="{{ route('share-templates-new.index') }}"
+                                <a href="{{ route('share-templates.index') }}"
                                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
                                     Cancel
                                 </a>

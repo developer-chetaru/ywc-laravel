@@ -194,11 +194,15 @@
                                                             @endphp
 
                                                             @if(in_array($extension, ['jpg','jpeg','png','gif','bmp','webp','svg']))
-                                                                <img src="{{ $filePath }}" alt="{{ $doc->name }}" class="max-w-full max-h-full object-contain">
+                                                                <img src="{{ $filePath }}" alt="{{ $doc->name }}" class="max-w-full max-h-full object-contain" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                                <div style="display:none; flex-direction:column; align-items:center; color:#999;" class="fallback-icon">
+                                                                    <i class="fas fa-file-image text-4xl mb-1"></i>
+                                                                    <span class="text-xs">Image</span>
+                                                                </div>
                                                             @elseif($extension === 'pdf')
                                                                 <!-- PDF Icon -->
                                                                 <a class="flex flex-col items-center text-red-600">
-                                                                    <img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain">
+                                                                    <img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-file-pdf text-red-600 text-4xl\'></i>';">
                                                                 </a>
                                                             @else
                                                                 <span class="text-gray-400 text-sm">Unsupported</span>
@@ -390,17 +394,21 @@
 
                                     @if(in_array($extension, ['jpg','jpeg','png','gif','bmp','webp','svg']))
                                         @if($thumbnailPath)
-                                            <img src="{{ $thumbnailPath }}" alt="{{ $doc->name ?? 'Document' }}" class="max-w-full max-h-full object-contain rounded shadow-sm group-hover:shadow-md transition-shadow">
+                                            <img src="{{ $thumbnailPath }}" alt="{{ $doc->name ?? 'Document' }}" class="max-w-full max-h-full object-contain rounded shadow-sm group-hover:shadow-md transition-shadow" onerror="this.onerror=null; this.src='{{ $filePath }}'; this.onerror=function(){this.style.display='none'; this.nextElementSibling.style.display='flex';};">
                                         @else
-                                            <img src="{{ $filePath }}" alt="{{ $doc->name ?? 'Document' }}" class="max-w-full max-h-full object-contain rounded shadow-sm group-hover:shadow-md transition-shadow">
+                                            <img src="{{ $filePath }}" alt="{{ $doc->name ?? 'Document' }}" class="max-w-full max-h-full object-contain rounded shadow-sm group-hover:shadow-md transition-shadow" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         @endif
+                                        <div style="display:none; flex-direction:column; align-items:center; color:#999;" class="fallback-icon">
+                                            <i class="fas fa-file-image text-4xl mb-1"></i>
+                                            <span class="text-xs">Image</span>
+                                        </div>
                                         <!-- Hover overlay for images -->
                                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-md transition-all flex items-center justify-center">
                                             <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg"></i>
                                         </div>
                                     @elseif($extension === 'pdf')
                                         <div class="flex flex-col items-center text-red-600 group-hover:text-red-700 transition-colors">
-                                            <img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain group-hover:scale-110 transition-transform">
+                                            <img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain group-hover:scale-110 transition-transform" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-file-pdf text-red-600 text-4xl\'></i>';">
                                             <span class="text-xs mt-1 font-medium">PDF</span>
                                         </div>
                                     @else
@@ -995,11 +1003,6 @@
                         </option>
                         @endforeach
                     </select>
-                    <a href="{{ route('share-templates.index') }}" 
-                       target="_blank"
-                       class="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-block">
-                        <i class="fas fa-cog mr-1"></i>Manage Templates
-                    </a>
                     {{-- Template Preview --}}
                     <div id="templatePreview" class="hidden mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
                         <div class="flex items-start justify-between mb-2">
@@ -1015,25 +1018,49 @@
                     </div>
                 </div>
 
-                <label class="block mb-2">To</label>
+                <!-- Validation Error Summary -->
+                <div id="shareValidationErrors" class="hidden mb-4 p-4 bg-red-50 border-l-4 border-red-400 rounded">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle text-red-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <ul id="shareErrorList" class="list-disc list-inside space-y-1"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <label class="block mb-2">To <span class="text-red-500">*</span></label>
                 <div class="w-full mb-4">
-                    <input type="text" id="emailInput" placeholder="Enter emails" class="w-full border p-2 rounded outline-none" />
+                    <input type="text" id="emailInput" placeholder="Enter emails (comma separated)" class="w-full border p-2 rounded outline-none @error('emails') border-red-500 @enderror" />
                     <div id="emailTags" class="flex flex-wrap gap-1 mt-2"></div>
+                    <p id="emailError" class="text-red-600 text-sm mt-1 hidden"></p>
+                    @error('emails')
+                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
                 <input type="hidden" name="emails" id="hiddenEmails" />
 
-                <label class="block mb-2">Message</label>
-                <textarea name="message" id="messageInput" class="w-full border p-2 rounded mb-4" rows="3" placeholder="Enter message"></textarea>
+                <label class="block mb-2">Message <span class="text-red-500">*</span></label>
+                <textarea name="message" id="messageInput" class="w-full border p-2 rounded mb-4 @error('message') border-red-500 @enderror" rows="3" placeholder="Enter message"></textarea>
+                <p id="messageError" class="text-red-600 text-sm mt-1 mb-2 hidden"></p>
+                @error('message')
+                <p class="text-red-600 text-sm mt-1 mb-2">{{ $message }}</p>
+                @enderror
 
-                <label class="block text-lg font-semibold mb-3">Select Documents</label>
+                <label class="block text-lg font-semibold mb-3">Select Documents <span class="text-red-500">*</span></label>
+                <p id="documentsError" class="text-red-600 text-sm mt-1 mb-2 hidden"></p>
                 <div id="docList" class="grid grid-cols-3 gap-4 mb-4">
                     @foreach($share_documents as $doc)
                     <div class="docCard border rounded-lg p-3 cursor-pointer hover:shadow-lg transition-shadow duration-200 ease-in-out bg-white flex flex-row items-center" data-id="{{ $doc->id }}">
                         <div class="w-16 h-16 bg-gray-100 flex items-center justify-center rounded-md overflow-hidden mr-3">
                             @if(strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION)) === 'pdf')
-                            	<img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain">
+                            	<img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-file-pdf text-red-500 text-3xl\'></i>';">
                             @else
-                            	<img src="{{ asset('storage/' . $doc->file_path) }}" alt="{{ $doc->type }}" class="object-contain h-full w-full">
+                            	<img src="{{ asset('storage/' . $doc->file_path) }}" alt="{{ $doc->type }}" class="object-contain h-full w-full" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-file-image text-gray-400 text-3xl\'></i>';">
                             @endif
                         </div>
                         <div class="flex-1">
@@ -1046,7 +1073,7 @@
                 </div>
 
                 <!-- Share Button -->
-                <button type="submit" id="saveShareBtn" class="bg-blue-600 text-white px-4 py-3 rounded disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center" disabled>
+                <button type="submit" id="saveShareBtn" class="bg-blue-600 text-white px-4 py-3 rounded disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center w-full">
                     <span id="shareBtnText">Share</span>
                     <svg id="shareBtnSpinner" class="animate-spin h-6 w-6 text-white mt-2 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -1365,6 +1392,13 @@ $(function () {
     // =======================
     $("[data-popup-target]").on("click", function() {
         const target = $(this).data("popup-target");
+        
+        // If opening share document modal, enable button and clear errors
+        if (target === "#shareDocumentModal") {
+            $("#saveShareBtn").prop("disabled", false);
+            hideShareValidationErrors();
+        }
+        
         $(target).removeClass("hidden").addClass("flex");
     });
 
@@ -2349,7 +2383,12 @@ document.querySelectorAll('.toggle-share').forEach(span => {
             const imageExtensions = ['jpg','jpeg','png','gif','bmp','svg','webp','tiff','jfif','ico','heic'];
 
             if (imageExtensions.includes(ext)) {
-                $("#viewDocImage").attr("src", "/storage/" + doc.file_path).removeClass("hidden");
+                const img = $("#viewDocImage");
+                img.attr("src", "/storage/" + doc.file_path).removeClass("hidden");
+                img.off("error").on("error", function() {
+                    $(this).addClass("hidden");
+                    $("#viewNoFileText").removeClass("hidden").text("Image not available");
+                });
                 $("#viewDocPDF").addClass("hidden");
                 $("#viewNoFileText").addClass("hidden");
                 // Show zoom controls for images
@@ -2864,6 +2903,9 @@ let emails = [];
 const minEmails = 1;
 const maxEmails = 15;
 
+// Enable share button by default
+$("#saveShareBtn").prop("disabled", false);
+
 // Render email tags
 function renderEmails() {
     emailTags.empty();
@@ -2951,35 +2993,117 @@ emailInput.on("paste", function(e) {
     processEmailInput();
 });
 
-// Check Share button
+// Check Share button - Always enabled (validation happens on submit)
 function checkShareBtn() {
-    const message = $("#messageInput").val()?.trim();
-    const selectedDocs = $(".docCard.selected").length;
-    const validEmails =
-        emails.length >= minEmails &&
-        emails.length <= maxEmails &&
-        emails.every(isValidEmail);
-    $("#saveShareBtn").prop("disabled", !(validEmails && message && selectedDocs > 0));
+    // Button is always enabled to allow validation on click
+    // Validation will be shown when user clicks the button
+    $("#saveShareBtn").prop("disabled", false);
 }
 
-// Update check on doc/message
+// Show validation errors
+function showShareValidationErrors(errors) {
+    const errorContainer = $("#shareValidationErrors");
+    const errorList = $("#shareErrorList");
+    
+    if (errors.length > 0) {
+        errorList.empty();
+        errors.forEach(error => {
+            errorList.append(`<li>${error}</li>`);
+        });
+        errorContainer.removeClass("hidden");
+        
+        // Scroll to top of modal to show errors
+        errorContainer[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+        errorContainer.addClass("hidden");
+    }
+}
+
+// Hide all validation errors
+function hideShareValidationErrors() {
+    $("#shareValidationErrors").addClass("hidden");
+    $("#emailError").addClass("hidden");
+    $("#messageError").addClass("hidden");
+    $("#documentsError").addClass("hidden");
+    
+    // Remove error borders
+    $("#emailInput").removeClass("border-red-500");
+    $("#messageInput").removeClass("border-red-500");
+}
+
+// Update check on doc/message with error clearing
 $(".docCard").on("click", function() {
     $(this).toggleClass("selected bg-blue-100 border-blue-500");
     checkShareBtn();
+    // Clear documents error when at least one is selected
+    if ($(".docCard.selected").length > 0) {
+        $("#documentsError").addClass("hidden");
+    }
 });
-$("#messageInput").on("input", checkShareBtn);
+
+$("#messageInput").on("input", function() {
+    checkShareBtn();
+    // Clear message error when user starts typing
+    if ($(this).val().trim()) {
+        $("#messageError").addClass("hidden");
+        $(this).removeClass("border-red-500");
+    }
+});
+
+// Clear email error when user starts typing
+$("#emailInput").on("input", function() {
+    checkShareBtn();
+    if ($(this).val().trim()) {
+        $("#emailError").addClass("hidden");
+        $(this).removeClass("border-red-500");
+    }
+});
 
 // Form submit
 $("#shareDocumentForm").on("submit", function(e) {
     e.preventDefault();
+    
+    // Hide previous errors
+    hideShareValidationErrors();
 
     const message = $("#messageInput").val().trim();
     const selectedDocs = $(".docCard.selected").length;
+    const validationErrors = [];
 
-    if (emails.length < minEmails) { showError(`Please enter at least ${minEmails} emails.`); return; }
-    if (!emails.every(isValidEmail)) { showError("Please enter valid emails."); return; }
-    if (!message) { showError("Please enter a message."); return; }
-    if (selectedDocs === 0) { showError("Please select at least one document."); return; }
+    // Validate emails
+    if (emails.length < minEmails) {
+        validationErrors.push(`Please enter at least ${minEmails} email address${minEmails > 1 ? 'es' : ''}.`);
+        $("#emailInput").addClass("border-red-500");
+        $("#emailError").text(`Please enter at least ${minEmails} email address${minEmails > 1 ? 'es' : ''}.`).removeClass("hidden");
+    } else if (emails.length > maxEmails) {
+        validationErrors.push(`Please enter no more than ${maxEmails} email addresses.`);
+        $("#emailInput").addClass("border-red-500");
+        $("#emailError").text(`Please enter no more than ${maxEmails} email addresses.`).removeClass("hidden");
+    } else if (!emails.every(isValidEmail)) {
+        const invalidEmails = emails.filter(email => !isValidEmail(email));
+        validationErrors.push(`Invalid email address${invalidEmails.length > 1 ? 'es' : ''}: ${invalidEmails.join(', ')}`);
+        $("#emailInput").addClass("border-red-500");
+        $("#emailError").text(`Invalid email address${invalidEmails.length > 1 ? 'es' : ''}: ${invalidEmails.join(', ')}`).removeClass("hidden");
+    }
+
+    // Validate message
+    if (!message) {
+        validationErrors.push("Please enter a message.");
+        $("#messageInput").addClass("border-red-500");
+        $("#messageError").text("Please enter a message.").removeClass("hidden");
+    }
+
+    // Validate documents
+    if (selectedDocs === 0) {
+        validationErrors.push("Please select at least one document to share.");
+        $("#documentsError").text("Please select at least one document to share.").removeClass("hidden");
+    }
+
+    // If there are validation errors, show them and stop
+    if (validationErrors.length > 0) {
+        showShareValidationErrors(validationErrors);
+        return;
+    }
 
     $(".docCard").each(function() {
         $(this).find(".docCheckbox").prop("checked", $(this).hasClass("selected"));
@@ -2996,11 +3120,39 @@ $("#shareDocumentForm").on("submit", function(e) {
         data: $(this).serialize(),
         success: function(response) {
             resetForm();
+            hideShareValidationErrors();
             showResultPopup("Success", response.message || "Your email has been sent successfully.", "success");
         },
         error: function(xhr) {
-            const errMsg = xhr.responseJSON?.error || "Error sharing documents.";
-            showResultPopup("Error", errMsg, "error");
+            // Handle validation errors from server
+            if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                const serverErrors = [];
+                const errors = xhr.responseJSON.errors;
+                
+                if (errors.emails) {
+                    $("#emailInput").addClass("border-red-500");
+                    $("#emailError").text(Array.isArray(errors.emails) ? errors.emails[0] : errors.emails).removeClass("hidden");
+                    serverErrors.push(Array.isArray(errors.emails) ? errors.emails[0] : errors.emails);
+                }
+                
+                if (errors.message) {
+                    $("#messageInput").addClass("border-red-500");
+                    $("#messageError").text(Array.isArray(errors.message) ? errors.message[0] : errors.message).removeClass("hidden");
+                    serverErrors.push(Array.isArray(errors.message) ? errors.message[0] : errors.message);
+                }
+                
+                if (errors.documents) {
+                    $("#documentsError").text(Array.isArray(errors.documents) ? errors.documents[0] : errors.documents).removeClass("hidden");
+                    serverErrors.push(Array.isArray(errors.documents) ? errors.documents[0] : errors.documents);
+                }
+                
+                if (serverErrors.length > 0) {
+                    showShareValidationErrors(serverErrors);
+                }
+            } else {
+                const errMsg = xhr.responseJSON?.error || xhr.responseJSON?.message || "Error sharing documents.";
+                showResultPopup("Error", errMsg, "error");
+            }
         },
         complete: function() {
             $("#shareBtnText").text("Share");
@@ -3017,6 +3169,7 @@ function resetForm() {
     $("#emailInput").val('');
     $("#messageInput").val('');
     $("#docList .docCard").removeClass("selected bg-blue-100 border-blue-500");
+    hideShareValidationErrors();
 }
 
 // ✅ Show modal popup (close current + show result)
@@ -3115,7 +3268,7 @@ function clearTemplate() {
         const profileUrlDB = "{{ auth()->user()->profile_url ?? '' }}";
 
         // Open Modal
-        card.addEventListener('click', () => {
+        card.addEventListener('click', async () => {
             if (modal) modal.classList.remove('hidden');
             if (loader) loader.classList.remove('hidden');
 
@@ -3125,13 +3278,81 @@ function clearTemplate() {
             if (profileLink) profileLink.value = profileUrlDB;
             if (visitProfileBtn) visitProfileBtn.href = profileUrlDB;
 
+            // Safety timeout to hide loader after 5 seconds max
+            const loaderTimeout = setTimeout(() => {
+                if (loader) loader.classList.add('hidden');
+            }, 5000);
+
+            // Check if QR code exists, if not try to fetch from API
+            let finalQrCodePath = qrCodePath;
+            
+            if (!qrCodePath || qrCodePath === '{{ asset("") }}' || qrCodePath.trim() === '') {
+                // Try to fetch QR code from web route (uses session auth)
+                try {
+                    const response = await fetch('/share-profile', {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                        },
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.status && data.data && data.data.qr_code_url) {
+                            finalQrCodePath = data.data.qr_code_url;
+                            if (profileLink && data.data.profile_link) {
+                                profileLink.value = data.data.profile_link;
+                                if (visitProfileBtn) visitProfileBtn.href = data.data.profile_link;
+                            }
+                        }
+                    } else if (response.status === 404) {
+                        // QR code not generated yet
+                        console.warn('QR Code not generated yet. Please contact admin.');
+                        clearTimeout(loaderTimeout);
+                        if (loader) loader.classList.add('hidden');
+                        if (img) {
+                            img.alt = 'QR Code not generated yet. Please contact admin.';
+                            img.style.opacity = '0.3';
+                        }
+                        // Don't return - continue to show profile link even without QR code
+                        finalQrCodePath = ''; // Set to empty so it doesn't try to load
+                    }
+                } catch (error) {
+                    console.error('Error fetching QR code:', error);
+                    // Continue to try loading with empty path, which will trigger the else block
+                }
+            }
+
             // Load QR Image
-            if (img && qrCodePath) {
-                img.src = qrCodePath;
+            if (img && finalQrCodePath && finalQrCodePath.trim() !== '' && finalQrCodePath !== '{{ asset("") }}') {
+                img.src = finalQrCodePath;
                 img.onload = () => {
+                    clearTimeout(loaderTimeout);
                     if (loader) loader.classList.add('hidden');
                     if (img) img.style.opacity = '1';
                 };
+                img.onerror = () => {
+                    clearTimeout(loaderTimeout);
+                    // Hide loader even if image fails to load
+                    if (loader) loader.classList.add('hidden');
+                    console.error('Failed to load QR code image');
+                    // Optionally show a message or placeholder
+                    if (img) {
+                        img.alt = 'QR Code not available';
+                    }
+                };
+            } else {
+                // No QR code available, hide loader immediately
+                clearTimeout(loaderTimeout);
+                if (loader) loader.classList.add('hidden');
+                if (img) {
+                    img.alt = 'QR Code not available. Please contact admin.';
+                    img.style.opacity = '0.3';
+                }
             }
         });
 

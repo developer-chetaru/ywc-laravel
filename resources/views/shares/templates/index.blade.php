@@ -4,7 +4,7 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Share Templates
             </h2>
-            <a href="{{ route('share-templates-new.create') }}"
+            <a href="{{ route('share-templates.create') }}"
                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                 <i class="fas fa-plus mr-2"></i>Create Template
             </a>
@@ -53,14 +53,14 @@
 
                             <div class="flex gap-2">
                                 @if(!$template->is_default || $template->user_id === Auth::id())
-                                <a href="{{ route('share-templates-new.edit', $template->id) }}"
+                                <a href="{{ route('share-templates.edit', $template->id) }}"
                                    class="flex-1 text-center px-3 py-2 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 text-sm">
                                     <i class="fas fa-edit mr-1"></i>Edit
                                 </a>
                                 @endif
 
                                 @if($template->user_id === Auth::id())
-                                <form action="{{ route('share-templates-new.destroy', $template->id) }}" method="POST" class="flex-1">
+                                <form action="{{ route('share-templates.destroy', $template->id) }}" method="POST" class="flex-1">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" onclick="return confirm('Delete this template?')"
@@ -75,7 +75,7 @@
                         <div class="col-span-full text-center py-12">
                             <i class="fas fa-folder-open text-gray-300 text-6xl mb-4"></i>
                             <p class="text-gray-500 mb-4">No templates yet</p>
-                            <a href="{{ route('share-templates-new.create') }}"
+                            <a href="{{ route('share-templates.create') }}"
                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                                 <i class="fas fa-plus mr-2"></i>Create Your First Template
                             </a>

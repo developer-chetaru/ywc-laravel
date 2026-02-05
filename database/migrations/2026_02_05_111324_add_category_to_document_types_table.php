@@ -14,7 +14,7 @@ return new class extends Migration
     {
         // Check if category column already exists
         if (!Schema::hasColumn('document_types', 'category')) {
-            Schema::table('document_types', function (Blueprint $table) {
+        Schema::table('document_types', function (Blueprint $table) {
                 $table->string('category')->nullable()->after('name');
             });
         }
