@@ -18,13 +18,6 @@ namespace App\OpenApi;
  *     description="Department Forum Post Management APIs"
  * )
  * 
- * @OA\Tag(
- *     name="Department Forum - Bulk Actions",
- *     description="Department Forum Bulk Operations APIs"
- * )
- */
-
-/**
  * @OA\Get(
  *     path="/forum/api/category",
  *     summary="Get all forum categories",
@@ -304,9 +297,7 @@ namespace App\OpenApi;
  *     @OA\Response(response=422, description="Validation error"),
  *     @OA\Response(response=401, description="Unauthenticated")
  * )
- */
-
-/**
+ * 
  * @OA\Get(
  *     path="/forum/api/thread/recent",
  *     summary="Get recent threads",
@@ -734,9 +725,7 @@ namespace App\OpenApi;
  *     @OA\Response(response=422, description="Validation error"),
  *     @OA\Response(response=401, description="Unauthenticated")
  * )
- */
-
-/**
+ * 
  * @OA\Get(
  *     path="/forum/api/post/recent",
  *     summary="Get recent posts",
@@ -946,14 +935,12 @@ namespace App\OpenApi;
  *     @OA\Response(response=401, description="Unauthenticated"),
  *     @OA\Response(response=403, description="Forbidden - Moderator access required")
  * )
- */
-
-/**
+ * 
  * @OA\Post(
  *     path="/forum/api/bulk/category/manage",
  *     summary="Bulk manage categories",
  *     description="Perform bulk administrative operations on multiple categories simultaneously. This endpoint requires administrator permissions and is designed for efficient category management. The action parameter specifies what operation to perform (e.g., 'delete', 'update'), and category_ids is an array of category IDs to operate on. This allows administrators to manage multiple categories in a single API call rather than making individual requests. Useful for batch updates, reorganizing category structures, or performing maintenance operations. Returns a success confirmation indicating the bulk operation completed. Use with caution as bulk operations affect multiple categories at once.",
- *     tags={"Department Forum - Bulk Actions"},
+ *     tags={"Department Forum - Categories"},
  *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -978,7 +965,7 @@ namespace App\OpenApi;
  *     path="/forum/api/bulk/thread/move",
  *     summary="Bulk move threads",
  *     description="Move multiple threads from their current categories to a target category in a single operation. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids and the target category_id. All specified threads will be moved to the same destination category. This is highly efficient for reorganizing forum content, consolidating related discussions, or correcting misplacements across multiple threads. The target category must accept threads. The response includes a count of successfully moved threads. This saves significant time compared to moving threads individually and ensures consistent organization.",
- *     tags={"Department Forum - Bulk Actions"},
+ *     tags={"Department Forum - Threads"},
  *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -1006,7 +993,7 @@ namespace App\OpenApi;
  *     path="/forum/api/bulk/thread/lock",
  *     summary="Bulk lock threads",
  *     description="Lock multiple threads simultaneously to prevent new replies. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids - all specified threads will be locked in a single operation. This is useful for closing multiple resolved discussions, preventing spam across multiple threads, or maintaining important announcements. Locked threads remain visible and readable but cannot receive new posts. The response includes a count of successfully locked threads. This is much more efficient than locking threads one by one and is essential for moderation workflows.",
- *     tags={"Department Forum - Bulk Actions"},
+ *     tags={"Department Forum - Threads"},
  *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -1032,7 +1019,7 @@ namespace App\OpenApi;
  *     path="/forum/api/bulk/thread/unlock",
  *     summary="Bulk unlock threads",
  *     description="Unlock multiple threads simultaneously to restore posting functionality. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids - all specified threads will be unlocked in a single operation. This reverses the lock action, allowing users to post new replies again. Useful for reopening multiple discussions, correcting accidental locks, or restoring normal forum activity after maintenance. The response includes a count of successfully unlocked threads. This bulk operation saves time and ensures consistent thread management across the forum.",
- *     tags={"Department Forum - Bulk Actions"},
+ *     tags={"Department Forum - Threads"},
  *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -1058,7 +1045,7 @@ namespace App\OpenApi;
  *     path="/forum/api/bulk/thread/pin",
  *     summary="Bulk pin threads",
  *     description="Pin multiple threads to the top of their respective category listings simultaneously. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids - all specified threads will be pinned in a single operation. Pinned threads appear at the top of category lists, above regular threads. This is ideal for featuring multiple important announcements, rules, or discussions across different categories. The response includes a count of successfully pinned threads. Bulk pinning is much more efficient than pinning threads individually and ensures consistent visibility for important content.",
- *     tags={"Department Forum - Bulk Actions"},
+ *     tags={"Department Forum - Threads"},
  *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -1084,7 +1071,7 @@ namespace App\OpenApi;
  *     path="/forum/api/bulk/thread/unpin",
  *     summary="Bulk unpin threads",
  *     description="Remove the pinned status from multiple threads simultaneously, allowing them to return to normal chronological ordering. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids - all specified threads will be unpinned in a single operation. Unpinned threads will be sorted by their last activity time like regular threads. Useful when multiple announcements are no longer relevant or when removing featured status from several threads. The response includes a count of successfully unpinned threads. This bulk operation streamlines content management and category organization.",
- *     tags={"Department Forum - Bulk Actions"},
+ *     tags={"Department Forum - Threads"},
  *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -1110,7 +1097,7 @@ namespace App\OpenApi;
  *     path="/forum/api/bulk/thread",
  *     summary="Bulk delete threads",
  *     description="Soft delete multiple threads simultaneously. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids in the request body - all specified threads will be deleted in a single operation. This is a soft delete operation, meaning threads can potentially be restored later. Deleting threads also soft-deletes all posts within those threads in a cascading manner. The response includes a count of successfully deleted threads. Use this with extreme caution as it affects all content within the specified threads. This bulk operation is essential for efficient moderation and content cleanup workflows.",
- *     tags={"Department Forum - Bulk Actions"},
+ *     tags={"Department Forum - Threads"},
  *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -1136,7 +1123,7 @@ namespace App\OpenApi;
  *     path="/forum/api/bulk/thread/restore",
  *     summary="Bulk restore threads",
  *     description="Restore multiple previously soft-deleted threads back to active status simultaneously. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids - all specified threads will be restored in a single operation. Restoring threads also restores all posts that were deleted along with them. The threads become visible again in category listings and regain full functionality. The response includes a count of successfully restored threads. This is useful for undoing accidental bulk deletions, recovering important discussions, or reversing moderation actions. Bulk restoration saves significant time compared to restoring threads individually.",
- *     tags={"Department Forum - Bulk Actions"},
+ *     tags={"Department Forum - Threads"},
  *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -1162,7 +1149,7 @@ namespace App\OpenApi;
  *     path="/forum/api/bulk/post",
  *     summary="Bulk delete posts",
  *     description="Soft delete multiple posts simultaneously from various threads. This endpoint requires moderator or administrator permissions. Provide an array of post_ids in the request body - all specified posts will be deleted in a single operation. This is a soft delete operation, meaning posts can potentially be restored later. Deleting posts updates the thread statistics (reply counts decrease accordingly). Deleted posts are typically hidden from normal thread views. The response includes a count of successfully deleted posts. Use this carefully as it removes content from discussions. This bulk operation is essential for efficient moderation, spam removal, and content cleanup across multiple threads.",
- *     tags={"Department Forum - Bulk Actions"},
+ *     tags={"Department Forum - Posts"},
  *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -1188,7 +1175,7 @@ namespace App\OpenApi;
  *     path="/forum/api/bulk/post/restore",
  *     summary="Bulk restore posts",
  *     description="Restore multiple previously soft-deleted posts back to active status simultaneously. This endpoint requires moderator or administrator permissions. Provide an array of post_ids - all specified posts will be restored in a single operation. Restored posts become visible again in thread views and regain full functionality. Thread statistics (reply counts) are updated accordingly. The response includes a count of successfully restored posts. This is useful for undoing accidental bulk deletions, recovering important content, or reversing moderation actions across multiple threads. Bulk restoration is much more efficient than restoring posts individually and helps maintain discussion continuity.",
- *     tags={"Department Forum - Bulk Actions"},
+ *     tags={"Department Forum - Posts"},
  *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,

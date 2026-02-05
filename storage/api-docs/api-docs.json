@@ -5229,10 +5229,2190 @@
                 }
             }
         },
+        "/forum/api/category": {
+            "get": {
+                "tags": [
+                    "Department Forum - Categories"
+                ],
+                "summary": "Get all forum categories",
+                "description": "Retrieve a hierarchical list of all forum categories that the authenticated user has access to. This endpoint returns the complete category tree structure, including nested subcategories. Categories are filtered based on user permissions - private categories are only shown to authorized users. Use the optional parent_id parameter to fetch only direct descendants of a specific category. The response includes category metadata such as thread count, post count, newest thread information, and available actions. This is typically the first API call when building a forum navigation menu or category listing page.",
+                "operationId": "c7da73dfa0e1a520bfe13373f129cbf7",
+                "parameters": [
+                    {
+                        "name": "parent_id",
+                        "in": "query",
+                        "description": "Filter categories by parent ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of categories",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "General Discussion"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "General forum discussions"
+                                                    },
+                                                    "accepts_threads": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "newest_thread_id": {
+                                                        "type": "integer",
+                                                        "example": 5,
+                                                        "nullable": true
+                                                    },
+                                                    "latest_active_thread_id": {
+                                                        "type": "integer",
+                                                        "example": 5,
+                                                        "nullable": true
+                                                    },
+                                                    "thread_count": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "post_count": {
+                                                        "type": "integer",
+                                                        "example": 50
+                                                    },
+                                                    "is_private": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "parent_id": {
+                                                        "type": "integer",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "color_light_mode": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "color_dark_mode": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "actions": {
+                                                        "properties": {
+                                                            "patch:update": {
+                                                                "type": "string",
+                                                                "example": "/forum/api/category/1"
+                                                            },
+                                                            "delete:delete": {
+                                                                "type": "string",
+                                                                "example": "/forum/api/category/1"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Department Forum - Categories"
+                ],
+                "summary": "Create a new category",
+                "description": "Create a new forum category in the system. This endpoint requires administrator permissions. You can create both top-level categories and nested subcategories by specifying a parent_id. Categories can be configured as private (is_private=true) to restrict access, or as public. The accepts_threads flag determines whether users can create threads directly in this category or if it's only a container for subcategories. Color schemes for light and dark modes can be customized. The title field is required and must be at least 3 characters long. Upon successful creation, the new category is returned with its assigned ID and all metadata.",
+                "operationId": "c99f36c28622c91ff7d0a75190180b1c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "New Category"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Category description"
+                                    },
+                                    "accepts_threads": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "is_private": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "parent_id": {
+                                        "type": "integer",
+                                        "example": null,
+                                        "nullable": true
+                                    },
+                                    "color_light_mode": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "color_dark_mode": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Category created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "New Category"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/category/{category}": {
+            "get": {
+                "tags": [
+                    "Department Forum - Categories"
+                ],
+                "summary": "Get a specific category",
+                "description": "Retrieve complete details of a specific forum category by its ID. This endpoint provides comprehensive information about a single category including its title, description, thread/post counts, privacy settings, color schemes, and hierarchical relationships. The response includes links to related resources such as the newest thread and latest active thread. Access is controlled - if the category is private, only authorized users can view it. Use this endpoint when displaying category details, breadcrumbs, or when you need to verify category properties before performing operations on it.",
+                "operationId": "e79ce0859e3e796742643d9d9f7e654f",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "description": "Category ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "General Discussion"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "General forum discussions"
+                                                },
+                                                "accepts_threads": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "thread_count": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "post_count": {
+                                                    "type": "integer",
+                                                    "example": 50
+                                                },
+                                                "is_private": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "self": {
+                                                    "type": "string",
+                                                    "example": "/forum/api/category/1"
+                                                },
+                                                "newest_thread": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "latest_active_thread": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Department Forum - Categories"
+                ],
+                "summary": "Delete a category",
+                "description": "Permanently delete a forum category from the system. This endpoint requires administrator permissions and should be used with caution. Deleting a category will also delete all associated threads, posts, and subcategories in a cascading manner. This action cannot be undone. Before deletion, ensure that you want to remove all content within the category. The category ID in the path specifies which category to delete. Returns a success confirmation upon successful deletion.",
+                "operationId": "03b8dc85c0d02b2cac80e891bd42dfd7",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "description": "Category ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Department Forum - Categories"
+                ],
+                "summary": "Update a category",
+                "description": "Update properties of an existing forum category. This endpoint requires administrator permissions. You can modify the category title, description, privacy settings, thread acceptance flag, and color schemes. All fields are optional - only include the fields you want to update. Changing is_private will affect user access immediately. Modifying accepts_threads will determine if new threads can be created in this category. The category ID in the path identifies which category to update. Returns the updated category object with all current values.",
+                "operationId": "b84f4fe14ae9f81dd89a92318293ad86",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "description": "Category ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Updated Category Title"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Updated description"
+                                    },
+                                    "accepts_threads": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "is_private": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Category updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Updated Category Title"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/category/{category}/thread": {
+            "get": {
+                "tags": [
+                    "Department Forum - Categories"
+                ],
+                "summary": "Get threads in a category",
+                "description": "Retrieve a paginated list of all threads within a specific category. This endpoint supports optional date-based filtering to narrow down results. You can filter threads by creation date (created_after, created_before) or last update date (updated_after, updated_before) using YYYY-MM-DD format. Threads are returned in chronological order by default. For private categories, only threads that the user has permission to view are included. The response includes thread metadata such as author information, pin/lock status, reply counts, and timestamps. Use this endpoint to display the thread listing page for a category.",
+                "operationId": "791ec74b761d234d8888ec2fd57d5072",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "description": "Category ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "created_after",
+                        "in": "query",
+                        "description": "Filter threads created after this date (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-01-01"
+                        }
+                    },
+                    {
+                        "name": "created_before",
+                        "in": "query",
+                        "description": "Filter threads created before this date (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-12-31"
+                        }
+                    },
+                    {
+                        "name": "updated_after",
+                        "in": "query",
+                        "description": "Filter threads updated after this date (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-01-01"
+                        }
+                    },
+                    {
+                        "name": "updated_before",
+                        "in": "query",
+                        "description": "Filter threads updated before this date (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-12-31"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of threads",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "category_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "author_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "author_name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Thread Title"
+                                                    },
+                                                    "pinned": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "locked": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "reply_count": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Department Forum - Categories"
+                ],
+                "summary": "Create a new thread in a category",
+                "description": "Create a new discussion thread in the specified category. Both title and content are required fields. The title must be at least 3 characters long, and the content must also be at least 3 characters. The authenticated user automatically becomes the thread author. The category must accept threads (accepts_threads=true) and the user must have permission to create threads in that category. Upon creation, the thread is immediately available and the first post (containing the content) is created automatically. Returns the complete thread object including the generated ID, timestamps, and all metadata.",
+                "operationId": "1204699c5122408f46aacb7eed8d7249",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "description": "Category ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "New Thread Title"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Thread content here..."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Thread created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "New Thread Title"
+                                                },
+                                                "category_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/recent": {
+            "get": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Get recent threads",
+                "description": "Retrieve a list of recently active threads across all forum categories that the user has access to. Threads are sorted by their last activity (most recently updated first). This endpoint is useful for displaying a 'Recent Activity' or 'Latest Discussions' section on the forum homepage. Only threads from accessible categories are included - private category threads are filtered based on user permissions. The response includes essential thread information like title, author, reply count, and timestamps. This provides a quick overview of forum activity without needing to navigate through individual categories.",
+                "operationId": "4af102ee3e98cae2247970f9954dbe0a",
+                "responses": {
+                    "200": {
+                        "description": "List of recent threads",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Thread Title"
+                                                    },
+                                                    "author_name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "reply_count": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/unread": {
+            "get": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Get unread threads",
+                "description": "Retrieve a personalized list of threads that contain unread posts for the authenticated user. This endpoint tracks which threads have new activity since the user last read them. Threads are considered unread if they have posts created or updated after the user's last read timestamp. This is essential for building notification systems, unread badges, and 'What's New' features. Only threads from accessible categories are included. The response helps users quickly identify discussions they haven't caught up on yet, improving forum engagement and user experience.",
+                "operationId": "971095730607da490973770ab00e6934",
+                "responses": {
+                    "200": {
+                        "description": "List of unread threads",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Thread Title"
+                                                    },
+                                                    "author_name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/unread/mark-as-read": {
+            "patch": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Mark threads as read",
+                "description": "Mark all threads within a specific category as read for the authenticated user. This updates the user's read status, clearing the 'unread' indicator for all threads in that category. This is typically called when a user visits a category page or manually marks a category as read. The category_id in the request body specifies which category's threads should be marked. After this operation, those threads will no longer appear in the unread threads list until new activity occurs. This helps users track their reading progress across the forum.",
+                "operationId": "7e59c2b029b58cebf43185f2e4995d00",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "category_id": {
+                                        "description": "Category ID to mark threads as read",
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Threads marked as read",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/{thread}": {
+            "get": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Get a specific thread",
+                "description": "Retrieve comprehensive details of a specific thread by its ID. This endpoint returns complete thread metadata including author information, pin/lock status, reply counts, first/last post IDs, timestamps, and available actions. The response includes links to related resources such as the category, posts, and individual post endpoints. For private categories, access is verified before returning the thread. Use this endpoint when displaying thread details, building thread navigation, or when you need to check thread properties before performing operations. The thread must be accessible to the user based on category permissions.",
+                "operationId": "e9e58a7a45074fcf9bc4c93d060fafba",
+                "parameters": [
+                    {
+                        "name": "thread",
+                        "in": "path",
+                        "description": "Thread ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thread details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "category_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "author_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "author_name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Thread Title"
+                                                },
+                                                "pinned": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "locked": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "first_post_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_post_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "reply_count": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "actions": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "self": {
+                                                    "type": "string",
+                                                    "example": "/forum/api/thread/1"
+                                                },
+                                                "category": {
+                                                    "type": "string",
+                                                    "example": "/forum/api/category/1"
+                                                },
+                                                "posts": {
+                                                    "type": "string",
+                                                    "example": "/forum/api/thread/1/posts"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Thread not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Delete a thread",
+                "description": "Soft delete a thread from the forum. This endpoint can be used by the thread's original author or by moderators/administrators. The thread is marked as deleted (soft delete) rather than being permanently removed, which means it can potentially be restored later. Deleting a thread also soft-deletes all posts within that thread in a cascading manner. Deleted threads are typically hidden from normal listings but may still be visible to moderators. The deleted_at timestamp is set and returned in the response. This action should be used carefully as it affects all content within the thread.",
+                "operationId": "b3a362526a1d99a87c30ed436f58f416",
+                "parameters": [
+                    {
+                        "name": "thread",
+                        "in": "path",
+                        "description": "Thread ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thread deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "deleted_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/{thread}/lock": {
+            "post": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Lock a thread",
+                "description": "Lock a thread to prevent users from posting new replies. This endpoint requires moderator or administrator permissions. Locking is useful for closing resolved discussions, preventing spam, or maintaining important announcements. Once locked, the thread remains visible and readable, but no new posts can be added. The thread's locked status is returned in the response. Locked threads typically display a visual indicator in the UI. This is a reversible action - threads can be unlocked using the unlock endpoint. Use this for moderation purposes or to preserve important discussions.",
+                "operationId": "d48e4a31142eb2ef69cbef82a779c36e",
+                "parameters": [
+                    {
+                        "name": "thread",
+                        "in": "path",
+                        "description": "Thread ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thread locked successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "locked": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden - Moderator access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/{thread}/unlock": {
+            "post": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Unlock a thread",
+                "description": "Unlock a previously locked thread to allow users to post new replies again. This endpoint requires moderator or administrator permissions. Unlocking reverses the lock action, restoring normal posting functionality. This is useful when a discussion needs to be reopened, or if a thread was accidentally locked. The thread's locked status is updated to false and returned in the response. Users will be able to create new posts in the thread immediately after unlocking. This action only affects the ability to post - existing posts remain unchanged.",
+                "operationId": "10a14741ba1e9b9c30ceb0b68a9b7307",
+                "parameters": [
+                    {
+                        "name": "thread",
+                        "in": "path",
+                        "description": "Thread ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thread unlocked successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "locked": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden - Moderator access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/{thread}/pin": {
+            "post": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Pin a thread",
+                "description": "Pin a thread to the top of its category's thread list. This endpoint requires moderator or administrator permissions. Pinned threads appear at the top of category listings, above regular threads, regardless of their last activity time. This is ideal for important announcements, rules, FAQs, or featured discussions that should always be visible. Multiple threads can be pinned - they will appear in the order they were pinned. The pinned status is returned in the response. Pinned threads typically display a visual indicator (like a pin icon) in the UI to distinguish them from regular threads.",
+                "operationId": "5c2cebe12a120bb7748e66b29384baae",
+                "parameters": [
+                    {
+                        "name": "thread",
+                        "in": "path",
+                        "description": "Thread ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thread pinned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "pinned": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden - Moderator access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/{thread}/unpin": {
+            "post": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Unpin a thread",
+                "description": "Remove the pinned status from a thread, allowing it to return to normal chronological ordering in the category listing. This endpoint requires moderator or administrator permissions. Unpinning reverses the pin action - the thread will no longer appear at the top of the list and will be sorted by its last activity time like regular threads. This is useful when an announcement is no longer relevant or when you want to remove featured status. The thread's pinned status is updated to false and returned in the response. The thread remains fully functional and accessible.",
+                "operationId": "cdf600682ceb8bdc9b08edf123eb052b",
+                "parameters": [
+                    {
+                        "name": "thread",
+                        "in": "path",
+                        "description": "Thread ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thread unpinned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "pinned": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden - Moderator access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/{thread}/rename": {
+            "post": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Rename a thread",
+                "description": "Change the title of an existing thread. This endpoint can be used by the thread's original author or by moderators/administrators. The new title must be provided in the request body and must be at least 3 characters long. Renaming is useful for correcting typos, updating thread topics, or improving clarity. The thread ID, content, and all other properties remain unchanged - only the title is modified. The updated thread object is returned with the new title. This action is logged and may be visible in thread history depending on your forum configuration.",
+                "operationId": "7c4ece50f9eb2ff87416104e20ac4bf1",
+                "parameters": [
+                    {
+                        "name": "thread",
+                        "in": "path",
+                        "description": "Thread ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "New Thread Title"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Thread renamed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "New Thread Title"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/{thread}/move": {
+            "post": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Move a thread to another category",
+                "description": "Move a thread from its current category to a different category. This endpoint requires moderator or administrator permissions. The target category ID must be provided in the request body. The target category must accept threads (accepts_threads=true). Moving a thread updates its category_id and may affect user access if the categories have different privacy settings. All posts within the thread remain intact. This is useful for organizing content, correcting misplacements, or consolidating related discussions. The updated thread object with the new category_id is returned in the response.",
+                "operationId": "38236bcab4a152673a6385b61d24af86",
+                "parameters": [
+                    {
+                        "name": "thread",
+                        "in": "path",
+                        "description": "Thread ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "category_id"
+                                ],
+                                "properties": {
+                                    "category_id": {
+                                        "description": "Target category ID",
+                                        "type": "integer",
+                                        "example": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Thread moved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "category_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden - Moderator access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/{thread}/restore": {
+            "post": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Restore a deleted thread",
+                "description": "Restore a previously soft-deleted thread back to active status. This endpoint requires moderator or administrator permissions. Restoring a thread also restores all posts that were deleted along with it. The thread becomes visible again in category listings and regains full functionality. The deleted_at timestamp is cleared (set to null). This is useful for undoing accidental deletions or recovering important discussions. The restored thread object is returned with deleted_at set to null, indicating it's active again.",
+                "operationId": "5819376b70dc956fa195309d89660d63",
+                "parameters": [
+                    {
+                        "name": "thread",
+                        "in": "path",
+                        "description": "Thread ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thread restored successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "deleted_at": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden - Moderator access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/thread/{thread}/posts": {
+            "get": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Get posts in a thread",
+                "description": "Retrieve a paginated list of all posts within a specific thread. Posts are returned in chronological order (oldest first) by default, showing the conversation flow. The response supports pagination using the page query parameter. Each post includes author information, content, sequence number, timestamps, and available actions. For private category threads, access is verified before returning posts. This endpoint is essential for displaying the thread view page where users read and reply to discussions. The sequence field indicates the post's position in the thread (1 for the first post, 2 for the second, etc.).",
+                "operationId": "1d4ab2cd18e8e35db0fdd0450e912b3e",
+                "parameters": [
+                    {
+                        "name": "thread",
+                        "in": "path",
+                        "description": "Thread ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of posts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "thread_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "author_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "author_name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "content": {
+                                                        "type": "string",
+                                                        "example": "Post content here..."
+                                                    },
+                                                    "sequence": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Thread not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Department Forum - Threads"
+                ],
+                "summary": "Create a new post in a thread",
+                "description": "Create a new post (reply) in an existing thread. The content field is required and must be at least 3 characters long. Optionally, you can specify a post_id to create a nested reply to a specific post. The thread must not be locked, and the user must have permission to post in the thread's category. The authenticated user automatically becomes the post author. Upon creation, the thread's last_post_id and updated_at are automatically updated to reflect the new activity. The post is assigned a sequence number based on its position in the thread. Returns the complete post object including the generated ID and all metadata.",
+                "operationId": "7df4159658c32b5e932a008ff27509e0",
+                "parameters": [
+                    {
+                        "name": "thread",
+                        "in": "path",
+                        "description": "Thread ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Reply content here..."
+                                    },
+                                    "post_id": {
+                                        "description": "Parent post ID for nested replies",
+                                        "type": "integer",
+                                        "example": null,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Post created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "thread_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "content": {
+                                                    "type": "string",
+                                                    "example": "Reply content here..."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/post/recent": {
+            "get": {
+                "tags": [
+                    "Department Forum - Posts"
+                ],
+                "summary": "Get recent posts",
+                "description": "Retrieve a list of the most recently created posts across all forum threads that the user has access to. Posts are sorted by creation time (newest first). This endpoint provides a comprehensive view of recent forum activity, showing the latest contributions from all users. Only posts from accessible threads in accessible categories are included - private content is filtered based on user permissions. The response includes post content, author information, thread context, and timestamps. This is useful for activity feeds, 'Latest Posts' widgets, or monitoring forum engagement across all categories.",
+                "operationId": "50b607a25f0250c46d884fc8a15df6bd",
+                "responses": {
+                    "200": {
+                        "description": "List of recent posts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "thread_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "author_name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "content": {
+                                                        "type": "string",
+                                                        "example": "Post content..."
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/post/unread": {
+            "get": {
+                "tags": [
+                    "Department Forum - Posts"
+                ],
+                "summary": "Get unread posts",
+                "description": "Retrieve a personalized list of posts that the authenticated user hasn't read yet. Posts are considered unread if they were created or updated after the user's last read timestamp for that thread. This endpoint helps users catch up on new activity and is essential for building notification systems and unread indicators. Only posts from accessible threads are included. The response allows users to quickly identify new content they haven't seen, improving engagement and ensuring important discussions aren't missed. This complements the unread threads endpoint by providing post-level granularity.",
+                "operationId": "199bbe47b5e199afa7a664c1cde2efc1",
+                "responses": {
+                    "200": {
+                        "description": "List of unread posts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "thread_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "author_name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/post/search": {
+            "post": {
+                "tags": [
+                    "Department Forum - Posts"
+                ],
+                "summary": "Search posts",
+                "description": "Search for posts across the entire forum using a text query. This endpoint requires the search feature to be enabled in the forum configuration. The query parameter is required and searches through post content. Optional filters allow you to narrow results by category_id (search within a specific category), author_id (posts by a specific user), or thread_id (posts within a specific thread). Search results are returned as an array of matching posts with their content, author information, and thread context. This is essential for finding specific discussions, answers, or content within the forum. The search respects user permissions - only accessible posts are included in results.",
+                "operationId": "ee31c4fc27f8711265a7fc9d3ae464a6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "query"
+                                ],
+                                "properties": {
+                                    "query": {
+                                        "description": "Search query string",
+                                        "type": "string",
+                                        "example": "search term"
+                                    },
+                                    "category_id": {
+                                        "description": "Filter by category ID",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "author_id": {
+                                        "description": "Filter by author ID",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "thread_id": {
+                                        "description": "Filter by thread ID",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Search results",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "thread_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "content": {
+                                                        "type": "string",
+                                                        "example": "Post content matching search..."
+                                                    },
+                                                    "author_name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/post/{post}": {
+            "get": {
+                "tags": [
+                    "Department Forum - Posts"
+                ],
+                "summary": "Get a specific post",
+                "description": "Retrieve complete details of a specific post by its ID. This endpoint returns comprehensive post information including content, author details, thread context, sequence number, parent post reference (if it's a nested reply), timestamps, and available actions. The response includes links to related resources such as the thread, parent post (if applicable), and self-reference. For posts in private category threads, access is verified before returning the post. Use this endpoint when displaying individual post details, building post navigation, generating permalinks, or when you need to verify post properties before performing operations.",
+                "operationId": "34ade3a879d03ab28d65ec9323a304c7",
+                "parameters": [
+                    {
+                        "name": "post",
+                        "in": "path",
+                        "description": "Post ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Post details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "thread_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "author_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "author_name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "content": {
+                                                    "type": "string",
+                                                    "example": "Post content here..."
+                                                },
+                                                "sequence": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "post_id": {
+                                                    "description": "Parent post ID",
+                                                    "type": "integer",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "actions": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "self": {
+                                                    "type": "string",
+                                                    "example": "/forum/api/post/1"
+                                                },
+                                                "thread": {
+                                                    "type": "string",
+                                                    "example": "/forum/api/thread/1"
+                                                },
+                                                "parent": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Department Forum - Posts"
+                ],
+                "summary": "Delete a post",
+                "description": "Soft delete a post from a thread. This endpoint can be used by the post's original author or by moderators/administrators. The post is marked as deleted (soft delete) rather than being permanently removed, which means it can potentially be restored later. Deleting a post updates the thread's statistics (reply count decreases). Deleted posts are typically hidden from normal thread views but may still be visible to moderators. The deleted_at timestamp is set and returned in the response. If this is the first post in a thread, deleting it may affect thread visibility. Use this carefully as it removes content from the discussion.",
+                "operationId": "a75805894500d1a5dedec9fd8f161d5b",
+                "parameters": [
+                    {
+                        "name": "post",
+                        "in": "path",
+                        "description": "Post ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Post deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "deleted_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Department Forum - Posts"
+                ],
+                "summary": "Update a post",
+                "description": "Update the content of an existing post. This endpoint can only be used by the post's original author. The content field is required and must be at least 3 characters long. Only the content can be modified - other properties like author, thread, sequence, and timestamps remain unchanged. The updated_at timestamp is automatically refreshed. This allows users to correct typos, clarify statements, or update information in their posts. The updated post object is returned with the new content and refreshed timestamp. Some forums may show an 'edited' indicator for updated posts.",
+                "operationId": "dede989ed5b3a3eb7851643878fa9e0a",
+                "parameters": [
+                    {
+                        "name": "post",
+                        "in": "path",
+                        "description": "Post ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Updated post content..."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Post updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "content": {
+                                                    "type": "string",
+                                                    "example": "Updated post content..."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forum/api/post/{post}/restore": {
+            "post": {
+                "tags": [
+                    "Department Forum - Posts"
+                ],
+                "summary": "Restore a deleted post",
+                "description": "Restore a previously soft-deleted post back to active status. This endpoint requires moderator or administrator permissions. Restoring a post makes it visible again in thread views and restores it to normal functionality. The thread's statistics (reply count) are updated accordingly. The deleted_at timestamp is cleared (set to null). This is useful for undoing accidental deletions, recovering important content, or reversing moderation actions. The restored post object is returned with deleted_at set to null, indicating it's active again. This helps maintain discussion continuity.",
+                "operationId": "138375f1dc8440e0da5aaf6d3f08d049",
+                "parameters": [
+                    {
+                        "name": "post",
+                        "in": "path",
+                        "description": "Post ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Post restored successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "deleted_at": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden - Moderator access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/forum/api/bulk/category/manage": {
             "post": {
                 "tags": [
-                    "Department Forum - Bulk Actions"
+                    "Department Forum - Categories"
                 ],
                 "summary": "Bulk manage categories",
                 "description": "Perform bulk administrative operations on multiple categories simultaneously. This endpoint requires administrator permissions and is designed for efficient category management. The action parameter specifies what operation to perform (e.g., 'delete', 'update'), and category_ids is an array of category IDs to operate on. This allows administrators to manage multiple categories in a single API call rather than making individual requests. Useful for batch updates, reorganizing category structures, or performing maintenance operations. Returns a success confirmation indicating the bulk operation completed. Use with caution as bulk operations affect multiple categories at once.",
@@ -5299,7 +7479,7 @@
         "/forum/api/bulk/thread/move": {
             "post": {
                 "tags": [
-                    "Department Forum - Bulk Actions"
+                    "Department Forum - Threads"
                 ],
                 "summary": "Bulk move threads",
                 "description": "Move multiple threads from their current categories to a target category in a single operation. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids and the target category_id. All specified threads will be moved to the same destination category. This is highly efficient for reorganizing forum content, consolidating related discussions, or correcting misplacements across multiple threads. The target category must accept threads. The response includes a count of successfully moved threads. This saves significant time compared to moving threads individually and ensures consistent organization.",
@@ -5377,7 +7557,7 @@
         "/forum/api/bulk/thread/lock": {
             "post": {
                 "tags": [
-                    "Department Forum - Bulk Actions"
+                    "Department Forum - Threads"
                 ],
                 "summary": "Bulk lock threads",
                 "description": "Lock multiple threads simultaneously to prevent new replies. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids - all specified threads will be locked in a single operation. This is useful for closing multiple resolved discussions, preventing spam across multiple threads, or maintaining important announcements. Locked threads remain visible and readable but cannot receive new posts. The response includes a count of successfully locked threads. This is much more efficient than locking threads one by one and is essential for moderation workflows.",
@@ -5446,7 +7626,7 @@
         "/forum/api/bulk/thread/unlock": {
             "post": {
                 "tags": [
-                    "Department Forum - Bulk Actions"
+                    "Department Forum - Threads"
                 ],
                 "summary": "Bulk unlock threads",
                 "description": "Unlock multiple threads simultaneously to restore posting functionality. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids - all specified threads will be unlocked in a single operation. This reverses the lock action, allowing users to post new replies again. Useful for reopening multiple discussions, correcting accidental locks, or restoring normal forum activity after maintenance. The response includes a count of successfully unlocked threads. This bulk operation saves time and ensures consistent thread management across the forum.",
@@ -5515,7 +7695,7 @@
         "/forum/api/bulk/thread/pin": {
             "post": {
                 "tags": [
-                    "Department Forum - Bulk Actions"
+                    "Department Forum - Threads"
                 ],
                 "summary": "Bulk pin threads",
                 "description": "Pin multiple threads to the top of their respective category listings simultaneously. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids - all specified threads will be pinned in a single operation. Pinned threads appear at the top of category lists, above regular threads. This is ideal for featuring multiple important announcements, rules, or discussions across different categories. The response includes a count of successfully pinned threads. Bulk pinning is much more efficient than pinning threads individually and ensures consistent visibility for important content.",
@@ -5584,7 +7764,7 @@
         "/forum/api/bulk/thread/unpin": {
             "post": {
                 "tags": [
-                    "Department Forum - Bulk Actions"
+                    "Department Forum - Threads"
                 ],
                 "summary": "Bulk unpin threads",
                 "description": "Remove the pinned status from multiple threads simultaneously, allowing them to return to normal chronological ordering. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids - all specified threads will be unpinned in a single operation. Unpinned threads will be sorted by their last activity time like regular threads. Useful when multiple announcements are no longer relevant or when removing featured status from several threads. The response includes a count of successfully unpinned threads. This bulk operation streamlines content management and category organization.",
@@ -5653,7 +7833,7 @@
         "/forum/api/bulk/thread": {
             "delete": {
                 "tags": [
-                    "Department Forum - Bulk Actions"
+                    "Department Forum - Threads"
                 ],
                 "summary": "Bulk delete threads",
                 "description": "Soft delete multiple threads simultaneously. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids in the request body - all specified threads will be deleted in a single operation. This is a soft delete operation, meaning threads can potentially be restored later. Deleting threads also soft-deletes all posts within those threads in a cascading manner. The response includes a count of successfully deleted threads. Use this with extreme caution as it affects all content within the specified threads. This bulk operation is essential for efficient moderation and content cleanup workflows.",
@@ -5722,7 +7902,7 @@
         "/forum/api/bulk/thread/restore": {
             "post": {
                 "tags": [
-                    "Department Forum - Bulk Actions"
+                    "Department Forum - Threads"
                 ],
                 "summary": "Bulk restore threads",
                 "description": "Restore multiple previously soft-deleted threads back to active status simultaneously. This endpoint requires moderator or administrator permissions. Provide an array of thread_ids - all specified threads will be restored in a single operation. Restoring threads also restores all posts that were deleted along with them. The threads become visible again in category listings and regain full functionality. The response includes a count of successfully restored threads. This is useful for undoing accidental bulk deletions, recovering important discussions, or reversing moderation actions. Bulk restoration saves significant time compared to restoring threads individually.",
@@ -5791,7 +7971,7 @@
         "/forum/api/bulk/post": {
             "delete": {
                 "tags": [
-                    "Department Forum - Bulk Actions"
+                    "Department Forum - Posts"
                 ],
                 "summary": "Bulk delete posts",
                 "description": "Soft delete multiple posts simultaneously from various threads. This endpoint requires moderator or administrator permissions. Provide an array of post_ids in the request body - all specified posts will be deleted in a single operation. This is a soft delete operation, meaning posts can potentially be restored later. Deleting posts updates the thread statistics (reply counts decrease accordingly). Deleted posts are typically hidden from normal thread views. The response includes a count of successfully deleted posts. Use this carefully as it removes content from discussions. This bulk operation is essential for efficient moderation, spam removal, and content cleanup across multiple threads.",
@@ -5860,7 +8040,7 @@
         "/forum/api/bulk/post/restore": {
             "post": {
                 "tags": [
-                    "Department Forum - Bulk Actions"
+                    "Department Forum - Posts"
                 ],
                 "summary": "Bulk restore posts",
                 "description": "Restore multiple previously soft-deleted posts back to active status simultaneously. This endpoint requires moderator or administrator permissions. Provide an array of post_ids - all specified posts will be restored in a single operation. Restored posts become visible again in thread views and regain full functionality. Thread statistics (reply counts) are updated accordingly. The response includes a count of successfully restored posts. This is useful for undoing accidental bulk deletions, recovering important content, or reversing moderation actions across multiple threads. Bulk restoration is much more efficient than restoring posts individually and helps maintain discussion continuity.",
@@ -6079,6 +8259,18 @@
             "description": "Stripe webhook endpoints (internal use only)"
         },
         {
+            "name": "Department Forum - Categories",
+            "description": "Department Forum Category Management APIs"
+        },
+        {
+            "name": "Department Forum - Threads",
+            "description": "Department Forum Thread Management APIs"
+        },
+        {
+            "name": "Department Forum - Posts",
+            "description": "Department Forum Post Management APIs"
+        },
+        {
             "name": "Authentication",
             "description": "Authentication"
         },
@@ -6109,10 +8301,6 @@
         {
             "name": "Itinerary",
             "description": "Itinerary"
-        },
-        {
-            "name": "Department Forum - Bulk Actions",
-            "description": "Department Forum - Bulk Actions"
         }
     ]
 }
