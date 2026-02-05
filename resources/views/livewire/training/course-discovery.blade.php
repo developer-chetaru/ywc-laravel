@@ -9,8 +9,8 @@
                 <!-- Hero Section -->
                 <div class="flex w-full flex-col bg-[#0053FF] p-6 py-8 justify-center items-center rounded-lg mb-6" 
                      style="background-image: url(/images/ad-bg-image.png); background-repeat: no-repeat; background-size: cover;">
-                    <h3 class="text-[36px] text-[#fff] font-bold mb-2">Advance Your Career at Sea</h3>
-                    <p class="text-[20px] text-[#fff]">
+                    <h3 class="text-[36px] text-[#fff] font-bold mb-2 max-[1200px]:text-[26px]">Advance Your Career at Sea</h3>
+                    <p class="text-[20px] text-[#fff] max-[1200px]:text-[14px]">
                         @if($isYwcMember)
                             As a YWC member, unlock professional courses & certifications at 20% OFF.
                         @else
@@ -21,9 +21,9 @@
 
                 <!-- Search and Filters -->
                 <div class="w-full mb-6">
-                    <div class="grid items-center md:grid-cols-2 gap-[12px] grid-cols-1">
+                    <div class="flex items-center gap-[12px] max-[1550px]:flex-col max-[1550px]:items-start">
                         <!-- Search Bar -->
-                        <div class="flex items-center">
+                        <div class="flex items-center w-[40%] max-[1550px]:w-full">
                             <div class="bg-[#f6f8fa] relative max-w-[100%] rounded-lg w-full">
                                 <button class="absolute top-3 left-3 flex items-center" type="button">
                                     <img src="/images/search.svg" alt="">
@@ -36,17 +36,17 @@
                         </div>
                         
                         <!-- Filter Dropdowns -->
-                        <div class="flex items-center justify-end gap-2 flex-wrap">
-                            <div class="relative flex-1 min-w-[150px]">
+                        <div class="flex items-center justify-end gap-2 flex-wrap flex-1 max-[1550px]:w-full max-[992px]:grid max-[992px]:grid-cols-2">
+                            <div class="relative flex-1">
                                 <select wire:model.live="categoryFilter" 
-                                        class="appearance-none cursor-pointer w-full px-3 py-3 pr-6 flex bg-[#f6f8fa] items-center rounded-lg text-[14px] text-[#808080] border border-gray-200 focus:outline-none focus:border focus:!border-blue-200">
+                                        class="cursor-pointer w-full px-3 py-3 pr-6 flex bg-[#f6f8fa] items-center rounded-lg text-[14px] text-[#808080] border border-gray-200 focus:outline-none focus:border focus:!border-blue-200">
                                     <option value="">All Categories</option>
                                     @foreach($categories as $category)
                                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="relative flex-1 min-w-[150px]">
+                            <div class="relative flex-1">
                                 <select wire:model.live="providerFilter" 
                                         class="appearance-none cursor-pointer w-full px-3 py-3 pr-6 flex bg-[#f6f8fa] items-center rounded-lg text-[14px] text-[#808080] border border-gray-200 focus:outline-none focus:border focus:!border-blue-200">
                                     <option value="">All Providers</option>
@@ -55,7 +55,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="relative flex-1 min-w-[120px]">
+                            <div class="relative flex-1">
                                 <select wire:model.live="durationFilter" 
                                         class="appearance-none cursor-pointer w-full px-3 pr-6 py-3 flex bg-[#f6f8fa] items-center rounded-lg text-[14px] text-[#808080] border border-gray-200 focus:outline-none focus:border focus:!border-blue-200">
                                     <option value="">Duration</option>
@@ -66,7 +66,7 @@
                                     <option value="6-plus">6+ Days</option>
                                 </select>
                             </div>
-                            <div class="relative flex-1 min-w-[120px]">
+                            <div class="relative flex-1">
                                 <select wire:model.live="formatFilter" 
                                         class="appearance-none cursor-pointer w-full px-3 pr-6 py-3 flex bg-[#f6f8fa] items-center rounded-lg text-[14px] text-[#808080] border border-gray-200 focus:outline-none focus:border focus:!border-blue-200">
                                     <option value="">Format</option>
@@ -77,7 +77,7 @@
                                 </select>
                             </div>
                             @if(isset($countries) && $countries->count() > 0)
-                            <div class="relative flex-1 min-w-[150px]">
+                            <div class="relative flex-1">
                                 <select wire:model.live="locationFilter" 
                                         class="appearance-none cursor-pointer w-full px-3 pr-6 py-3 flex bg-[#f6f8fa] items-center rounded-lg text-[14px] text-[#808080] border border-gray-200 focus:outline-none focus:border focus:!border-blue-200">
                                     <option value="">Location</option>
@@ -87,9 +87,9 @@
                                 </select>
                             </div>
                             @endif
-                            <div class="relative flex-1 min-w-[150px]">
+                            <div class="relative flex-1">
                                 <select wire:model.live="sortBy" 
-                                        class="appearance-none cursor-pointer w-full px-3 pr-6 py-3 flex bg-[#f6f8fa] items-center rounded-lg text-[14px] text-[#808080] border border-gray-200 focus:outline-none focus:border focus:!border-blue-200">
+                                        class="cursor-pointer w-full px-3 pr-6 py-3 flex bg-[#f6f8fa] items-center rounded-lg text-[14px] text-[#808080] border border-gray-200 focus:outline-none focus:border focus:!border-blue-200">
                                     <option value="relevance">Sort By</option>
                                     <option value="price_low">Price: Low to High</option>
                                     <option value="price_high">Price: High to Low</option>
