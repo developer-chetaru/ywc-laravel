@@ -74,6 +74,7 @@ class CareerHistoryController extends Controller
             ->groupBy('category');
 
         $documents = Document::with([
+            'documentType', // Load document type relationship for new document types
             'certificates.type',
             'certificates.issuer',
             'otherDocument',
@@ -850,8 +851,27 @@ class CareerHistoryController extends Controller
     public function store(Request $request)
     {
         // Step 1: Base validation rules
+        // Validate type: either a valid document type slug OR a legacy type
         $base = [
-            'type' => 'required|in:passport,idvisa,certificate,resume,other',
+            'type' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    // Check if it's a legacy type
+                    $legacyTypes = ['passport', 'idvisa', 'certificate', 'resume', 'other'];
+                    if (in_array($value, $legacyTypes)) {
+                        return;
+                    }
+                    
+                    // Check if it's a valid document type slug
+                    $exists = DocumentType::where('slug', $value)
+                        ->where('is_active', true)
+                        ->exists();
+                    
+                    if (!$exists) {
+                        $fail('The selected type is invalid.');
+                    }
+                },
+            ],
             'file' => 'required|file|max:5120', // 5MB
           	'dob'  => 'nullable|date|before_or_equal:today',
         ];
@@ -945,23 +965,33 @@ class CareerHistoryController extends Controller
             $storedPath = $request->file('file')->store('documents', 'public');
         }
 
-        // Step 5: Map 'resume' to 'other' for legacy enum compatibility
-        $legacyType = $validated['type'];
+        // Step 5: Check if type is a new document type slug or legacy type
+        $documentType = DocumentType::where('slug', $validated['type'])->where('is_active', true)->first();
+        $legacyType = in_array($validated['type'], ['passport', 'idvisa', 'certificate', 'resume', 'other']) 
+            ? $validated['type'] 
+            : 'other'; // Default to 'other' for new document types
+        
+        // Map 'resume' to 'other' for legacy enum compatibility
         if ($legacyType === 'resume') {
             $legacyType = 'other';
         }
 
-        // Step 6: Save main Document
+        // Step 6: Check if type is a new document type slug
+        $documentType = DocumentType::where('slug', $validated['type'])->where('is_active', true)->first();
+
+        // Step 7: Save main Document
         $document = Document::create([
-            'user_id'    => auth()->id(),
-            'type'       => $legacyType,
-            'file_path'  => $storedPath,
-            'file_type'  => $request->file ? $request->file->getClientOriginalExtension() : null,
-            'file_size'  => $request->file ? (int) ceil($request->file->getSize() / 1024) : null,
-            'issue_date' => $validated['issue_date'] ?? null,
-            'expiry_date'=> $validated['expiry_date'] ?? null,
-          	'dob'        => $validated['dob'] ?? null,
-            'ocr_status' => 'pending', // OCR will be processed in background
+            'user_id'         => auth()->id(),
+            'type'            => $legacyType, // Keep legacy type for backward compatibility
+            'document_type_id'=> $documentType ? $documentType->id : null, // New document type reference
+            'document_name'   => $documentType ? $documentType->name : null,
+            'file_path'       => $storedPath,
+            'file_type'       => $request->file ? $request->file->getClientOriginalExtension() : null,
+            'file_size'       => $request->file ? (int) ceil($request->file->getSize() / 1024) : null,
+            'issue_date'      => $validated['issue_date'] ?? null,
+            'expiry_date'     => $validated['expiry_date'] ?? null,
+          	'dob'             => $validated['dob'] ?? null,
+            'ocr_status'      => 'pending', // OCR will be processed in background
         ]);
 
         // Queue OCR processing if file was uploaded
@@ -980,8 +1010,13 @@ class CareerHistoryController extends Controller
             }
         }
 
-        // Step 7: Save child details depending on type
-        switch ($validated['type']) {
+        // Step 8: Save child details depending on type
+        // For new document types (not legacy), treat as 'other'
+        $typeForSwitch = in_array($validated['type'], ['passport', 'idvisa', 'certificate', 'resume', 'other']) 
+            ? $validated['type'] 
+            : 'other';
+        
+        switch ($typeForSwitch) {
             case 'resume':
                 // Resume is treated as 'other' in database
                 OtherDocument::create([
@@ -1036,9 +1071,14 @@ class CareerHistoryController extends Controller
                 break;
 
             case 'other':
+                // For new document types, use document_name from DocumentType, otherwise use validated doc_name
+                $docName = $documentType 
+                    ? $documentType->name 
+                    : ($validated['doc_name'] ?? 'Document');
+                
                 OtherDocument::create([
                     'document_id' => $document->id,
-                    'doc_name'    => $validated['doc_name'],
+                    'doc_name'    => $docName,
                     'doc_number'  => $validated['doc_number'] ?? null,
                     'issue_date'  => $validated['issue_date'] ?? null,
                     'expiry_date' => $validated['expiry_date'] ?? null,

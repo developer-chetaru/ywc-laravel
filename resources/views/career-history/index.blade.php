@@ -125,7 +125,15 @@
                                     $priorityDocs = $documents->filter(fn($doc) => $doc->is_expiring_soon && (!isset($doc->is_expired) || !$doc->is_expired))->values();
                                     $normalDocs = $documents->filter(fn($doc) => !$doc->is_expiring_soon && (!isset($doc->is_expired) || !$doc->is_expired))->values();
 
+                                    // Initialize categories with all possible document type categories
                                     $categories = [
+                                        'STCW Certificates' => [],
+                                        'Medical Certificates' => [],
+                                        'Identity & Travel Documents' => [],
+                                        'Professional Qualifications' => [],
+                                        'Employment Records' => [],
+                                        'Insurance & Financial' => [],
+                                        'Additional Documents' => [],
                                         'Passport' => [],
                                         'Ids and Visa' => [],
                                         'Certificate' => [],
@@ -133,15 +141,33 @@
                                     ];
 
                                     foreach ($normalDocs as $doc) {
-                                        $type = strtolower($doc->type);
-                                        $categoryKey = match($type) {
-                                            'passport' => 'Passport',
-                                            'ids_and_visa' => 'Ids and Visa',
-                                            'certificate' => 'Certificate',
-                                            default => 'Other'
-                                        };
+                                        $categoryKey = 'Other'; // Default
+                                        
+                                        // Check if document has a document type (new system)
+                                        if ($doc->documentType && $doc->documentType->category) {
+                                            $categoryKey = $doc->documentType->category;
+                                        } else {
+                                            // Fallback to legacy type system
+                                            $type = strtolower($doc->type);
+                                            $categoryKey = match($type) {
+                                                'passport' => 'Passport',
+                                                'idvisa' => 'Ids and Visa',
+                                                'ids_and_visa' => 'Ids and Visa',
+                                                'certificate' => 'Certificate',
+                                                default => 'Other'
+                                            };
+                                        }
+                                        
+                                        // Ensure category exists in array
+                                        if (!isset($categories[$categoryKey])) {
+                                            $categories[$categoryKey] = [];
+                                        }
+                                        
                                         $categories[$categoryKey][] = $doc;
                                     }
+                                    
+                                    // Remove empty categories
+                                    $categories = array_filter($categories, fn($docs) => count($docs) > 0);
                                 @endphp
 
                                 {{-- Tabs --}}
@@ -219,17 +245,28 @@
                                                             <h3 class="text-md font-semibold mb-1 text-left">{{ $doc->name }}</h3>
                                                             <p class="text-sm font-semibold text-gray-800 mb-1">
                                                                 @php
-                                                                    $typeName = ucfirst($doc->type);
-                                                                    $typeDetail = '';
-                                                                    if ($doc->type === 'certificate') {
-                                                                        $typeDetail = ' - ' . ($doc->certificates->first()?->type->name ?? 'N/A');
+                                                                    // Priority: document_type->name > document_name > otherDocument->doc_name > type
+                                                                    if ($doc->documentType) {
+                                                                        // New document type system
+                                                                        $displayName = $doc->documentType->name;
+                                                                    } elseif ($doc->document_name) {
+                                                                        // Has document_name field set
+                                                                        $displayName = $doc->document_name;
+                                                                    } elseif ($doc->type === 'certificate') {
+                                                                        $displayName = $doc->certificates->first()?->type->name ?? 'Certificate';
+                                                                    } elseif ($doc->type === 'passport') {
+                                                                        $displayName = 'Passport';
+                                                                    } elseif ($doc->type === 'idvisa') {
+                                                                        $displayName = 'ID / Visa';
                                                                     } elseif ($doc->type === 'resume') {
-                                                                        $typeDetail = ' - ' . ($doc->otherDocument?->doc_name ?? 'Resume');
+                                                                        $displayName = $doc->otherDocument?->doc_name ?? 'Resume';
                                                                     } elseif ($doc->type === 'other') {
-                                                                        $typeDetail = ' - ' . ($doc->otherDocument?->doc_name ?? 'N/A');
+                                                                        $displayName = $doc->otherDocument?->doc_name ?? 'Other Document';
+                                                                    } else {
+                                                                        $displayName = ucfirst($doc->type ?? 'Document');
                                                                     }
                                                                 @endphp
-                                                                {{ $typeName }}{{ $typeDetail }}
+                                                                {{ $displayName }}
                                                             </p>
 
                                                             <!-- Eye icon + Featured -->
@@ -431,17 +468,28 @@
                                     <h3 class="text-md font-semibold mb-1 text-left">{{ $doc->name }}</h3>
                                     <p class="text-sm font-semibold text-gray-800 mb-1">
                                         @php
-                                            $typeName = ucfirst($doc->type);
-                                            $typeDetail = '';
-                                            if ($doc->type === 'certificate') {
-                                                $typeDetail = ' - ' . ($doc->certificates->first()?->type->name ?? 'N/A');
+                                            // Priority: document_type->name > document_name > otherDocument->doc_name > type
+                                            if ($doc->documentType) {
+                                                // New document type system
+                                                $displayName = $doc->documentType->name;
+                                            } elseif ($doc->document_name) {
+                                                // Has document_name field set
+                                                $displayName = $doc->document_name;
+                                            } elseif ($doc->type === 'certificate') {
+                                                $displayName = $doc->certificates->first()?->type->name ?? 'Certificate';
+                                            } elseif ($doc->type === 'passport') {
+                                                $displayName = 'Passport';
+                                            } elseif ($doc->type === 'idvisa') {
+                                                $displayName = 'ID / Visa';
                                             } elseif ($doc->type === 'resume') {
-                                                $typeDetail = ' - ' . ($doc->otherDocument?->doc_name ?? 'Resume');
+                                                $displayName = $doc->otherDocument?->doc_name ?? 'Resume';
                                             } elseif ($doc->type === 'other') {
-                                                $typeDetail = ' - ' . ($doc->otherDocument?->doc_name ?? 'N/A');
+                                                $displayName = $doc->otherDocument?->doc_name ?? 'Other Document';
+                                            } else {
+                                                $displayName = ucfirst($doc->type ?? 'Document');
                                             }
                                         @endphp
-                                        {{ $typeName }}{{ $typeDetail }}
+                                        {{ $displayName }}
                                     </p>
 
                                     <!-- Eye icon + Featured -->

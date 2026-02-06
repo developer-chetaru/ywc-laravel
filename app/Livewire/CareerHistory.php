@@ -96,8 +96,27 @@ class CareerHistory extends Component
     // Public rules method for validation on click
     public function getRules(): array
     {
+        // Validate type: either a valid document type slug OR a legacy type
         $base = [
-            'type' => 'required|in:passport,idvisa,certificate,resume,other',
+            'type' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    // Check if it's a legacy type
+                    $legacyTypes = ['passport', 'idvisa', 'certificate', 'resume', 'other'];
+                    if (in_array($value, $legacyTypes)) {
+                        return;
+                    }
+                    
+                    // Check if it's a valid document type slug
+                    $exists = DocumentType::where('slug', $value)
+                        ->where('is_active', true)
+                        ->exists();
+                    
+                    if (!$exists) {
+                        $fail('The selected type is invalid.');
+                    }
+                },
+            ],
             'file' => 'nullable|file|max:5120', // 5MB
         ];
 
@@ -187,15 +206,23 @@ class CareerHistory extends Component
                     }
                 }
 
+                // Check if type is a new document type slug or legacy type
+                $documentType = DocumentType::where('slug', $this->type)->where('is_active', true)->first();
+                $legacyType = in_array($this->type, ['passport', 'idvisa', 'certificate', 'resume', 'other']) 
+                    ? $this->type 
+                    : 'other'; // Default to 'other' for new document types
+                
                 $document = Document::create([
-                    'user_id'    => auth()->id(),
-                    'type'       => $this->type,
-                    'file_path'  => $storedPath,
-                    'file_type'  => $this->file ? $this->file->getClientOriginalExtension() : null,
-                    'file_size'  => $this->file ? (int) ceil($this->file->getSize() / 1024) : null,
-                    'issue_date' => $this->issue_date,
-                    'expiry_date'=> $this->expiry_date,
-                    'ocr_status' => 'pending', // OCR will be processed in background
+                    'user_id'         => auth()->id(),
+                    'type'            => $legacyType, // Keep legacy type for backward compatibility
+                    'document_type_id'=> $documentType ? $documentType->id : null, // New document type reference
+                    'document_name'   => $documentType ? $documentType->name : null,
+                    'file_path'       => $storedPath,
+                    'file_type'       => $this->file ? $this->file->getClientOriginalExtension() : null,
+                    'file_size'       => $this->file ? (int) ceil($this->file->getSize() / 1024) : null,
+                    'issue_date'      => $this->issue_date,
+                    'expiry_date'     => $this->expiry_date,
+                    'ocr_status'      => 'pending', // OCR will be processed in background
                 ]);
 
                 // Queue OCR processing if file was uploaded

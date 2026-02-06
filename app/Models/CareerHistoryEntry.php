@@ -15,6 +15,7 @@ class CareerHistoryEntry extends Model
         'user_id',
         'vessel_name',
         'position_title',
+        'role',
         'vessel_type',
         'vessel_flag',
         'vessel_length_meters',

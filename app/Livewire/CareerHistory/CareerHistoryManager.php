@@ -8,6 +8,7 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CareerHistoryEntry;
 use App\Models\Document;
+use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 
 class CareerHistoryManager extends Component
@@ -39,7 +40,11 @@ class CareerHistoryManager extends Component
     public $is_current_position = false;
     public $employment_type = '';
     public $position_rank = '';
+    public $role = '';
     public $department = '';
+    
+    // Available roles from database
+    public $availableRoles = [];
     
     // Employment Information
     public $employer_company = '';
@@ -111,6 +116,14 @@ class CareerHistoryManager extends Component
             $this->viewingUserId = $currentUser->id;
             $this->viewingUser = $currentUser;
         }
+        
+        // Load available roles (excluding super_admin and user)
+        $this->availableRoles = Role::where('name', '!=', 'super_admin')
+            ->where('name', '!=', 'user')
+            ->where('guard_name', 'web')
+            ->orderBy('name')
+            ->pluck('name', 'name')
+            ->toArray();
     }
 
     public function selectUser($userId)
@@ -165,6 +178,7 @@ class CareerHistoryManager extends Component
             $entry = CareerHistoryEntry::where('user_id', $this->viewingUserId)->findOrFail($entryId);
             $this->vessel_name = $entry->vessel_name;
             $this->position_title = $entry->position_title;
+            $this->role = $entry->role ?? '';
             $this->vessel_type = $entry->vessel_type ?? '';
             $this->vessel_flag = $entry->vessel_flag ?? '';
             $this->vessel_length_meters = $entry->vessel_length_meters ?? '';
@@ -202,6 +216,7 @@ class CareerHistoryManager extends Component
         $this->editingId = null;
         $this->vessel_name = '';
         $this->position_title = '';
+        $this->role = '';
         $this->vessel_type = '';
         $this->vessel_flag = '';
         $this->vessel_length_meters = '';
@@ -232,6 +247,32 @@ class CareerHistoryManager extends Component
         }
     }
 
+    public function markAsChanged()
+    {
+        // This method is called from JavaScript to track changes
+        // The actual tracking is handled by Alpine.js
+    }
+
+    public function updatedStartDate($value)
+    {
+        // Validate end date is after start date
+        if ($this->end_date && $this->start_date) {
+            if (strtotime($this->end_date) < strtotime($this->start_date)) {
+                $this->addError('end_date', 'End date must be after start date.');
+            }
+        }
+    }
+
+    public function updatedEndDate($value)
+    {
+        // Validate end date is after start date
+        if ($this->end_date && $this->start_date) {
+            if (strtotime($this->end_date) < strtotime($this->start_date)) {
+                $this->addError('end_date', 'End date must be after start date.');
+            }
+        }
+    }
+
     public function save()
     {
         $rules = [
@@ -245,6 +286,7 @@ class CareerHistoryManager extends Component
             'gross_tonnage' => 'nullable|integer|min:0',
             'employment_type' => 'nullable|in:' . implode(',', array_keys($this->employmentTypes)),
             'position_rank' => 'nullable|in:' . implode(',', array_keys($this->positionRanks)),
+            'role' => 'nullable|string|max:255',
             'department' => 'nullable|in:' . implode(',', array_keys($this->departments)),
             'employer_company' => 'nullable|string|max:255',
             'supervisor_name' => 'nullable|string|max:255',
@@ -295,6 +337,7 @@ class CareerHistoryManager extends Component
             'end_date' => $validated['end_date'],
             'employment_type' => $validated['employment_type'] ?: null,
             'position_rank' => $validated['position_rank'] ?: null,
+            'role' => $validated['role'] ?: null,
             'department' => $validated['department'] ?: null,
             'employer_company' => $validated['employer_company'] ?: null,
             'supervisor_name' => $validated['supervisor_name'] ?: null,
@@ -314,17 +357,30 @@ class CareerHistoryManager extends Component
             abort(403, 'Unauthorized');
         }
 
-        if ($this->editingId) {
-            $entry = CareerHistoryEntry::where('user_id', $this->viewingUserId)->findOrFail($this->editingId);
-            $entry->update($data);
-            session()->flash('message', 'Career entry updated successfully!');
-        } else {
-            CareerHistoryEntry::create($data);
-            session()->flash('message', 'Career entry added successfully!');
-        }
+        try {
+            if ($this->editingId) {
+                $entry = CareerHistoryEntry::where('user_id', $this->viewingUserId)->findOrFail($this->editingId);
+                $entry->update($data);
+                session()->flash('message', 'Career entry updated successfully!');
+            } else {
+                CareerHistoryEntry::create($data);
+                session()->flash('message', 'Career entry added successfully!');
+            }
 
-        $this->closeModal();
-        $this->resetPage();
+            // Clear any draft data
+            if (request()->hasHeader('X-Livewire')) {
+                // Only clear if this is a Livewire request
+            }
+
+            $this->closeModal();
+            $this->resetPage();
+            
+            // Dispatch browser event for success animation
+            $this->dispatch('career-entry-saved');
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred while saving. Please try again.');
+            \Log::error('Career entry save error: ' . $e->getMessage());
+        }
     }
 
     public function delete($entryId)
@@ -372,6 +428,7 @@ class CareerHistoryManager extends Component
             'end_date' => null,
             'employment_type' => $originalEntry->employment_type,
             'position_rank' => $originalEntry->position_rank,
+            'role' => $originalEntry->role,
             'department' => $originalEntry->department,
             'employer_company' => $originalEntry->employer_company,
             'supervisor_name' => $originalEntry->supervisor_name,
@@ -429,6 +486,29 @@ class CareerHistoryManager extends Component
         }
         
         return $parts ? implode(' ', $parts) : 'Less than 1 month';
+    }
+
+    public function addCurrentYachtAsEntry()
+    {
+        $user = $this->viewingUser;
+        
+        if (!$user->current_yacht) {
+            session()->flash('error', 'No current yacht found in your profile.');
+            return;
+        }
+
+        // Pre-fill form with current yacht data
+        $this->vessel_name = $user->current_yacht;
+        $this->start_date = $user->current_yacht_start_date 
+            ? \Carbon\Carbon::parse($user->current_yacht_start_date)->format('Y-m-d')
+            : \Carbon\Carbon::now()->subMonths(6)->format('Y-m-d'); // Default to 6 months ago if no date
+        $this->is_current_position = true;
+        $this->end_date = null;
+        
+        // Open the modal
+        $this->openModal();
+        
+        session()->flash('info', 'Current yacht data has been pre-filled. Please complete the remaining fields and save.');
     }
 
     public function getSummaryProperty()
