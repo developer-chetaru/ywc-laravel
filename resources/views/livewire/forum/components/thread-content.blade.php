@@ -10,7 +10,24 @@
         @if($firstPost)
             @php
                 $quoteService = app(\App\Services\Forum\QuoteService::class);
-                $formattedContent = $quoteService->formatQuotes($firstPost->content);
+                $content = $firstPost->content;
+                
+                // Strip HTML tags if content contains HTML (from old posts or Quill editor)
+                // Convert HTML entities and clean up
+                if (strip_tags($content) !== $content) {
+                    // Content has HTML tags, strip them and convert to plain text
+                    $content = strip_tags($content);
+                    // Decode HTML entities
+                    $content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    // Clean up extra whitespace
+                    $content = preg_replace('/\s+/', ' ', $content);
+                    $content = trim($content);
+                }
+                
+                $formattedContent = $quoteService->formatQuotes($content);
+                
+                // Always convert markdown to HTML (bold, italic, etc.)
+                $formattedContent = \App\Helpers\MarkdownHelper::toHtml($formattedContent);
             @endphp
             {!! $formattedContent !!}
         @else

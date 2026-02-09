@@ -25,19 +25,23 @@ class QuickReply extends Component
             return;
         }
 
-        // Sanitize HTML content
+        // Strip HTML tags and convert to plain text/markdown
+        // This ensures content is saved as markdown, not HTML
+        $plainContent = strip_tags($this->content);
+        
+        // Sanitize content (for quote tags and other special formatting)
         $sanitizer = app(HtmlSanitizerService::class);
-        $sanitizedContent = $sanitizer->sanitize($this->content);
+        $sanitizedContent = $sanitizer->sanitize($plainContent);
 
         // Calculate sequence number (next post in thread)
         $maxSequence = Post::where('thread_id', $this->thread->id)->max('sequence') ?? 0;
         $nextSequence = $maxSequence + 1;
 
-        // Create reply (save raw content with quote tags)
+        // Create reply (save plain text/markdown content with quote tags)
         $post = Post::create([
             'thread_id' => $this->thread->id,
             'author_id' => Auth::id(),
-            'content'   => $sanitizedContent, // Save sanitized content with [quote=id] tags
+            'content'   => $sanitizedContent, // Save plain text/markdown content with [quote=id] tags
             'sequence'  => $nextSequence,
         ]);
 

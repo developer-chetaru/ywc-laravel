@@ -24,8 +24,16 @@ class RichTextEditor extends Component
 
     public function updatedContent($value)
     {
-        // Dispatch to parent component if needed
-        $this->dispatch('editor-content-updated', content: $value, editorId: $this->editorId);
+        // Don't dispatch on every keystroke to prevent flickering
+        // The JavaScript will handle the sync
+        // This prevents Livewire from re-rendering on every keystroke
+    }
+    
+    public function setContentSilently($content)
+    {
+        // Set content without triggering updatedContent or re-render
+        $this->content = $content;
+        // Don't dispatch anything to prevent re-render
     }
 
     public function togglePreview()

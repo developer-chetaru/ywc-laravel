@@ -7,14 +7,51 @@
 @endphp
 
 <div>
+    {{-- ✅ Success message --}}
+    @if (session()->has('success'))
+        <div id="successMessage"
+            class="mb-4 p-4 text-green-800 bg-green-50 border-l-4 border-green-500 rounded-lg flex items-center gap-3 shadow-sm animate-slide-down">
+            <i class="fas fa-check-circle text-green-500 text-xl"></i>
+            <div class="flex-1">
+                <p class="font-semibold">{{ session('success') }}</p>
+            </div>
+            <button onclick="document.getElementById('successMessage').remove()" class="text-green-600 hover:text-green-800">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <script>
+            // Auto-hide success message after 5 seconds
+            setTimeout(function() {
+                const msg = document.getElementById('successMessage');
+                if (msg) {
+                    msg.style.transition = 'opacity 0.5s';
+                    msg.style.opacity = '0';
+                    setTimeout(() => msg.remove(), 500);
+                }
+            }, 5000);
+        </script>
+    @endif
+
+    {{-- Error message --}}
+    @if (session()->has('error'))
+        <div class="mb-4 p-4 text-red-800 bg-red-50 border-l-4 border-red-500 rounded-lg flex items-center gap-3 shadow-sm">
+            <i class="fas fa-exclamation-circle text-red-500 text-xl"></i>
+            <div class="flex-1">
+                <p class="font-semibold">{{ session('error') }}</p>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-red-600 hover:text-red-800">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    @endif
     @role('super_admin')
     <div class="flex-1">
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6" id="forumTabs">
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6" id="forumTabs">
             <!-- Tab 1 -->
             <div data-tab="forums" 
                 class="tab-btn cursor-pointer relative flex flex-col justify-center border border-[#BDBDBD] 
-                bg-white rounded-lg py-4 sm:py-5 px-4 sm:px-6 pr-10 sm:pr-12 hover:bg-[#F8F9FA] hover:border-blue-500 transition-all shadow-sm">
+                bg-white rounded-lg py-4 sm:py-5 px-4 sm:px-6 pr-10 sm:pr-12 hover:bg-[#F8F9FA] hover:border-blue-500 transition-all shadow-sm flex-1 sm:max-w-[300px]">
                 <p class="font-normal text-[#808080] text-xs sm:text-sm mb-1">Total Forums</p>
                 <span class="font-semibold text-[#1B1B1B] text-xl sm:text-2xl">{{ $totalForums }}</span>
                 <img src="{{ asset('images/message-multiple-01.svg') }}" alt="" class="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8">
@@ -23,19 +60,10 @@
             <!-- Tab 2 -->
             <div data-tab="threads"
                 class="tab-btn cursor-pointer relative flex flex-col justify-center border border-[#BDBDBD] 
-                bg-white rounded-lg py-4 sm:py-5 px-4 sm:px-6 pr-10 sm:pr-12 hover:bg-[#F8F9FA] hover:border-blue-500 transition-all shadow-sm">
+                bg-white rounded-lg py-4 sm:py-5 px-4 sm:px-6 pr-10 sm:pr-12 hover:bg-[#F8F9FA] hover:border-blue-500 transition-all shadow-sm flex-1 sm:max-w-[300px]">
                 <p class="font-normal text-[#808080] text-xs sm:text-sm mb-1">Total Threads</p>
                 <span class="font-semibold text-[#1B1B1B] text-xl sm:text-2xl">{{ $totalThreads }}</span>
                 <img src="{{ asset('images/wechat.svg') }}" alt="" class="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8">
-            </div>
-
-            <!-- Tab 3 -->
-            <div data-tab="create-forum"
-                class="tab-btn cursor-pointer relative flex flex-col justify-center border border-[#BDBDBD] 
-                bg-white rounded-lg py-4 sm:py-5 px-4 sm:px-6 pr-10 sm:pr-12 hover:bg-[#F8F9FA] hover:border-blue-500 transition-all shadow-sm">
-                <p class="font-normal text-[#808080] text-xs sm:text-sm mb-1">Create New Forum</p>
-                <span class="font-semibold text-[#1B1B1B] text-xs sm:text-sm">Click to create</span>
-                <img src="{{ asset('images/add-circle-blue.svg') }}" alt="" class="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8">
             </div>
         </div>
 
@@ -50,11 +78,6 @@
             <div id="tab-threads" class="tab-content hidden">
                 @livewire('forum::pages.category.threads-list')
             </div>
-
-            <!-- Create Forum Tab -->
-            <div id="tab-create-forum" class="tab-content hidden">
-                @livewire('forum::pages.category.create-forum')
-            </div>
         </div>
 
         <!-- 🔹 Chat Layout (Left + Right Side) -->
@@ -62,90 +85,188 @@
 
             <!-- Left Sidebar -->
             <div class="w-full lg:w-100 bg-white rounded-xl flex flex-col overflow-hidden shadow-sm">
-                <div class="p-4 border-b border-gray-100">
-                    <div class="flex items-center gap-2">
-                        <div class="relative flex-1">
-                            <input type="search" 
-                                wire:model.live.debounce.300ms="search"
-                                placeholder="Search Topics"
-                                class="w-full py-3 px-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm pl-10 font-medium bg-[#F8F9FA]" />
-                            <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <img src="{{ asset('images/search.svg') }}" alt="Search" class="w-5 h-5">
-                            </div>
-                            @if(!empty($search))
-                                <button wire:click="$set('search', '')" 
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                    type="button">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
-                            @endif
+                <div class="p-4 border-b border-gray-100 space-y-3">
+                    <!-- Search -->
+                    <div class="relative flex-1">
+                        <input type="search" 
+                            wire:model.live.debounce.300ms="search"
+                            placeholder="Search forums, threads..."
+                            class="w-full py-3 px-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm pl-10 font-medium bg-[#F8F9FA]" />
+                        <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <img src="{{ asset('images/search.svg') }}" alt="Search" class="w-5 h-5">
                         </div>
+                        @if(!empty($search))
+                            <button wire:click="$set('search', '')" 
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                type="button">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+                    
+                    <!-- Filter & Sort Controls -->
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <select wire:model.live="filterBy" 
+                                class="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                            <option value="all">All Forums</option>
+                            <option value="active">Active (Last 7 days)</option>
+                            <option value="pinned">Pinned</option>
+                        </select>
+                        <select wire:model.live="sortBy" 
+                                class="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                            <option value="recent">Most Recent</option>
+                            <option value="popular">Most Popular</option>
+                            <option value="most_threads">Most Threads</option>
+                            <option value="oldest">Oldest First</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4">
+                <div class="flex-1 overflow-y-auto p-4 space-y-3">
                     @php
                         $categoriesToDisplay = isset($displayCategories) ? $displayCategories : $categories;
                     @endphp
-                    @if(empty($categoriesToDisplay) && !empty($search))
-                        <div class="text-center py-8 text-gray-500">
-                            <p>No categories found matching "{{ $search }}"</p>
+                    @if(empty($categoriesToDisplay))
+                        <div class="text-center py-12">
+                            <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-search text-gray-400 text-2xl"></i>
+                            </div>
+                            <p class="text-gray-500 text-lg font-medium">
+                                @if(!empty($search))
+                                    No forums found matching "{{ $search }}"
+                                @else
+                                    No forums available
+                                @endif
+                            </p>
+                            @if(!empty($search))
+                                <button wire:click="$set('search', '')" 
+                                    class="mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                    Clear search
+                                </button>
+                            @endif
                         </div>
                     @else
                         @foreach($categoriesToDisplay as $category)
-                        <div class="mb-4 pb-4 border-b border-gray-100 last:border-b-0">
-                            <h4 class="font-semibold text-gray-700 mb-3 hover:text-blue-600 flex justify-between gap-2 items-start cursor-pointer px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                                onclick="toggleSection(this)">
-                                <div class="flex flex-col flex-1">
-                                    <span class="capitalize text-base mb-2">{{ $category->title }}</span>
+                        @php
+                            $threadCount = $category->threads->count();
+                            $latestThread = $category->threads->max('updated_at');
+                            $isActive = $latestThread && $latestThread->gt(now()->subDays(7));
+                            $pinnedThreads = $category->threads->where('pinned', true)->count();
+                        @endphp
+                        <div class="border border-gray-200 rounded-lg hover:shadow-md transition-all bg-white">
+                            <div class="p-4">
+                                <div class="flex items-start justify-between gap-3 mb-3">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <h4 class="font-semibold text-gray-900 text-lg capitalize">
+                                                {{ $category->title }}
+                                            </h4>
+                                            @if($pinnedThreads > 0)
+                                                <span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                    <i class="fas fa-thumbtack mr-1"></i>Pinned
+                                                </span>
+                                            @endif
+                                            @if($isActive)
+                                                <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">
+                                                    <i class="fas fa-circle text-[8px] mr-1"></i>Active
+                                                </span>
+                                            @endif
+                                        </div>
+                                        
+                                        @if($category->description)
+                                            <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                                {{ $category->description }}
+                                            </p>
+                                        @endif
 
-                                    <div class="flex items-center gap-4 flex-wrap text-gray-500">
-                                        <p class="flex items-center gap-1.5 text-sm text-gray-600">
-                                            <img src="{{ asset('images/wechat.svg') }}" alt="Chat Icon" class="w-4 h-4">
-                                            <span class="font-medium">{{ $category->threads()->count() ?? 0 }} threads</span>
-                                        </p>
-                                        <p class="flex items-center gap-1.5 text-sm text-gray-600">
-                                            <img src="{{ asset('images/calendar-03.svg') }}" alt="Calendar Icon" class="w-4 h-4">
-                                            <span>{{ $category->created_at->format('M d, Y') }}</span>
-                                        </p>
+                                        <div class="flex items-center gap-4 flex-wrap text-sm text-gray-600">
+                                            <span class="flex items-center gap-1.5">
+                                                <i class="fas fa-comments text-blue-500"></i>
+                                                <span class="font-medium">{{ $threadCount }} {{ Str::plural('thread', $threadCount) }}</span>
+                                            </span>
+                                            @if($latestThread)
+                                                <span class="flex items-center gap-1.5">
+                                                    <i class="fas fa-clock text-gray-400"></i>
+                                                    <span>Updated {{ $latestThread->diffForHumans() }}</span>
+                                                </span>
+                                            @endif
+                                            <span class="flex items-center gap-1.5">
+                                                <i class="fas fa-calendar text-gray-400"></i>
+                                                <span>Created {{ $category->created_at->format('M d, Y') }}</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-2">
                                         <a href="{{ Forum::route('category.edit', $category) }}"
-                                            class="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 transition font-medium">
-                                            <img src="{{ asset('images/pencil-edit-01.svg') }}" class="w-4 h-4">
-                                            <span>Edit</span>
+                                            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="Edit Forum">
+                                            <i class="fas fa-edit"></i>
                                         </a>
-
                                         <a href="{{ Forum::route('thread.create', $category) }}"
-                                            class="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 transition font-medium">
-                                            <img src="{{ asset('images/add-circle.svg') }}" class="w-4 h-4">
-                                            <span>Add New Thread</span>
+                                            class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                            title="Add Thread">
+                                            <i class="fas fa-plus"></i>
                                         </a>
                                     </div>
                                 </div>
-                                <img src="{{ asset('images/down-arr.svg') }}" alt="Expand Icon" class="w-4 h-5 transition-transform duration-200 arrow-icon flex-shrink-0 mt-1" />
-                            </h4>
 
-                            <div class="hidden section-content pl-4">
-                                @if ($category->accepts_threads && $category->threads->count())
-                                    <ol class="text-gray-600 mt-3 space-y-1.5 font-medium text-sm">
-                                        @foreach($category->threads as $index => $thread)
+                                @if($category->accepts_threads && $threadCount > 0)
+                                    <button onclick="toggleSection(this)" 
+                                            class="w-full text-left text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                        <span>View {{ $threadCount }} {{ Str::plural('thread', $threadCount) }}</span>
+                                        <i class="fas fa-chevron-down transition-transform arrow-icon"></i>
+                                    </button>
+                                    
+                                    <div class="hidden section-content mt-3 space-y-2">
+                                        @foreach($category->threads->take(10) as $index => $thread)
                                             @php
-                                                $isActive = isset($selectedThread) && $selectedThread && $selectedThread->id === $thread->id;
+                                                $isThreadActive = isset($selectedThread) && $selectedThread && $selectedThread->id === $thread->id;
                                             @endphp
-                                            <li wire:key="thread-{{ $thread->id }}" 
-                                                class="group p-2.5 pl-4 hover:bg-blue-50 rounded-lg border border-transparent hover:border-blue-200 flex items-start gap-2 transition-colors">
-                                                <span class="text-gray-400 font-medium">{{ $index + 1 }}.</span>
-                                                <a href="{{ Forum::route('thread.show', $thread) }}" 
-                                                    class="text-gray-700 hover:text-blue-600 capitalize flex-1 transition-colors">
-                                                    {{ $thread->title }}
-                                                </a>
-                                            </li>
+                                            <a href="{{ Forum::route('thread.show', $thread) }}" 
+                                                class="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all {{ $isThreadActive ? 'bg-blue-100 border-blue-400' : '' }}">
+                                                <div class="flex items-start gap-3">
+                                                    @if($thread->pinned)
+                                                        <i class="fas fa-thumbtack text-yellow-500 mt-1"></i>
+                                                    @else
+                                                        <i class="fas fa-circle text-gray-300 text-[6px] mt-2"></i>
+                                                    @endif
+                                                    <div class="flex-1 min-w-0">
+                                                        <h5 class="font-medium text-gray-900 truncate">
+                                                            {{ $thread->title }}
+                                                        </h5>
+                                                        <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                                                            <span>{{ $thread->posts->count() }} {{ Str::plural('reply', $thread->posts->count()) }}</span>
+                                                            <span>•</span>
+                                                            <span>{{ $thread->updated_at->diffForHumans() }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </a>
                                         @endforeach
-                                    </ol>
-                                @else
-                                    <p class="text-gray-400 text-sm mt-3 px-4 py-2 bg-gray-50 rounded-lg">No threads available</p>
-                                @endif
+                                        @if($threadCount > 10)
+                                            <a href="{{ Forum::route('category.show', $category) }}" 
+                                                class="block text-center py-2 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                                                View all {{ $threadCount }} threads →
+                                            </a>
+                                        @endif
+                                    </div>
+                            @else
+                                <div class="text-center py-6 px-4 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div class="mb-4">
+                                        <i class="fas fa-comments text-4xl text-gray-300 mb-3"></i>
+                                        <p class="text-sm font-medium text-gray-600 mb-1">No threads yet</p>
+                                        <p class="text-xs text-gray-500">Be the first to start a discussion in this forum</p>
+                                    </div>
+                                    <a href="{{ Forum::route('thread.create', $category) }}" 
+                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                                        <i class="fas fa-plus-circle"></i>
+                                        Create First Thread
+                                    </a>
+                                </div>
+                            @endif
                             </div>
                         </div>
                         @endforeach
@@ -243,31 +364,6 @@
                     </div>
                 @elseif(isset($selectedThread) && $selectedThread)
                     @livewire('forum::categories.thread-view', ['threadId' => $selectedThread->id], key('thread-' . $selectedThread->id))
-                @else
-                    <div id="welcome-section" class="flex flex-col items-center justify-center min-h-[300px] sm:min-h-[400px] h-full text-center py-6 sm:py-12 px-4">
-                        <div class="bg-blue-600 rounded-full p-3 sm:p-4 mb-4 sm:mb-6 shadow-lg flex items-center justify-center">
-                            <img src="{{ asset('images/department-forums-image-02-blue.svg') }}" class="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px]" alt="WeChat Icon" />
-                        </div>
-                        <h1 class="text-2xl sm:text-3xl md:text-4xl font-semibold text-blue-600 mb-3 sm:mb-4">Welcome to Department Forums</h1>
-                        <p class="text-gray-600 text-base sm:text-lg max-w-md mb-6 sm:mb-8">Select a forum category from the left to view and participate in discussions.</p>
-                        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-center w-full sm:w-auto">
-                            <a href="{{ route('forum.messages.index') }}" 
-                                class="px-6 sm:px-8 py-3 sm:py-3.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium text-sm sm:text-base inline-flex items-center justify-center shadow-md hover:shadow-lg whitespace-nowrap min-w-[160px]">
-                                <svg class="w-5 h-5 mr-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                                </svg>
-                                <span>Start Direct Chat</span>
-                            </a>
-                            <button wire:click="$dispatch('openSendMessage')" 
-                                class="px-6 sm:px-8 py-3 sm:py-3.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 font-medium text-sm sm:text-base inline-flex items-center justify-center shadow-md hover:shadow-lg whitespace-nowrap min-w-[160px]">
-                                <svg class="w-5 h-5 mr-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                </svg>
-                                <span>New Message</span>
-                            </button>
-                        </div>
-                        <livewire:forum.send-message />
-                    </div>
                 @endif
             </section>
         </div>
@@ -280,93 +376,193 @@
     <div class="flex flex-col lg:flex-row user-forum h-[calc(100vh-100px)] gap-4 lg:gap-x-[24px] bg-gray-100">
 
         <!-- Left Sidebar -->
-        <div class="w-full lg:w-90 bg-white rounded-xl flex flex-col">
-            <div class="p-4">
+        <div class="w-full lg:w-90 bg-white rounded-xl flex flex-col shadow-sm">
+            <div class="p-4 border-b border-gray-100 space-y-3">
+                <!-- Create Forum Button -->
+                <a href="{{ Forum::route('category.create') }}" 
+                   class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm shadow-sm">
+                    <i class="fas fa-plus-circle"></i>
+                    Create New Forum
+                </a>
+                
                 <!-- Search -->
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="relative flex-1">
-                        <input type="search" 
-                            wire:model.live.debounce.300ms="search"
-                            placeholder="Search Topics"
-                            class="w-full py-3 px-4 rounded-lg border border-gray-200 focus:outline-none focus:border focus:!border-blue-200 text-sm !pl-[40px] font-medium !bg-[#F8F9FA]" />
-                        <div class="!absolute !left-3 !top-1/2 !transform !-translate-y-1/2 pointer-events-none">
-                            <img src="{{ asset('images/search.svg') }}" alt="">
-                        </div>
-                        @if(!empty($search))
-                            <button wire:click="$set('search', '')" 
-                                class="!absolute !right-3 !top-1/2 !transform !-translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                type="button">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        @endif
+                <div class="relative flex-1">
+                    <input type="search" 
+                        wire:model.live.debounce.300ms="search"
+                        placeholder="Search forums, threads..."
+                        class="w-full py-3 px-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm pl-10 font-medium bg-[#F8F9FA]" />
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <img src="{{ asset('images/search.svg') }}" alt="Search" class="w-5 h-5">
                     </div>
+                    @if(!empty($search))
+                        <button wire:click="$set('search', '')" 
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            type="button">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    @endif
+                </div>
+                
+                <!-- Filter & Sort Controls -->
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <select wire:model.live="filterBy" 
+                            class="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                        <option value="all">All Forums</option>
+                        <option value="active">Active (Last 7 days)</option>
+                        <option value="pinned">Pinned</option>
+                    </select>
+                    <select wire:model.live="sortBy" 
+                            class="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                        <option value="recent">Most Recent</option>
+                        <option value="popular">Most Popular</option>
+                        <option value="most_threads">Most Threads</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
                 </div>
             </div>
 
             <!-- Forum List -->
-            <nav class="flex-1 overflow-y-auto px-4 pb-4 [scrollbar-width:none]">
+            <nav class="flex-1 overflow-y-auto p-4 space-y-3">
                 @php
                     $categoriesToDisplay = isset($displayCategories) ? $displayCategories : $categories;
                 @endphp
-                @if(empty($categoriesToDisplay) && !empty($search))
-                    <div class="text-center py-8 text-gray-500">
-                        <p>No categories found matching "{{ $search }}"</p>
+                @if(empty($categoriesToDisplay))
+                    <div class="text-center py-12">
+                        <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-search text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500 text-lg font-medium">
+                            @if(!empty($search))
+                                No forums found matching "{{ $search }}"
+                            @else
+                                No forums available
+                            @endif
+                        </p>
+                        @if(!empty($search))
+                            <button wire:click="$set('search', '')" 
+                                class="mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                Clear search
+                            </button>
+                        @endif
                     </div>
                 @else
                     @foreach($categoriesToDisplay as $category)
-                    <div class="mb-4 pb-4 border-b border-gray-100 last:border-b-0">
-                        <h4 class="font-semibold text-gray-700 mb-3 hover:text-blue-600 flex justify-between gap-2 items-start cursor-pointer px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            onclick="toggleSection(this)">
-                            
-                            <div class="flex flex-col flex-1">
-                                <span class="capitalize text-base mb-2">{{ $category->title }}</span>
+                    @php
+                        $threadCount = $category->threads->count();
+                        $latestThread = $category->threads->max('updated_at');
+                        $isActive = $latestThread && $latestThread->gt(now()->subDays(7));
+                        $pinnedThreads = $category->threads->where('pinned', true)->count();
+                    @endphp
+                    <div class="border border-gray-200 rounded-lg hover:shadow-md transition-all bg-white">
+                        <div class="p-4">
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <h4 class="font-semibold text-gray-900 text-lg capitalize">
+                                            {{ $category->title }}
+                                        </h4>
+                                        @if($pinnedThreads > 0)
+                                            <span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                <i class="fas fa-thumbtack mr-1"></i>Pinned
+                                            </span>
+                                        @endif
+                                        @if($isActive)
+                                            <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">
+                                                <i class="fas fa-circle text-[8px] mr-1"></i>Active
+                                            </span>
+                                        @endif
+                                    </div>
+                                    
+                                    @if($category->description)
+                                        <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                            {{ $category->description }}
+                                        </p>
+                                    @endif
 
-                                <div class="flex items-center gap-4 flex-wrap text-gray-500">
-                                    {{-- Chat Icon + Thread Count --}}
-                                    <p class="flex items-center gap-1.5 text-sm text-gray-600">
-                                        <img src="{{ asset('images/wechat.svg') }}" alt="Chat Icon" class="w-4 h-4" />
-                                        <span class="font-medium">{{ $category->threads()->count() ?? 0 }} threads</span>
-                                    </p>
-
-                                    {{-- Calendar Icon + Created Date --}}
-                                    <p class="flex items-center gap-1.5 text-sm text-gray-600">
-                                        <img src="{{ asset('images/calendar-03.svg') }}" alt="Calendar Icon" class="w-4 h-4" />
-                                        <span>{{ $category->created_at->format('M d, Y') }}</span>
-                                    </p>
+                                    <div class="flex items-center gap-4 flex-wrap text-sm text-gray-600">
+                                        <span class="flex items-center gap-1.5">
+                                            <i class="fas fa-comments text-blue-500"></i>
+                                            <span class="font-medium">{{ $threadCount }} {{ Str::plural('thread', $threadCount) }}</span>
+                                        </span>
+                                        @if($latestThread)
+                                            <span class="flex items-center gap-1.5">
+                                                <i class="fas fa-clock text-gray-400"></i>
+                                                <span>Updated {{ $latestThread->diffForHumans() }}</span>
+                                            </span>
+                                        @endif
+                                        <span class="flex items-center gap-1.5">
+                                            <i class="fas fa-calendar text-gray-400"></i>
+                                            <span>Created {{ $category->created_at->format('M d, Y') }}</span>
+                                        </span>
+                                    </div>
+                                    
+                                    @if($category->accepts_threads)
+                                        <div class="mt-3">
+                                            <a href="{{ Forum::route('thread.create', $category) }}"
+                                                class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors font-medium">
+                                                <i class="fas fa-plus-circle text-xs"></i>
+                                                <span>Add Thread</span>
+                                            </a>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
 
-                            <!-- Arrow icon -->
-                            <img src="{{ asset('images/down-arr.svg') }}" alt="Expand Icon" 
-                                class="w-4 h-5 transition-transform duration-200 arrow-icon flex-shrink-0 mt-1" />
-                        </h4>
-
-                        <div class="hidden section-content pl-4">
-                            @if ($category->accepts_threads && $category->threads->count())
-                                <ol class="text-gray-600 mt-3 space-y-1.5 font-medium text-sm">
-                                    @foreach($category->threads as $index => $thread)
+                            @if($category->accepts_threads && $threadCount > 0)
+                                <button onclick="toggleSection(this)" 
+                                        class="w-full text-left text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <span>View {{ $threadCount }} {{ Str::plural('thread', $threadCount) }}</span>
+                                    <i class="fas fa-chevron-down transition-transform arrow-icon"></i>
+                                </button>
+                                
+                                <div class="hidden section-content mt-3 space-y-2">
+                                    @foreach($category->threads->take(10) as $index => $thread)
                                         @php
                                             $isActive = isset($selectedThread) && $selectedThread->id === $thread->id;
                                         @endphp
-
-                                        <li wire:key="thread-{{ $thread->id }}" 
-                                            class="group p-2.5 pl-4 hover:bg-blue-50 rounded-lg border border-transparent hover:border-blue-200 flex items-start gap-2 transition-colors {{ $isActive ? 'bg-blue-50 border-blue-200' : '' }}">
-
-                                            <!-- Thread Title -->
-                                            <div class="flex items-center gap-2 flex-1">
-                                                <span class="text-gray-400 font-medium">{{ $index + 1 }}.</span>
-                                                <a href="{{ Forum::route('thread.show', $thread) }}"
-                                                    class="text-gray-700 hover:text-blue-600 capitalize flex-1 transition-colors">
-                                                    {{ $thread->title }}
-                                                </a>
+                                        <a href="{{ Forum::route('thread.show', $thread) }}" 
+                                            class="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all {{ $isActive ? 'bg-blue-100 border-blue-400' : '' }}">
+                                            <div class="flex items-start gap-3">
+                                                @if($thread->pinned)
+                                                    <i class="fas fa-thumbtack text-yellow-500 mt-1"></i>
+                                                @else
+                                                    <i class="fas fa-circle text-gray-300 text-[6px] mt-2"></i>
+                                                @endif
+                                                <div class="flex-1 min-w-0">
+                                                    <h5 class="font-medium text-gray-900 truncate">
+                                                        {{ $thread->title }}
+                                                    </h5>
+                                                    <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                                                        <span>{{ $thread->posts->count() }} {{ Str::plural('reply', $thread->posts->count()) }}</span>
+                                                        <span>•</span>
+                                                        <span>{{ $thread->updated_at->diffForHumans() }}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </li>
+                                        </a>
                                     @endforeach
-                                </ol>
+                                    @if($threadCount > 10)
+                                        <a href="{{ Forum::route('category.show', $category) }}" 
+                                            class="block text-center py-2 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                                            View all {{ $threadCount }} threads →
+                                        </a>
+                                    @endif
+                                </div>
                             @else
-                                <p class="text-gray-400 text-sm mt-3 px-4 py-2 bg-gray-50 rounded-lg">No threads available</p>
+                                <div class="text-center py-6 px-4 bg-gray-50 rounded-lg border border-gray-200 mt-3">
+                                    <div class="mb-4">
+                                        <i class="fas fa-comments text-4xl text-gray-300 mb-3"></i>
+                                        <p class="text-sm font-medium text-gray-600 mb-1">No threads available</p>
+                                        <p class="text-xs text-gray-500">Start a new discussion in this forum</p>
+                                    </div>
+                                    <a href="{{ Forum::route('thread.create', $category) }}" 
+                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                                        <i class="fas fa-plus-circle"></i>
+                                        Create New Thread
+                                    </a>
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -466,33 +662,6 @@
             @elseif(isset($selectedThread) && $selectedThread)
                     {{-- Livewire Thread View --}}
                     @livewire('forum::categories.thread-view', ['threadId' => $selectedThread->id], key('thread-' . $selectedThread->id))
-            @else
-                <div id="welcome-section" class="flex flex-col items-center justify-center min-h-[300px] sm:min-h-[400px] h-full text-center py-6 sm:py-12 px-4">
-                    <div class="bg-blue-600 rounded-full p-3 sm:p-4 mb-4 sm:mb-6 shadow-lg flex items-center justify-center">
-                        <img src="{{ asset('images/department-forums-image-02-blue.svg') }}" class="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px]" alt="WeChat Icon" />
-                    </div>
-                    <h1 class="text-2xl sm:text-3xl md:text-4xl font-semibold text-blue-600 mb-3 sm:mb-4">
-                        Welcome to Department Forums
-                    </h1>
-                    <p class="text-gray-600 text-base sm:text-lg max-w-md mb-6 sm:mb-8">Select a forum category from the left to view and participate in discussions.</p>
-                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-center w-full sm:w-auto">
-                        <a href="{{ route('forum.messages.index') }}" 
-                            class="px-6 sm:px-8 py-3 sm:py-3.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium text-sm sm:text-base inline-flex items-center justify-center shadow-md hover:shadow-lg whitespace-nowrap min-w-[160px]">
-                            <svg class="w-5 h-5 mr-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                            </svg>
-                            <span>Start Direct Chat</span>
-                        </a>
-                        <button wire:click="$dispatch('openSendMessage')" 
-                            class="px-6 sm:px-8 py-3 sm:py-3.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 font-medium text-sm sm:text-base inline-flex items-center justify-center shadow-md hover:shadow-lg whitespace-nowrap min-w-[160px]">
-                            <svg class="w-5 h-5 mr-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                            </svg>
-                            <span>New Message</span>
-                        </button>
-                    </div>
-                    <livewire:forum.send-message />
-                </div>
             @endif
         </section>
 

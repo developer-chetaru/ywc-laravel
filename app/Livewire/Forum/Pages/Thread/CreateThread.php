@@ -109,9 +109,18 @@ class CreateThread extends Component
 
         $this->breadcrumbs_append = [trans('forum::threads.new_thread')];
 
-        if (!CategoryAuthorization::createThreads($request->user(), $this->category)) {
-            abort(403, 'You do not have permission to create threads in this category.');
+        // Allow all authenticated users to create threads if category accepts threads
+        if (!$request->user()) {
+            abort(403, 'You must be logged in to create a thread.');
         }
+        
+        if (!$this->category->accepts_threads) {
+            abort(403, 'This category does not accept threads.');
+        }
+        
+        // Allow all authenticated users to create threads
+        // Role restrictions only apply to viewing, not creating
+        // This allows users to participate in discussions even if they don't have view access yet
 
         // Get source module parameters from query string
         $this->source_module = $request->query('source_module');
@@ -164,15 +173,32 @@ class CreateThread extends Component
             return;
         }
 
-        if (!CategoryAuthorization::createThreads($request->user(), $this->category)) {
-            abort(403, 'You do not have permission to create threads in this category.');
+        // Allow all authenticated users to create threads if category accepts threads
+        if (!$request->user()) {
+            abort(403, 'You must be logged in to create a thread.');
+        }
+        
+        if (!$this->category->accepts_threads) {
+            abort(403, 'This category does not accept threads.');
+        }
+        
+        // Allow all authenticated users to create threads
+        // Role restrictions only apply to viewing, not creating
+
+        // Get content from request if not set in component (from editor event)
+        if (empty($this->content) && $request->has('editor_content')) {
+            $this->content = $request->input('editor_content');
         }
 
         $validated = $this->validate(ThreadRules::create());
 
-        // Sanitize HTML content
+        // Strip HTML tags and convert to plain text/markdown
+        // This ensures content is saved as markdown, not HTML
+        $plainContent = strip_tags($validated['content']);
+        
+        // Sanitize content (for quote tags and other special formatting)
         $sanitizer = app(HtmlSanitizerService::class);
-        $sanitizedContent = $sanitizer->sanitize($validated['content']);
+        $sanitizedContent = $sanitizer->sanitize($plainContent);
 
         $action = new Action($this->category, $request->user(), $validated['title'], $sanitizedContent);
         $thread = $action->execute();

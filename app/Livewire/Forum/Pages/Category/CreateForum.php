@@ -3,6 +3,7 @@
 namespace App\Livewire\Forum\Pages\Category;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Illuminate\Http\Request;
 use TeamTeaTime\Forum\Models\Category;
 use TeamTeaTime\Forum\Models\Thread;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use App\Services\Forum\ForumRoleAccessService;
 use App\Services\Forum\ForumReputationService;
 
+#[Layout('forum::layouts.main')]
 class CreateForum extends Component
 {
     // Form fields
@@ -37,8 +39,15 @@ class CreateForum extends Component
 
     public function mount(Request $request)
     {
-        if (!CategoryAuthorization::create($request->user())) {
-            abort(403);
+        \Log::info('=== CreateForum::mount() CALLED ===', [
+            'user_id' => $request->user()?->id,
+            'url' => $request->fullUrl(),
+        ]);
+        
+        // Allow all authenticated users to create forums
+        if (!$request->user()) {
+            \Log::error('CreateForum::mount() - User not authenticated');
+            abort(403, 'You must be logged in to create a forum.');
         }
 
         // Get available categories for parent selection
@@ -49,6 +58,11 @@ class CreateForum extends Component
         
         // Get all roles
         $this->loadRoles();
+        
+        \Log::info('CreateForum::mount() - Component initialized', [
+            'categories_count' => count($this->availableCategories),
+            'roles_count' => count($this->roles),
+        ]);
     }
 
     public function loadRoles()
@@ -90,11 +104,46 @@ class CreateForum extends Component
         $this->loadRoles();
     }
 
-    public function store(Request $request)
+    public function store()
     {
-        if (!CategoryAuthorization::create($request->user())) {
-            abort(403);
+        $request = request();
+        
+        // Log to both Laravel log and return to browser console via Livewire
+        \Log::info('=== CreateForum::store() METHOD CALLED ===', [
+            'title' => $this->title,
+            'description' => $this->description,
+            'parent_category' => $this->parent_category,
+            'selectedRoles' => $this->selectedRoles,
+            'threadTitle' => $this->threadTitle,
+            'threadDescription' => $this->threadDescription,
+            'user_id' => $request->user()?->id,
+            'request_method' => $request->method(),
+            'request_url' => $request->fullUrl(),
+        ]);
+        
+        // Dispatch event to browser console
+        $this->dispatch('console-log', message: '=== CreateForum::store() METHOD CALLED ===');
+        
+        // Allow all authenticated users to create forums
+        if (!$request->user()) {
+            \Log::error('CreateForum::store() - User not authenticated');
+            $this->dispatch('console-log', message: 'ERROR: User not authenticated');
+            abort(403, 'You must be logged in to create a forum.');
         }
+        
+        $this->dispatch('console-log', message: 'User authenticated: ' . $request->user()->id);
+        
+        // Dispatch event to browser console
+        $this->dispatch('console-log', message: '=== CreateForum::store() METHOD CALLED ===');
+        
+        // Allow all authenticated users to create forums
+        if (!$request->user()) {
+            \Log::error('CreateForum::store() - User not authenticated');
+            $this->dispatch('console-log', message: 'ERROR: User not authenticated');
+            abort(403, 'You must be logged in to create a forum.');
+        }
+        
+        $this->dispatch('console-log', message: 'User authenticated: ' . $request->user()->id);
 
         // Normalize parent_category first (convert empty string to null)
         if (empty($this->parent_category) || $this->parent_category === '' || $this->parent_category === '0') {
@@ -114,7 +163,11 @@ class CreateForum extends Component
             $rules['parent_category'] = 'required|integer|exists:forum_categories,id';
         }
         
+        \Log::info('CreateForum::store() - Validating data', ['rules' => $rules]);
+        
         $validated = $this->validate($rules);
+        
+        \Log::info('CreateForum::store() - Validation passed', ['validated' => $validated]);
         
         // Ensure parent_category is set correctly
         $validated['parent_category'] = $this->parent_category;
@@ -134,6 +187,8 @@ class CreateForum extends Component
             );
             
             $category = $action->execute();
+            
+            \Log::info('CreateForum::store() - Category created', ['category_id' => $category->id, 'category_title' => $category->title]);
 
             // Set parent category if provided
             if (!empty($validated['parent_category']) && $validated['parent_category'] > 0) {
@@ -170,6 +225,10 @@ class CreateForum extends Component
                 $postContent = !empty($validated['threadDescription']) 
                     ? $validated['threadDescription'] 
                     : $validated['threadTitle']; // Use title as content if description is empty
+                
+                // Strip HTML tags and convert to plain text/markdown
+                // This ensures content is saved as markdown, not HTML
+                $postContent = strip_tags($postContent);
                     
                 $post = Post::create([
                     'thread_id' => $thread->id,
@@ -185,15 +244,30 @@ class CreateForum extends Component
             UserCreatedCategory::dispatch($request->user(), $category);
 
             DB::commit();
-
-            session()->flash('success', 'Forum created successfully!');
             
+            \Log::info('CreateForum::store() - Transaction committed successfully', ['category_id' => $category->id]);
+
             // Reset form
             $this->resetForm();
             
+            // Set success message in session before redirect
+            session()->flash('success', 'Forum created successfully!');
+            
+            \Log::info('CreateForum::store() - Redirecting to category index');
+            
+            // Redirect to the category index page
+            return $this->redirect(route('forum.category.index'), navigate: true);
+            
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Forum creation error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $request->user()->id ?? null,
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             session()->flash('error', 'Error creating forum: ' . $e->getMessage());
+            throw $e; // Re-throw to see error in browser
         }
     }
 
@@ -215,6 +289,6 @@ class CreateForum extends Component
 
     public function render()
     {
-        return view('pages.category.create-forum');
+        return view('pages.category.create-forum')->layout('forum::layouts.main');
     }
 }

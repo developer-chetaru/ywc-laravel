@@ -30,7 +30,20 @@
         </div>
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
-            <form wire:submit="create">
+            <form wire:submit="create" 
+                  x-data="{ 
+                      onSubmit(e) {
+                          // Get content from editor before submit
+                          const editorElement = document.getElementById('create-thread-editor-editor');
+                          if (editorElement && window.__quillEditors && window.__quillEditors['create-thread-editor']) {
+                              const quill = window.__quillEditors['create-thread-editor'];
+                              const html = quill.root.innerHTML;
+                              const markdown = window.__quillHelpers.htmlToMarkdown(html);
+                              $wire.set('content', markdown);
+                          }
+                      }
+                  }"
+                  @submit="onSubmit">
                 {{-- Hidden fields for source module --}}
                 @if ($source_module)
                     <input type="hidden" wire:model="source_module">
@@ -46,7 +59,11 @@
                         wire:model="title" />
                 </div>
 
-                <div class="mb-6" x-data @editor-content-updated.window="if ($event.detail.editorId === 'create-thread-editor') { $wire.set('content', $event.detail.content); }">
+                <div class="mb-6" x-data @editor-content-updated.window="if ($event.detail.editorId === 'create-thread-editor') { 
+                    // Store content without triggering Livewire re-render
+                    // Content will be available when form is submitted
+                    console.log('Editor content updated:', $event.detail.content);
+                }">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         {{ trans('forum::general.content') }}
                     </label>

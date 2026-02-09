@@ -25,6 +25,8 @@ class CategoryIndex extends Component
     public $selectedThread = null;
     public $search = '';
     public $filteredCategories = [];
+    public $sortBy = 'recent'; // recent, popular, oldest, most_threads
+    public $filterBy = 'all'; // all, active, pinned
     
     // Direct Chat properties
     public $showDirectChat = false;
@@ -73,20 +75,61 @@ class CategoryIndex extends Component
         $this->applyFilters();
     }
 
+    public function updatedSortBy()
+    {
+        $this->applyFilters();
+    }
+
+    public function updatedFilterBy()
+    {
+        $this->applyFilters();
+    }
+
     public function applyFilters()
     {
-        $allCategories = $this->categories;
+        $allCategories = collect($this->categories);
         
         // Filter by search term
         if (!empty(trim($this->search))) {
             $searchTerm = strtolower(trim($this->search));
-            $allCategories = collect($allCategories)->filter(function($category) use ($searchTerm) {
+            $allCategories = $allCategories->filter(function($category) use ($searchTerm) {
                 return str_contains(strtolower($category->title), $searchTerm) ||
-                       str_contains(strtolower($category->description ?? ''), $searchTerm);
-            })->values()->all();
+                       str_contains(strtolower($category->description ?? ''), $searchTerm) ||
+                       $category->threads->contains(function($thread) use ($searchTerm) {
+                           return str_contains(strtolower($thread->title), $searchTerm);
+                       });
+            });
         }
         
-        $this->filteredCategories = $allCategories;
+        // Filter by status
+        if ($this->filterBy === 'active') {
+            $allCategories = $allCategories->filter(function($category) {
+                return $category->threads->count() > 0 && 
+                       $category->threads->max('updated_at') > now()->subDays(7);
+            });
+        } elseif ($this->filterBy === 'pinned') {
+            $allCategories = $allCategories->filter(function($category) {
+                return $category->threads->contains('pinned', true);
+            });
+        }
+        
+        // Sort categories
+        $allCategories = $allCategories->sortBy(function($category) {
+            switch ($this->sortBy) {
+                case 'popular':
+                    return -$category->threads->count(); // Most threads first
+                case 'oldest':
+                    return $category->created_at->timestamp;
+                case 'most_threads':
+                    return -$category->threads->count();
+                case 'recent':
+                default:
+                    $latestThread = $category->threads->max('updated_at');
+                    return $latestThread ? -$latestThread->timestamp : -$category->created_at->timestamp;
+            }
+        })->values();
+        
+        $this->filteredCategories = $allCategories->all();
     }
 
     public function loadThread($threadId)
@@ -291,8 +334,8 @@ class CategoryIndex extends Component
         // Calculate total threads
         $totalThreads = Thread::count();
 
-        // Use filtered categories if search is active, otherwise use all categories
-        $displayCategories = !empty(trim($this->search)) ? $this->filteredCategories : $this->categories;
+        // Use filtered categories (includes search, sort, and filter)
+        $displayCategories = $this->filteredCategories;
 
         // Get all users for Direct Chat (all users in the system)
         $usersQuery = User::where('id', '!=', auth()->id())

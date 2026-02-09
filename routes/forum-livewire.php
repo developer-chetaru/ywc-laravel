@@ -19,7 +19,7 @@ $prefix = config('forum.frontend.route_prefixes');
 
 Route::get('/', CategoryIndex::class)->name('category.index');
 Route::get('category/order', UpdateCategoryTree::class)->name('category.order');
-Route::get('category/create', CategoryCreate::class)->name('category.create');
+Route::get('category/create', \App\Livewire\Forum\Pages\Category\CreateForum::class)->name('category.create');
 
 Route::get('recent', RecentThreads::class)->name('recent');
 Route::get('unread', UnreadThreads::class)->name('unread');
