@@ -85,27 +85,7 @@
 
             <!-- Left Sidebar -->
             <div class="w-full lg:w-100 bg-white rounded-xl flex flex-col overflow-hidden shadow-sm">
-                <div class="p-4 border-b border-gray-100 space-y-3">
-                    <!-- Search -->
-                    <div class="relative flex-1">
-                        <input type="search" 
-                            wire:model.live.debounce.300ms="search"
-                            placeholder="Search forums, threads..."
-                            class="w-full py-3 px-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm pl-10 font-medium bg-[#F8F9FA]" />
-                        <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <img src="{{ asset('images/search.svg') }}" alt="Search" class="w-5 h-5">
-                        </div>
-                        @if(!empty($search))
-                            <button wire:click="$set('search', '')" 
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                type="button">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        @endif
-                    </div>
-                    
+                <div class="p-4 border-b border-gray-100">
                     <!-- Filter & Sort Controls -->
                     <div class="flex flex-col sm:flex-row gap-2">
                         <select wire:model.live="filterBy" 
@@ -125,6 +105,27 @@
                 </div>
 
                 <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                    <!-- Search Bar -->
+                    <div class="mb-6">
+                        <div class="relative group">
+                            <input type="search" 
+                                wire:model.live.debounce.300ms="search"
+                                placeholder="Search forums, threads..."
+                                class="w-full py-3.5 px-5 pl-14 pr-12 rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium bg-white shadow-md hover:shadow-lg hover:border-blue-300 transition-all duration-300 placeholder:text-gray-400" />
+                            <div class="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <i class="fas fa-search text-blue-500 text-base"></i>
+                            </div>
+                            @if(!empty($search))
+                                <button wire:click="$set('search', '')" 
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-all duration-200 p-1.5 rounded-lg hover:bg-gray-100 group"
+                                    type="button"
+                                    title="Clear search">
+                                    <i class="fas fa-times text-sm"></i>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                    
                     @php
                         $categoriesToDisplay = isset($displayCategories) ? $displayCategories : $categories;
                     @endphp
@@ -169,7 +170,7 @@
                                                 </span>
                                             @endif
                                             @if($isActive)
-                                                <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">
+                                                <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded">
                                                     <i class="fas fa-circle text-[8px] mr-1"></i>Active
                                                 </span>
                                             @endif
@@ -206,7 +207,7 @@
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <a href="{{ Forum::route('thread.create', $category) }}"
-                                            class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                             title="Add Thread">
                                             <i class="fas fa-plus"></i>
                                         </a>
@@ -274,98 +275,7 @@
                 </div>
             </div>
 
-            <!-- Right Content -->
-            <section id="main-content" class="flex-1 flex flex-col bg-white rounded-xl shadow-sm p-4 sm:p-6 md:p-8">
-                @if($showDirectChat)
-                    <!-- Direct Chat Section -->
-                    <div class="flex flex-col h-full">
-                        <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-                            <div>
-                                <h2 class="text-2xl font-bold text-gray-900">Direct Chat</h2>
-                                <p class="text-sm text-gray-600 mt-1">Chat with any user in the system</p>
-                            </div>
-                            <button wire:click="toggleDirectChat" 
-                                class="px-4 py-2 text-gray-600 hover:text-gray-900 transition">
-                                <i class="fa-solid fa-arrow-left mr-2"></i>Back to Forums
-                            </button>
-                        </div>
-                        
-                        <!-- Search Users -->
-                        <div class="mb-4">
-                            <div class="relative">
-                                <input type="text" 
-                                    wire:model.live.debounce.300ms="chatSearch"
-                                    placeholder="Search users by name or email..." 
-                                    class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                @if(!empty($chatSearch))
-                                    <button wire:click="$set('chatSearch', '')" 
-                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                        type="button">
-                                        <i class="fa-solid fa-times"></i>
-                                    </button>
-                                @endif
-                            </div>
-                        </div>
-                        
-                        <div class="flex-1 overflow-y-auto">
-                            @if(count($allUsers) > 0)
-                                <div class="space-y-3">
-                                    @foreach($allUsers as $item)
-                                        @php
-                                            $chatUser = $item['user'];
-                                            $unreadCount = $item['unread_count'];
-                                            $lastMessage = $item['last_message'];
-                                        @endphp
-                                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition cursor-pointer" 
-                                            wire:click="openMessageModal({{ $chatUser->id }})">
-                                            <div class="flex items-start gap-4">
-                                                <div class="relative">
-                                                    <img src="{{ $chatUser->profile_photo_url ?? '/default-avatar.png' }}" 
-                                                        alt="{{ $chatUser->name }}" 
-                                                        class="w-12 h-12 rounded-full border-2 {{ $unreadCount > 0 ? 'border-red-500' : 'border-blue-500' }}">
-                                                    @if($unreadCount > 0)
-                                                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                                                            {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="flex items-center justify-between">
-                                                        <h3 class="font-semibold text-gray-900">
-                                                            {{ $chatUser->name }}
-                                                            @if($unreadCount > 0)
-                                                                <span class="text-red-500 text-sm font-normal">({{ $unreadCount }} unread)</span>
-                                                            @endif
-                                                        </h3>
-                                                    </div>
-                                                    @if($lastMessage)
-                                                        <p class="text-sm text-gray-500 mt-1 truncate">
-                                                            {{ $lastMessage->sender_id === auth()->id() ? 'You: ' : '' }}{{ Str::limit($lastMessage->message, 60) }}
-                                                        </p>
-                                                        <p class="text-xs text-gray-400 mt-1">
-                                                            {{ $lastMessage->created_at->diffForHumans() }}
-                                                        </p>
-                                                    @else
-                                                        <p class="text-sm text-gray-400 mt-1">No messages yet</p>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @else
-                                <div class="text-center py-12">
-                                    <i class="fa-solid fa-users text-4xl text-gray-300 mb-4"></i>
-                                    <p class="text-gray-500 text-lg">No users available</p>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                @elseif(isset($selectedThread) && $selectedThread)
-                    @livewire('forum::categories.thread-view', ['threadId' => $selectedThread->id], key('thread-' . $selectedThread->id))
-                @endif
-            </section>
+     
         </div>
 
     </div>
@@ -377,54 +287,38 @@
 
         <!-- Left Sidebar -->
         <div class="w-full lg:w-90 bg-white rounded-xl flex flex-col shadow-sm">
-            <div class="p-4 border-b border-gray-100 space-y-3">
+            <div class="p-4 border-b border-gray-100">
                 <!-- Create Forum Button -->
                 <a href="{{ Forum::route('category.create') }}" 
-                   class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm shadow-sm">
+                   class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm">
                     <i class="fas fa-plus-circle"></i>
                     Create New Forum
                 </a>
-                
-                <!-- Search -->
-                <div class="relative flex-1">
-                    <input type="search" 
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="Search forums, threads..."
-                        class="w-full py-3 px-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm pl-10 font-medium bg-[#F8F9FA]" />
-                    <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <img src="{{ asset('images/search.svg') }}" alt="Search" class="w-5 h-5">
-                    </div>
-                    @if(!empty($search))
-                        <button wire:click="$set('search', '')" 
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                            type="button">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    @endif
-                </div>
-                
-                <!-- Filter & Sort Controls -->
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <select wire:model.live="filterBy" 
-                            class="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
-                        <option value="all">All Forums</option>
-                        <option value="active">Active (Last 7 days)</option>
-                        <option value="pinned">Pinned</option>
-                    </select>
-                    <select wire:model.live="sortBy" 
-                            class="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
-                        <option value="recent">Most Recent</option>
-                        <option value="popular">Most Popular</option>
-                        <option value="most_threads">Most Threads</option>
-                        <option value="oldest">Oldest First</option>
-                    </select>
-                </div>
             </div>
 
             <!-- Forum List -->
             <nav class="flex-1 overflow-y-auto p-4 space-y-3">
+                <!-- Search Bar -->
+                <div class="mb-6">
+                    <div class="relative group">
+                        <input type="search" 
+                            wire:model.live.debounce.300ms="search"
+                            placeholder="Search forums, threads..."
+                            class="w-full py-3.5 px-5 pl-14 pr-12 rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium bg-white shadow-md hover:shadow-lg hover:border-blue-300 transition-all duration-300 placeholder:text-gray-400" />
+                        <div class="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <i class="fas fa-search text-blue-500 text-base"></i>
+                        </div>
+                        @if(!empty($search))
+                            <button wire:click="$set('search', '')" 
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-all duration-200 p-1.5 rounded-lg hover:bg-gray-100 group"
+                                type="button"
+                                title="Clear search">
+                                <i class="fas fa-times text-sm"></i>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+                
                 @php
                     $categoriesToDisplay = isset($displayCategories) ? $displayCategories : $categories;
                 @endphp
@@ -469,7 +363,7 @@
                                             </span>
                                         @endif
                                         @if($isActive)
-                                            <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">
+                                            <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded">
                                                 <i class="fas fa-circle text-[8px] mr-1"></i>Active
                                             </span>
                                         @endif
@@ -501,7 +395,7 @@
                                     @if($category->accepts_threads)
                                         <div class="mt-3">
                                             <a href="{{ Forum::route('thread.create', $category) }}"
-                                                class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors font-medium">
+                                                class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors font-medium">
                                                 <i class="fas fa-plus-circle text-xs"></i>
                                                 <span>Add Thread</span>
                                             </a>
@@ -571,99 +465,7 @@
             </nav>
         </div>
 
-        <!-- Right Content -->
-        <section id="main-content" class="flex-1 flex flex-col bg-white rounded-xl shadow-sm p-6 md:p-8">
-            @if($showDirectChat)
-                <!-- Direct Chat Section -->
-                <div class="flex flex-col h-full">
-                    <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900">Direct Chat</h2>
-                            <p class="text-sm text-gray-600 mt-1">Chat with any user in the system</p>
-                        </div>
-                        <button wire:click="toggleDirectChat" 
-                            class="px-4 py-2 text-gray-600 hover:text-gray-900 transition">
-                            <i class="fa-solid fa-arrow-left mr-2"></i>Back to Forums
-                        </button>
-                    </div>
-                    
-                    <!-- Search Users -->
-                    <div class="mb-4">
-                        <div class="relative">
-                            <input type="text" 
-                                wire:model.live.debounce.300ms="chatSearch"
-                                placeholder="Search users by name or email..." 
-                                class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                            @if(!empty($chatSearch))
-                                <button wire:click="$set('chatSearch', '')" 
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                    type="button">
-                                    <i class="fa-solid fa-times"></i>
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-                    
-                    <div class="flex-1 overflow-y-auto">
-                        @if(count($allUsers) > 0)
-                            <div class="space-y-3">
-                                @foreach($allUsers as $item)
-                                    @php
-                                        $chatUser = $item['user'];
-                                        $unreadCount = $item['unread_count'];
-                                        $lastMessage = $item['last_message'];
-                                    @endphp
-                                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition cursor-pointer" 
-                                        wire:click="openMessageModal({{ $chatUser->id }})">
-                                        <div class="flex items-start gap-4">
-                                            <div class="relative">
-                                                <img src="{{ $chatUser->profile_photo_url ?? '/default-avatar.png' }}" 
-                                                    alt="{{ $chatUser->name }}" 
-                                                    class="w-12 h-12 rounded-full border-2 {{ $unreadCount > 0 ? 'border-red-500' : 'border-blue-500' }}">
-                                                @if($unreadCount > 0)
-                                                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                                                        {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            <div class="flex-1">
-                                                <div class="flex items-center justify-between">
-                                                    <h3 class="font-semibold text-gray-900">
-                                                        {{ $chatUser->name }}
-                                                        @if($unreadCount > 0)
-                                                            <span class="text-red-500 text-sm font-normal">({{ $unreadCount }} unread)</span>
-                                                        @endif
-                                                    </h3>
-                                                </div>
-                                                @if($lastMessage)
-                                                    <p class="text-sm text-gray-500 mt-1 truncate">
-                                                        {{ $lastMessage->sender_id === auth()->id() ? 'You: ' : '' }}{{ Str::limit($lastMessage->message, 60) }}
-                                                    </p>
-                                                    <p class="text-xs text-gray-400 mt-1">
-                                                        {{ $lastMessage->created_at->diffForHumans() }}
-                                                    </p>
-                                                @else
-                                                    <p class="text-sm text-gray-400 mt-1">No messages yet</p>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="text-center py-12">
-                                <i class="fa-solid fa-users text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-gray-500 text-lg">No users available</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @elseif(isset($selectedThread) && $selectedThread)
-                    {{-- Livewire Thread View --}}
-                    @livewire('forum::categories.thread-view', ['threadId' => $selectedThread->id], key('thread-' . $selectedThread->id))
-            @endif
-        </section>
+
 
     </div>
     </div>

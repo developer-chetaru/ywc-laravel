@@ -175,21 +175,49 @@
                      });
                  }
                  
-                 // Handle Ctrl+Enter to submit
-                 this.quill.root.addEventListener('keydown', (e) => {
-                     if (e.ctrlKey && e.key === 'Enter') {
-                         e.preventDefault();
-                         // Save content before submit
-                         const html = this.quill.root.innerHTML;
-                         const markdown = window.__quillHelpers.htmlToMarkdown(html);
-                         if (typeof $wire !== 'undefined') {
-                             $wire.set('content', markdown);
-                         }
-                         window.dispatchEvent(new CustomEvent('editor-submit', {
-                             detail: { editorId: this.editorId }
-                         }));
-                     }
-                 });
+                // Handle Ctrl+Enter to submit
+                this.quill.root.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'Enter') {
+                        e.preventDefault();
+                        // Save content before submit
+                        const html = this.quill.root.innerHTML;
+                        const markdown = window.__quillHelpers.htmlToMarkdown(html);
+                        if (typeof $wire !== 'undefined') {
+                            $wire.set('content', markdown);
+                        }
+                        window.dispatchEvent(new CustomEvent('editor-submit', {
+                            detail: { editorId: this.editorId }
+                        }));
+                    }
+                });
+                
+                // Listen for quote insertion
+                window.addEventListener('editor-insert-quote', (e) => {
+                    if (e.detail.editorId === this.editorId && this.quill) {
+                        const quote = e.detail.quote || '';
+                        if (quote) {
+                            // Get current content
+                            const currentHtml = this.quill.root.innerHTML;
+                            const currentMarkdown = window.__quillHelpers.htmlToMarkdown(currentHtml);
+                            
+                            // Append quote to current content
+                            const newContent = currentMarkdown + (currentMarkdown ? '\n\n' : '') + quote;
+                            
+                            // Convert to HTML and insert into Quill
+                            const html = window.__quillHelpers.markdownToHtml(newContent);
+                            const delta = this.quill.clipboard.convert({ html: html });
+                            this.quill.setContents(delta);
+                            
+                            // Update Livewire content
+                            if (typeof $wire !== 'undefined') {
+                                $wire.set('content', newContent);
+                            }
+                            
+                            // Focus the editor
+                            this.quill.focus();
+                        }
+                    }
+                });
              });
          }
      }"

@@ -100,7 +100,9 @@ class CategoryEdit extends Component
             abort(404, 'Category not found. Please select a valid category to edit.');
         }
 
-        if (!CategoryAuthorization::edit($request->user(), $category)) {
+        // Allow super_admin to edit any category
+        $user = $request->user();
+        if (!$user->hasRole('super_admin') && !CategoryAuthorization::edit($user, $category)) {
             abort(403, 'You do not have permission to edit this category.');
         }
 
@@ -129,7 +131,9 @@ class CategoryEdit extends Component
             return;
         }
 
-        if (!CategoryAuthorization::edit($request->user(), $this->category)) {
+        // Allow super_admin to edit any category
+        $user = $request->user();
+        if (!$user->hasRole('super_admin') && !CategoryAuthorization::edit($user, $this->category)) {
             abort(403, 'You do not have permission to edit this category.');
         }
 

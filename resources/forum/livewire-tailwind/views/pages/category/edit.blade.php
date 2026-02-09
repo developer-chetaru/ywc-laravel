@@ -6,6 +6,13 @@
         </div>
     @else
     <div class="mb-6">
+        <div class="flex items-center gap-4 mb-4">
+            <a href="{{ Forum::route('category.index') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </a>
+        </div>
         <h1 class="text-2xl font-semibold text-gray-800 mb-2">{{ trans('forum::categories.edit') }}</h1>
         <p class="text-sm text-gray-600">Editing: <span class="font-medium text-gray-800">{{ $category->title }}</span></p>
     </div>
@@ -51,11 +58,17 @@
             </div>
 
             <div class="flex items-center justify-between pt-4 border-t border-gray-200">
-                <button type="button"
-                        @click.prevent="requestDelete"
-                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                    {{ trans('forum::general.delete') }}
-                </button>
+                <div class="flex items-center gap-3">
+                    <a href="{{ Forum::route('category.index') }}" 
+                       class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="button"
+                            @click.prevent="requestDelete"
+                            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                        {{ trans('forum::general.delete') }}
+                    </button>
+                </div>
                 <button type="submit" 
                         class="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                     {{ trans('forum::general.save') }}

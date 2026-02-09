@@ -26,11 +26,6 @@ class MessageList extends Component
     public function mount(?string $folder = 'inbox')
     {
         $this->folder = $folder ?? 'inbox';
-        
-        // Open send message modal if requested
-        if (request()->has('new')) {
-            $this->dispatch('openSendMessage');
-        }
     }
 
     public function switchFolder(string $folder)

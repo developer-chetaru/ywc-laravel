@@ -4,9 +4,6 @@
         <p class="text-gray-600 mt-1">Manage your messages</p>
     </div>
 
-    {{-- Send Message Component --}}
-    <livewire:forum.send-message />
-
     {{-- Folder Tabs --}}
     <div class="mb-4 border-b border-gray-200">
         <div class="flex gap-4">
@@ -23,10 +20,10 @@
                 Archived
             </button>
             <div class="ml-auto">
-                <button wire:click="$dispatch('openSendMessage')" 
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <a href="{{ route('forum.messages.send') }}" 
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     New Message
-                </button>
+                </a>
             </div>
         </div>
     </div>

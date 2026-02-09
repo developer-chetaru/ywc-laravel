@@ -31,6 +31,7 @@ Route::get('notifications/preferences', \App\Livewire\Forum\NotificationPreferen
 
 // Private Messages
 Route::get('messages', \App\Livewire\Forum\MessageList::class)->name('messages.index');
+Route::get('messages/send', \App\Livewire\Forum\SendMessage::class)->name('messages.send');
 Route::get('messages/{messageId}', \App\Livewire\Forum\MessageConversation::class)->name('messages.conversation');
 
 Route::group(['prefix' => $prefix['category'] . '/{category_id}-{category_slug}'], function () use ($prefix) {

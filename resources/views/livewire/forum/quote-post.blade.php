@@ -33,7 +33,25 @@
                         Original Post by {{ $post->author->first_name }} {{ $post->author->last_name }}
                     </label>
                     <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-48 overflow-y-auto">
-                        <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ $quotedContent }}</p>
+                        @php
+                            // Get original content for display
+                            $originalContent = $post->content;
+                            
+                            // Strip HTML tags if present
+                            if (strip_tags($originalContent) !== $originalContent) {
+                                $originalContent = strip_tags($originalContent);
+                            }
+                            
+                            // Decode HTML entities
+                            $originalContent = html_entity_decode($originalContent, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                            
+                            // Remove zero-width characters
+                            $originalContent = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', '', $originalContent);
+                            
+                            // Convert markdown to HTML for display
+                            $displayContent = \App\Helpers\MarkdownHelper::toHtml($originalContent);
+                        @endphp
+                        <div class="text-sm text-gray-700 prose prose-sm max-w-none">{!! $displayContent !!}</div>
                     </div>
                 </div>
 

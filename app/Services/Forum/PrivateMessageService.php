@@ -95,6 +95,15 @@ class PrivateMessageService
                 }
             }
 
+            // Send notification to recipient
+            try {
+                $notificationService = app(\App\Services\Forum\ForumNotificationService::class);
+                $notificationService->notifyPrivateMessage($recipient, $messageId, $sender);
+            } catch (\Exception $e) {
+                // Log error but don't fail the message send
+                \Log::error('Failed to send private message notification: ' . $e->getMessage());
+            }
+
             return $messageId;
         });
     }

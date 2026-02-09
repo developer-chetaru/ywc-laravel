@@ -1,46 +1,31 @@
-<div>
-    {{-- Trigger Button (only show when recipient is specified, not in welcome section) --}}
-    @if (!$showModal && $recipientId)
-        <button wire:click="openModal({{ $recipientId }}, '{{ $recipientName }}')"
-            class="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-            </svg>
-            Send Message
-        </button>
-    @endif
+<div class="w-full max-w-4xl mx-auto px-4 py-6">
+    {{-- Header --}}
+    <div class="mb-6">
+        <div class="flex items-center gap-4 mb-4">
+            <a href="{{ route('forum.messages.index') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </a>
+        </div>
+        <h1 class="text-2xl font-semibold text-gray-800 mb-2">Send Private Message</h1>
+    </div>
 
-    {{-- Modal --}}
-    @if ($showModal)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" wire:click="closeModal">
-            <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col" wire:click.stop>
-                <div class="p-6 border-b border-gray-200 bg-gray-50">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-xl font-semibold text-gray-900">Send Private Message</h3>
-                        <button wire:click="closeModal" 
-                            wire:loading.attr="disabled"
-                            wire:target="send"
-                            class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="p-6 overflow-y-auto flex-1">
-                    {{-- Flash Messages --}}
-                    @if (session()->has('success'))
-                        <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    @if (session()->has('error'))
-                        <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                            {{ session('error') }}
-                        </div>
-                    @endif
+    {{-- Content --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
+        {{-- Flash Messages --}}
+        @if (session()->has('success'))
+            <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if (session()->has('error'))
+            <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                {{ session('error') }}
+            </div>
+        @endif
 
-                    <form wire:submit.prevent="send" class="space-y-5">
+        <form wire:submit.prevent="send" class="space-y-5">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 To <span class="text-red-500">*</span>
@@ -126,30 +111,25 @@
                             @endif
                         </div>
 
-                        <div class="flex gap-3 pt-2">
-                            <button type="button" wire:click="closeModal" 
-                                wire:loading.attr="disabled"
-                                wire:target="send"
-                                class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
-                                Cancel
-                            </button>
-                            <button type="submit" 
-                                wire:loading.attr="disabled"
-                                wire:target="send"
-                                class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
-                                <span wire:loading.remove wire:target="send">Send Message</span>
-                                <span wire:loading wire:target="send" class="flex items-center">
-                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Sending...
-                                </span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <a href="{{ route('forum.messages.index') }}" 
+                   class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" 
+                    wire:loading.attr="disabled"
+                    wire:target="send"
+                    class="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span wire:loading.remove wire:target="send">Send Message</span>
+                    <span wire:loading wire:target="send" class="flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Sending...
+                    </span>
+                </button>
             </div>
-        </div>
-    @endif
+        </form>
+    </div>
 </div>

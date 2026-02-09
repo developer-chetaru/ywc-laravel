@@ -32,6 +32,11 @@ class SendMessage extends Component
 
     public function mount(?int $recipientId = null, ?string $recipientName = null)
     {
+        // Get recipientId from query parameter if not provided
+        if (!$recipientId && request()->has('recipient_id')) {
+            $recipientId = (int) request()->query('recipient_id');
+        }
+        
         if ($recipientId) {
             $this->recipientId = $recipientId;
             $recipient = \App\Models\User::find($recipientId);
@@ -132,8 +137,7 @@ class SendMessage extends Component
 
             $this->isSending = false;
             session()->flash('success', 'Message sent successfully!');
-            $this->closeModal();
-            $this->dispatch('messageSent');
+            return $this->redirect(route('forum.messages.index'), navigate: true);
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->isSending = false;
             // Validation errors are automatically handled by Livewire
