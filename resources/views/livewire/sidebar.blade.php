@@ -5,6 +5,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
 @endphp
 
 {{-- Mobile Overlay --}}
+
 <div 
     x-show="$store.sidebar?.isOpen && window.innerWidth < 768"
     @click="$store.sidebar.isOpen = false"
@@ -28,6 +29,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
 ></div>
 
 <div
+
     x-data="{ 
         isOpen: window.innerWidth >= 768, 
         isMobile: window.innerWidth < 768,
@@ -74,7 +76,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             }
         });
     "
-    class="h-screen bg-[#0066FF] text-white flex flex-col transition-all duration-300 z-50 fixed inset-y-0 left-0 group w-72"
+    class="h-screen bg-[#0066FF] text-white flex flex-col transition-all duration-300 z-50 fixed inset-y-0 left-0 group w-72 left-sidebar"
     :class="{
         'w-72': isOpen && !isMobile,
         'w-16': !isOpen && !isMobile,
@@ -1179,3 +1181,23 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
         </ul>
     </div>
 </div>
+<style>
+    
+
+.left-sidebar.w-16 .sidebar-scrollable li a,
+.left-sidebar.w-16 .sidebar-scrollable li div,
+.left-sidebar.w-16 .sidebar-scrollable li button {
+    padding: 0;
+    justify-content: center;
+    margin: 0;
+}
+.left-sidebar.w-16 .sidebar-scrollable li img,
+.left-sidebar.w-16 .sidebar-scrollable li svg,
+.left-sidebar.w-16 .sidebar-scrollable li i {
+    margin: 0;
+}
+.left-sidebar.w-16 .sidebar-scrollable li a {
+    /* width: 38px;
+    height: 38px; */
+}
+</style>
