@@ -74,7 +74,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             }
         });
     "
-    class="h-screen bg-[#0066FF] text-white flex flex-col transition-all duration-300 z-50 fixed inset-y-0 left-0 group"
+    class="h-screen bg-[#0066FF] text-white flex flex-col transition-all duration-300 z-50 fixed inset-y-0 left-0 group w-72"
     :class="{
         'w-72': isOpen && !isMobile,
         'w-16': !isOpen && !isMobile,
@@ -566,6 +566,9 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                     </div>
                     
                     {{-- SUBMENU --}}
+                    <style>
+                        .sidebar-scrollable a:not(.link-button):not(.group-button):not(.text-category) {color: #ffffff !important;}
+                    </style>
                     <ul x-show="forumOpen && isOpen" x-collapse class="ml-4 mt-1 space-y-1">
                         <li>
                             <a href="/forum"

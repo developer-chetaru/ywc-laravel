@@ -9,3 +9,8 @@
 @import "../forum/livewire-tailwind/css/forum.css";
 @import "@fortawesome/fontawesome-free/css/all.min.css";
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+.sidebar-scrollable a:not(.link-button):not(.group-button):not(.text-category) {
+   
+    color: #ffffff !important;
+}
