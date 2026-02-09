@@ -355,8 +355,8 @@
                 </button>
             </div>
 
-            {{-- Loading Overlay --}}
-            <div wire:loading.delay class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-20 rounded-lg">
+            {{-- Loading Overlay - Only show on form submit --}}
+            <div wire:loading.delay wire:target="save" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-20 rounded-lg">
                 <div class="text-center">
                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0053FF]"></div>
                     <p class="mt-2 text-sm text-gray-600">Saving...</p>
@@ -381,7 +381,7 @@
                                 Vessel Name <span class="text-red-500">*</span>
                             </label>
                             <input type="text" 
-                                   wire:model.blur="vessel_name" 
+                                   wire:model.defer="vessel_name" 
                                    wire:keydown.debounce.500ms="markAsChanged"
                                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all
                                    @error('vessel_name') border-red-500 @enderror">
@@ -397,7 +397,7 @@
                                 Position Title <span class="text-red-500">*</span>
                             </label>
                             <input type="text" 
-                                   wire:model.blur="position_title" 
+                                   wire:model.defer="position_title" 
                                    wire:keydown.debounce.500ms="markAsChanged"
                                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all
                                    @error('position_title') border-red-500 @enderror">
@@ -410,8 +410,8 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Vessel Type</label>
-                            <select wire:model="vessel_type" 
-                                    wire:change="markAsChanged"
+                            <select wire:model.defer="vessel_type" 
+                                    @change="markAsChanged()"
                                     class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all">
                                 <option value="">Select Type</option>
                                 @foreach($vesselTypes as $key => $label)
@@ -423,7 +423,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Vessel Flag (Country Code)</label>
                             <input type="text" 
-                                   wire:model.blur="vessel_flag" 
+                                   wire:model.defer="vessel_flag" 
                                    maxlength="3" 
                                    placeholder="e.g., USA, GBR"
                                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all uppercase"
@@ -435,7 +435,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Length (meters)</label>
                             <div class="relative">
                                 <input type="number" 
-                                       wire:model.blur="vessel_length_meters" 
+                                       wire:model.defer="vessel_length_meters" 
                                        step="0.01" 
                                        min="0"
                                        placeholder="0.00"
@@ -447,7 +447,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Gross Tonnage</label>
                             <input type="number" 
-                                   wire:model.blur="gross_tonnage" 
+                                   wire:model.defer="gross_tonnage" 
                                    min="0"
                                    placeholder="0"
                                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all">
@@ -470,7 +470,7 @@
                             </label>
                             <div class="relative">
                                 <input type="date" 
-                                       wire:model.blur="start_date" 
+                                       wire:model.defer="start_date" 
                                        max="{{ date('Y-m-d') }}"
                                        class="w-full border rounded-md px-3 py-2 pr-10 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all
                                        @error('start_date') border-red-500 @enderror">
@@ -499,7 +499,7 @@
                             <div class="space-y-2">
                                 <div class="relative">
                                     <input type="date" 
-                                           wire:model.blur="end_date" 
+                                           wire:model.defer="end_date" 
                                            :min="$wire.start_date || ''"
                                            :max="date('Y-m-d')"
                                            :disabled="$wire.is_current_position"
@@ -510,7 +510,7 @@
                                 </div>
                                 <label class="flex items-center cursor-pointer group">
                                     <input type="checkbox" 
-                                           wire:model="is_current_position" 
+                                           wire:model.defer="is_current_position" 
                                            wire:change="markAsChanged"
                                            class="mr-2 w-4 h-4 text-[#0053FF] border-gray-300 rounded focus:ring-[#0053FF] cursor-pointer">
                                     <span class="text-sm text-gray-700 group-hover:text-gray-900">
@@ -538,7 +538,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Employment Type</label>
-                            <select wire:model="employment_type" 
+                            <select wire:model.defer="employment_type" 
                                     wire:change="markAsChanged"
                                     class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all">
                                 <option value="">Select Type</option>
@@ -550,7 +550,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Role <span class="text-xs text-gray-500 font-normal">(Position/Role)</span></label>
-                            <select wire:model="role" 
+                            <select wire:model.defer="role" 
                                     wire:change="markAsChanged"
                                     class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all">
                                 <option value="">Select Role</option>
@@ -565,7 +565,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Position Rank</label>
-                            <select wire:model="position_rank" 
+                            <select wire:model.defer="position_rank" 
                                     wire:change="markAsChanged"
                                     class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all">
                                 <option value="">Select Rank</option>
@@ -577,7 +577,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                            <select wire:model="department" 
+                            <select wire:model.defer="department" 
                                     wire:change="markAsChanged"
                                     class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all">
                                 <option value="">Select Department</option>
@@ -601,7 +601,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Employer/Management Company</label>
                             <input type="text" 
-                                   wire:model.blur="employer_company" 
+                                   wire:model.defer="employer_company" 
                                    placeholder="Company name"
                                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all">
                         </div>
@@ -609,7 +609,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Supervisor/Captain Name</label>
                             <input type="text" 
-                                   wire:model.blur="supervisor_name" 
+                                   wire:model.defer="supervisor_name" 
                                    placeholder="Full name"
                                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all">
                         </div>
@@ -617,7 +617,7 @@
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Supervisor Contact</label>
                             <input type="text" 
-                                   wire:model.blur="supervisor_contact" 
+                                   wire:model.defer="supervisor_contact" 
                                    placeholder="Email or phone number"
                                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all">
                         </div>
@@ -626,7 +626,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Key Duties & Responsibilities
                             </label>
-                            <textarea wire:model.blur="key_duties" 
+                            <textarea wire:model.defer="key_duties" 
                                       rows="4" 
                                       maxlength="500"
                                       placeholder="Describe your key duties and responsibilities..."
@@ -644,7 +644,7 @@
 
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Notable Achievements</label>
-                            <textarea wire:model.blur="notable_achievements" 
+                            <textarea wire:model.defer="notable_achievements" 
                                       rows="4" 
                                       maxlength="500"
                                       placeholder="Describe your notable achievements..."
@@ -662,7 +662,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Departure Reason</label>
-                            <select wire:model="departure_reason" 
+                            <select wire:model.defer="departure_reason" 
                                     wire:change="markAsChanged"
                                     class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all">
                                 <option value="">Select Reason</option>
@@ -683,19 +683,19 @@
                         <i class="fas fa-chevron-down transition-transform" :class="{ 'rotate-180': isOpen }"></i>
                     </button>
                     <div x-show="isOpen" x-collapse class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div x-data="{ search: '', isOpen: false }" class="relative">
+                        <div x-data="{ search: '', isOpen: false, selectedValue: '{{ $reference_document_id ?? '' }}' }" class="relative" wire:ignore.self>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Reference Letter
                                 <span class="text-xs text-gray-500 font-normal">(from Documents)</span>
                             </label>
                             <div class="relative">
-                                <select wire:model="reference_document_id" 
-                                        wire:change="markAsChanged"
+                                <select x-model="selectedValue" 
+                                        @change="selectedValue = $event.target.value; $wire.set('reference_document_id', $event.target.value, false); markAsChanged()"
                                         class="w-full border rounded-md px-3 py-2 pr-8 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all appearance-none
                                         @if(count($documents) === 0) bg-gray-100 cursor-not-allowed @endif">
                                     <option value="">None</option>
                                     @foreach($documents as $doc)
-                                    <option value="{{ $doc->id }}">
+                                    <option value="{{ $doc->id }}" {{ ($reference_document_id ?? '') == $doc->id ? 'selected' : '' }}>
                                         {{ $doc->name ?? ($doc->document_name ?? ($doc->type ?? 'Document #' . $doc->id)) }}
                                         @if($doc->status === 'approved')
                                             <span class="text-green-600">✓</span>
@@ -705,26 +705,34 @@
                                 </select>
                                 <i class="fas fa-chevron-down absolute right-3 top-3 text-gray-400 pointer-events-none"></i>
                             </div>
-                            @if($reference_document_id)
+                            <div x-show="selectedValue" 
+                                 x-cloak
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0"
+                                 x-transition:enter-end="opacity-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100"
+                                 x-transition:leave-end="opacity-0"
+                                 style="display: none !important;">
                                 <p class="text-xs text-green-600 mt-1">
                                     <i class="fas fa-check-circle mr-1"></i>Document linked
                                 </p>
-                            @endif
+                            </div>
                         </div>
 
-                        <div x-data="{ search: '', isOpen: false }" class="relative">
+                        <div x-data="{ search: '', isOpen: false, selectedValue: '{{ $contract_document_id ?? '' }}' }" class="relative" wire:ignore.self>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Employment Contract
                                 <span class="text-xs text-gray-500 font-normal">(from Documents)</span>
                             </label>
                             <div class="relative">
-                                <select wire:model="contract_document_id" 
-                                        wire:change="markAsChanged"
+                                <select x-model="selectedValue" 
+                                        @change="selectedValue = $event.target.value; $wire.set('contract_document_id', $event.target.value, false); markAsChanged()"
                                         class="w-full border rounded-md px-3 py-2 pr-8 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all appearance-none
                                         @if(count($documents) === 0) bg-gray-100 cursor-not-allowed @endif">
                                     <option value="">None</option>
                                     @foreach($documents as $doc)
-                                    <option value="{{ $doc->id }}">
+                                    <option value="{{ $doc->id }}" {{ ($contract_document_id ?? '') == $doc->id ? 'selected' : '' }}>
                                         {{ $doc->name ?? ($doc->document_name ?? ($doc->type ?? 'Document #' . $doc->id)) }}
                                         @if($doc->status === 'approved')
                                             <span class="text-green-600">✓</span>
@@ -734,26 +742,34 @@
                                 </select>
                                 <i class="fas fa-chevron-down absolute right-3 top-3 text-gray-400 pointer-events-none"></i>
                             </div>
-                            @if($contract_document_id)
+                            <div x-show="selectedValue" 
+                                 x-cloak
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0"
+                                 x-transition:enter-end="opacity-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100"
+                                 x-transition:leave-end="opacity-0"
+                                 style="display: none !important;">
                                 <p class="text-xs text-green-600 mt-1">
                                     <i class="fas fa-check-circle mr-1"></i>Document linked
                                 </p>
-                            @endif
+                            </div>
                         </div>
 
-                        <div x-data="{ search: '', isOpen: false }" class="relative">
+                        <div x-data="{ search: '', isOpen: false, selectedValue: '{{ $signoff_document_id ?? '' }}' }" class="relative" wire:ignore.self>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Sign-Off Document
                                 <span class="text-xs text-gray-500 font-normal">(from Documents)</span>
                             </label>
                             <div class="relative">
-                                <select wire:model="signoff_document_id" 
-                                        wire:change="markAsChanged"
+                                <select x-model="selectedValue" 
+                                        @change="selectedValue = $event.target.value; $wire.set('signoff_document_id', $event.target.value, false); markAsChanged()"
                                         class="w-full border rounded-md px-3 py-2 pr-8 focus:ring-2 focus:ring-[#0053FF] focus:border-[#0053FF] transition-all appearance-none
                                         @if(count($documents) === 0) bg-gray-100 cursor-not-allowed @endif">
                                     <option value="">None</option>
                                     @foreach($documents as $doc)
-                                    <option value="{{ $doc->id }}">
+                                    <option value="{{ $doc->id }}" {{ ($signoff_document_id ?? '') == $doc->id ? 'selected' : '' }}>
                                         {{ $doc->name ?? ($doc->document_name ?? ($doc->type ?? 'Document #' . $doc->id)) }}
                                         @if($doc->status === 'approved')
                                             <span class="text-green-600">✓</span>
@@ -763,11 +779,19 @@
                                 </select>
                                 <i class="fas fa-chevron-down absolute right-3 top-3 text-gray-400 pointer-events-none"></i>
                             </div>
-                            @if($signoff_document_id)
+                            <div x-show="selectedValue" 
+                                 x-cloak
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0"
+                                 x-transition:enter-end="opacity-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100"
+                                 x-transition:leave-end="opacity-0"
+                                 style="display: none !important;">
                                 <p class="text-xs text-green-600 mt-1">
                                     <i class="fas fa-check-circle mr-1"></i>Document linked
                                 </p>
-                            @endif
+                            </div>
                         </div>
                     </div>
                     @if(count($documents) === 0)
@@ -804,7 +828,7 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" 
-                                   wire:model="visible_on_profile" 
+                                   wire:model.defer="visible_on_profile" 
                                    wire:change="markAsChanged"
                                    class="sr-only peer">
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0053FF]"></div>
@@ -872,12 +896,8 @@
                         this.charCounts.notable_achievements = notableAchievements.length;
                     });
                     
-                    // Auto-save draft every 30 seconds
-                    setInterval(() => {
-                        if (this.hasUnsavedChanges) {
-                            this.saveDraft();
-                        }
-                    }, 30000);
+                    // Auto-save disabled - only save on form submit
+                    // Removed auto-save interval to prevent flashing
                     
                     // Warn before leaving with unsaved changes
                     window.addEventListener('beforeunload', (e) => {

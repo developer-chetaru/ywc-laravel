@@ -5,7 +5,8 @@
      aria-labelledby="modal-title" 
      role="dialog" 
      aria-modal="true"
-     style="display: none;">
+     style="display: none !important;"
+     @keydown.escape.window="showModal = false">
     
     {{-- Backdrop --}}
     <div x-show="showModal" 
@@ -15,24 +16,26 @@
          x-transition:leave="ease-in duration-200" 
          x-transition:leave-start="opacity-100" 
          x-transition:leave-end="opacity-0" 
-         class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" 
+         class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity" 
          aria-hidden="true"
          @click="showModal = false"></div>
 
-    <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
-
-    <div x-show="showModal" 
-         x-transition:enter="ease-out duration-300" 
-         x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
-         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
-         x-transition:leave="ease-in duration-200" 
-         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
-         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
-         class="inline-block w-full max-w-5xl my-8 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:align-middle">
+    {{-- Modal Container --}}
+    <div class="flex min-h-full items-center justify-center p-4">
+        {{-- Modal Content --}}
+        <div x-show="showModal" 
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+             class="relative w-full max-w-5xl max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl transform transition-all"
+             @click.stop>
         
         @if($entry)
         {{-- Header --}}
-        <div class="flex justify-between items-start px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <div class="flex justify-between items-start px-6 py-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
             <div class="flex-1">
                 <h3 class="text-2xl font-bold text-gray-900" id="modal-title">
                     {{ $entry->vessel_name }}
@@ -67,7 +70,7 @@
 
         {{-- Navigation --}}
         @if($previousEntryId || $nextEntryId)
-        <div class="px-6 py-2 bg-gray-100 border-b border-gray-200 flex justify-between items-center">
+        <div class="px-6 py-2 bg-gray-100 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
             <button wire:click="navigateToEntry({{ $previousEntryId }})" 
                     @if(!$previousEntryId) disabled @endif
                     class="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -83,7 +86,7 @@
         @endif
 
         {{-- Content --}}
-        <div class="p-6 overflow-y-auto max-h-[70vh]">
+        <div class="p-6 overflow-y-auto flex-1" style="min-height: 0;">
             {{-- Vessel Information Card --}}
             <div class="mb-6 bg-gray-50 rounded-lg p-4">
                 <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -316,7 +319,7 @@
         </div>
 
         {{-- Footer Actions --}}
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-2 justify-end">
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-2 justify-end flex-shrink-0">
             <button wire:click="closeModal" 
                     class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
                 <i class="fas fa-times mr-2"></i>Close
@@ -336,5 +339,6 @@
             </button>
         </div>
         @endif
+        </div>
     </div>
 </div>
