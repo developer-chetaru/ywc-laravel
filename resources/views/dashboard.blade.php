@@ -12,7 +12,7 @@
                             // Dashboard cards: defaultImage shows on gray bg (needs colored icon), hoverImage shows on blue bg (needs white icon)
                             $dashboardItems = [
                                 ['label' => 'Career History', 'defaultImage' => '/images/career.svg', 'hoverImage' => '/images/manage-dashbaord.svg', 'url' => auth()->check() ? route('career-history', auth()->id()) : route('login')],
-                                ['label' => 'Documents', 'defaultImage' => '/images/document.svg', 'hoverImage' => '/images/document-black.svg', 'url' => route('documents')],
+                                ['label' => 'Documents', 'defaultImage' => '/images/document-black.svg', 'hoverImage' => '/images/document.svg', 'url' => route('documents')],
                                 ['label' => 'Analytics', 'defaultImage' => '/images/dashboard.svg', 'hoverImage' => '/images/dashboard-black.svg', 'url' => route('analytics.user-dashboard')],
                                 ['label' => 'Legal Support', 'defaultImage' => '/images/justice-scale-01.svg', 'hoverImage' => '/images/justice-scale-white.svg', 'url' => route('legal-support.index')],
                                 ['label' => 'Training & Resources', 'defaultImage' => '/images/training-and-resources-active.svg', 'hoverImage' => '/images/training-and-resources-default.svg', 'url' => route('training.resources')],
