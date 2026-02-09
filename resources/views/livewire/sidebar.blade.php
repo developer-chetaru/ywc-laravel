@@ -1184,20 +1184,20 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
 <style>
     
 
-.left-sidebar.w-16 .sidebar-scrollable li a,
-.left-sidebar.w-16 .sidebar-scrollable li div,
-.left-sidebar.w-16 .sidebar-scrollable li button {
+.left-sidebar.w-16 .sidebar-scrollable li a, .left-sidebar.w-16 .sidebar-scrollable li div, .left-sidebar.w-16 .sidebar-scrollable li button {
     padding: 0;
     justify-content: center;
     margin: 0;
+    width: 38px;
+    height: 38px;
 }
 .left-sidebar.w-16 .sidebar-scrollable li img,
 .left-sidebar.w-16 .sidebar-scrollable li svg,
 .left-sidebar.w-16 .sidebar-scrollable li i {
     margin: 0;
 }
-.left-sidebar.w-16 .sidebar-scrollable li a {
-    /* width: 38px;
-    height: 38px; */
+
+.left-sidebar.w-16 .sidebar-scrollable li {
+    margin-bottom: 16px;
 }
 </style>
