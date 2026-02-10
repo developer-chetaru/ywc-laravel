@@ -20,6 +20,7 @@ use App\Jobs\ProcessDocumentOcr;
 use Carbon\Carbon;
 use Imagick;
 use thiagoalessio\TesseractOCR\TesseractOCR;
+use App\Services\Documents\TesseractOCRWrapper;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ShareDocumentMail;
 use chillerlan\QRCode\QRCode;
@@ -165,26 +166,17 @@ class CareerHistoryApiController extends Controller
             throw new \Exception("Tesseract executable not found at: {$fullPath}. Please set TESSERACT_PATH in .env file.");
         }
         
-        // Create OCR instance
+        // Use wrapper class to handle namespace exec() issue
         try {
-            $ocr = new TesseractOCR($imagePath);
-            
-            // CRITICAL: Set executable path BEFORE any other operations
-            // This prevents the library from trying to call exec() internally
-            $ocr->executable($fullPath);
+            $wrapper = new TesseractOCRWrapper($imagePath, $fullPath);
+            $ocr = $wrapper->getOCR();
             
             \Log::info('TesseractOCR created with absolute path: ' . $fullPath);
             
             return $ocr;
-        } catch (\Error $e) {
-            // Catch namespace errors (like exec() not found)
-            if (strpos($e->getMessage(), 'exec()') !== false || strpos($e->getMessage(), 'undefined function') !== false) {
-                throw new \Exception("TesseractOCR library error: {$e->getMessage()}. Please ensure exec() function is enabled in PHP and TESSERACT_PATH is set in .env file.");
-            }
-            throw $e;
         } catch (\Exception $e) {
             \Log::error('TesseractOCR creation failed: ' . $e->getMessage());
-            throw new \Exception("Failed to initialize OCR: {$e->getMessage()}. Please check TESSERACT_PATH in .env file.");
+            throw $e;
         }
     }
     /**
