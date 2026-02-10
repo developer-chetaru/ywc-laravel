@@ -14,6 +14,23 @@
 <body class="bg-gray-100">
     <div class="min-h-screen py-8 px-4">
         <div class="max-w-4xl mx-auto">
+            {{-- Success/Error Messages --}}
+            @if(session('success'))
+            <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p class="text-sm text-green-800">
+                    <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+                </p>
+            </div>
+            @endif
+            
+            @if(session('error'))
+            <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-sm text-red-800">
+                    <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
+                </p>
+            </div>
+            @endif
+
             {{-- Header --}}
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <div class="flex items-center justify-between mb-4">
@@ -72,6 +89,48 @@
             </div>
             @endif
 
+            {{-- Crewdentials Profile Preview (if available) --}}
+            @if(isset($crewdentialsIframeUrl) && $crewdentialsIframeUrl)
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Crewdentials Profile</h2>
+                    @if(isset($crewdentialsDocsCount))
+                    <span class="text-sm text-gray-600">
+                        @if($crewdentialsDocsCount > 0)
+                            {{ $crewdentialsDocsCount }} verified document{{ $crewdentialsDocsCount !== 1 ? 's' : '' }}
+                        @else
+                            Profile available
+                        @endif
+                    </span>
+                    @endif
+                </div>
+                @if(isset($crewdentialsDocsCount) && $crewdentialsDocsCount > 0)
+                <div class="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                    <iframe 
+                        src="{{ $crewdentialsIframeUrl }}" 
+                        class="w-full" 
+                        style="height: 600px; border: none; min-height: 400px;"
+                        title="Crewdentials Profile Preview"
+                        loading="lazy"
+                        allow="clipboard-read; clipboard-write"
+                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms">
+                    </iframe>
+                </div>
+                <p class="text-xs text-gray-500 mt-2 text-center">
+                    <i class="fas fa-shield-check mr-1"></i>Verified by Crewdentials
+                </p>
+                @else
+                {{-- Show message if profile exists but no documents yet --}}
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                    <i class="fas fa-info-circle text-blue-600 text-2xl mb-2"></i>
+                    <p class="text-sm text-blue-800">
+                        This crew member has a Crewdentials account, but no verified documents are available yet.
+                    </p>
+                </div>
+                @endif
+            </div>
+            @endif
+
             {{-- Documents --}}
             @if($share->hasSection('documents') && isset($documents) && $documents->count() > 0)
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -87,12 +146,50 @@
                         <h3 class="font-semibold text-sm mb-1">
                             {{ $document->document_name ?? ($document->documentType->name ?? 'Document') }}
                         </h3>
-                        @if($document->expiry_date)
+                        
+                        {{-- Crewdentials Verification Badge --}}
+                        @php
+                            $verificationData = $document->crewdentials_verification_data ? json_decode($document->crewdentials_verification_data, true) : null;
+                            $crewdentialsStatus = $verificationData['status'] ?? ($document->status === 'approved' ? 'verified' : ($document->status === 'rejected' ? 'rejected' : ($document->status === 'expired' ? 'expired' : 'pending')));
+                            $isVerified = $crewdentialsStatus === 'verified' && $document->crewdentials_verified_at;
+                            $isPending = $crewdentialsStatus === 'pending';
+                            $isRejected = $crewdentialsStatus === 'rejected';
+                            $isExpired = $crewdentialsStatus === 'expired' || ($document->expiry_date && \Carbon\Carbon::parse($document->expiry_date)->isPast());
+                        @endphp
+                        
+                        @if($isVerified)
+                        <div class="mb-2 flex items-center gap-1">
+                            <i class="fas fa-check-circle text-green-600 text-xs"></i>
+                            <span class="text-xs font-medium text-green-600">Verified</span>
+                            @if($document->crewdentials_verified_at)
+                            <span class="text-xs text-gray-500 ml-1">by Crewdentials</span>
+                            @endif
+                        </div>
+                        @elseif($isPending)
+                        <div class="mb-2 flex items-center gap-1">
+                            <i class="fas fa-clock text-amber-600 text-xs"></i>
+                            <span class="text-xs font-medium text-amber-600">Verification in progress</span>
+                        </div>
+                        @elseif($isExpired)
+                        <div class="mb-2 flex items-center gap-1">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xs"></i>
+                            <span class="text-xs font-medium text-red-600">
+                                Expired {{ $document->expiry_date ? \Carbon\Carbon::parse($document->expiry_date)->format('M d, Y') : '' }}
+                            </span>
+                        </div>
+                        @elseif(!$isRejected || ($share->include_rejected_docs ?? false))
+                        <div class="mb-2 flex items-center gap-1">
+                            <i class="fas fa-circle text-gray-400 text-xs"></i>
+                            <span class="text-xs text-gray-500">Not yet verified</span>
+                        </div>
+                        @endif
+                        
+                        @if($document->expiry_date && !$isExpired)
                         <p class="text-xs text-gray-600">
                             Expires: {{ \Carbon\Carbon::parse($document->expiry_date)->format('M d, Y') }}
                         </p>
                         @endif
-                        @if($document->file_path)
+                        @if($document->file_path && ($share->allow_downloads ?? false))
                         <a href="{{ asset('storage/' . $document->file_path) }}" 
                             target="_blank" 
                             class="mt-2 block text-center text-xs bg-[#0053FF] text-white px-3 py-1 rounded hover:bg-[#0044DD]">
@@ -132,7 +229,7 @@
             @endif
 
             {{-- Download All as ZIP --}}
-            @if($share->hasSection('documents') && isset($documents) && $documents->count() > 0)
+            @if($share->hasSection('documents') && isset($hasDownloadableDocuments) && $hasDownloadableDocuments)
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <div class="flex items-center justify-between">
                     <div>

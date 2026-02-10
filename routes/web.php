@@ -460,6 +460,24 @@ Route::middleware([
         Route::get('/versions/{version}/download', [\App\Http\Controllers\DocumentDownloadController::class, 'downloadVersion'])->name('versions.download');
     });
 
+    // Crewdentials integration routes
+    Route::prefix('crewdentials')->name('crewdentials.')->group(function () {
+        Route::get('/check-account', [\App\Http\Controllers\CrewdentialsController::class, 'checkAccount'])->name('check-account');
+        Route::post('/consent', [\App\Http\Controllers\CrewdentialsController::class, 'storeConsent'])->name('consent.store');
+        Route::get('/consent', [\App\Http\Controllers\CrewdentialsController::class, 'getConsent'])->name('consent.get');
+        Route::post('/import', [\App\Http\Controllers\CrewdentialsController::class, 'importDocuments'])->name('import');
+        Route::post('/request-verification', [\App\Http\Controllers\CrewdentialsController::class, 'requestVerification'])->name('request-verification');
+        Route::get('/documents/needing-category', [\App\Http\Controllers\CrewdentialsController::class, 'getDocumentsNeedingCategory'])->name('documents.needing-category');
+        Route::post('/documents/{document}/assign-category', [\App\Http\Controllers\CrewdentialsController::class, 'assignCategory'])->name('documents.assign-category');
+        Route::get('/sync/failed', [\App\Http\Controllers\CrewdentialsController::class, 'getFailedSyncs'])->name('sync.failed');
+        Route::post('/sync/{sync}/retry', [\App\Http\Controllers\CrewdentialsController::class, 'retrySync'])->name('sync.retry');
+        Route::post('/consent/withdraw', [\App\Http\Controllers\CrewdentialsController::class, 'withdrawConsent'])->name('consent.withdraw');
+        Route::post('/profile-preview', [\App\Http\Controllers\CrewdentialsController::class, 'getProfilePreview'])->name('profile-preview');
+    });
+
+    // Crewdentials webhook (public, no auth required)
+    Route::post('/crewdentials/webhook', [\App\Http\Controllers\CrewdentialsController::class, 'webhook'])->name('crewdentials.webhook');
+
     // New token-based sharing routes
     Route::prefix('shares')->name('shares.')->group(function () {
         // Document shares

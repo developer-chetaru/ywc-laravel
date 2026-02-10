@@ -10,6 +10,8 @@ use App\Policies\ItineraryRoutePolicy;
 use App\Policies\ItineraryRouteReviewPolicy;
 use App\Policies\YachtPolicy;
 use App\Policies\DocumentPolicy;
+use App\Observers\DocumentObserver;
+use App\Services\Documents\CrewdentialsService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -38,6 +40,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ItineraryRouteReview::class, ItineraryRouteReviewPolicy::class);
         Gate::policy(Yacht::class, YachtPolicy::class);
         Gate::policy(Document::class, DocumentPolicy::class);
+        
+        // Register Document Observer for auto-sync
+        Document::observe(DocumentObserver::class);
         
         // Register forum Livewire components
         Livewire::component('forum::pages.category.forums-list', ForumsList::class);

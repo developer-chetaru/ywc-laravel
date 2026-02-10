@@ -38,6 +38,11 @@ class Document extends Model
         'ocr_error',
         'verification_level_id',
         'highest_verification_level',
+        'crewdentials_document_id',
+        'crewdentials_verification_data',
+        'imported_from_crewdentials',
+        'crewdentials_verified_at',
+        'needs_category_assignment',
     ];
 
     protected $casts = [
@@ -49,6 +54,9 @@ class Document extends Model
         'ocr_data' => 'array',
         'ocr_confidence' => 'float',
         'highest_verification_level' => 'integer',
+        'imported_from_crewdentials' => 'boolean',
+        'crewdentials_verified_at' => 'datetime',
+        'needs_category_assignment' => 'boolean',
     ];
 
     /* 🔗 Relationships */

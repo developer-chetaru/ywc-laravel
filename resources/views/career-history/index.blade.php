@@ -78,6 +78,27 @@
                         </div>
 
                         <div class="bg-[#F5F6FA] p-4 sm:p-5 rounded-lg mt-6">
+                            <!-- Crewdentials Import Card (CASE 1) -->
+                            <div id="crewdentialsImportCard" class="hidden mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-5">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <i class="fas fa-cloud-download-alt text-2xl text-blue-600"></i>
+                                            <h3 class="text-lg font-semibold text-gray-900">Import Documents from Crewdentials</h3>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mb-4">
+                                            We found existing documents on Crewdentials for your email address. Would you like to import them?
+                                        </p>
+                                        <button onclick="showConsentModal('import')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                                            <i class="fas fa-download mr-2"></i>Import Documents
+                                        </button>
+                                    </div>
+                                    <button onclick="$('#crewdentialsImportCard').addClass('hidden')" class="text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-times text-xl"></i>
+                                    </button>
+                                </div>
+                            </div>
+
                             <!-- Top cards -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <!-- Add Document Card -->
@@ -193,6 +214,24 @@
 
                                 {{-- All Documents Tab Content --}}
                                 <div id="tab-content-all" class="tab-content">
+                                
+                                {{-- Bulk Actions for Crewdentials Verification --}}
+                                <div id="bulkActionsBar" class="hidden mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-sm font-medium text-gray-700">
+                                            <span id="selectedCount">0</span> document(s) selected
+                                        </span>
+                                        <button onclick="clearDocumentSelection()" class="text-sm text-blue-600 hover:text-blue-800 underline">
+                                            Clear Selection
+                                        </button>
+                                    </div>
+                                    <button onclick="requestCrewdentialsVerificationForSelected()" 
+                                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2">
+                                        <i class="fas fa-shield-check"></i>
+                                        Request Verification with Crewdentials
+                                    </button>
+                                </div>
+
                                 {{-- Expired / Expiring Soon --}}
                                 @if($priorityDocs->count() > 0)
                               		<hr class="border-t border-gray-400 my-5 w-full">
@@ -205,7 +244,15 @@
                                                 @php
                                                     $isRejected = strtolower(trim($doc->status ?? '')) === 'rejected';
                                                 @endphp
-                                                <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3">
+                                                <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3 document-item" data-document-id="{{ $doc->id }}">
+
+                                                    <!-- Bulk Selection Checkbox (Top Left) -->
+                                                    <label class="absolute top-2 left-2 z-10 cursor-pointer">
+                                                        <input type="checkbox" 
+                                                               class="document-checkbox w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+                                                               value="{{ $doc->id }}"
+                                                               onchange="updateBulkActionsBar()">
+                                                    </label>
 
                                                     <!-- History Button (Top Right) -->
                                                     <button onclick="openVersionHistoryModal({{ $doc->id }}); event.stopPropagation();" 
@@ -414,7 +461,15 @@
                         @php
                             $isRejected = strtolower(trim($doc->status ?? '')) === 'rejected';
                         @endphp
-                        <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3">
+                        <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3 document-item" data-document-id="{{ $doc->id }}">
+
+                            <!-- Bulk Selection Checkbox (Top Left) -->
+                            <label class="absolute top-2 left-2 z-10 cursor-pointer">
+                                <input type="checkbox" 
+                                       class="document-checkbox w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+                                       value="{{ $doc->id }}"
+                                       onchange="updateBulkActionsBar()">
+                            </label>
 
                             <!-- History Button (Top Right) -->
                             <button onclick="openVersionHistoryModal({{ $doc->id }}); event.stopPropagation();" 
@@ -1274,6 +1329,101 @@
     </div>
 </div>
 
+<!-- Category Assignment Modal for Imported Documents -->
+<div id="categoryAssignmentModal" class="popup hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl w-[700px] max-w-[90vw] max-h-[90vh] overflow-y-auto p-6 relative">
+        <button class="closePopup absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl">&times;</button>
+        
+        <h3 class="text-xl font-semibold mb-4 text-gray-900">Help Us Organize Your Imported Documents</h3>
+        
+        <p class="text-sm text-gray-600 mb-6">
+            Some imported documents couldn't be automatically categorized. Please assign categories (STCW, Medical, Flag State, etc.) for better organization.
+        </p>
+        
+        <div id="categoryAssignmentList" class="space-y-4">
+            <!-- Documents will be loaded here -->
+        </div>
+        
+        <div class="flex gap-3 pt-4 border-t mt-6">
+            <button onclick="closeCategoryAssignmentModal()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors font-medium">
+                Skip for Now
+            </button>
+            <button onclick="saveCategoryAssignments()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium">
+                Save Categories
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Crewdentials Consent Modal -->
+<div id="crewdentialsConsentModal" class="popup hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl w-[600px] max-w-[90vw] max-h-[90vh] overflow-y-auto p-6 relative">
+        <button class="closePopup absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl">&times;</button>
+        
+        <h3 class="text-xl font-semibold mb-4 text-gray-900">Data Sharing Consent</h3>
+        
+        <div class="space-y-4">
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                <p class="text-sm text-gray-700">
+                    <strong>Crewdentials</strong> is a third-party verification service that helps verify your documents. 
+                    To use this service, we need your consent to share your document data with Crewdentials.
+                </p>
+            </div>
+
+            <div class="space-y-3">
+                <h4 class="font-semibold text-gray-900">What will be shared:</h4>
+                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 ml-4">
+                    <li>Document files and metadata (name, type, issue date, expiry date)</li>
+                    <li>Your email address for account linking</li>
+                    <li>Verification status updates</li>
+                </ul>
+            </div>
+
+            <div class="space-y-3">
+                <h4 class="font-semibold text-gray-900">How it's used:</h4>
+                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 ml-4">
+                    <li>Crewdentials verifies your documents against official databases</li>
+                    <li>Verification results are sent back to YWC</li>
+                    <li>You can revoke consent at any time from settings</li>
+                </ul>
+            </div>
+
+            <div class="border-t border-gray-200 pt-4">
+                <a href="{{ config('services.crewdentials.policy_url', '#') }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
+                    <i class="fas fa-external-link-alt mr-1"></i>View Data Sharing Policy
+                </a>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label class="flex items-start cursor-pointer">
+                    <input type="checkbox" id="consentCheckbox" class="mt-1 mr-3 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                    <div class="flex-1">
+                        <span class="text-sm font-medium text-gray-900 block">
+                            I consent to sharing my document data with Crewdentials for verification purposes
+                        </span>
+                        <span class="text-xs text-gray-500 mt-1 block">
+                            You can withdraw this consent at any time from your account settings
+                        </span>
+                    </div>
+                </label>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button onclick="closeConsentModal()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors font-medium">
+                    Cancel
+                </button>
+                <button id="consentSubmitBtn" onclick="submitConsent()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span id="consentBtnText">Give Consent & Continue</span>
+                    <svg id="consentBtnSpinner" class="animate-spin h-5 w-5 text-white hidden inline-block ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Share Profile Modal -->
 <div id="shareProfileModal" class="popup hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl w-1/3 h-[600px] p-6 relative flex flex-col">
@@ -1303,12 +1453,12 @@
 
         <!-- Buttons -->
         <div class="flex justify-center space-x-4 px-4">
-            <!-- Download Button -->
-            <button id="downloadBtn" class="bg-gray-300 hover:bg-gray-400 px-6 py-2 rounded w-1/2 flex justify-center items-center space-x-2 text-center">
+            <!-- Download QR Code Button -->
+            <button id="downloadBtn" onclick="downloadQRCode()" class="bg-gray-300 hover:bg-gray-400 px-6 py-2 rounded w-1/2 flex justify-center items-center space-x-2 text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
                 </svg>
-                <span>Download</span>
+                <span>Download QR</span>
             </button>
 
             <a id="visitProfileBtn" href="#" target="_blank" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 w-1/2 text-center">
@@ -3865,91 +4015,106 @@ function clearTemplate() {
         const qrCodePath = "{{ asset(auth()->user()->qrcode ?? '') }}";
         const profileUrlDB = "{{ auth()->user()->profile_url ?? '' }}";
 
-        // Open Modal
+        // Open Modal - Create new profile share
         card.addEventListener('click', async () => {
             if (modal) modal.classList.remove('hidden');
             if (loader) loader.classList.remove('hidden');
 
             if (img) img.style.opacity = '0';
 
-            // Set Profile URL
-            if (profileLink) profileLink.value = profileUrlDB;
-            if (visitProfileBtn) visitProfileBtn.href = profileUrlDB;
-
-            // Safety timeout to hide loader after 5 seconds max
+            // Safety timeout to hide loader after 10 seconds max
             const loaderTimeout = setTimeout(() => {
                 if (loader) loader.classList.add('hidden');
-            }, 5000);
+            }, 10000);
 
-            // Check if QR code exists, if not try to fetch from API
-            let finalQrCodePath = qrCodePath;
-            
-            if (!qrCodePath || qrCodePath === '{{ asset("") }}' || qrCodePath.trim() === '') {
-                // Try to fetch QR code from web route (uses session auth)
-                try {
-                    const response = await fetch('/share-profile', {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                        },
-                        credentials: 'same-origin'
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.status && data.data && data.data.qr_code_url) {
-                            finalQrCodePath = data.data.qr_code_url;
-                            if (profileLink && data.data.profile_link) {
-                                profileLink.value = data.data.profile_link;
-                                if (visitProfileBtn) visitProfileBtn.href = data.data.profile_link;
+            try {
+                // Create new profile share
+                const response = await fetch('{{ route("shares.profile.store") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        shared_sections: ['personal_info', 'documents', 'career_history'],
+                        generate_qr_code: true,
+                        expires_at: null // No expiry by default
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.share_url) {
+                        // Set Profile URL
+                        if (profileLink) profileLink.value = data.share_url;
+                        if (visitProfileBtn) visitProfileBtn.href = data.share_url;
+
+                        // Load QR Code
+                        if (data.qr_code_url && img) {
+                            img.src = data.qr_code_url;
+                            img.onload = () => {
+                                clearTimeout(loaderTimeout);
+                                if (loader) loader.classList.add('hidden');
+                                if (img) img.style.opacity = '1';
+                            };
+                            img.onerror = () => {
+                                clearTimeout(loaderTimeout);
+                                if (loader) loader.classList.add('hidden');
+                                console.error('Failed to load QR code image');
+                                if (img) {
+                                    img.alt = 'QR Code not available';
+                                }
+                            };
+                        } else {
+                            // Generate QR code if not provided
+                            if (data.share && data.share.id) {
+                                try {
+                                    const qrResponse = await fetch(`/shares/profile/${data.share.id}/qr-code`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                                        },
+                                        credentials: 'same-origin'
+                                    });
+                                    
+                                    if (qrResponse.ok) {
+                                        const qrData = await qrResponse.json();
+                                        if (qrData.success && qrData.qr_code_url && img) {
+                                            img.src = qrData.qr_code_url;
+                                            img.onload = () => {
+                                                clearTimeout(loaderTimeout);
+                                                if (loader) loader.classList.add('hidden');
+                                                if (img) img.style.opacity = '1';
+                                            };
+                                        }
+                                    }
+                                } catch (qrError) {
+                                    console.error('Error generating QR code:', qrError);
+                                }
                             }
+                            clearTimeout(loaderTimeout);
+                            if (loader) loader.classList.add('hidden');
                         }
-                    } else if (response.status === 404) {
-                        // QR code not generated yet
-                        console.warn('QR Code not generated yet. Please contact admin.');
-                        clearTimeout(loaderTimeout);
-                        if (loader) loader.classList.add('hidden');
-                        if (img) {
-                            img.alt = 'QR Code not generated yet. Please contact admin.';
-                            img.style.opacity = '0.3';
-                        }
-                        // Don't return - continue to show profile link even without QR code
-                        finalQrCodePath = ''; // Set to empty so it doesn't try to load
+                    } else {
+                        throw new Error(data.message || 'Failed to create profile share');
                     }
-                } catch (error) {
-                    console.error('Error fetching QR code:', error);
-                    // Continue to try loading with empty path, which will trigger the else block
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to create profile share');
                 }
-            }
-
-            // Load QR Image
-            if (img && finalQrCodePath && finalQrCodePath.trim() !== '' && finalQrCodePath !== '{{ asset("") }}') {
-                img.src = finalQrCodePath;
-                img.onload = () => {
-                    clearTimeout(loaderTimeout);
-                    if (loader) loader.classList.add('hidden');
-                    if (img) img.style.opacity = '1';
-                };
-                img.onerror = () => {
-                    clearTimeout(loaderTimeout);
-                    // Hide loader even if image fails to load
-                    if (loader) loader.classList.add('hidden');
-                    console.error('Failed to load QR code image');
-                    // Optionally show a message or placeholder
-                    if (img) {
-                        img.alt = 'QR Code not available';
-                    }
-                };
-            } else {
-                // No QR code available, hide loader immediately
+            } catch (error) {
+                console.error('Error creating profile share:', error);
                 clearTimeout(loaderTimeout);
                 if (loader) loader.classList.add('hidden');
-                if (img) {
-                    img.alt = 'QR Code not available. Please contact admin.';
-                    img.style.opacity = '0.3';
+                alert('Failed to create profile share: ' + error.message);
+                // Fallback to old method
+                if (profileLink && profileUrlDB) {
+                    profileLink.value = profileUrlDB;
+                    if (visitProfileBtn) visitProfileBtn.href = profileUrlDB;
                 }
             }
         });
@@ -3966,27 +4131,50 @@ function clearTemplate() {
             if (e.target === modal) modal.classList.add('hidden');
         });
 
-        // Copy Link
+        // Copy Link (updated handler)
         const copyBtn = document.getElementById('copyBtn');
-        if (copyBtn && profileLink) {
-            copyBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(profileLink.value);
-            });
-        }
-
-        // Download QR Image
-        const downloadBtn = document.getElementById('downloadBtn');
-        if (downloadBtn && qrCodePath) {
-            downloadBtn.addEventListener('click', function() {
-                const link = document.createElement('a');
-                link.href = qrCodePath;
-                link.download = 'profile-qrcode.png';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const profileLink = document.getElementById('profileLink');
+                if (profileLink && profileLink.value) {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(profileLink.value).then(() => {
+                            // Visual feedback
+                            const originalHTML = this.innerHTML;
+                            this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
+                            setTimeout(() => {
+                                this.innerHTML = originalHTML;
+                            }, 2000);
+                        });
+                    } else {
+                        // Fallback
+                        profileLink.select();
+                        document.execCommand('copy');
+                        const originalHTML = this.innerHTML;
+                        this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
+                        setTimeout(() => {
+                            this.innerHTML = originalHTML;
+                        }, 2000);
+                    }
+                }
             });
         }
     }
+    
+    // Download QR Code Function (global)
+    window.downloadQRCode = function() {
+        const qrImage = document.getElementById('qrcodeImage');
+        if (qrImage && qrImage.src && qrImage.style.opacity !== '0') {
+            const link = document.createElement('a');
+            link.href = qrImage.src;
+            link.download = 'profile-share-qr-code-' + Date.now() + '.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            alert('QR code not available yet. Please wait for it to load.');
+        }
+    };
 
   });
 
@@ -4406,6 +4594,386 @@ function clearTemplate() {
   // Initialize: Show 'all' tab by default
   document.addEventListener('DOMContentLoaded', function() {
     showTab('all');
+    
+    // Check for Crewdentials account on page load (CASE 1)
+    checkCrewdentialsAccount();
   });
+  
+  // Crewdentials Integration Functions
+  let consentAction = null; // 'import' or 'verification'
+  
+  // Check if user has Crewdentials account
+  function checkCrewdentialsAccount() {
+    $.ajax({
+      url: "{{ route('crewdentials.check-account') }}",
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        if (response && response.success && response.has_account) {
+          // Check if already imported
+          // For now, show the import card
+          $('#crewdentialsImportCard').removeClass('hidden');
+        }
+      },
+      error: function(xhr) {
+        console.error('Failed to check Crewdentials account:', xhr);
+      }
+    });
+  }
+  
+  // Show consent modal
+  function showConsentModal(action) {
+    consentAction = action;
+    $('#consentCheckbox').prop('checked', false); // Never pre-tick
+    $('#crewdentialsConsentModal').removeClass('hidden').addClass('flex');
+  }
+  
+  // Close consent modal
+  function closeConsentModal() {
+    $('#crewdentialsConsentModal').addClass('hidden').removeClass('flex');
+    consentAction = null;
+  }
+  
+  // Submit consent
+  function submitConsent() {
+    if (!$('#consentCheckbox').is(':checked')) {
+      alert('Please check the consent checkbox to continue');
+      return;
+    }
+    
+    const btn = $('#consentSubmitBtn');
+    const btnText = $('#consentBtnText');
+    const spinner = $('#consentBtnSpinner');
+    
+    btn.prop('disabled', true);
+    btnText.text('Processing...');
+    spinner.removeClass('hidden');
+    
+    $.ajax({
+      url: "{{ route('crewdentials.consent.store') }}",
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+        'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+        has_consented: true
+      }),
+      success: function(response) {
+        if (response && response.success) {
+          closeConsentModal();
+          
+          // Proceed with the action
+          if (consentAction === 'import') {
+            importFromCrewdentials();
+          } else if (consentAction === 'verification' && window.pendingVerificationDocIds) {
+            submitVerificationRequest(window.pendingVerificationDocIds);
+            window.pendingVerificationDocIds = null;
+          }
+        } else {
+          alert('Failed to store consent: ' + (response?.message || 'Unknown error'));
+          btn.prop('disabled', false);
+          btnText.text('Give Consent & Continue');
+          spinner.addClass('hidden');
+        }
+      },
+      error: function(xhr) {
+        const errorMsg = xhr.responseJSON?.message || 'Failed to store consent';
+        alert('Error: ' + errorMsg);
+        btn.prop('disabled', false);
+        btnText.text('Give Consent & Continue');
+        spinner.addClass('hidden');
+      }
+    });
+  }
+  
+  // Import documents from Crewdentials
+  function importFromCrewdentials() {
+    $.ajax({
+      url: "{{ route('crewdentials.import') }}",
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+        'Content-Type': 'application/json'
+      },
+      success: function(response) {
+        if (response && response.success) {
+          alert('Document import started! You will be notified when the import is complete.');
+          $('#crewdentialsImportCard').addClass('hidden');
+          // Reload page after a delay to show imported documents
+          setTimeout(() => {
+            location.reload();
+          }, 2000);
+        } else if (response && response.requires_consent) {
+          showConsentModal('import');
+        } else {
+          alert('Failed to import: ' + (response?.message || 'Unknown error'));
+        }
+      },
+      error: function(xhr) {
+        if (xhr.status === 403 && xhr.responseJSON?.requires_consent) {
+          showConsentModal('import');
+        } else {
+          const errorMsg = xhr.responseJSON?.message || 'Failed to import documents';
+          alert('Error: ' + errorMsg);
+        }
+      }
+    });
+  }
+  
+  // Bulk Actions Functions
+  function updateBulkActionsBar() {
+    const checkedBoxes = $('.document-checkbox:checked');
+    const count = checkedBoxes.length;
+    const bulkBar = $('#bulkActionsBar');
+    
+    if (count > 0) {
+      $('#selectedCount').text(count);
+      bulkBar.removeClass('hidden');
+    } else {
+      bulkBar.addClass('hidden');
+    }
+  }
+  
+  function clearDocumentSelection() {
+    $('.document-checkbox').prop('checked', false);
+    updateBulkActionsBar();
+  }
+  
+  function requestCrewdentialsVerificationForSelected() {
+    const selectedIds = $('.document-checkbox:checked').map(function() {
+      return parseInt($(this).val());
+    }).get();
+    
+    if (selectedIds.length === 0) {
+      alert('Please select at least one document to verify.');
+      return;
+    }
+    
+    requestCrewdentialsVerification(selectedIds);
+  }
+  
+  // Request verification (CASE 2)
+  function requestCrewdentialsVerification(documentIds) {
+    window.pendingVerificationDocIds = documentIds;
+    
+    // Check consent first
+    $.ajax({
+      url: "{{ route('crewdentials.consent.get') }}",
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        if (response && response.has_consent) {
+          // Consent exists, proceed with verification
+          submitVerificationRequest(documentIds);
+        } else {
+          // Show consent modal
+          consentAction = 'verification';
+          showConsentModal('verification');
+        }
+      },
+      error: function() {
+        // Assume no consent, show modal
+        consentAction = 'verification';
+        showConsentModal('verification');
+      }
+    });
+  }
+  
+  // Submit verification request
+  function submitVerificationRequest(documentIds) {
+    $.ajax({
+      url: "{{ route('crewdentials.request-verification') }}",
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+        'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+        document_ids: documentIds
+      }),
+      success: function(response) {
+        if (response && response.success) {
+          alert('Verification request submitted! Documents will be processed in the background. You will be notified when verification is complete.');
+          // Clear selection after successful submission
+          clearDocumentSelection();
+          // Optionally reload page to show updated status
+          setTimeout(() => {
+            location.reload();
+          }, 2000);
+        } else {
+          alert('Failed to submit verification: ' + (response?.message || 'Unknown error'));
+        }
+      },
+      error: function(xhr) {
+        if (xhr.status === 403 && xhr.responseJSON?.requires_consent) {
+          showConsentModal('verification');
+        } else {
+          const errorMsg = xhr.responseJSON?.message || 'Failed to submit verification';
+          alert('Error: ' + errorMsg);
+        }
+      }
+    });
+  }
+  
+  // Update consent submit to handle verification action
+  $(document).on('change', '#consentCheckbox', function() {
+    $('#consentSubmitBtn').prop('disabled', !$(this).is(':checked'));
+  });
+  
+  // Handle consent modal close
+  $(document).on('click', '#crewdentialsConsentModal .closePopup', function() {
+    closeConsentModal();
+  });
+  
+  // Category Assignment Functions
+  function checkDocumentsNeedingCategory() {
+    $.ajax({
+      url: "{{ route('crewdentials.documents.needing-category') }}",
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        if (response && response.success && response.documents && response.documents.length > 0) {
+          showCategoryAssignmentModal(response.documents, response.document_types);
+        }
+      },
+      error: function(xhr) {
+        console.error('Failed to check documents needing category:', xhr);
+      }
+    });
+  }
+  
+  function showCategoryAssignmentModal(documents, documentTypes) {
+    const modal = $('#categoryAssignmentModal');
+    const list = $('#categoryAssignmentList');
+    list.html('');
+    
+    documents.forEach(function(doc) {
+      const docHtml = `
+        <div class="border border-gray-200 rounded-lg p-4" data-document-id="${doc.id}">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex-1">
+              <h4 class="font-semibold text-gray-900">${doc.document_name || 'Imported Document'}</h4>
+              ${doc.document_number ? `<p class="text-sm text-gray-600">Number: ${doc.document_number}</p>` : ''}
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Select Category:</label>
+            <select class="document-category-select w-full border border-gray-300 rounded-lg p-2 text-sm" data-document-id="${doc.id}">
+              <option value="">-- Select Category --</option>
+              ${Object.keys(documentTypes).map(category => `
+                <optgroup label="${category}">
+                  ${documentTypes[category].map(type => `
+                    <option value="${type.id}" ${doc.document_type_id == type.id ? 'selected' : ''}>${type.name}</option>
+                  `).join('')}
+                </optgroup>
+              `).join('')}
+            </select>
+          </div>
+        </div>
+      `;
+      list.append(docHtml);
+    });
+    
+    modal.removeClass('hidden').addClass('flex');
+  }
+  
+  function closeCategoryAssignmentModal() {
+    $('#categoryAssignmentModal').addClass('hidden').removeClass('flex');
+  }
+  
+  function saveCategoryAssignments() {
+    const assignments = [];
+    $('.document-category-select').each(function() {
+      const documentId = $(this).data('document-id');
+      const documentTypeId = $(this).val();
+      if (documentTypeId) {
+        assignments.push({ document_id: documentId, document_type_id: documentTypeId });
+      }
+    });
+    
+    if (assignments.length === 0) {
+      alert('Please select at least one category');
+      return;
+    }
+    
+    let saved = 0;
+    assignments.forEach(function(assignment) {
+      $.ajax({
+        url: `/crewdentials/documents/${assignment.document_id}/assign-category`,
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+          'Content-Type': 'application/json'
+        },
+        data: JSON.stringify({
+          document_type_id: assignment.document_type_id
+        }),
+        success: function(response) {
+          saved++;
+          if (saved === assignments.length) {
+            alert('Categories assigned successfully!');
+            closeCategoryAssignmentModal();
+            location.reload();
+          }
+        },
+        error: function(xhr) {
+          alert('Failed to assign category: ' + (xhr.responseJSON?.message || 'Unknown error'));
+        }
+      });
+    });
+  }
+  
+  // Check for documents needing category assignment on page load
+  $(document).ready(function() {
+    setTimeout(function() {
+      checkDocumentsNeedingCategory();
+    }, 2000);
+  });
+  
+  // Handle category assignment modal close
+  $(document).on('click', '#categoryAssignmentModal .closePopup', function() {
+    closeCategoryAssignmentModal();
+  });
+  
+  // Retry Failed Sync Function
+  function retryFailedSync(syncId) {
+    if (!confirm('Retry this sync operation?')) {
+      return;
+    }
+    
+    $.ajax({
+      url: `/crewdentials/sync/${syncId}/retry`,
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        if (response && response.success) {
+          alert('Sync retry initiated. You will be notified when complete.');
+          location.reload();
+        } else {
+          alert('Failed to retry sync: ' + (response?.message || 'Unknown error'));
+        }
+      },
+      error: function(xhr) {
+        alert('Error: ' + (xhr.responseJSON?.message || 'Failed to retry sync'));
+      }
+    });
+  }
 </script>
 

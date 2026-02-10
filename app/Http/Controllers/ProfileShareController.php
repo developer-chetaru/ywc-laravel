@@ -99,7 +99,15 @@ class ProfileShareController extends Controller
                 });
             }
             
-            $data['documents'] = $query->get();
+            $allDocuments = $query->get();
+            
+            // Filter documents that have valid file paths
+            $data['documents'] = $allDocuments->filter(function($doc) {
+                return $doc->file_path && \Storage::disk('public')->exists($doc->file_path);
+            })->values();
+            
+            // Also store count of documents with valid files for download button visibility
+            $data['hasDownloadableDocuments'] = $data['documents']->count() > 0;
         }
 
         if ($share->hasSection('career_history')) {
@@ -110,6 +118,42 @@ class ProfileShareController extends Controller
             }
             
             $data['careerEntries'] = $query->orderBy('start_date', 'desc')->get();
+        }
+
+        // Get Crewdentials profile preview iframe URL (if user has Crewdentials account)
+        try {
+            $crewdentialsService = app(\App\Services\Documents\CrewdentialsService::class);
+            $previewResult = $crewdentialsService->getProfilePreview(
+                $user->email,
+                false, // dashboardMode = false for public view
+                [
+                    'bgColor' => '#ffffff',
+                    'textColor' => '#333333',
+                    'fontFamily' => 'DM Sans, sans-serif',
+                    'accentColor' => '#0053FF',
+                ]
+            );
+            
+            if ($previewResult['success'] && $previewResult['hasProfile'] && !empty($previewResult['publicProfileIframeUrl'])) {
+                $data['crewdentialsIframeUrl'] = $previewResult['publicProfileIframeUrl'];
+                $data['crewdentialsDocsCount'] = $previewResult['docsCount'] ?? 0;
+                $data['crewdentialsIsConnected'] = $previewResult['isConnected'] ?? false;
+            } else {
+                // Log why preview is not shown
+                \Log::info('Crewdentials profile preview not shown', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'success' => $previewResult['success'] ?? false,
+                    'hasProfile' => $previewResult['hasProfile'] ?? false,
+                    'hasIframeUrl' => !empty($previewResult['publicProfileIframeUrl'] ?? null),
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silently fail - Crewdentials preview is optional
+            \Log::warning('Failed to load Crewdentials profile preview', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         return view('profile.share-view', $data);
@@ -208,20 +252,79 @@ class ProfileShareController extends Controller
         }
 
         $zip = new \ZipArchive();
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+        $zipResult = $zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        
+        if ($zipResult !== true) {
+            \Log::error('Failed to create ZIP file', [
+                'zip_result' => $zipResult,
+                'zip_path' => $zipPath,
+            ]);
             abort(500, 'Failed to create ZIP file');
         }
 
+        $filesAdded = 0;
         foreach ($documents as $document) {
             if ($document->file_path && \Storage::disk('public')->exists($document->file_path)) {
-                $filePath = \Storage::disk('public')->path($document->file_path);
-                $fileName = $document->document_name ?? ($document->documentType->name ?? 'document-' . $document->id);
-                $extension = pathinfo($filePath, PATHINFO_EXTENSION);
-                $zip->addFile($filePath, $fileName . '.' . $extension);
+                try {
+                    $filePath = \Storage::disk('public')->path($document->file_path);
+                    
+                    // Check if file actually exists
+                    if (!file_exists($filePath)) {
+                        \Log::warning('Document file not found', [
+                            'document_id' => $document->id,
+                            'file_path' => $document->file_path,
+                            'storage_path' => $filePath,
+                        ]);
+                        continue;
+                    }
+                    
+                    $fileName = $document->document_name ?? ($document->documentType->name ?? 'document-' . $document->id);
+                    $extension = pathinfo($filePath, PATHINFO_EXTENSION) ?: 'pdf';
+                    $zipFileName = $fileName . '.' . $extension;
+                    
+                    // Sanitize filename for ZIP
+                    $zipFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $zipFileName);
+                    
+                    if ($zip->addFile($filePath, $zipFileName)) {
+                        $filesAdded++;
+                    } else {
+                        \Log::warning('Failed to add file to ZIP', [
+                            'document_id' => $document->id,
+                            'file_path' => $filePath,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Error adding document to ZIP', [
+                        'document_id' => $document->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    continue;
+                }
             }
         }
 
         $zip->close();
+
+        // Check if any files were added
+        if ($filesAdded === 0) {
+            // Clean up empty ZIP file
+            if (file_exists($zipPath)) {
+                @unlink($zipPath);
+            }
+            
+            // Redirect back with error message instead of showing error page
+            return redirect()->route('profile.share.view', $token)
+                ->with('error', 'No valid documents found to download. The documents may not have files attached.');
+        }
+
+        // Verify ZIP file exists before downloading
+        if (!file_exists($zipPath)) {
+            \Log::error('ZIP file was not created', [
+                'zip_path' => $zipPath,
+                'files_added' => $filesAdded,
+            ]);
+            abort(500, 'ZIP file creation failed');
+        }
 
         // Record download
         $share->recordDownload();

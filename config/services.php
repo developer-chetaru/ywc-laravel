@@ -69,4 +69,12 @@ return [
         'path' => env('TESSERACT_PATH'), // Optional: Set explicit path to tesseract executable (e.g., /usr/bin/tesseract)
     ],
 
+    'crewdentials' => [
+        'api_url' => env('CREWDENTIALS_API_URL', 'https://crewdentials-api.onrender.com/api/v1'),
+        'api_key' => env('CREWDENTIALS_API_KEY', ''),
+        'webhook_secret' => env('CREWDENTIALS_WEBHOOK_SECRET', ''),
+        'policy_url' => env('CREWDENTIALS_POLICY_URL', 'https://crewdentials.com/data-sharing-policy'),
+        'policy_version' => env('CREWDENTIALS_POLICY_VERSION', '1.0'),
+    ],
+
 ];
