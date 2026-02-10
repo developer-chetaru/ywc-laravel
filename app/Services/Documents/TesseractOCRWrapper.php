@@ -22,7 +22,8 @@ class TesseractOCRWrapper
         $this->tesseractPath = $tesseractPath;
         
         // Set environment variable that might be checked by library
-        putenv("TESSERACT_CMD={$tesseractPath}");
+        // Use global namespace prefix to avoid namespace resolution issues
+        \putenv("TESSERACT_CMD={$tesseractPath}");
         
         // CRITICAL: Create function alias in library's namespace to fix exec() namespace bug
         // The library calls exec() without \ prefix, so PHP looks for thiagoalessio\TesseractOCR\exec()
