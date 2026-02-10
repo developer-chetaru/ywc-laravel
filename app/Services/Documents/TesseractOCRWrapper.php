@@ -22,30 +22,12 @@ class TesseractOCRWrapper
     {
         $this->tesseractPath = $tesseractPath;
         
-        // Don't use putenv() - it's often disabled on servers and not essential
-        // We'll set the executable path directly via executable() method
-        
-        // CRITICAL: Create function alias in library's namespace to fix exec() namespace bug
-        // The library calls exec() without \ prefix, so PHP looks for thiagoalessio\TesseractOCR\exec()
-        // We create an alias that points to the global exec() function
-        // Only do this if eval is available and function doesn't exist
-        if (function_exists('eval') && !function_exists('thiagoalessio\TesseractOCR\exec')) {
-            try {
-                // Use eval to create function in library's namespace
-                // This is a workaround for the library's namespace bug
-                @eval('namespace thiagoalessio\TesseractOCR; function exec() { return \exec(...func_get_args()); }');
-            } catch (\Throwable $e) {
-                // If eval fails, we'll rely on setting executable path immediately
-                // This is fine - the executable() method should prevent internal exec() calls
-                Log::debug('Could not create exec() alias in TesseractOCR namespace (eval disabled). Will rely on executable() method.');
-            }
-        }
+        // Ensure the namespace fix is loaded (via composer autoload files)
+        // The TesseractOCRFix.php file creates exec() in the library's namespace
         
         // Create the OCR instance
-        // The library might call exec() during construction, so we need to catch that
+        // The exec() function should now be available in the library's namespace
         try {
-            // Try to create instance - if it fails due to exec() namespace issue,
-            // we'll catch it and provide helpful error
             $this->ocr = new TesseractOCR($imagePath);
             
             // CRITICAL: Set executable path IMMEDIATELY after instantiation
@@ -58,30 +40,25 @@ class TesseractOCRWrapper
             $errorMsg = $e->getMessage();
             
             if (strpos($errorMsg, 'exec()') !== false || 
-                strpos($errorMsg, 'undefined function') !== false ||
-                strpos($errorMsg, 'putenv()') !== false) {
+                strpos($errorMsg, 'undefined function') !== false) {
                 
-                // This is the namespace bug - library is calling exec() or putenv() in wrong namespace
+                // Check if the fix file is being loaded
+                $fixFile = app_path('Helpers/TesseractOCRFix.php');
+                $fixLoaded = function_exists('thiagoalessio\TesseractOCR\exec');
+                
                 throw new \RuntimeException(
                     "TesseractOCR library namespace error: {$errorMsg}\n\n" .
-                    "This is a known library bug. Solutions:\n" .
-                    "1. Ensure PHP exec() function is enabled (check php.ini disable_functions)\n" .
-                    "2. TESSERACT_PATH is set in .env file: {$tesseractPath}\n" .
-                    "3. Tesseract is installed and accessible at: {$tesseractPath}\n" .
-                    "4. If putenv() is disabled, that's OK - we don't use it\n" .
-                    "5. Contact server admin to enable exec() if needed"
+                    "The exec() function fix may not be loaded. Please:\n" .
+                    "1. Run: composer dump-autoload\n" .
+                    "2. Ensure TESSERACT_PATH is set in .env: {$tesseractPath}\n" .
+                    "3. Ensure PHP exec() function is enabled\n" .
+                    "4. Fix file exists: " . (file_exists($fixFile) ? 'YES' : 'NO') . "\n" .
+                    "5. Fix function loaded: " . ($fixLoaded ? 'YES' : 'NO')
                 );
             }
             throw $e;
         } catch (\Exception $e) {
-            // Re-throw with more context
-            $errorMsg = $e->getMessage();
-            if (strpos($errorMsg, 'putenv') !== false) {
-                throw new \RuntimeException(
-                    "putenv() related error: {$errorMsg}. " .
-                    "We don't use putenv() anymore. Please ensure TESSERACT_PATH is set in .env: {$tesseractPath}"
-                );
-            }
+            Log::error('TesseractOCR creation failed: ' . $e->getMessage());
             throw $e;
         }
     }
