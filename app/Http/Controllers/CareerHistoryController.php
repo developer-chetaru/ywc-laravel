@@ -684,14 +684,39 @@ class CareerHistoryController extends Controller
      */
     protected function createTesseractOCR($imagePath): TesseractOCR
     {
+        // Get Tesseract path first
+        $tesseractPath = $this->getTesseractPath();
+        
+        if (!$tesseractPath) {
+            throw new \Exception('Tesseract OCR not found. Please ensure Tesseract is installed and accessible.');
+        }
+        
+        // Always resolve to full path to avoid namespace issues with exec()
+        $fullPath = $tesseractPath;
+        if ($tesseractPath === 'tesseract') {
+            // If we got 'tesseract', try to find the actual path
+            $output = [];
+            $returnVar = 0;
+            @\exec('which tesseract 2>&1', $output, $returnVar);
+            if ($returnVar === 0 && !empty($output)) {
+                $fullPath = trim($output[0]);
+            } else {
+                // Fallback to common path
+                $fullPath = '/usr/bin/tesseract';
+            }
+        }
+        
+        // Verify the path exists and is executable
+        if (!file_exists($fullPath) || !is_executable($fullPath)) {
+            throw new \Exception("Tesseract executable not found at: {$fullPath}");
+        }
+        
         $ocr = new TesseractOCR($imagePath);
         
-        // Set Tesseract executable path if found (for server environments)
-        $tesseractPath = $this->getTesseractPath();
-        if ($tesseractPath) {
-            // Set executable path explicitly (works on servers where PATH might not include tesseract)
-            $ocr->executable($tesseractPath);
-        }
+        // Always set executable path explicitly to avoid library's internal exec() calls
+        $ocr->executable($fullPath);
+        
+        Log::info('TesseractOCR created with path: ' . $fullPath);
         
         return $ocr;
     }

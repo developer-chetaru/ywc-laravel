@@ -26,30 +26,55 @@ class OcrService
      */
     protected function getTesseractPath(): ?string
     {
+        // Method 1: Check config first (manual override via .env)
+        $configPath = config('services.tesseract.path');
+        if ($configPath && file_exists($configPath) && is_executable($configPath)) {
+            Log::info('Tesseract path from config: ' . $configPath);
+            return $configPath;
+        }
+        
         // Check if exec function is available
         if (!function_exists('exec') && !function_exists('shell_exec')) {
+            Log::warning('exec() and shell_exec() functions are disabled. Cannot detect Tesseract path.');
             return null;
         }
 
         $output = [];
         $returnVar = 0;
         
-        // Method 1: Try direct tesseract --version (most reliable)
+        // Method 2: Try direct tesseract --version (most reliable)
         @\exec('tesseract --version 2>&1', $output, $returnVar);
         if ($returnVar === 0) {
-            return 'tesseract'; // Use command directly
+            // Command works, but we need full path to avoid namespace issues
+            // Try to get full path via which
+            $output2 = [];
+            @\exec('which tesseract 2>&1', $output2, $returnVar2);
+            if ($returnVar2 === 0 && !empty($output2)) {
+                $path = trim($output2[0]);
+                if (file_exists($path) && is_executable($path)) {
+                    Log::info('Tesseract found via which: ' . $path);
+                    return $path;
+                }
+            }
+            // Fallback to common path if which fails
+            $commonPath = '/usr/bin/tesseract';
+            if (file_exists($commonPath) && is_executable($commonPath)) {
+                Log::info('Tesseract command works, using common path: ' . $commonPath);
+                return $commonPath;
+            }
         }
         
-        // Method 2: Try which tesseract
+        // Method 3: Try which tesseract directly
         @\exec('which tesseract 2>&1', $output, $returnVar);
         if ($returnVar === 0 && !empty($output)) {
             $path = trim($output[0]);
             if (file_exists($path) && is_executable($path)) {
+                Log::info('Tesseract found via which: ' . $path);
                 return $path;
             }
         }
         
-        // Method 3: Try common installation paths
+        // Method 4: Try common installation paths
         $commonPaths = [
             '/usr/bin/tesseract',
             '/usr/local/bin/tesseract',
@@ -61,19 +86,30 @@ class OcrService
             if (file_exists($path) && is_executable($path)) {
                 @\exec($path . ' --version 2>&1', $output, $returnVar);
                 if ($returnVar === 0) {
+                    Log::info('Tesseract found at common path: ' . $path);
                     return $path;
                 }
             }
         }
         
-        // Method 4: Try shell_exec as fallback
+        // Method 5: Try shell_exec as fallback
         if (function_exists('shell_exec')) {
             $result = @shell_exec('tesseract --version 2>&1');
             if ($result && strpos($result, 'tesseract') !== false) {
-                return 'tesseract';
+                // Still need full path
+                $result2 = @shell_exec('which tesseract 2>&1');
+                if ($result2) {
+                    $path = trim($result2);
+                    if (file_exists($path) && is_executable($path)) {
+                        Log::info('Tesseract found via shell_exec: ' . $path);
+                        return $path;
+                    }
+                }
             }
         }
         
+        $pathEnv = getenv('PATH');
+        Log::warning('Tesseract not found. Checked config, common paths, and PATH variable. Server PATH: ' . ($pathEnv ?? 'not set'));
         return null;
     }
 
@@ -82,14 +118,39 @@ class OcrService
      */
     protected function createTesseractOCR($imagePath): \thiagoalessio\TesseractOCR\TesseractOCR
     {
+        // Get Tesseract path first
+        $tesseractPath = $this->getTesseractPath();
+        
+        if (!$tesseractPath) {
+            throw new \Exception('Tesseract OCR not found. Please ensure Tesseract is installed and accessible.');
+        }
+        
+        // Always resolve to full path to avoid namespace issues with exec()
+        $fullPath = $tesseractPath;
+        if ($tesseractPath === 'tesseract') {
+            // If we got 'tesseract', try to find the actual path
+            $output = [];
+            $returnVar = 0;
+            @\exec('which tesseract 2>&1', $output, $returnVar);
+            if ($returnVar === 0 && !empty($output)) {
+                $fullPath = trim($output[0]);
+            } else {
+                // Fallback to common path
+                $fullPath = '/usr/bin/tesseract';
+            }
+        }
+        
+        // Verify the path exists and is executable
+        if (!file_exists($fullPath) || !is_executable($fullPath)) {
+            throw new \Exception("Tesseract executable not found at: {$fullPath}");
+        }
+        
         $ocr = new \thiagoalessio\TesseractOCR\TesseractOCR($imagePath);
         
-        // Set Tesseract executable path if found (for server environments)
-        $tesseractPath = $this->getTesseractPath();
-        if ($tesseractPath) {
-            // Set executable path explicitly (works on servers where PATH might not include tesseract)
-            $ocr->executable($tesseractPath);
-        }
+        // Always set executable path explicitly to avoid library's internal exec() calls
+        $ocr->executable($fullPath);
+        
+        Log::info('TesseractOCR created with path: ' . $fullPath);
         
         return $ocr;
     }
