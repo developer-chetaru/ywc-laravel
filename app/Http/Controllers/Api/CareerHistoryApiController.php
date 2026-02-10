@@ -30,6 +30,78 @@ use Illuminate\Support\Facades\Crypt;
 class CareerHistoryApiController extends Controller
 {
     /**
+     * Get Tesseract executable path
+     */
+    protected function getTesseractPath(): ?string
+    {
+        // Check if exec function is available
+        if (!function_exists('exec') && !function_exists('shell_exec')) {
+            return null;
+        }
+
+        $output = [];
+        $returnVar = 0;
+        
+        // Method 1: Try direct tesseract --version (most reliable)
+        @\exec('tesseract --version 2>&1', $output, $returnVar);
+        if ($returnVar === 0) {
+            return 'tesseract'; // Use command directly
+        }
+        
+        // Method 2: Try which tesseract
+        @\exec('which tesseract 2>&1', $output, $returnVar);
+        if ($returnVar === 0 && !empty($output)) {
+            $path = trim($output[0]);
+            if (file_exists($path) && is_executable($path)) {
+                return $path;
+            }
+        }
+        
+        // Method 3: Try common installation paths
+        $commonPaths = [
+            '/usr/bin/tesseract',
+            '/usr/local/bin/tesseract',
+            '/opt/homebrew/bin/tesseract',
+            '/bin/tesseract',
+        ];
+        
+        foreach ($commonPaths as $path) {
+            if (file_exists($path) && is_executable($path)) {
+                @\exec($path . ' --version 2>&1', $output, $returnVar);
+                if ($returnVar === 0) {
+                    return $path;
+                }
+            }
+        }
+        
+        // Method 4: Try shell_exec as fallback
+        if (function_exists('shell_exec')) {
+            $result = @shell_exec('tesseract --version 2>&1');
+            if ($result && strpos($result, 'tesseract') !== false) {
+                return 'tesseract';
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Create TesseractOCR instance with proper path configuration
+     */
+    protected function createTesseractOCR($imagePath): TesseractOCR
+    {
+        $ocr = new TesseractOCR($imagePath);
+        
+        // Set Tesseract executable path if found (for server environments)
+        $tesseractPath = $this->getTesseractPath();
+        if ($tesseractPath) {
+            // Set executable path explicitly (works on servers where PATH might not include tesseract)
+            $ocr->executable($tesseractPath);
+        }
+        
+        return $ocr;
+    }
+    /**
      * Upload document (API).
      * Returns JSON.
      */
@@ -692,7 +764,7 @@ class CareerHistoryApiController extends Controller
                     $tmpImage = storage_path("app/temp/page_{$i}.png");
                     $page->writeImage($tmpImage);
 
-                    $ocr = new TesseractOCR($tmpImage);
+                    $ocr = $this->createTesseractOCR($tmpImage);
                     $ocr->lang('eng')->psm(3)->oem(1);
                     $text .= $ocr->run() . "\n";
 
@@ -702,7 +774,7 @@ class CareerHistoryApiController extends Controller
                 $imagick->clear();
                 $imagick->destroy();
             } else {
-                $ocr = new TesseractOCR($fullPath);
+                $ocr = $this->createTesseractOCR($fullPath);
                 $ocr->lang('eng')->psm(3)->oem(1);
                 $text = $ocr->run();
             }
