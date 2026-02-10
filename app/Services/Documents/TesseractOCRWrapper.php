@@ -42,18 +42,40 @@ class TesseractOCRWrapper
             if (strpos($errorMsg, 'exec()') !== false || 
                 strpos($errorMsg, 'undefined function') !== false) {
                 
+                // Check if exec() is available globally
+                $execAvailable = function_exists('\exec');
+                $shellExecAvailable = function_exists('\shell_exec');
+                $procOpenAvailable = function_exists('\proc_open');
+                
                 // Check if the fix file is being loaded
                 $fixFile = app_path('Helpers/TesseractOCRFix.php');
                 $fixLoaded = function_exists('thiagoalessio\TesseractOCR\exec');
                 
+                $diagnostics = [
+                    "Error: {$errorMsg}",
+                    "TESSERACT_PATH in .env: {$tesseractPath}",
+                    "Global exec() available: " . ($execAvailable ? 'YES' : 'NO'),
+                    "Global shell_exec() available: " . ($shellExecAvailable ? 'YES' : 'NO'),
+                    "Global proc_open() available: " . ($procOpenAvailable ? 'YES' : 'NO'),
+                    "Fix file exists: " . (file_exists($fixFile) ? 'YES' : 'NO'),
+                    "Fix function loaded: " . ($fixLoaded ? 'YES' : 'NO')
+                ];
+                
+                if (!$execAvailable && !$shellExecAvailable && !$procOpenAvailable) {
+                    throw new \RuntimeException(
+                        "TesseractOCR cannot work: exec(), shell_exec(), and proc_open() are all disabled.\n\n" .
+                        "Please contact your server administrator to enable at least one of these functions.\n\n" .
+                        "Diagnostics:\n" . implode("\n", $diagnostics)
+                    );
+                }
+                
                 throw new \RuntimeException(
-                    "TesseractOCR library namespace error: {$errorMsg}\n\n" .
-                    "The exec() function fix may not be loaded. Please:\n" .
+                    "TesseractOCR library error: {$errorMsg}\n\n" .
+                    "Diagnostics:\n" . implode("\n", $diagnostics) . "\n\n" .
+                    "Please:\n" .
                     "1. Run: composer dump-autoload\n" .
                     "2. Ensure TESSERACT_PATH is set in .env: {$tesseractPath}\n" .
-                    "3. Ensure PHP exec() function is enabled\n" .
-                    "4. Fix file exists: " . (file_exists($fixFile) ? 'YES' : 'NO') . "\n" .
-                    "5. Fix function loaded: " . ($fixLoaded ? 'YES' : 'NO')
+                    "3. If exec() is disabled, ensure shell_exec() or proc_open() is enabled"
                 );
             }
             throw $e;
