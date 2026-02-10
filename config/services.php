@@ -65,4 +65,8 @@ return [
         'api_key' => env('GOOGLE_CLOUD_API_KEY'), // Alternative to key_file
     ],
 
+    'tesseract' => [
+        'path' => env('TESSERACT_PATH'), // Optional: Set explicit path to tesseract executable (e.g., /usr/bin/tesseract)
+    ],
+
 ];

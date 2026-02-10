@@ -592,8 +592,16 @@ class CareerHistoryController extends Controller
      */
     protected function getTesseractPath(): ?string
     {
+        // First check if path is configured in config file (for server environments)
+        $configuredPath = config('services.tesseract.path');
+        if ($configuredPath && file_exists($configuredPath) && is_executable($configuredPath)) {
+            Log::info('Using configured Tesseract path: ' . $configuredPath);
+            return $configuredPath;
+        }
+        
         // Check if exec function is available
         if (!function_exists('exec') && !function_exists('shell_exec')) {
+            Log::warning('Tesseract detection: exec and shell_exec functions not available');
             return null;
         }
 
@@ -603,6 +611,7 @@ class CareerHistoryController extends Controller
         // Method 1: Try direct tesseract --version (most reliable)
         @\exec('tesseract --version 2>&1', $output, $returnVar);
         if ($returnVar === 0) {
+            Log::info('Tesseract found via direct command: tesseract');
             return 'tesseract'; // Use command directly
         }
         
@@ -611,23 +620,26 @@ class CareerHistoryController extends Controller
         if ($returnVar === 0 && !empty($output)) {
             $path = trim($output[0]);
             if (file_exists($path) && is_executable($path)) {
+                Log::info('Tesseract found via which command: ' . $path);
                 return $path;
             }
         }
         
-        // Method 3: Try common installation paths
+        // Method 3: Try common installation paths (including server-specific paths)
         $commonPaths = [
             '/usr/bin/tesseract',
             '/usr/local/bin/tesseract',
             '/opt/homebrew/bin/tesseract',
             '/bin/tesseract',
-            '/usr/local/bin/tesseract',
+            '/usr/bin/tesseract-ocr', // Some servers use this
+            '/usr/local/bin/tesseract-ocr',
         ];
         
         foreach ($commonPaths as $path) {
             if (file_exists($path) && is_executable($path)) {
                 @\exec($path . ' --version 2>&1', $output, $returnVar);
                 if ($returnVar === 0) {
+                    Log::info('Tesseract found at common path: ' . $path);
                     return $path;
                 }
             }
@@ -636,11 +648,26 @@ class CareerHistoryController extends Controller
         // Method 4: Try shell_exec as fallback
         if (function_exists('shell_exec')) {
             $result = @shell_exec('tesseract --version 2>&1');
-            if ($result && strpos($result, 'tesseract') !== false) {
+            if ($result && (stripos($result, 'tesseract') !== false || stripos($result, '5.3.0') !== false)) {
+                Log::info('Tesseract found via shell_exec');
                 return 'tesseract';
             }
         }
         
+        // Method 5: Try to find via PATH environment variable
+        $pathEnv = getenv('PATH');
+        if ($pathEnv) {
+            $paths = explode(':', $pathEnv);
+            foreach ($paths as $basePath) {
+                $testPath = rtrim($basePath, '/') . '/tesseract';
+                if (file_exists($testPath) && is_executable($testPath)) {
+                    Log::info('Tesseract found in PATH: ' . $testPath);
+                    return $testPath;
+                }
+            }
+        }
+        
+        Log::warning('Tesseract not found. Checked common paths and PATH variable.');
         return null;
     }
 
@@ -719,15 +746,19 @@ class CareerHistoryController extends Controller
             
             // Fallback to TesseractOCR if Google Vision failed or not available
             if (empty(trim($text))) {
-                // Check if TesseractOCR is available
-                $tesseractAvailable = $this->checkTesseractAvailable();
+                // Try to get Tesseract path
+                $tesseractPath = $this->getTesseractPath();
                 
-                if (!$tesseractAvailable) {
+                if (!$tesseractPath) {
+                    // Log detailed error for debugging
+                    Log::error('Tesseract OCR not available. Detection failed. Server PATH: ' . getenv('PATH'));
                     return response()->json([
                         'success' => false,
                         'message' => 'OCR is not available. Please install TesseractOCR: sudo apt-get install tesseract-ocr tesseract-ocr-eng'
                     ], 500);
                 }
+                
+                Log::info('Using Tesseract at path: ' . $tesseractPath);
 
                 if ($extension === 'pdf') {
                     // Check if Imagick is available
