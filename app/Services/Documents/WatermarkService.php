@@ -50,85 +50,166 @@ class WatermarkService
         }
 
         try {
+            \Log::info('Starting watermark process for document: ' . $document->id . ' | File: ' . $filePath);
+            
             $image = $this->imageManager->read($filePath);
             $user = $document->user;
             
             // Default watermark text
             $text = $watermarkText ?? ($user->email ?? 'YWC Document');
+            \Log::info('Watermark text: ' . $text);
             
             // Get image dimensions
             $width = $image->width();
             $height = $image->height();
+            \Log::info('Image dimensions: ' . $width . 'x' . $height);
             
-            // Calculate watermark position
-            $fontSize = max(12, min($width, $height) / 30); // Responsive font size
-            $padding = 20;
+            // Calculate watermark position with proper sizing
+            // Use a percentage-based font size for better scaling
+            $baseFontSize = max(14, min($width, $height) / 30);
+            $fontSize = (int)$baseFontSize;
+            $padding = max(20, min($width, $height) / 40); // Responsive padding
             
             // Create watermark text with background
             $watermarkX = 0;
             $watermarkY = 0;
             
+            // Calculate text dimensions (built-in font 5 is ~8x13 pixels per character)
+            $charWidth = 8;
+            $charHeight = 13;
+            $textWidth = strlen($text) * $charWidth;
+            $textHeight = $charHeight;
+            
             switch ($position) {
                 case 'center':
-                    $watermarkX = ($width / 2) - (strlen($text) * $fontSize / 3);
-                    $watermarkY = ($height / 2);
+                    $watermarkX = ($width / 2) - ($textWidth / 2);
+                    $watermarkY = ($height / 2) - ($textHeight / 2);
                     break;
                 case 'bottom-right':
-                    $watermarkX = $width - (strlen($text) * $fontSize / 2) - $padding;
-                    $watermarkY = $height - $fontSize - $padding;
+                    $watermarkX = $width - $textWidth - $padding;
+                    $watermarkY = $height - $textHeight - $padding;
                     break;
                 case 'bottom-left':
                     $watermarkX = $padding;
-                    $watermarkY = $height - $fontSize - $padding;
+                    $watermarkY = $height - $textHeight - $padding;
                     break;
                 case 'top-right':
-                    $watermarkX = $width - (strlen($text) * $fontSize / 2) - $padding;
-                    $watermarkY = $padding + $fontSize;
+                    $watermarkX = $width - $textWidth - $padding;
+                    $watermarkY = $padding;
                     break;
                 case 'top-left':
                     $watermarkX = $padding;
-                    $watermarkY = $padding + $fontSize;
+                    $watermarkY = $padding;
                     break;
             }
             
-            // Add text watermark with background for better visibility
-            // First, create a semi-transparent background rectangle
-            $bgWidth = strlen($text) * ($fontSize / 1.5) + 20;
-            $bgHeight = $fontSize + 10;
-            
-            // Add text watermark (simpler approach - text only)
-            // Note: Intervention Image v3 may have different API, using basic text
+            // Add text watermark using Intervention Image v3 API
             try {
-                $image->text(
-                    $text,
-                    (int)$watermarkX,
-                    (int)$watermarkY,
-                    function ($font) use ($fontSize, $opacity) {
-                        $font->size($fontSize);
-                        $font->color([255, 255, 255, (int)(255 * ($opacity / 100))]); // White with opacity
-                        $font->align('left');
-                        $font->valign('top');
+                // Use GD functions directly for reliable watermarking
+                $gdImage = null;
+                
+                // Load image based on type
+                if ($extension === 'png') {
+                    $gdImage = imagecreatefrompng($filePath);
+                } elseif (in_array($extension, ['jpg', 'jpeg'])) {
+                    $gdImage = imagecreatefromjpeg($filePath);
+                } elseif ($extension === 'gif') {
+                    $gdImage = imagecreatefromgif($filePath);
+                } elseif ($extension === 'webp') {
+                    $gdImage = imagecreatefromwebp($filePath);
+                }
+                
+                if ($gdImage) {
+                    // Enable alpha blending for transparency
+                    imagealphablending($gdImage, true);
+                    imagesavealpha($gdImage, true);
+                    
+                    // Calculate text dimensions (built-in font 5 is ~8x13 pixels per character)
+                    $charWidth = 8;
+                    $charHeight = 13;
+                    $textWidth = strlen($text) * $charWidth;
+                    $textHeight = $charHeight;
+                    
+                    // Background box padding
+                    $bgPadding = 10;
+                    $bgX1 = (int)$watermarkX - $bgPadding;
+                    $bgY1 = (int)$watermarkY - $bgPadding;
+                    $bgX2 = (int)$watermarkX + $textWidth + $bgPadding;
+                    $bgY2 = (int)$watermarkY + $textHeight + $bgPadding;
+                    
+                    // Ensure watermark stays within image bounds
+                    if ($bgX1 < 0) $bgX1 = 0;
+                    if ($bgY1 < 0) $bgY1 = 0;
+                    if ($bgX2 > $width) $bgX2 = $width;
+                    if ($bgY2 > $height) $bgY2 = $height;
+                    
+                    // Adjust text position if background was adjusted
+                    $watermarkX = $bgX1 + $bgPadding;
+                    $watermarkY = $bgY1 + $bgPadding;
+                    
+                    // Create semi-transparent black background box (professional look)
+                    $bgAlpha = (int)(127 * 0.4); // 40% opacity = 60% visible black background
+                    $bgColor = imagecolorallocatealpha($gdImage, 0, 0, 0, $bgAlpha);
+                    
+                    // Draw background box
+                    imagefilledrectangle($gdImage, $bgX1, $bgY1, $bgX2, $bgY2, $bgColor);
+                    
+                    // Add a subtle white border for better definition
+                    $borderAlpha = (int)(127 * 0.2);
+                    $borderColor = imagecolorallocatealpha($gdImage, 255, 255, 255, $borderAlpha);
+                    imagerectangle($gdImage, $bgX1, $bgY1, $bgX2, $bgY2, $borderColor);
+                    
+                    // Create bright white text color (fully opaque for maximum visibility)
+                    $textAlpha = 0; // 0 = fully opaque = 100% visible
+                    $textColor = imagecolorallocatealpha($gdImage, 255, 255, 255, $textAlpha);
+                    
+                    // Use largest built-in font (5) for best visibility
+                    $font = 5;
+                    
+                    // Add text watermark
+                    imagestring($gdImage, $font, (int)$watermarkX, (int)$watermarkY, $text, $textColor);
+                    
+                    \Log::info('Watermark added at position: ' . $watermarkX . ', ' . $watermarkY . ' | Text: ' . $text);
+                    
+                    // Save watermarked image directly
+                    $watermarkedPath = 'watermarked/' . $document->id . '-' . time() . '.' . $extension;
+                    $watermarkedFullPath = Storage::disk('public')->path($watermarkedPath);
+                    
+                    // Ensure directory exists
+                    $watermarkedDir = dirname($watermarkedFullPath);
+                    if (!is_dir($watermarkedDir)) {
+                        mkdir($watermarkedDir, 0755, true);
                     }
-                );
+                    
+                    // Save based on format
+                    $saved = false;
+                    if ($extension === 'png') {
+                        $saved = imagepng($gdImage, $watermarkedFullPath);
+                    } elseif (in_array($extension, ['jpg', 'jpeg'])) {
+                        $saved = imagejpeg($gdImage, $watermarkedFullPath, 90);
+                    } elseif ($extension === 'gif') {
+                        $saved = imagegif($gdImage, $watermarkedFullPath);
+                    } elseif ($extension === 'webp') {
+                        $saved = imagewebp($gdImage, $watermarkedFullPath, 90);
+                    }
+                    
+                    imagedestroy($gdImage);
+                    
+                    if ($saved && file_exists($watermarkedFullPath)) {
+                        \Log::info('Watermarked file saved successfully: ' . $watermarkedPath);
+                        return $watermarkedPath;
+                    } else {
+                        \Log::error('Failed to save watermarked file: ' . $watermarkedFullPath);
+                        return null;
+                    }
+                } else {
+                    \Log::warning('Failed to load image for watermarking: ' . $filePath);
+                    return null;
+                }
             } catch (\Exception $e) {
-                // Fallback: Try without font configuration
-                \Log::warning('Watermark text failed, trying simple approach: ' . $e->getMessage());
-                // For now, just save the image without watermark if text fails
+                \Log::error('Watermark generation failed: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+                return null;
             }
-            
-            // Save watermarked image
-            $watermarkedPath = 'watermarked/' . $document->id . '-' . time() . '.' . $extension;
-            
-            // Encode based on original format
-            if ($extension === 'png') {
-                $watermarkedData = $image->toPng();
-            } elseif ($extension === 'webp') {
-                $watermarkedData = $image->toWebp();
-            } else {
-                $watermarkedData = $image->toJpeg(90); // JPEG with 90% quality
-            }
-            
-            Storage::disk('public')->put($watermarkedPath, $watermarkedData);
             
             return $watermarkedPath;
         } catch (\Exception $e) {
@@ -146,7 +227,8 @@ class WatermarkService
             ? "Shared with: {$recipient->email} | YWC" 
             : "Shared Document | Yacht Workers Council";
             
-        return $this->addWatermark($document, $watermarkText, 'bottom-right', 40);
+        // Use higher opacity (70 instead of 40) for better visibility
+        return $this->addWatermark($document, $watermarkText, 'bottom-right', 70);
     }
 
     /**

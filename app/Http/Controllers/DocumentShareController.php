@@ -13,10 +13,12 @@ use Carbon\Carbon;
 class DocumentShareController extends Controller
 {
     protected $shareService;
+    protected $watermarkService;
 
-    public function __construct(DocumentShareService $shareService)
+    public function __construct(DocumentShareService $shareService, WatermarkService $watermarkService)
     {
         $this->shareService = $shareService;
+        $this->watermarkService = $watermarkService;
     }
 
     /**
@@ -74,7 +76,15 @@ class DocumentShareController extends Controller
             abort(404, 'Share link not found or expired');
         }
 
-        // Record access
+        // Check if share is accessible (including max_views check)
+        if (!$share->isAccessible()) {
+            if ($share->max_views && $share->view_count >= $share->max_views) {
+                abort(403, 'Maximum view limit reached. This share link has been viewed the maximum number of times.');
+            }
+            abort(403, 'Share link is no longer accessible.');
+        }
+
+        // Record access (only if accessible)
         $this->shareService->recordAccess($share);
 
         $documents = $share->documents()->with('documentType')->get();

@@ -182,7 +182,7 @@
     <div class="email-wrapper">
         <!-- Header with Logo -->
         <div class="email-header">
-            <img src="{{ asset('images/yacht-worker-council-app-icon.jpg') }}" alt="Yacht Workers Council Logo" />
+            <img src="{{ url('images/yacht-worker-council-app-icon.jpg') }}" alt="Yacht Workers Council Logo" style="max-width: 120px; height: auto;" />
         </div>
 
         <!-- Main Content -->
@@ -224,12 +224,21 @@
             <!-- What's Next Section -->
             <div class="info-section">
                 <h3>What's Next?</h3>
-                <p>View and download these documents securely in your YWC account. All shared documents are encrypted and stored safely in accordance with maritime data protection standards.</p>
+                <p>Click the button below to view and download these documents securely. All shared documents are encrypted and stored safely in accordance with maritime data protection standards.</p>
+                @if(isset($share) && $share->expires_at)
+                <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                    <strong>Note:</strong> This share link will expire on {{ \Carbon\Carbon::parse($share->expires_at)->format('M d, Y') }}.
+                </p>
+                @endif
             </div>
 
             <!-- Primary CTA Button -->
             <div class="cta-section">
-                <a href="{{ route('documents') }}" class="cta-button">View Documents</a>
+                @if(isset($shareUrl) && $shareUrl)
+                    <a href="{{ $shareUrl }}" class="cta-button">View Shared Documents</a>
+                @else
+                    <a href="{{ url('/login') }}" class="cta-button">Login to View Documents</a>
+                @endif
             </div>
 
             <!-- Help Section -->
@@ -251,8 +260,8 @@
             <p style="color: #666666; font-size: 13px; margin-top: 10px;">The crew-owned cooperative serving yachting professionals worldwide</p>
             
             <div class="links">
-                <a href="{{ route('documents') }}">View Documents</a> |
-                <a href="{{ route('dashboard') }}">Your Dashboard</a> |
+                <a href="{{ url('/login') }}">Login</a> |
+                <a href="{{ route('main-dashboard') }}">Your Dashboard</a> |
                 <a href="mailto:{{ config('app.support_email', 'support@yachtworkerscouncil.com') }}">Support</a>
             </div>
             

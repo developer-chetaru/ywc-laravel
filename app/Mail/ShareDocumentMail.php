@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Document;
+use App\Models\DocumentShare;
 use App\Models\PassportDetail;
 use App\Models\IdvisaDetail;
 use App\Models\Certificate;
@@ -25,13 +26,25 @@ class ShareDocumentMail extends Mailable
     public $messageText;
   	public $senderName;
     public $sender; // Full user object for email
+    public $share; // DocumentShare object for token-based sharing
+    public $shareUrl; // Secure share URL
 
     /**
      * Create a new message instance.
+     * 
+     * @param DocumentShare $share The document share object
+     * @param string $messageText Optional message text (if not using share's personal_message)
      */
-    public function __construct($documents, $messageText, $senderName)
+    public function __construct(DocumentShare $share, $messageText = null)
     {
-         $this->documents = Document::whereIn('id', $documents)->get()->map(function ($doc) {
+        $this->share = $share;
+        $this->shareUrl = $share->share_url;
+        $this->messageText = $messageText ?? $share->personal_message;
+        $this->sender = $share->user;
+        $this->senderName = $this->sender->name ?? ($this->sender->first_name . ' ' . $this->sender->last_name);
+
+        // Load documents with proper names
+        $this->documents = $share->documents()->get()->map(function ($doc) {
             if ($doc->type === 'passport') {
                 $doc->extra_name = 'Passport';
             } elseif ($doc->type === 'idvisa') {
@@ -48,10 +61,6 @@ class ShareDocumentMail extends Mailable
 
             return $doc;
         });
-
-        $this->messageText = $messageText;
-        $this->senderName = $senderName;
-        $this->sender = \Auth::user(); // Store full user object
     }
 
     // public function __construct(array $documentIds, $messageText)
@@ -108,6 +117,8 @@ class ShareDocumentMail extends Mailable
                 'documents' => $this->documents,
                 'senderName' => $this->senderName,
                 'sender' => $this->sender,
+                'share' => $this->share,
+                'shareUrl' => $this->shareUrl,
             ]
         );
     }

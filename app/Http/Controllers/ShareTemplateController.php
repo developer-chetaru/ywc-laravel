@@ -87,9 +87,13 @@ class ShareTemplateController extends Controller
      */
     public function edit($id)
     {
-        $template = ShareTemplate::where('user_id', Auth::id())
-            ->orWhere('is_default', true)
-            ->findOrFail($id);
+        // First find the template by ID, then check if user has access
+        $template = ShareTemplate::where('id', $id)
+            ->where(function($query) {
+                $query->where('user_id', Auth::id())
+                      ->orWhere('is_default', true);
+            })
+            ->firstOrFail();
 
         // Prevent editing default templates
         if ($template->is_default && $template->user_id !== Auth::id()) {

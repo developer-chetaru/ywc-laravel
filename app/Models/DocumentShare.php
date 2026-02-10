@@ -22,6 +22,7 @@ class DocumentShare extends Model
         'expires_at',
         'is_active',
         'access_count',
+        'view_count',
         'download_count',
         'abuse_reports',
         'last_accessed_at',
@@ -178,7 +179,23 @@ class DocumentShare extends Model
      */
     public function recordAccess(): void
     {
+        // Check if max_views limit reached before incrementing
+        if ($this->max_views && $this->view_count >= $this->max_views) {
+            // Already at max, don't increment
+            return;
+        }
+        
         $this->increment('access_count');
+        $this->increment('view_count'); // Also increment view_count for display
+        
+        // Refresh to get updated view_count
+        $this->refresh();
+        
+        // Deactivate if max views reached after increment
+        if ($this->max_views && $this->view_count >= $this->max_views) {
+            $this->update(['is_active' => false]);
+        }
+        
         $this->update([
             'last_accessed_at' => now(),
             'ip_address' => request()->ip(),

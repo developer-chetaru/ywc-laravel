@@ -13,9 +13,17 @@ use App\Models\Certificate;
 use App\Models\OtherDocument;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Services\Documents\DocumentShareService;
+use Carbon\Carbon;
 
 class DocumentController extends Controller
 {
+    protected $shareService;
+
+    public function __construct(DocumentShareService $shareService)
+    {
+        $this->shareService = $shareService;
+    }
   
   	public function share(Request $request)
     {
@@ -37,15 +45,48 @@ class DocumentController extends Controller
             }
         }
 
-        $documents = $request->input('documents');
+        $documentIds = $request->input('documents');
         $message = $request->input('message');
-        $authUserName = Auth::user()->name;
+        $user = Auth::user();
 
-        // Send to all recipients at once
-        \Mail::to($toEmails->toArray())
-            ->send(new \App\Mail\ShareDocumentMail($documents, $message, $authUserName));
+        // Default expiry: 30 days
+        $expiresAt = Carbon::now()->addDays(30);
 
-        return back()->with('success', 'Documents shared successfully!');
+        // Create a share for each recipient
+        $sharesCreated = [];
+        
+        foreach ($toEmails as $recipientEmail) {
+            try {
+                // Create token-based share using DocumentShareService
+                // Pass null for recipient_email to prevent auto-email, we'll send manually
+                $share = $this->shareService->createShare(
+                    $user,
+                    $documentIds,
+                    null, // Don't pass recipient_email to prevent auto-email
+                    null, // recipient_name
+                    $message,
+                    $expiresAt
+                );
+                
+                // Update share with recipient email
+                $share->update(['recipient_email' => $recipientEmail]);
+                
+                // Send email using ShareDocumentMail (legacy template but with token-based share)
+                \Mail::to($recipientEmail)->send(new \App\Mail\ShareDocumentMail($share, $message));
+                
+                $sharesCreated[] = $share;
+            } catch (\Exception $e) {
+                // Log error but continue with other recipients
+                \Log::error('Failed to create share for ' . $recipientEmail . ': ' . $e->getMessage());
+                continue;
+            }
+        }
+
+        if (empty($sharesCreated)) {
+            return back()->withErrors(['emails' => 'Failed to create share links. Please try again.']);
+        }
+
+        return back()->with('success', 'Documents shared successfully! Share links have been sent to recipients.');
     }
   
   
