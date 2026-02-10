@@ -266,6 +266,16 @@ Route::prefix('shared')->name('shared.')->group(function () {
     Route::get('/{token}/download', [\App\Http\Controllers\ShareWizardController::class, 'downloadShared'])->name('download');
 });
 
+// Public Document Share Routes (no auth required) - Must be outside auth middleware
+Route::get('/documents/share/{token}', [\App\Http\Controllers\DocumentShareController::class, 'view'])->name('documents.share.view');
+Route::post('/documents/share/{token}/verify-password', [\App\Http\Controllers\DocumentShareController::class, 'verifyPassword'])->name('documents.share.verify-password');
+Route::get('/documents/share/{token}/download/{documentId}', [\App\Http\Controllers\DocumentShareController::class, 'download'])->name('documents.share.download');
+Route::post('/documents/share/{token}/report-abuse', [\App\Http\Controllers\DocumentShareController::class, 'reportAbuse'])->name('documents.share.report-abuse');
+
+// Public Profile Share Routes (no auth required)
+Route::get('/profile/share/{token}', [\App\Http\Controllers\ProfileShareController::class, 'view'])->name('profile.share.view');
+Route::post('/profile/share/{token}/download', [\App\Http\Controllers\ProfileShareController::class, 'downloadZip'])->name('profile.share.download');
+
 // OCR Accuracy Routes
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'setlocale'])->prefix('ocr')->name('ocr.')->group(function () {
     Route::get('/accuracy', [\App\Http\Controllers\OcrAccuracyController::class, 'index'])->name('accuracy.index');
@@ -458,6 +468,7 @@ Route::middleware([
         Route::post('/documents', [\App\Http\Controllers\DocumentShareController::class, 'store'])->name('documents.store');
         Route::delete('/documents/{share}', [\App\Http\Controllers\DocumentShareController::class, 'revoke'])->name('documents.revoke');
         Route::post('/documents/{share}/resend', [\App\Http\Controllers\DocumentShareController::class, 'resend'])->name('documents.resend');
+        Route::post('/documents/{share}/qr-code', [\App\Http\Controllers\DocumentShareController::class, 'generateQrCode'])->name('documents.qr-code');
         Route::get('/documents/view/{token}', [\App\Http\Controllers\DocumentShareController::class, 'view'])->name('documents.view');
 
         // Profile shares
@@ -467,13 +478,6 @@ Route::middleware([
         Route::post('/profile/{share}/qr-code', [\App\Http\Controllers\ProfileShareController::class, 'generateQrCode'])->name('profile.qr-code');
         Route::get('/profile/view/{token}', [\App\Http\Controllers\ProfileShareController::class, 'view'])->name('profile.view');
     });
-
-    // Public share routes (no auth required)
-    Route::get('/documents/share/{token}', [\App\Http\Controllers\DocumentShareController::class, 'view'])->name('documents.share.view');
-    Route::get('/documents/share/{token}/download/{documentId}', [\App\Http\Controllers\DocumentShareController::class, 'download'])->name('documents.share.download');
-    Route::post('/documents/share/{token}/report-abuse', [\App\Http\Controllers\DocumentShareController::class, 'reportAbuse'])->name('documents.share.report-abuse');
-    Route::get('/profile/share/{token}', [\App\Http\Controllers\ProfileShareController::class, 'view'])->name('profile.share.view');
-    Route::post('/profile/share/{token}/download', [\App\Http\Controllers\ProfileShareController::class, 'downloadZip'])->name('profile.share.download');
 
   
   	Route::get('/qrcode', [QRCodeController::class, 'generate'])->name('qrcode.generate');

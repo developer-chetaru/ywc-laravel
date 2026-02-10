@@ -184,6 +184,10 @@
                                             <span class="ml-2 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded-full">{{ $expiredDocs->count() }}</span>
                                             @endif
                                         </button>
+                                        <button onclick="showTab('shares')" id="tab-shares" 
+                                            class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                                            <i class="fas fa-link mr-1"></i>Active Share Links
+                                        </button>
                                     </nav>
                                 </div>
 
@@ -629,6 +633,31 @@
                                 {{-- Close All Documents Tab --}}
                                 </div>
 
+                                {{-- Active Share Links Tab Content --}}
+                                <div id="tab-content-shares" class="tab-content hidden">
+                                    <div class="bg-white rounded-xl p-4 sm:p-5 border border-gray-200">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <h3 class="text-lg font-semibold text-gray-900">
+                                                <i class="fas fa-link mr-2 text-[#0053FF]"></i>Active Share Links
+                                            </h3>
+                                            <button onclick="loadActiveShares(1)" class="text-sm text-[#0053FF] hover:text-[#0044DD] flex items-center gap-1">
+                                                <i class="fas fa-sync-alt"></i> Refresh
+                                            </button>
+                                        </div>
+                                        
+                                        <div id="activeSharesList" class="space-y-3">
+                                            <div class="text-center py-8 text-gray-500">
+                                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                                <p>Loading active shares...</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Pagination -->
+                                        <div id="activeSharesPagination" class="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {{-- Expired Documents Tab Content --}}
                                 <div id="tab-content-expired" class="tab-content hidden">
                                     @if($expiredDocs->count() > 0)
@@ -1025,15 +1054,15 @@
         <button class="closePopup absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl">&times;</button>
 
         <!-- Title -->
-        <h3 class="text-xl font-semibold mb-4">Share Document</h3>
+        <h3 class="text-xl font-semibold mb-4">Share Documents</h3>
 
-        <!-- Email Input -->
-        <form id="shareDocumentForm" method="POST" action="{{ route('documents.share') }}">
-            @csrf
+
+        <!-- Share Form -->
+        <div id="shareDocumentForm">
             <div>
-                {{-- Template Selection --}}
-                <div class="mb-4">
-                    <label class="block mb-2">Use Template (Optional)</label>
+                {{-- Template Selection -- Hidden --}}
+                <div class="mb-4 hidden">
+                    <label class="block mb-2 text-sm font-medium">Use Template (Optional)</label>
                     <select id="shareTemplateSelect" class="w-full border p-2 rounded outline-none">
                         <option value="">-- Select a template --</option>
                         @php
@@ -1081,55 +1110,167 @@
                     </div>
                 </div>
 
-                <label class="block mb-2">To <span class="text-red-500">*</span></label>
-                <div class="w-full mb-4">
-                    <input type="text" id="emailInput" placeholder="Enter emails (comma separated)" class="w-full border p-2 rounded outline-none @error('emails') border-red-500 @enderror" />
-                    <div id="emailTags" class="flex flex-wrap gap-1 mt-2"></div>
-                    <p id="emailError" class="text-red-600 text-sm mt-1 hidden"></p>
-                    @error('emails')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                <input type="hidden" name="emails" id="hiddenEmails" />
-
-                <label class="block mb-2">Message <span class="text-red-500">*</span></label>
-                <textarea name="message" id="messageInput" class="w-full border p-2 rounded mb-4 @error('message') border-red-500 @enderror" rows="3" placeholder="Enter message"></textarea>
-                <p id="messageError" class="text-red-600 text-sm mt-1 mb-2 hidden"></p>
-                @error('message')
-                <p class="text-red-600 text-sm mt-1 mb-2">{{ $message }}</p>
-                @enderror
-
-                <label class="block text-lg font-semibold mb-3">Select Documents <span class="text-red-500">*</span></label>
-                <p id="documentsError" class="text-red-600 text-sm mt-1 mb-2 hidden"></p>
-                <div id="docList" class="grid grid-cols-3 gap-4 mb-4">
-                    @foreach($share_documents as $doc)
-                    <div class="docCard border rounded-lg p-3 cursor-pointer hover:shadow-lg transition-shadow duration-200 ease-in-out bg-white flex flex-row items-center" data-id="{{ $doc->id }}">
-                        <div class="w-16 h-16 bg-gray-100 flex items-center justify-center rounded-md overflow-hidden mr-3">
-                            @if(strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION)) === 'pdf')
-                            	<img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-file-pdf text-red-500 text-3xl\'></i>';">
-                            @else
-                            	<img src="{{ asset('storage/' . $doc->file_path) }}" alt="{{ $doc->type }}" class="object-contain h-full w-full" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-file-image text-gray-400 text-3xl\'></i>';">
-                            @endif
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="text-sm font-semibold truncate" title="{{ $doc->type }}">{{ $doc->type }}</h4>
-                            <span class="text-xs text-gray-500">Featured on profile</span>
-                        </div>
-                        <input type="checkbox" name="documents[]" value="{{ $doc->id }}" class="hidden docCheckbox">
+                <!-- Recipient Email (Optional) - Multiple Emails Support -->
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium">
+                        <i class="fas fa-envelope mr-1 text-blue-600"></i>Recipient Email(s) <span class="text-gray-400 font-normal">(Optional)</span>
+                    </label>
+                    <div class="border border-gray-300 rounded-lg p-2 min-h-[50px] bg-white">
+                        <div id="recipientEmailTags" class="flex flex-wrap gap-2 mb-2"></div>
+                        <input type="text" id="recipientEmail" placeholder="Enter email addresses (comma or space separated)" class="w-full border-0 p-1 outline-none focus:ring-0" />
                     </div>
-                    @endforeach
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i><strong>Purpose:</strong> Send email notifications to recipients when share is created. You can add multiple emails (max 10). Leave empty to create share link without sending emails.
+                    </p>
+                    <p id="recipientEmailError" class="text-red-600 text-xs mt-1 hidden"></p>
+                </div>
+
+                <!-- Message -->
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium">Message</label>
+                    <textarea id="messageInput" class="w-full border p-2 rounded outline-none" rows="3" placeholder="Enter message (optional)"></textarea>
+                </div>
+
+                <!-- Expiry Options -->
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium">Link Expiry</label>
+                    <select id="expiryOption" class="w-full border p-2 rounded outline-none">
+                        <option value="7">7 Days</option>
+                        <option value="30" selected>30 Days</option>
+                        <option value="permanent">Permanent (No Expiry)</option>
+                    </select>
+                </div>
+
+                <!-- Security Options -->
+                <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h4 class="text-sm font-semibold mb-3">Security Options</h4>
+                    <p class="text-xs text-gray-600 mb-3 bg-blue-50 p-2 rounded border border-blue-200">
+                        <i class="fas fa-shield-alt mr-1 text-blue-600"></i><strong>Note:</strong> You can revoke access to any share link at any time from the success screen or your shares management page.
+                    </p>
+                    
+                    <!-- Password Protection -->
+                    <div class="mb-3">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="enablePassword" class="mr-2" />
+                            <span class="text-sm font-medium">Password Protection</span>
+                        </label>
+                        <input type="password" id="sharePassword" placeholder="Enter password (min 6 characters)" class="w-full border p-2 rounded mt-2 outline-none hidden" minlength="6" />
+                    </div>
+
+                    <!-- Email Restriction -->
+                    <div class="mb-3">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="enableEmailRestriction" class="mr-2" />
+                            <span class="text-sm font-medium">Restrict to Specific Email</span>
+                        </label>
+                        <input type="email" id="restrictToEmail" placeholder="Only this email can access" class="w-full border p-2 rounded mt-2 outline-none hidden" />
+                        <p class="text-xs text-orange-600 bg-orange-50 p-2 rounded mt-2 hidden border border-orange-200" id="emailRestrictionHint">
+                            <i class="fas fa-shield-alt mr-1"></i><strong>Security Feature:</strong> Only the specified email address will be able to access this share link. This is different from "Recipient Email" - this restricts who can VIEW the share, while "Recipient Email" only sends notifications.
+                        </p>
+                    </div>
+
+                    <!-- Generate QR Code -->
+                    <div>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="generateQrCode" class="mr-2" />
+                            <span class="text-sm font-medium">Generate QR Code</span>
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1">Create a QR code for easy sharing</p>
+                    </div>
+                </div>
+
+                <!-- Document Selection -->
+                <div class="mb-4">
+                    <label class="block text-lg font-semibold mb-3">Select Documents <span class="text-red-500">*</span></label>
+                    <p id="documentsError" class="text-red-600 text-sm mt-1 mb-2 hidden"></p>
+                    <div id="docList" class="grid grid-cols-3 gap-4">
+                        @foreach($share_documents as $doc)
+                        <div class="docCard border rounded-lg p-3 cursor-pointer hover:shadow-lg transition-shadow duration-200 ease-in-out bg-white flex flex-row items-center" data-id="{{ $doc->id }}">
+                            <div class="w-16 h-16 bg-gray-100 flex items-center justify-center rounded-md overflow-hidden mr-3">
+                                @if(strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION)) === 'pdf')
+                                	<img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-file-pdf text-red-500 text-3xl\'></i>';">
+                                @else
+                                	<img src="{{ asset('storage/' . $doc->file_path) }}" alt="{{ $doc->type }}" class="object-contain h-full w-full" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-file-image text-gray-400 text-3xl\'></i>';">
+                                @endif
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-sm font-semibold truncate" title="{{ $doc->type }}">{{ $doc->type }}</h4>
+                                <span class="text-xs text-gray-500">Featured on profile</span>
+                            </div>
+                            <input type="checkbox" name="documents[]" value="{{ $doc->id }}" class="hidden docCheckbox">
+                        </div>
+                        @endforeach
+                    </div>
                 </div>
 
                 <!-- Share Button -->
-                <button type="submit" id="saveShareBtn" class="bg-blue-600 text-white px-4 py-3 rounded disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center w-full">
-                    <span id="shareBtnText">Share</span>
+                <button type="button" id="saveShareBtn" class="bg-blue-600 text-white px-4 py-3 rounded disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center w-full hover:bg-blue-700 transition-colors">
+                    <span id="shareBtnText">Create Share Link</span>
                     <svg id="shareBtnSpinner" class="animate-spin h-6 w-6 text-white mt-2 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                     </svg>
                 </button>
             </div>
-        </form>
+        </div>
+    </div>
+</div>
+
+<!-- Share Success Modal -->
+<div id="shareSuccessModal" class="popup hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl w-[600px] max-h-[90vh] overflow-y-auto p-6 relative">
+        <!-- Close Button -->
+        <button class="closePopup absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl">&times;</button>
+
+        <!-- Title -->
+        <h3 class="text-xl font-semibold mb-4 text-green-600">
+            <i class="fas fa-check-circle mr-2"></i>Share Created Successfully!
+        </h3>
+
+        <!-- Success Content -->
+        <div class="space-y-4">
+            <!-- Share Link -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Share Link:</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="shareUrlDisplay" readonly class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50" />
+                    <button onclick="copyShareUrl()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">
+                        <i class="fas fa-copy mr-1"></i> Copy
+                    </button>
+                </div>
+            </div>
+
+            <!-- QR Code -->
+            <div id="qrCodeDisplay" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">QR Code:</label>
+                <div class="flex flex-col items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    <img id="qrCodeImage" src="" alt="QR Code" class="w-48 h-48 border-2 border-gray-300 rounded-lg shadow-md" />
+                    <button onclick="downloadQRCode()" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm font-medium">
+                        <i class="fas fa-download mr-1"></i> Download QR Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Revoke Access Info -->
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
+                <p class="text-sm text-blue-700">
+                    <i class="fas fa-info-circle mr-1"></i><strong>Note:</strong> You can revoke access to this share link at any time. Once revoked, the link will no longer be accessible.
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3 pt-4">
+                <button onclick="closeShareSuccessModal()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors font-medium">
+                    Close
+                </button>
+                <button id="revokeShareBtn" onclick="revokeShareAccess()" class="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors font-medium">
+                    <i class="fas fa-ban mr-1"></i> Revoke Access
+                </button>
+                <a id="visitShareLink" href="#" target="_blank" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center font-medium">
+                    <i class="fas fa-external-link-alt mr-1"></i> Visit Link
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1445,6 +1586,34 @@ $(function () {
         if (target === "#shareDocumentModal") {
             $("#saveShareBtn").prop("disabled", false);
             hideShareValidationErrors();
+            
+            // Ensure click handler is attached when modal opens
+            setTimeout(function() {
+                $("#saveShareBtn").off("click").on("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    console.log("Share button clicked!");
+                    
+                    // Prevent any form submission - check all parent forms
+                    let parent = this.parentElement;
+                    while (parent && parent !== document.body) {
+                        if (parent.tagName === "FORM") {
+                            $(parent).off("submit").on("submit", function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                return false;
+                            });
+                        }
+                        parent = parent.parentElement;
+                    }
+                    
+                    // Execute share logic
+                    handleShareButtonClick();
+                    return false;
+                });
+            }, 100);
         }
         
         $(target).removeClass("hidden").addClass("flex");
@@ -1455,6 +1624,12 @@ $(function () {
     // =======================
     $(".closePopup").on("click", function() {
         const popup = $(this).closest(".popup");
+        
+        // Special handling for share success modal
+        if (popup.attr('id') === 'shareSuccessModal') {
+            closeShareSuccessModal();
+            return;
+        }
 
         // Hide the popup
         popup.addClass("hidden").removeClass("flex");
@@ -2942,6 +3117,89 @@ document.querySelectorAll('.toggle-share').forEach(span => {
 
     // share document start
 
+    // Multiple Recipient Emails Handler for Share Documents
+    const recipientEmailInput = $("#recipientEmail");
+    const recipientEmailTags = $("#recipientEmailTags");
+    const recipientEmailError = $("#recipientEmailError");
+    
+    let recipientEmails = [];
+    const maxRecipientEmails = 10;
+    
+    // Function to validate email
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+    
+    // Render recipient email tags
+    function renderRecipientEmailTags() {
+        recipientEmailTags.empty();
+        recipientEmails.forEach((email, index) => {
+            const tag = $(`
+                <span class="bg-blue-500 text-white px-2 py-1 rounded text-sm flex items-center gap-1">
+                    ${email} <span class="cursor-pointer hover:text-red-200 remove-recipient-email" data-index="${index}">&times;</span>
+                </span>
+            `);
+            recipientEmailTags.append(tag);
+        });
+        recipientEmailError.addClass("hidden");
+    }
+    
+    // Remove recipient email
+    $(document).on("click", ".remove-recipient-email", function() {
+        const index = $(this).data("index");
+        recipientEmails.splice(index, 1);
+        renderRecipientEmailTags();
+    });
+    
+    // Process recipient email input
+    function processRecipientEmailInput() {
+        let value = recipientEmailInput.val().trim();
+        if (!value) return;
+        
+        const splitEmails = value.split(/[\s,]+/);
+        let errorMessage = "";
+        
+        splitEmails.forEach(e => {
+            const email = e.trim();
+            if (email && isValidEmail(email)) {
+                if (recipientEmails.length < maxRecipientEmails) {
+                    if (!recipientEmails.includes(email.toLowerCase())) {
+                        recipientEmails.push(email.toLowerCase());
+                    } else {
+                        errorMessage = `Email already added: ${email}`;
+                    }
+                } else {
+                    errorMessage = `Maximum ${maxRecipientEmails} emails allowed.`;
+                }
+            } else if (email) {
+                errorMessage = `Invalid email format: ${email}`;
+            }
+        });
+        
+        if (errorMessage) {
+            recipientEmailError.text(errorMessage).removeClass("hidden");
+        } else {
+            recipientEmailError.addClass("hidden");
+        }
+        
+        recipientEmailInput.val('');
+        renderRecipientEmailTags();
+    }
+    
+    // Add email on Enter, comma, or space
+    recipientEmailInput.on("keydown", function(e) {
+        if (["Enter", ",", " "].includes(e.key)) {
+            e.preventDefault();
+            processRecipientEmailInput();
+        }
+    });
+    
+    // Process on blur
+    recipientEmailInput.on("blur", function() {
+        processRecipientEmailInput();
+    });
+
     const emailInput = $("#emailInput");
 const emailTags = $("#emailTags");
 const hiddenEmails = $("#hiddenEmails");
@@ -3107,108 +3365,386 @@ $("#emailInput").on("input", function() {
     }
 });
 
-// Form submit
-$("#shareDocumentForm").on("submit", function(e) {
-    e.preventDefault();
-    
-    // Hide previous errors
-    hideShareValidationErrors();
+// Toggle password input visibility
+$("#enablePassword").on("change", function() {
+    if ($(this).is(":checked")) {
+        $("#sharePassword").removeClass("hidden").prop("required", true);
+    } else {
+        $("#sharePassword").addClass("hidden").prop("required", false).val("");
+    }
+});
 
-    const message = $("#messageInput").val().trim();
-    const selectedDocs = $(".docCard.selected").length;
+    // Toggle email restriction input visibility
+    $("#enableEmailRestriction").on("change", function() {
+        if ($(this).is(":checked")) {
+            $("#restrictToEmail").removeClass("hidden").prop("required", true);
+            $("#emailRestrictionHint").removeClass("hidden");
+        } else {
+            $("#restrictToEmail").addClass("hidden").prop("required", false).val("");
+            $("#emailRestrictionHint").addClass("hidden");
+        }
+    });
+    
+    // Reset recipient emails when modal closes
+    $(document).on("click", ".closePopup", function() {
+        if ($("#shareDocumentModal").hasClass("hidden")) {
+            recipientEmails = [];
+            renderRecipientEmailTags();
+            recipientEmailInput.val('');
+        }
+    });
+
+// Store share data globally
+let currentShareData = null;
+let currentShareId = null; // Store share ID for revoke functionality
+
+// Copy share URL function - Make sure it's in global scope
+window.copyShareUrl = function(event) {
+    event = event || window.event;
+    const urlInput = document.getElementById("shareUrlDisplay");
+    if (!urlInput) {
+        console.error('Share URL input not found');
+        return;
+    }
+    urlInput.select();
+    urlInput.setSelectionRange(0, 99999); // For mobile devices
+    
+    try {
+        document.execCommand("copy");
+        
+        // Show feedback
+        const copyBtn = event ? event.target.closest('button') : document.querySelector('button[onclick*="copyShareUrl"]');
+        if (copyBtn) {
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
+            copyBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            copyBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            
+            setTimeout(function() {
+                copyBtn.innerHTML = originalText;
+                copyBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                copyBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }, 2000);
+        }
+    } catch (err) {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy. Please select and copy manually.');
+    }
+}
+
+// Download QR code function - Make sure it's in global scope
+window.downloadQRCode = function() {
+    const qrImage = document.getElementById("qrCodeImage");
+    if (!qrImage || !qrImage.src) {
+        alert('QR code not available');
+        return;
+    }
+    const link = document.createElement("a");
+    link.href = qrImage.src;
+    link.download = "share-qr-code.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Close share success modal function - Make sure it's in global scope
+window.closeShareSuccessModal = function() {
+    $("#shareSuccessModal").addClass("hidden").removeClass("flex");
+    // Reset form
+    if (typeof resetShareForm === 'function') {
+        resetShareForm();
+    }
+    // Reset share data
+    currentShareData = null;
+    currentShareId = null;
+}
+
+// Revoke share access function - Make sure it's in global scope
+window.revokeShareAccess = function() {
+    if (!currentShareId) {
+        alert('Share ID not found. Cannot revoke access.');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to revoke access to this share link? Once revoked, the link will no longer be accessible.')) {
+        return;
+    }
+    
+    const revokeBtn = $("#revokeShareBtn");
+    const originalText = revokeBtn.html();
+    revokeBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Revoking...');
+    
+    $.ajax({
+        url: `/shares/documents/${currentShareId}`,
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        success: function(response) {
+            if (response && response.success) {
+                // Show success message
+                alert('Share access revoked successfully. The link is no longer accessible.');
+                
+                // Update UI - disable visit link button
+                $("#visitShareLink").addClass('opacity-50 cursor-not-allowed').prop('onclick', 'return false;');
+                revokeBtn.html('<i class="fas fa-check mr-1"></i> Revoked').addClass('bg-gray-500 hover:bg-gray-600').removeClass('bg-red-600 hover:bg-red-700');
+                
+                // Update info message
+                $(".bg-blue-50").html('<p class="text-sm text-red-700"><i class="fas fa-ban mr-1"></i><strong>Access Revoked:</strong> This share link has been revoked and is no longer accessible.</p>').removeClass('bg-blue-50 border-blue-400').addClass('bg-red-50 border-red-400');
+            } else {
+                alert('Failed to revoke access: ' + (response?.message || 'Unknown error'));
+                revokeBtn.prop('disabled', false).html(originalText);
+            }
+        },
+        error: function(xhr) {
+            const errorMsg = xhr.responseJSON?.message || xhr.responseText || 'Failed to revoke access. Please try again.';
+            alert('Error: ' + errorMsg);
+            revokeBtn.prop('disabled', false).html(originalText);
+        }
+    });
+}
+
+// Handle share button click - COMPLETELY prevent any form submission
+// Remove ALL existing handlers first
+$("#saveShareBtn").off("click submit");
+$(document).off("click submit", "#saveShareBtn");
+
+// Also prevent any form submission on the div container
+$("#shareDocumentForm").off("submit");
+
+// Attach handler using jQuery with proper event delegation
+// Ensure this runs after DOM is ready
+$(document).ready(function() {
+    // Remove any existing handlers
+    $("#saveShareBtn").off("click");
+    $(document).off("click", "#saveShareBtn");
+    
+    // Attach new handler
+    $(document).on("click", "#saveShareBtn", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
+        console.log("Share button clicked!");
+        
+        // Prevent any form submission - check all parent forms
+        let parent = this.parentElement;
+        while (parent && parent !== document.body) {
+            if (parent.tagName === "FORM") {
+                $(parent).off("submit").on("submit", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                });
+            }
+            parent = parent.parentElement;
+        }
+        
+        // Execute share logic
+        handleShareButtonClick();
+        return false;
+    });
+});
+
+// Separate function for share logic
+function handleShareButtonClick() {
+    // Hide previous errors and success message
+    hideShareValidationErrors();
+    $("#shareSuccessMessage").addClass("hidden");
+
     const validationErrors = [];
 
-    // Validate emails
-    if (emails.length < minEmails) {
-        validationErrors.push(`Please enter at least ${minEmails} email address${minEmails > 1 ? 'es' : ''}.`);
-        $("#emailInput").addClass("border-red-500");
-        $("#emailError").text(`Please enter at least ${minEmails} email address${minEmails > 1 ? 'es' : ''}.`).removeClass("hidden");
-    } else if (emails.length > maxEmails) {
-        validationErrors.push(`Please enter no more than ${maxEmails} email addresses.`);
-        $("#emailInput").addClass("border-red-500");
-        $("#emailError").text(`Please enter no more than ${maxEmails} email addresses.`).removeClass("hidden");
-    } else if (!emails.every(isValidEmail)) {
-        const invalidEmails = emails.filter(email => !isValidEmail(email));
-        validationErrors.push(`Invalid email address${invalidEmails.length > 1 ? 'es' : ''}: ${invalidEmails.join(', ')}`);
-        $("#emailInput").addClass("border-red-500");
-        $("#emailError").text(`Invalid email address${invalidEmails.length > 1 ? 'es' : ''}: ${invalidEmails.join(', ')}`).removeClass("hidden");
-    }
-
-    // Validate message
-    if (!message) {
-        validationErrors.push("Please enter a message.");
-        $("#messageInput").addClass("border-red-500");
-        $("#messageError").text("Please enter a message.").removeClass("hidden");
-    }
-
     // Validate documents
-    if (selectedDocs === 0) {
-        validationErrors.push("Please select at least one document to share.");
-        $("#documentsError").text("Please select at least one document to share.").removeClass("hidden");
+    const selectedDocs = $(".docCard.selected");
+    if (selectedDocs.length === 0) {
+        validationErrors.push("Please select at least one document.");
+        $("#documentsError").text("Please select at least one document.").removeClass("hidden");
     }
 
-    // If there are validation errors, show them and stop
+    // Validate password if enabled
+    if ($("#enablePassword").is(":checked")) {
+        const password = $("#sharePassword").val();
+        if (!password || password.length < 6) {
+            validationErrors.push("Password must be at least 6 characters.");
+        }
+    }
+
+    // Validate email restriction if enabled
+    if ($("#enableEmailRestriction").is(":checked")) {
+        const restrictEmail = $("#restrictToEmail").val();
+        if (!restrictEmail || !isValidEmail(restrictEmail)) {
+            validationErrors.push("Please enter a valid email address for restriction.");
+        }
+    }
+
     if (validationErrors.length > 0) {
         showShareValidationErrors(validationErrors);
         return;
     }
 
-    $(".docCard").each(function() {
-        $(this).find(".docCheckbox").prop("checked", $(this).hasClass("selected"));
+    // Prepare form data for new API
+    const documentIds = [];
+    selectedDocs.each(function() {
+        documentIds.push($(this).find(".docCheckbox").val());
     });
 
+    // Get form values
+    // Process any remaining email input
+    processRecipientEmailInput();
+    const recipientEmailsArray = recipientEmails.length > 0 ? recipientEmails : null;
+    const personalMessage = $("#messageInput").val()?.trim() || null;
+    
+    console.log('Form values:', {
+        recipientEmails: recipientEmailsArray,
+        personalMessage: personalMessage,
+        expiryOption: $("#expiryOption").val(),
+        generateQrCode: $("#generateQrCode").is(":checked")
+    });
+    
+    const requestData = {
+        document_ids: documentIds,
+        recipient_emails: recipientEmailsArray, // Changed to support multiple emails
+        personal_message: personalMessage,
+        expiry_option: $("#expiryOption").val(),
+        generate_qr_code: $("#generateQrCode").is(":checked"),
+    };
+
+    // Add password if enabled
+    if ($("#enablePassword").is(":checked")) {
+        requestData.password = $("#sharePassword").val();
+    }
+
+    // Add email restriction if enabled
+    if ($("#enableEmailRestriction").is(":checked")) {
+        requestData.restrict_to_email = $("#restrictToEmail").val();
+    }
+
     // Show processing
-    $("#shareBtnText").text("Sending...");
+    $("#shareBtnText").text("Creating Share Link...");
     $("#shareBtnSpinner").removeClass("hidden");
     $("#saveShareBtn").prop("disabled", true);
 
+    // Ensure we're using the correct route - use absolute URL
+    const shareUrl = "{{ route('shares.documents.store') }}";
+    console.log('Sharing documents to:', shareUrl);
+    console.log('Request data:', requestData);
+    
+    // CRITICAL: Verify route is correct before making request
+    if (!shareUrl || (shareUrl.includes('/documents') && !shareUrl.includes('/shares/documents'))) {
+        console.error('ERROR: Wrong route! Expected /shares/documents but got:', shareUrl);
+        alert('Configuration error: Invalid route. Please contact administrator.');
+        $("#shareBtnText").text("Create Share Link");
+        $("#shareBtnSpinner").addClass("hidden");
+        $("#saveShareBtn").prop("disabled", false);
+        return false;
+    }
+    
     $.ajax({
-        url: $(this).attr("action"),
+        url: shareUrl,
         method: "POST",
-        data: $(this).serialize(),
-        success: function(response) {
-            resetForm();
-            hideShareValidationErrors();
-            showResultPopup("Success", response.message || "Your email has been sent successfully.", "success");
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
         },
-        error: function(xhr) {
-            // Handle validation errors from server
-            if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                const serverErrors = [];
-                const errors = xhr.responseJSON.errors;
+        data: JSON.stringify(requestData),
+        dataType: 'json',
+        success: function(response) {
+            console.log('AJAX Success Response:', response);
+            console.log('QR Code Generated:', response.qr_code_generated);
+            console.log('QR Code URL:', response.qr_code_url);
+            
+            if (response && response.success) {
+                // Store share data and ID for revoke functionality
+                currentShareData = response.share;
+                currentShareId = response.share?.id || null;
                 
-                if (errors.emails) {
-                    $("#emailInput").addClass("border-red-500");
-                    $("#emailError").text(Array.isArray(errors.emails) ? errors.emails[0] : errors.emails).removeClass("hidden");
-                    serverErrors.push(Array.isArray(errors.emails) ? errors.emails[0] : errors.emails);
+                // Close the share document modal
+                $("#shareDocumentModal").addClass("hidden").removeClass("flex");
+                
+                // Populate success modal
+                if (response.share_url) {
+                    $("#shareUrlDisplay").val(response.share_url);
+                    $("#visitShareLink").attr("href", response.share_url);
                 }
                 
-                if (errors.message) {
-                    $("#messageInput").addClass("border-red-500");
-                    $("#messageError").text(Array.isArray(errors.message) ? errors.message[0] : errors.message).removeClass("hidden");
-                    serverErrors.push(Array.isArray(errors.message) ? errors.message[0] : errors.message);
+                // Show QR code if generated
+                if (response.qr_code_url) {
+                    console.log('Displaying QR code:', response.qr_code_url);
+                    $("#qrCodeImage").attr("src", response.qr_code_url);
+                    $("#qrCodeDisplay").removeClass("hidden");
+                } else {
+                    console.log('No QR code URL in response');
+                    $("#qrCodeDisplay").addClass("hidden");
+                    
+                    // Check if QR code was requested but not generated
+                    const wasRequested = $("#generateQrCode").is(":checked");
+                    if (wasRequested && !response.qr_code_generated) {
+                        console.warn('QR code was requested but not generated');
+                    }
                 }
                 
-                if (errors.documents) {
-                    $("#documentsError").text(Array.isArray(errors.documents) ? errors.documents[0] : errors.documents).removeClass("hidden");
-                    serverErrors.push(Array.isArray(errors.documents) ? errors.documents[0] : errors.documents);
-                }
+                // Reset the form
+                resetShareForm();
                 
-                if (serverErrors.length > 0) {
-                    showShareValidationErrors(serverErrors);
-                }
+                // Show success modal
+                $("#shareSuccessModal").removeClass("hidden").addClass("flex");
+                
+                // Reload active shares list after successful share creation
+                setTimeout(function() {
+                    if (typeof loadActiveShares === 'function') {
+                        loadActiveShares();
+                    }
+                }, 500);
             } else {
-                const errMsg = xhr.responseJSON?.error || xhr.responseJSON?.message || "Error sharing documents.";
-                showResultPopup("Error", errMsg, "error");
+                const errorMsg = response?.message || "Failed to create share. Unknown error.";
+                console.error('Share creation failed:', errorMsg);
+                alert("Failed to create share: " + errorMsg);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', {
+                status: status,
+                error: error,
+                responseText: xhr.responseText,
+                responseJSON: xhr.responseJSON,
+                statusCode: xhr.status
+            });
+            
+            const errors = xhr.responseJSON?.errors || {};
+            const serverErrors = [];
+
+            if (errors.document_ids) {
+                $("#documentsError").text(Array.isArray(errors.document_ids) ? errors.document_ids[0] : errors.document_ids).removeClass("hidden");
+                serverErrors.push(Array.isArray(errors.document_ids) ? errors.document_ids[0] : errors.document_ids);
+            }
+
+            if (errors.password) {
+                serverErrors.push(Array.isArray(errors.password) ? errors.password[0] : errors.password);
+            }
+
+            if (errors.restrict_to_email) {
+                serverErrors.push(Array.isArray(errors.restrict_to_email) ? errors.restrict_to_email[0] : errors.restrict_to_email);
+            }
+
+            if (serverErrors.length > 0) {
+                showShareValidationErrors(serverErrors);
+            } else {
+                const errorMsg = xhr.responseJSON?.message || xhr.responseText || "Failed to create share link. Please try again.";
+                console.error('Final error message:', errorMsg);
+                alert(errorMsg);
             }
         },
         complete: function() {
-            $("#shareBtnText").text("Share");
+            console.log('AJAX request completed');
+            $("#shareBtnText").text("Create Share Link");
             $("#shareBtnSpinner").addClass("hidden");
-            checkShareBtn();
+            $("#saveShareBtn").prop("disabled", false);
         }
     });
-});
+}
 
 // Reset form
 function resetForm() {
@@ -3216,8 +3752,22 @@ function resetForm() {
     renderEmails();
     $("#emailInput").val('');
     $("#messageInput").val('');
+    $("#recipientEmail").val('');
+    $("#sharePassword").val('').addClass("hidden").prop("required", false);
+    $("#restrictToEmail").val('').addClass("hidden").prop("required", false);
+    $("#enablePassword").prop("checked", false);
+    $("#enableEmailRestriction").prop("checked", false);
+    $("#generateQrCode").prop("checked", false);
+    $("#expiryOption").val("30");
+    $("#emailRestrictionHint").addClass("hidden");
     $("#docList .docCard").removeClass("selected bg-blue-100 border-blue-500");
     hideShareValidationErrors();
+    currentShareData = null;
+}
+
+// Reset share form (alias for consistency)
+function resetShareForm() {
+    resetForm();
 }
 
 // ✅ Show modal popup (close current + show result)
@@ -3557,6 +4107,270 @@ function clearTemplate() {
     }
   }
 
+  // Pagination state
+  let currentSharesPage = 1;
+  const sharesPerPage = 10;
+  
+  // Load and display active shares
+  function loadActiveShares(page = 1) {
+    currentSharesPage = page;
+    const sharesList = $("#activeSharesList");
+    const paginationContainer = $("#activeSharesPagination");
+    sharesList.html('<div class="text-center py-4 text-gray-500"><i class="fas fa-spinner fa-spin text-xl mb-2"></i><p>Loading...</p></div>');
+    paginationContainer.html('');
+    
+    $.ajax({
+      url: "{{ route('shares.documents.index') }}",
+      method: 'GET',
+      data: {
+        page: page,
+        per_page: sharesPerPage
+      },
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        if (response && response.success && response.shares) {
+          const activeShares = response.shares;
+          const pagination = response.pagination;
+          
+          if (activeShares.length === 0 && page === 1) {
+            sharesList.html(`
+              <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-link text-3xl mb-3 text-gray-400"></i>
+                <p class="text-sm">No active share links found.</p>
+                <p class="text-xs text-gray-400 mt-1">Create a share link to get started.</p>
+              </div>
+            `);
+            paginationContainer.html('');
+            return;
+          }
+          
+          let html = '';
+          activeShares.forEach(share => {
+            const shareUrl = share.share_url || `{{ url('/documents/share') }}/${share.share_token}`;
+            const createdAt = new Date(share.created_at).toLocaleDateString();
+            const expiresAt = share.expires_at ? new Date(share.expires_at).toLocaleDateString() : 'Never';
+            const documentCount = share.documents ? share.documents.length : 0;
+            const accessCount = share.access_count || 0;
+            
+            html += `
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white" data-share-id="${share.id}">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-800">
+                        <i class="fas fa-check-circle mr-1"></i>Active
+                      </span>
+                      ${share.expires_at ? `<span class="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800">Expires: ${expiresAt}</span>` : ''}
+                    </div>
+                    <div class="space-y-1 text-sm text-gray-600">
+                      <div class="flex items-center gap-2">
+                        <i class="fas fa-link text-[#0053FF]"></i>
+                        <span class="font-mono text-xs bg-gray-50 px-2 py-1 rounded flex-1 truncate">${shareUrl}</span>
+                        <button onclick="copyShareUrlFromList('${shareUrl}')" class="text-[#0053FF] hover:text-[#0044DD] px-2 py-1 text-xs" title="Copy link">
+                          <i class="fas fa-copy"></i>
+                        </button>
+                      </div>
+                      <div class="flex items-center gap-4 text-xs text-gray-500 mt-2">
+                        <span><i class="fas fa-file-alt mr-1"></i>${documentCount} document${documentCount !== 1 ? 's' : ''}</span>
+                        <span><i class="fas fa-eye mr-1"></i>${accessCount} view${accessCount !== 1 ? 's' : ''}</span>
+                        <span><i class="fas fa-calendar mr-1"></i>Created: ${createdAt}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <a href="${shareUrl}" target="_blank" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">
+                      <i class="fas fa-external-link-alt mr-1"></i>View
+                    </a>
+                    <button onclick="revokeShareFromList(${share.id})" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                      <i class="fas fa-ban mr-1"></i>Revoke
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+          
+          sharesList.html(html);
+          
+          // Render pagination
+          if (pagination && pagination.last_page > 1) {
+            renderSharesPagination(pagination);
+          } else {
+            paginationContainer.html('');
+          }
+        } else {
+          sharesList.html(`
+            <div class="text-center py-8 text-red-500">
+              <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+              <p class="text-sm">Failed to load shares.</p>
+            </div>
+          `);
+          paginationContainer.html('');
+        }
+      },
+      error: function(xhr) {
+        console.error('Error loading shares:', xhr);
+        sharesList.html(`
+          <div class="text-center py-8 text-red-500">
+            <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+            <p class="text-sm">Failed to load shares. Please try again.</p>
+          </div>
+        `);
+        paginationContainer.html('');
+      }
+    });
+  }
+  
+  // Render pagination controls
+  function renderSharesPagination(pagination) {
+    const paginationContainer = $("#activeSharesPagination");
+    let html = '';
+    
+    // Show total count
+    html += `<div class="text-sm text-gray-700">
+      Showing <span class="font-medium">${pagination.from}</span> to <span class="font-medium">${pagination.to}</span> of <span class="font-medium">${pagination.total}</span> results
+    </div>`;
+    
+    // Pagination buttons
+    html += '<div class="flex items-center gap-2">';
+    
+    // Previous button
+    if (pagination.current_page > 1) {
+      html += `<button onclick="loadActiveShares(${pagination.current_page - 1})" class="px-3 py-2 text-sm font-medium text-[#0053FF] bg-white border border-[#0053FF] rounded-md hover:bg-[#0053FF] hover:text-white transition-colors">
+        <i class="fas fa-chevron-left mr-1"></i>Previous
+      </button>`;
+    } else {
+      html += `<span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 rounded-md cursor-not-allowed">
+        <i class="fas fa-chevron-left mr-1"></i>Previous
+      </span>`;
+    }
+    
+    // Page numbers
+    html += '<div class="flex items-center gap-1">';
+    const startPage = Math.max(1, pagination.current_page - 2);
+    const endPage = Math.min(pagination.last_page, pagination.current_page + 2);
+    
+    if (startPage > 1) {
+      html += `<button onclick="loadActiveShares(1)" class="px-3 py-2 text-sm font-medium text-[#0053FF] bg-white border border-[#0053FF] rounded-md hover:bg-[#0053FF] hover:text-white transition-colors">1</button>`;
+      if (startPage > 2) {
+        html += `<span class="px-2 text-gray-500">...</span>`;
+      }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      if (i === pagination.current_page) {
+        html += `<span class="px-3 py-2 text-sm font-medium text-white bg-[#0053FF] rounded-md">${i}</span>`;
+      } else {
+        html += `<button onclick="loadActiveShares(${i})" class="px-3 py-2 text-sm font-medium text-[#0053FF] bg-white border border-[#0053FF] rounded-md hover:bg-[#0053FF] hover:text-white transition-colors">${i}</button>`;
+      }
+    }
+    
+    if (endPage < pagination.last_page) {
+      if (endPage < pagination.last_page - 1) {
+        html += `<span class="px-2 text-gray-500">...</span>`;
+      }
+      html += `<button onclick="loadActiveShares(${pagination.last_page})" class="px-3 py-2 text-sm font-medium text-[#0053FF] bg-white border border-[#0053FF] rounded-md hover:bg-[#0053FF] hover:text-white transition-colors">${pagination.last_page}</button>`;
+    }
+    
+    html += '</div>';
+    
+    // Next button
+    if (pagination.current_page < pagination.last_page) {
+      html += `<button onclick="loadActiveShares(${pagination.current_page + 1})" class="px-3 py-2 text-sm font-medium text-[#0053FF] bg-white border border-[#0053FF] rounded-md hover:bg-[#0053FF] hover:text-white transition-colors">
+        Next<i class="fas fa-chevron-right ml-1"></i>
+      </button>`;
+    } else {
+      html += `<span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 rounded-md cursor-not-allowed">
+        Next<i class="fas fa-chevron-right ml-1"></i>
+      </span>`;
+    }
+    
+    html += '</div>';
+    paginationContainer.html(html);
+  }
+  
+  // Revoke share from list
+  function revokeShareFromList(shareId) {
+    if (!confirm('Are you sure you want to revoke access to this share link? Once revoked, the link will no longer be accessible.')) {
+      return;
+    }
+    
+    const shareCard = $(`[data-share-id="${shareId}"]`);
+    const revokeBtn = shareCard.find('button[onclick*="revokeShareFromList"]');
+    const originalText = revokeBtn.html();
+    revokeBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Revoking...');
+    
+    $.ajax({
+      url: `/shares/documents/${shareId}`,
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      success: function(response) {
+        if (response && response.success) {
+          // Remove the share card with animation
+          shareCard.fadeOut(300, function() {
+            $(this).remove();
+            // Reload the current page to check if we need to go to previous page
+            const currentPage = currentSharesPage;
+            loadActiveShares(currentPage);
+          });
+        } else {
+          alert('Failed to revoke access: ' + (response?.message || 'Unknown error'));
+          revokeBtn.prop('disabled', false).html(originalText);
+        }
+      },
+      error: function(xhr) {
+        const errorMsg = xhr.responseJSON?.message || xhr.responseText || 'Failed to revoke access. Please try again.';
+        alert('Error: ' + errorMsg);
+        revokeBtn.prop('disabled', false).html(originalText);
+      }
+    });
+  }
+  
+  // Copy share URL from list
+  function copyShareUrlFromList(url) {
+    const tempInput = document.createElement('input');
+    tempInput.value = url;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    tempInput.setSelectionRange(0, 99999);
+    
+    try {
+      document.execCommand('copy');
+      // Show feedback
+      const btn = event.target.closest('button');
+      if (btn) {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check text-green-600"></i>';
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+        }, 2000);
+      }
+    } catch (err) {
+      alert('Failed to copy. Please copy manually.');
+    }
+    
+    document.body.removeChild(tempInput);
+  }
+  
+  // Load active shares when page loads
+  $(document).ready(function() {
+    loadActiveShares();
+    
+    // Reload shares after successful share creation
+    $(document).on('shareCreated', function() {
+      setTimeout(() => {
+        loadActiveShares();
+      }, 1000);
+    });
+  });
+
   // Tab switching function
   function showTab(tabName) {
     // Hide all tab contents
@@ -3581,6 +4395,11 @@ function clearTemplate() {
     if (button) {
       button.classList.remove('border-transparent', 'text-gray-500');
       button.classList.add('border-[#0053FF]', 'text-[#0053FF]');
+    }
+    
+    // Load active shares when shares tab is selected
+    if (tabName === 'shares' && typeof loadActiveShares === 'function') {
+      loadActiveShares();
     }
   }
 

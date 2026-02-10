@@ -307,7 +307,8 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                 <span class="text-sm font-medium">Documents</span>
                             </a>
                         </li>
-                        <li>
+                        {{-- Share Templates - Hidden --}}
+                        <li class="hidden">
                             <a href="{{ route('share-templates.index') }}"
                                 class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
                                 {{ request()->is('share-templates*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">
@@ -319,7 +320,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         </li>
                         
                         {{-- My Appeals --}}
-                        <li>
+                        <li class="hidden">
                             <a href="{{ route('verification.appeals.my-appeals') }}"
                                 class="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-sm
                                 {{ request()->is('verification/appeals/my-appeals') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80' }}">

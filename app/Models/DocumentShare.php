@@ -18,6 +18,7 @@ class DocumentShare extends Model
         'password_hash',
         'recipient_email',
         'recipient_name',
+        'restrict_to_email',
         'personal_message',
         'expires_at',
         'is_active',
@@ -27,12 +28,32 @@ class DocumentShare extends Model
         'abuse_reports',
         'last_accessed_at',
         'ip_address',
+        'qr_code_path',
+        'can_download',
+        'can_print',
+        'can_share',
+        'can_comment',
+        'is_one_time',
+        'max_views',
+        'require_watermark',
+        'access_start_date',
+        'access_end_date',
+        'share_type',
+        'share_notes',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
         'last_accessed_at' => 'datetime',
         'is_active' => 'boolean',
+        'can_download' => 'boolean',
+        'can_print' => 'boolean',
+        'can_share' => 'boolean',
+        'can_comment' => 'boolean',
+        'is_one_time' => 'boolean',
+        'require_watermark' => 'boolean',
+        'access_start_date' => 'datetime',
+        'access_end_date' => 'datetime',
     ];
 
     /**
@@ -89,7 +110,7 @@ class DocumentShare extends Model
     /**
      * Check if share is accessible now (within access window)
      */
-    public function isAccessible(): bool
+    public function isAccessible(?string $accessingEmail = null): bool
     {
         if (!$this->is_active) {
             return false;
@@ -97,6 +118,13 @@ class DocumentShare extends Model
 
         if ($this->isExpired()) {
             return false;
+        }
+
+        // Check email restriction - if restrict_to_email is set, only that email can access
+        if ($this->restrict_to_email && $accessingEmail) {
+            if (strtolower(trim($accessingEmail)) !== strtolower(trim($this->restrict_to_email))) {
+                return false;
+            }
         }
 
         // Check access window
@@ -126,7 +154,7 @@ class DocumentShare extends Model
      */
     public function requiresPassword(): bool
     {
-        return !empty($this->password);
+        return !empty($this->password_hash);
     }
 
     /**
@@ -134,7 +162,10 @@ class DocumentShare extends Model
      */
     public function verifyPassword(string $password): bool
     {
-        return \Hash::check($password, $this->password);
+        if (empty($this->password_hash)) {
+            return false;
+        }
+        return \Hash::check($password, $this->password_hash);
     }
 
     /**
