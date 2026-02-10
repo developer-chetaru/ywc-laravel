@@ -1,5 +1,5 @@
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <div class="px-4 py-6 sm:px-0">
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 max-[767px]:!p-0">
+    <div class="px-4 py-6 sm:px-0 max-[767px]:!p-0">
         <!-- Header -->
         <div class="mb-6">
             <h1 class="text-3xl font-bold text-gray-900">Forum Leaderboard</h1>
@@ -30,9 +30,9 @@
         </div>
 
         <!-- Leaderboard Table -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+        <div class="bg-white shadow rounded-lg">
+            <div class="w-full overflow-x-auto">
+                <table class="w-full  divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>

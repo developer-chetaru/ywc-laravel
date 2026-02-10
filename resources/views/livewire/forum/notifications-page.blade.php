@@ -1,13 +1,13 @@
 <div class="min-h-screen bg-gray-50 py-6">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-white rounded-xl shadow-sm p-6">
-            <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center justify-between mb-6 max-[992px]:flex-col max-[992px]:items-start max-[992px]:gap-3">
                 <h1 class="text-2xl font-bold text-gray-900">Notifications</h1>
                 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 max-[767px]:flex-col max-[767px]:w-full max-[767px]:items-start">
                     <a 
                         href="{{ route('forum.notifications.preferences') }}" 
-                        class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium flex items-center gap-2"
+                        class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium flex items-center gap-2 max-[992px]:pl-0"
                         title="Notification Preferences"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,7 +18,7 @@
                     </a>
                     <select 
                         wire:model.live="filter"
-                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 max-[767px]:w-full"
                     >
                         <option value="all">All</option>
                         <option value="unread">Unread</option>
@@ -28,7 +28,7 @@
                     @if($filter === 'unread' || $filter === 'all')
                         <button 
                             onclick="Livewire.dispatch('markAllAsRead')"
-                            class="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                            class="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium max-[767px]:pl-0"
                         >
                             Mark All as Read
                         </button>

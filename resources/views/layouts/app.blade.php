@@ -83,7 +83,7 @@
             $defaultMargin = $hasSidebar ? 'ml-72' : 'ml-0';
         @endphp
         <div
-            class="flex-1 transition-all duration-300 {{ $defaultMargin }}"
+            class="flex-1 transition-all duration-300 overflow-x-hidden {{ $defaultMargin }}"
             x-data
             :class="{
                 'ml-72': {{ $hasSidebar ? 'true' : 'false' }} && $store?.sidebar?.isOpen && window.innerWidth >= 768,

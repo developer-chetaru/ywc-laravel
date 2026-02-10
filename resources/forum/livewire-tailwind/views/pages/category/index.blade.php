@@ -45,6 +45,8 @@
         </div>
     @endif
     @role('super_admin')
+
+   
     <div class="flex-1">
 
         <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6" id="forumTabs">
@@ -282,6 +284,12 @@
     @endrole
     
     @if(!auth()->user() || !auth()->user()->hasRole('super_admin'))
+     <style>
+        a:not(.link-button):not(.group-button):not(.text-category) {
+    
+    color: #ffffff;
+}
+    </style>
     <div class="flex-1">
     <div class="flex flex-col lg:flex-row user-forum h-[calc(100vh-100px)] gap-4 lg:gap-x-[24px] bg-gray-100">
 
@@ -304,9 +312,9 @@
                         <input type="search" 
                             wire:model.live.debounce.300ms="search"
                             placeholder="Search forums, threads..."
-                            class="w-full py-3.5 px-5 pl-14 pr-12 rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium bg-white shadow-md hover:shadow-lg hover:border-blue-300 transition-all duration-300 placeholder:text-gray-400" />
-                        <div class="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <i class="fas fa-search text-blue-500 text-base"></i>
+                            class="w-full py-3.5 px-5 !pl-12 pr-12 rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium bg-white hover:border-blue-300 transition-all duration-300 placeholder:text-gray-400" />
+                        <div class="absolute left-5 top-[15px]">
+                            <i class="fas fa-search text-gray-500 text-base"></i>
                         </div>
                         @if(!empty($search))
                             <button wire:click="$set('search', '')" 

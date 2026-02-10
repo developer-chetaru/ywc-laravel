@@ -13,7 +13,7 @@
                             $dashboardItems = [
                                 ['label' => 'Career History', 'defaultImage' => '/images/career.svg', 'hoverImage' => '/images/manage-dashbaord.svg', 'url' => auth()->check() ? route('career-history', auth()->id()) : route('login')],
                                 ['label' => 'Documents', 'defaultImage' => '/images/document-black.svg', 'hoverImage' => '/images/document.svg', 'url' => route('documents')],
-                                ['label' => 'Analytics', 'defaultImage' => '/images/dashboard.svg', 'hoverImage' => '/images/dashboard-black.svg', 'url' => route('analytics.user-dashboard')],
+                                ['label' => 'Analytics', 'defaultImage' => '/images/dashboard.svg', 'hoverImage' => '/images/dashboard-white.svg', 'url' => route('analytics.user-dashboard')],
                                 ['label' => 'Legal Support', 'defaultImage' => '/images/justice-scale-01.svg', 'hoverImage' => '/images/justice-scale-white.svg', 'url' => route('legal-support.index')],
                                 ['label' => 'Training & Resources', 'defaultImage' => '/images/training-and-resources-active.svg', 'hoverImage' => '/images/training-and-resources-default.svg', 'url' => route('training.resources')],
                                 ['label' => 'Mental Health Support', 'defaultImage' => '/images/brain-02.svg', 'hoverImage' => '/images/brain-white.svg', 'url' => route('mental-health.dashboard')],
@@ -23,8 +23,8 @@
                                 ['label' => 'Itinerary System', 'defaultImage' => '/images/itinerarySystem.svg', 'hoverImage' => '/images/itinerarySystemWhite.svg', 'url' => route('itinerary.routes.index')],
                                 ['label' => 'Market Place', 'defaultImage' => '/images/market-place-active-icon.svg', 'hoverImage' => '/images/market-place-default-icon.svg', 'url' => route('marketplace.index')],
                                 ['label' => 'Work Log', 'defaultImage' => '/images/work-log-active.svg', 'hoverImage' => '/images/work-log-defult.svg', 'url' => route('worklog.index')],
-                                ['label' => 'Work Schedules', 'defaultImage' => '/images/calendar-03.svg', 'hoverImage' => '/images/calendar-03.svg', 'url' => route('work-schedules.index')],
-                                ['label' => 'Job Board', 'defaultImage' => '/images/document.svg', 'hoverImage' => '/images/document-black.svg', 'url' => route('job-board.index')],
+                                ['label' => 'Work Schedules', 'defaultImage' => '/images/calendar-03.svg', 'hoverImage' => '/images/calender-white.svg', 'url' => route('work-schedules.index')],
+                                ['label' => 'Job Board', 'defaultImage' => '/images/document-black.svg', 'hoverImage' => '/images/document.svg', 'url' => route('job-board.index')],
                                 ['label' => 'Crew Discovery', 'defaultImage' => '/images/discover-circle.svg', 'hoverImage' => '/images/discover-circle-white.svg', 'url' => route('crew.discovery')],
                             ];
                             

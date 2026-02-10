@@ -15,7 +15,7 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="grid  md:grid-cols-3 gap-4 mb-8 max-[992px]:!grid-cols-1">
             <a href="{{ route('mental-health.crisis') }}" class="bg-red-600 hover:bg-red-700 text-white p-6 rounded-lg shadow-md transition">
                 <div class="flex items-center">
                     <svg class="w-8 h-8 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
