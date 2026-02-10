@@ -684,41 +684,66 @@ class CareerHistoryController extends Controller
      */
     protected function createTesseractOCR($imagePath): TesseractOCR
     {
-        // Get Tesseract path first
+        // Get Tesseract path first - must be absolute path
         $tesseractPath = $this->getTesseractPath();
         
         if (!$tesseractPath) {
             throw new \Exception('Tesseract OCR not found. Please ensure Tesseract is installed and accessible.');
         }
         
-        // Always resolve to full path to avoid namespace issues with exec()
+        // Always resolve to full absolute path to avoid namespace issues with exec()
         $fullPath = $tesseractPath;
-        if ($tesseractPath === 'tesseract') {
-            // If we got 'tesseract', try to find the actual path
+        if ($tesseractPath === 'tesseract' || !file_exists($tesseractPath)) {
+            // If we got 'tesseract' command or path doesn't exist, try to find the actual path
             $output = [];
             $returnVar = 0;
-            @\exec('which tesseract 2>&1', $output, $returnVar);
-            if ($returnVar === 0 && !empty($output)) {
-                $fullPath = trim($output[0]);
-            } else {
-                // Fallback to common path
-                $fullPath = '/usr/bin/tesseract';
+            
+            // Try which command first
+            if (function_exists('exec')) {
+                @\exec('which tesseract 2>&1', $output, $returnVar);
+                if ($returnVar === 0 && !empty($output)) {
+                    $fullPath = trim($output[0]);
+                }
+            }
+            
+            // If which failed, try common paths
+            if (!file_exists($fullPath) || !is_executable($fullPath)) {
+                $commonPaths = ['/usr/bin/tesseract', '/usr/local/bin/tesseract', '/bin/tesseract'];
+                foreach ($commonPaths as $commonPath) {
+                    if (file_exists($commonPath) && is_executable($commonPath)) {
+                        $fullPath = $commonPath;
+                        break;
+                    }
+                }
             }
         }
         
         // Verify the path exists and is executable
         if (!file_exists($fullPath) || !is_executable($fullPath)) {
-            throw new \Exception("Tesseract executable not found at: {$fullPath}");
+            throw new \Exception("Tesseract executable not found at: {$fullPath}. Please set TESSERACT_PATH in .env file.");
         }
         
-        $ocr = new TesseractOCR($imagePath);
-        
-        // Always set executable path explicitly to avoid library's internal exec() calls
-        $ocr->executable($fullPath);
-        
-        Log::info('TesseractOCR created with path: ' . $fullPath);
-        
-        return $ocr;
+        // Create OCR instance
+        try {
+            $ocr = new TesseractOCR($imagePath);
+            
+            // CRITICAL: Set executable path BEFORE any other operations
+            // This prevents the library from trying to call exec() internally
+            $ocr->executable($fullPath);
+            
+            Log::info('TesseractOCR created with absolute path: ' . $fullPath);
+            
+            return $ocr;
+        } catch (\Error $e) {
+            // Catch namespace errors (like exec() not found)
+            if (strpos($e->getMessage(), 'exec()') !== false || strpos($e->getMessage(), 'undefined function') !== false) {
+                throw new \Exception("TesseractOCR library error: {$e->getMessage()}. Please ensure exec() function is enabled in PHP and TESSERACT_PATH is set in .env file.");
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('TesseractOCR creation failed: ' . $e->getMessage());
+            throw new \Exception("Failed to initialize OCR: {$e->getMessage()}. Please check TESSERACT_PATH in .env file.");
+        }
     }
 
     public function scan(Request $request)
@@ -815,8 +840,13 @@ class CareerHistoryController extends Controller
                             $ocr = $this->createTesseractOCR($tmpImage);
                             $ocr->lang('eng')->psm(3)->oem(1);
                             $text .= $ocr->run() . "\n";
+                        } catch (\Error $e) {
+                            // Catch fatal errors (like undefined function)
+                            Log::error("TesseractOCR fatal error for PDF page {$i}: " . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+                            // Continue with next page instead of failing completely
                         } catch (\Exception $e) {
                             Log::warning("TesseractOCR failed for PDF page {$i}: " . $e->getMessage());
+                            // Continue with next page instead of failing completely
                         }
 
                         // Delete temp page
@@ -833,9 +863,19 @@ class CareerHistoryController extends Controller
                         $ocr = $this->createTesseractOCR($fullPath);
                         $ocr->lang('eng')->psm(3)->oem(1);
                         $text = $ocr->run();
+                    } catch (\Error $e) {
+                        // Catch fatal errors (like undefined function)
+                        Log::error("TesseractOCR fatal error: " . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'OCR processing failed: ' . $e->getMessage() . '. Please ensure TESSERACT_PATH is set in .env file.'
+                        ], 500);
                     } catch (\Exception $e) {
-                        Log::error("TesseractOCR failed: " . $e->getMessage());
-                        throw $e;
+                        Log::error("TesseractOCR failed: " . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'OCR processing failed: ' . $e->getMessage()
+                        ], 500);
                     }
                 }
             }
