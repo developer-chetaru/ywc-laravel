@@ -481,6 +481,7 @@ Route::middleware([
     // New token-based sharing routes
     Route::prefix('shares')->name('shares.')->group(function () {
         // Document shares
+        Route::get('/documents/create', [\App\Http\Controllers\DocumentShareController::class, 'create'])->name('documents.create');
         Route::get('/documents', [\App\Http\Controllers\DocumentShareController::class, 'index'])->name('documents.index');
         Route::get('/documents/analytics', \App\Livewire\Documents\ShareAnalytics::class)->name('documents.analytics');
         Route::post('/documents', [\App\Http\Controllers\DocumentShareController::class, 'store'])->name('documents.store');

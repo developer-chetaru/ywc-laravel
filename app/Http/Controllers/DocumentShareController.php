@@ -285,6 +285,28 @@ class DocumentShareController extends Controller
     }
 
     /**
+     * Show the create share documents page
+     */
+    public function create()
+    {
+        $user = Auth::user();
+        
+        // Get documents that can be shared (same logic as CareerHistoryController)
+        $share_documents = \App\Models\Document::with(['passportDetail', 'idvisaDetail', 'certificates.type', 'certificates.issuer', 'otherDocument'])
+            ->where('user_id', $user->id)
+            ->where('is_active', 1)
+            ->get();
+        
+        // Get templates
+        $templates = \App\Models\ShareTemplate::forUser($user->id)
+            ->orderBy('is_default', 'desc')
+            ->orderBy('name', 'asc')
+            ->get();
+        
+        return view('documents.share-create', compact('share_documents', 'templates'));
+    }
+
+    /**
      * Get all shares for authenticated user
      */
     public function index(Request $request)

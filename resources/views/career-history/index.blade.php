@@ -114,7 +114,7 @@
                                 </div>
 
                                 <!-- Share Document Card (optional) -->
-                                <div id="shareDocumentCard" data-popup-target="#shareDocumentModal" class="bg-white rounded-xl p-3 py-8 flex justify-center items-center flex-col cursor-pointer">
+                                <a href="{{ route('shares.documents.create') }}" class="bg-white rounded-xl p-3 py-8 flex justify-center items-center flex-col cursor-pointer hover:shadow-lg transition-shadow">
                                     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M16.6601 3.36803C12.496 3.19173 9.27886 3.67143 9.27886 3.67143C7.24744 3.81668 3.35443 4.95555 3.35446 11.6067C3.35449 18.2013 3.31139 26.3313 3.35446 29.5723C3.35446 31.5525 4.58049 36.1713 8.82409 36.4188C13.9822 36.7198 23.2732 36.7838 27.5361 36.4188C28.6772 36.3545 32.4764 35.4586 32.9572 31.3251C33.4554 27.043 33.3562 24.067 33.3562 23.3586" stroke="#616161" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M36.1356 3.56964C34.1957 1.48046 19.6033 6.59822 19.6154 8.46671C19.629 10.5856 25.3141 11.2374 26.8898 11.6795C27.8374 11.9453 28.0912 12.2179 28.3096 13.2115C29.2992 17.7116 29.796 19.9499 30.9284 19.9999C32.7333 20.0797 38.0289 5.60849 36.1356 3.56964Z" stroke="#0053FE" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
@@ -123,7 +123,7 @@
                                         <path d="M11.6346 28.3652H24.9679" stroke="#616161" stroke-width="2.15385" stroke-linecap="round"/>
                                     </svg>
                                     <h4 class="mt-2">Share Document</h4>
-                                </div>
+                                </a>
                                 <div id="shareProfileCard" data-popup-target="#shareProfileModal" class="bg-white rounded-xl p-3 py-8 flex justify-center items-center flex-col cursor-pointer">
                                     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M5 10C5 7.64298 5 6.46447 5.73223 5.73223C6.46447 5 7.64298 5 10 5C12.357 5 13.5355 5 14.2678 5.73223C15 6.46447 15 7.64298 15 10C15 12.357 15 13.5355 14.2678 14.2678C13.5355 15 12.357 15 10 15C7.64298 15 6.46447 15 5.73223 14.2678C5 13.5355 5 12.357 5 10Z" stroke="#616161" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>

@@ -264,6 +264,7 @@
 
     @stack('modals')
     @livewireScripts
+    @stack('scripts')
     
     <script>
         // Initialize Alpine store for sidebar - ensure it's available early
