@@ -2017,12 +2017,22 @@ $(function () {
                     let matchedType = matchDocumentType(text);
 
                     if (matchedType) {
+                        // Set the document type dropdown
+                        $("#docType").val(matchedType).trigger('change');
                         renderDynamicFields(matchedType, function() {
                             fillDocumentFields(matchedType, text);
                         });
                     } else {
+                        // Even if type doesn't match, try to extract and fill common fields
+                        // Show notification but also allow manual type selection
                         showTypeNotification();
+                        
+                        // Try to extract common fields even without type match
+                        extractCommonFields(text);
                     }
+                } else {
+                    // No text extracted, show notification
+                    showTypeNotification();
                 }
               	// Show Replace button after scan is complete
                 $("#replaceBtn").removeClass("hidden");
@@ -2054,10 +2064,27 @@ $(function () {
         typeNotification.addClass("hidden");
     });
 
-    // Document type matcher
+    // Document type matcher - improved to check all document types
     function matchDocumentType(text) {
         const lowerText = text.toLowerCase();
         const upperText = text.toUpperCase();
+        
+        // Get all document types from PHP
+        const documentTypes = @json($documentTypes);
+        const allTypes = [];
+        
+        // Flatten document types array
+        if (documentTypes) {
+            for (const category in documentTypes) {
+                documentTypes[category].forEach(type => {
+                    allTypes.push({
+                        slug: type.slug,
+                        name: type.name.toLowerCase(),
+                        keywords: (type.name + ' ' + (type.category || '')).toLowerCase()
+                    });
+                });
+            }
+        }
 
         // Passport detection - multiple patterns
         const passportPatterns = [
@@ -2092,21 +2119,156 @@ $(function () {
             lowerText.includes("id card") ||
             lowerText.includes("identity card") ||
             lowerText.includes("driving license") ||
+            lowerText.includes("driving licence") ||
             lowerText.includes("schengen")) {
             return "idvisa";
         }
 
-        // Certificate detection
+        // Certificate detection - check for various certificate types
         if (lowerText.includes("certificate") || 
             lowerText.includes("degree") || 
             lowerText.includes("qualification") ||
             lowerText.includes("diploma") ||
             lowerText.includes("license") ||
-            lowerText.includes("certification")) {
+            lowerText.includes("licence") ||
+            lowerText.includes("certification") ||
+            lowerText.includes("stcw") ||
+            lowerText.includes("eng1") ||
+            lowerText.includes("peme") ||
+            lowerText.includes("medical")) {
+            return "certificate";
+        }
+        
+        // Medical/Vaccination documents
+        if (lowerText.includes("vaccination") ||
+            lowerText.includes("vaccine") ||
+            lowerText.includes("covid") ||
+            lowerText.includes("nhs") ||
+            lowerText.includes("medical certificate") ||
+            lowerText.includes("health certificate")) {
+            // Try to find matching document type slug
+            for (let type of allTypes) {
+                if (lowerText.includes(type.name) || lowerText.includes(type.keywords)) {
+                    return type.slug;
+                }
+            }
+            // Default to certificate for medical documents
             return "certificate";
         }
 
+        // Try to match against all document types from database
+        for (let type of allTypes) {
+            // Check if document type name or keywords appear in text
+            if (lowerText.includes(type.name) || 
+                lowerText.includes(type.keywords) ||
+                type.keywords.split(' ').some(keyword => keyword.length > 3 && lowerText.includes(keyword))) {
+                return type.slug;
+            }
+        }
+
         return null;
+    }
+    
+    // Extract common fields even when type doesn't match
+    function extractCommonFields(text) {
+        const lowerText = text.toLowerCase();
+        
+        // Extract Date of Birth - multiple patterns
+        const dobPatterns = [
+            /(?:date\s+of\s+birth|dob|birth\s+date|date\s+of\s+birth)[:\s]+(\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4})/i,
+            /(\d{1,2}[.\-/]\d{1,2}[.\-/]\d{4})\s*(?:date\s+of\s+birth|dob)/i,
+            /birth[:\s]+(\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4})/i
+        ];
+        
+        for (let pattern of dobPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                let dob = formatDate(match[1]) || formatDateDDMMYYYY(match[1]);
+                if (dob && $("input[name='dob']").length) {
+                    $("input[name='dob']").val(dob);
+                    break;
+                }
+            }
+        }
+        
+        // Extract Issue Date - multiple patterns
+        const issuePatterns = [
+            /(?:date\s+issued|issue\s+date|issued\s+on|date\s+issued)[:\s]+(\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4})/i,
+            /(\d{1,2}[.\-/]\d{1,2}[.\-/]\d{4})\s*(?:issued|issue)/i,
+            /issued[:\s]+(\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4})/i
+        ];
+        
+        for (let pattern of issuePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                let issueDate = formatDate(match[1]) || formatDateDDMMYYYY(match[1]);
+                if (issueDate && $("input[name='issue_date']").length) {
+                    $("input[name='issue_date']").val(issueDate);
+                    break;
+                }
+            }
+        }
+        
+        // Extract Expiry Date - multiple patterns
+        const expiryPatterns = [
+            /(?:expiry\s+date|expires\s+on|valid\s+until|expiry)[:\s]+(\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4})/i,
+            /(\d{1,2}[.\-/]\d{1,2}[.\-/]\d{4})\s*(?:expires|expiry|valid)/i
+        ];
+        
+        for (let pattern of expiryPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                let expiryDate = formatDate(match[1]) || formatDateDDMMYYYY(match[1]);
+                if (expiryDate && $("input[name='expiry_date']").length) {
+                    $("input[name='expiry_date']").val(expiryDate);
+                    break;
+                }
+            }
+        }
+        
+        // Extract Document Number - multiple patterns
+        const docNumPatterns = [
+            /(?:document\s+number|doc\s+no|number|document\s+no)[:\s]+([A-Z0-9]{4,20})/i,
+            /([A-Z0-9]{4,20})\s*(?:document\s+number|doc\s+no)/i
+        ];
+        
+        for (let pattern of docNumPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                const docNum = match[1].trim();
+                if ($("input[name='document_number']").length) {
+                    $("input[name='document_number']").val(docNum);
+                } else if ($("input[name='doc_number']").length) {
+                    $("input[name='doc_number']").val(docNum);
+                }
+                break;
+            }
+        }
+        
+        // Extract Issuing Authority - multiple patterns
+        const issuerPatterns = [
+            /(?:issued\s+by|issuing\s+authority|authority|document\s+issued\s+by)[:\s]+([A-Z][A-Za-z\s]{3,50})/i,
+            /([A-Z][A-Za-z\s]{3,50})\s*(?:issued|authority)/i,
+            /(?:NHS|nhs|government|ministry)\s+([A-Z][A-Za-z\s]{2,30})/i
+        ];
+        
+        for (let pattern of issuerPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                const issuer = match[1].trim();
+                if ($("input[name='issuing_authority']").length) {
+                    $("input[name='issuing_authority']").val(issuer);
+                }
+                break;
+            }
+        }
+        
+        // Extract Issuing Country
+        if (lowerText.includes("scotland") || lowerText.includes("nhs scotland")) {
+            if ($("input[name='issuing_country']").length) {
+                $("input[name='issuing_country']").val("Scotland");
+            }
+        }
     }
 
 // =======================
@@ -2150,6 +2312,21 @@ function extractPassportNumber(text) {
 // =======================
 function renderDynamicFields(type, callback) {
     let fields = "";
+    
+    // Get document type info from PHP (passed as JSON)
+    const documentTypes = @json($documentTypes);
+    let selectedTypeInfo = null;
+    
+    // Find the selected document type info
+    if (type && documentTypes) {
+        for (const category in documentTypes) {
+            const found = documentTypes[category].find(t => t.slug === type);
+            if (found) {
+                selectedTypeInfo = found;
+                break;
+            }
+        }
+    }
 
     if (type === "passport") {
         fields = `
@@ -2352,6 +2529,104 @@ function renderDynamicFields(type, callback) {
                 <div>
                     <label>Expiry Date</label>
                     <input type="date" name="expiry_date" class="w-full border p-2 rounded-md">
+                </div>
+            </div>
+        `;
+    }
+    
+    // Handle new document types dynamically based on their requirements
+    if (!fields && selectedTypeInfo) {
+        fields = `<div class="space-y-4">`;
+        
+        // Document Number (if required)
+        if (selectedTypeInfo.requires_document_number) {
+            fields += `
+                <div>
+                    <label class="block font-medium">Document Number <span class="text-red-500">*</span></label>
+                    <input type="text" name="document_number" class="w-full border p-2 rounded-md" placeholder="Enter document number" required>
+                </div>
+            `;
+        }
+        
+        // Date of Birth (common field)
+        fields += `
+            <div>
+                <label class="block font-medium">Date of Birth</label>
+                <input type="date" name="dob" class="w-full border p-2 rounded-md">
+            </div>
+        `;
+        
+        // Issue Date (common field)
+        fields += `
+            <div>
+                <label class="block font-medium">Issue Date</label>
+                <input type="date" name="issue_date" class="w-full border p-2 rounded-md">
+            </div>
+        `;
+        
+        // Expiry Date (if required)
+        if (selectedTypeInfo.requires_expiry_date) {
+            fields += `
+                <div>
+                    <label class="block font-medium">Expiry Date <span class="text-red-500">*</span></label>
+                    <input type="date" name="expiry_date" class="w-full border p-2 rounded-md" required>
+                </div>
+            `;
+        } else {
+            fields += `
+                <div>
+                    <label class="block font-medium">Expiry Date (Optional)</label>
+                    <input type="date" name="expiry_date" class="w-full border p-2 rounded-md">
+                </div>
+            `;
+        }
+        
+        // Issuing Authority (if required)
+        if (selectedTypeInfo.requires_issuing_authority) {
+            fields += `
+                <div>
+                    <label class="block font-medium">Issuing Authority <span class="text-red-500">*</span></label>
+                    <input type="text" name="issuing_authority" class="w-full border p-2 rounded-md" placeholder="Enter issuing authority" required>
+                </div>
+            `;
+        }
+        
+        // Issuing Country (common field)
+        fields += `
+            <div>
+                <label class="block font-medium">Issuing Country</label>
+                <input type="text" name="issuing_country" class="w-full border p-2 rounded-md" placeholder="e.g. United States">
+            </div>
+        `;
+        
+        fields += `</div>`;
+    }
+    
+    // If still no fields and type is not empty, show default fields
+    if (!fields && type && type !== "") {
+        fields = `
+            <div class="space-y-4">
+                <div>
+                    <label class="block font-medium">Document Name</label>
+                    <input type="text" name="doc_name" class="w-full border p-2 rounded-md">
+                </div>
+                <div>
+                    <label class="block font-medium">Document Number</label>
+                    <input type="text" name="doc_number" class="w-full border p-2 rounded-md">
+                </div>
+                <div>
+                    <label class="block font-medium">Date of Birth</label>
+                    <input type="date" name="dob" class="w-full border p-2 rounded-md">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-medium">Issue Date</label>
+                        <input type="date" name="issue_date" class="w-full border p-2 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block font-medium">Expiry Date</label>
+                        <input type="date" name="expiry_date" class="w-full border p-2 rounded-md">
+                    </div>
                 </div>
             </div>
         `;
