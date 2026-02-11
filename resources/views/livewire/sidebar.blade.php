@@ -151,7 +151,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         alt="Dashboard"
                         class="w-5 h-5">
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('dashboard') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('dashboard') ? 'text-black' : 'text-white' }}">
                         Dashboard
                     </span>
                 </a>
@@ -166,7 +166,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                     class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
                         {{ request()->is('employer*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
                     <i class="fas fa-users {{ request()->is('employer*') ? 'text-black' : 'text-white' }}"></i>
-                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('employer*') ? 'text-black' : 'text-white' }}">
+                    <span x-show="isOpen" class="text-sm text-base font-medium {{ request()->is('employer*') ? 'text-black' : 'text-white' }}">
                         Employer Dashboard
                     </span>
                 </a>
@@ -180,7 +180,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                     class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
                         {{ request()->is('agency*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
                     <i class="fas fa-briefcase {{ request()->is('agency*') ? 'text-black' : 'text-white' }}"></i>
-                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('agency*') ? 'text-black' : 'text-white' }}">
+                    <span x-show="isOpen" class="text-sm text-base font-medium {{ request()->is('agency*') ? 'text-black' : 'text-white' }}">
                         Agency Dashboard
                     </span>
                 </a>
@@ -193,7 +193,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                     class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
                         {{ request()->is('analytics*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
                     <i class="fas fa-chart-bar {{ request()->is('analytics*') ? 'text-black' : 'text-white' }}"></i>
-                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('analytics*') ? 'text-black' : 'text-white' }}">
+                    <span x-show="isOpen" class="text-sm text-base font-medium {{ request()->is('analytics*') ? 'text-black' : 'text-white' }}">
                         Analytics
                     </span>
                 </a>
@@ -212,7 +212,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         alt="Users" class="w-5 h-5">
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('users') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('users') ? 'text-black' : 'text-white' }}">
                         User list
                     </span>
                 </a>
@@ -231,7 +231,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         alt="Waitlist" class="w-5 h-5">
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('admin/waitlist*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('admin/waitlist*') ? 'text-black' : 'text-white' }}">
                         Waitlist
                     </span>
                 </a>
@@ -250,7 +250,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                     </svg>
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('admin/subscriptions*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('admin/subscriptions*') ? 'text-black' : 'text-white' }}">
                         Subscription Admin
                     </span>
                 </a>
@@ -272,13 +272,13 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                 alt="Documents & Career History"
                                 class="w-5 h-5">
                             <span x-show="isOpen"
-                                class="text-base font-medium {{ request()->is('documents*') || request()->is('career-history*') ? 'text-black' : 'text-white' }}">
+                                class="text-sm text-base font-medium {{ request()->is('documents*') || request()->is('career-history*') ? 'text-black' : 'text-white' }}">
                                 Documents & Career History
                             </span>
                         </a>
                         <button @click.stop="documentsCareerOpen = !documentsCareerOpen" 
                             x-show="isOpen"
-                            class="ml-2 p-1 hover:bg-white/10 rounded transition-colors">
+                            class="ml-2 p-0 hover:bg-white/10 rounded transition-colors">
                             <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': documentsCareerOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
@@ -294,7 +294,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                 </svg>
-                                <span class="text-sm font-medium">Career History</span>
+                                <span class="text-sm text-sm font-medium">Career History</span>
                             </a>
                         </li>                        
                         <li>
@@ -381,7 +381,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         alt="Certificate Types" class="w-5 h-5">
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('certificate-types*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('certificate-types*') ? 'text-black' : 'text-white' }}">
                         Certificate Types
                     </span>
                 </a>
@@ -402,7 +402,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         alt="Certificate Issuer" class="w-5 h-5">
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->routeIs('certificate.issuers.*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->routeIs('certificate.issuers.*') ? 'text-black' : 'text-white' }}">
                         Certificate Issuer
                     </span>
                 </a>
@@ -421,7 +421,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                     </svg>
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->routeIs('master-data.*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->routeIs('master-data.*') ? 'text-black' : 'text-white' }}">
                         Master Data
                     </span>
                 </a>
@@ -440,7 +440,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         alt="Legal Support" class="w-5 h-5">
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('legal-support*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('legal-support*') ? 'text-black' : 'text-white' }}">
                         Legal Support
                     </span>
                 </a>
@@ -462,7 +462,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                     : '/images/training-and-resources-default.svg' }}"
                             alt="Training & Resources"
                             class="w-5 h-5">
-                        <span x-show="isOpen" class="text-base font-medium {{ request()->is('training*') ? 'text-black' : 'text-white' }}">
+                        <span x-show="isOpen" class="text-sm text-base font-medium {{ request()->is('training*') ? 'text-black' : 'text-white' }}">
                             Training & Resources
                         </span>
                     </div>
@@ -513,7 +513,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
 
                     <span
                         x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('training-resources*') || request()->is('training/courses*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('training-resources*') || request()->is('training/courses*') ? 'text-black' : 'text-white' }}">
                         Training & Resources
                     </span>
                 </a>
@@ -535,7 +535,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                 <a href="{{ route('mental-health.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition
                     {{ request()->is('mental-health*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
                     <img src="{{ request()->is('mental-health*') ? '/images/brain-02.svg' : '/images/brain-white.svg' }}" alt="Mental Health Support" class="w-5 h-5">
-                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('mental-health*') ? 'text-black' : 'text-white' }}">Mental Health Support</span>
+                    <span x-show="isOpen" class="text-sm text-base font-medium {{ request()->is('mental-health*') ? 'text-black' : 'text-white' }}">Mental Health Support</span>
                 </a>
             </li>
             @endhasanyrole
@@ -555,13 +555,13 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                 alt="Department Forums"
                                 class="w-5 h-5">
                             <span x-show="isOpen"
-                                class="text-base font-medium {{ request()->is('forum*') ? 'text-black' : 'text-white' }}">
+                                class="text-sm text-base font-medium {{ request()->is('forum*') ? 'text-black' : 'text-white' }}">
                                 Department Forums
                             </span>
                         </div>
                         <button @click.stop="forumOpen = !forumOpen" 
                             x-show="isOpen"
-                            class="ml-2 p-1 hover:bg-white/10 rounded transition-colors">
+                            class="ml-2 p-0 hover:bg-white/10 rounded transition-colors">
                             <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': forumOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
@@ -645,7 +645,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                             {{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? 'bg-[#F2F2F2] text-black' : 'hover:bg-white/10 text-white' }}">
                     <div class="flex items-center space-x-3">
                         <img src="{{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? '/images/save-money-dollar.svg' : '/images/save-money-dollar-white.svg' }}" alt="Financial Future Planning" class="w-5 h-5">
-                        <span x-show="isOpen" class="text-base font-medium {{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? 'text-black' : 'text-white' }}">
+                        <span x-show="isOpen" class="text-sm text-base font-medium {{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? 'text-black' : 'text-white' }}">
                             Financial Future Planning
                         </span>
                     </div>
@@ -681,7 +681,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
-                    <span x-show="isOpen" class="text-base font-medium {{ request()->is('financial-planning/admin*') ? 'text-black' : 'text-white' }}">Financial Admin</span>
+                    <span x-show="isOpen" class="text-sm text-base font-medium {{ request()->is('financial-planning/admin*') ? 'text-black' : 'text-white' }}">Financial Admin</span>
                 </a>
             </li>
             @endif
@@ -701,13 +701,13 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                     alt="Industry Review System"
                                     class="w-5 h-5">
                                 <span x-show="isOpen"
-                                    class="text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
+                                    class="text-sm text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
                                     Industry Review System
                                 </span>
                             </div>
                             <button @click.stop="industryReviewOpen = !industryReviewOpen" 
                                 x-show="isOpen"
-                                class="ml-2 p-1 hover:bg-white/10 rounded transition-colors">
+                                class="ml-2 p-0 hover:bg-white/10 rounded transition-colors">
                                 <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': industryReviewOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
@@ -835,7 +835,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                         alt="Industry Review System"
                                         class="w-5 h-5">
                                     <span x-show="isOpen"
-                                        class="text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
+                                        class="text-sm text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
                                         Industry Review System
                                     </span>
                                 </div>
@@ -924,7 +924,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                 alt="Industry Review System"
                                 class="w-5 h-5">
                             <span x-show="isOpen"
-                                class="text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
+                                class="text-sm text-base font-medium {{ request()->is('industry-review*') ? 'text-black' : 'text-white' }}">
                                 Industry Review System
                             </span>
                         </a>
@@ -963,7 +963,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                 alt="Itinerary System"
                                 class="w-5 h-5">
                             <span x-show="isOpen"
-                                class="text-base font-medium {{ request()->is('itinerary*') ? 'text-black' : 'text-white' }}">
+                                class="text-sm text-base font-medium {{ request()->is('itinerary*') ? 'text-black' : 'text-white' }}">
                                 Itinerary System
                             </span>
                         </div>
@@ -1005,7 +1005,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         class="w-5 h-5">
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('marketplace*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('marketplace*') ? 'text-black' : 'text-white' }}">
                         Market Place
                     </span>
                 </a>
@@ -1026,7 +1026,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         class="w-5 h-5">
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('work-log*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('work-log*') ? 'text-black' : 'text-white' }}">
                         Work Log
                     </span>
                 </a>
@@ -1046,7 +1046,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                     </svg>
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('job-board*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('job-board*') ? 'text-black' : 'text-white' }}">
                         Job Board
                     </span>
                 </a>
@@ -1065,7 +1065,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                     </svg>
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('work-schedules*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('work-schedules*') ? 'text-black' : 'text-white' }}">
                         Work Schedules
                     </span>
                 </a>
@@ -1084,7 +1084,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                     </svg>
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->is('captain-dashboard*') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->is('captain-dashboard*') ? 'text-black' : 'text-white' }}">
                         Captain Dashboard
                     </span>
                 </a>
@@ -1104,7 +1104,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
                             <span x-show="isOpen"
-                                class="text-base font-medium {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'text-black' : 'text-white' }}">
+                                class="text-sm text-base font-medium {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'text-black' : 'text-white' }}">
                                 Crew Discovery
                             </span>
                         </div>
@@ -1162,7 +1162,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         class="w-5 h-5">
 
                     <span x-show="isOpen"
-                        class="text-base font-medium {{ request()->routeIs('roles.index') ? 'text-black' : 'text-white' }}">
+                        class="text-sm text-base font-medium {{ request()->routeIs('roles.index') ? 'text-black' : 'text-white' }}">
                         User Roles
                     </span>
                 </a>
