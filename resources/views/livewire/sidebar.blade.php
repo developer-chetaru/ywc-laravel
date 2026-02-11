@@ -278,7 +278,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         </a>
                         <button @click.stop="documentsCareerOpen = !documentsCareerOpen" 
                             x-show="isOpen"
-                            class="ml-2 p-0 hover:bg-white/10 rounded transition-colors">
+                            class="cursor-pointer ml-2 p-0 hover:bg-white/10 rounded transition-colors">
                             <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': documentsCareerOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
@@ -561,7 +561,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                         </div>
                         <button @click.stop="forumOpen = !forumOpen" 
                             x-show="isOpen"
-                            class="ml-2 p-0 hover:bg-white/10 rounded transition-colors">
+                            class="cursor-pointer ml-2 p-0 hover:bg-white/10 rounded transition-colors">
                             <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': forumOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
@@ -641,7 +641,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             {{-- FINANCIAL FUTURE PLANNING --}}
             <li>
                 <button @click="financialPlanningOpen = !financialPlanningOpen"
-                    class="flex items-center justify-between w-full px-4 py-3 rounded-lg transition
+                    class="cursor-pointer flex items-center justify-between w-full px-4 py-3 rounded-lg transition
                             {{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? 'bg-[#F2F2F2] text-black' : 'hover:bg-white/10 text-white' }}">
                     <div class="flex items-center space-x-3">
                         <img src="{{ request()->is('financial-planning*') || request()->is('pension-investment-advice*') ? '/images/save-money-dollar.svg' : '/images/save-money-dollar-white.svg' }}" alt="Financial Future Planning" class="w-5 h-5">
@@ -707,7 +707,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                             </div>
                             <button @click.stop="industryReviewOpen = !industryReviewOpen" 
                                 x-show="isOpen"
-                                class="ml-2 p-0 hover:bg-white/10 rounded transition-colors">
+                                class="cursor-pointer ml-2 p-0 hover:bg-white/10 rounded transition-colors">
                                 <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': industryReviewOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
@@ -841,7 +841,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
                                 </div>
                                 <button @click.stop="industryReviewOpen = !industryReviewOpen" 
                                     x-show="isOpen"
-                                    class="ml-2 p-1 hover:bg-white/10 rounded transition-colors">
+                                    class="ml-2 p-0 hover:bg-white/10 rounded transition-colors">
                                     <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': industryReviewOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                     </svg>
@@ -955,7 +955,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             <li>
                 <div>
                     <button @click="itineraryOpen = !itineraryOpen"
-                        class="w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition
+                        class="cursor-pointer w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition
                         {{ request()->is('itinerary*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
                         <div class="flex items-center space-x-3">
                             <img
@@ -1096,7 +1096,7 @@ $nonAdminRoles = Role::where('name', '!=', 'super_admin')->pluck('name')->toArra
             <li>
                 <div>
                     <button @click="crewDiscoveryOpen = !crewDiscoveryOpen"
-                        class="w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition
+                        class="cursor-pointer w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition
                         {{ request()->is('crew-discovery*') || request()->is('connections*') || request()->is('rallies*') ? 'bg-white text-black' : 'hover:bg-white/10 text-white' }}">
                         <div class="flex items-center space-x-3">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
