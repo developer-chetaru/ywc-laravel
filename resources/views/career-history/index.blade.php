@@ -215,21 +215,59 @@
                                 {{-- All Documents Tab Content --}}
                                 <div id="tab-content-all" class="tab-content">
                                 
-                                {{-- Bulk Actions for Crewdentials Verification --}}
-                                <div id="bulkActionsBar" class="hidden mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-sm font-medium text-gray-700">
-                                            <span id="selectedCount">0</span> document(s) selected
-                                        </span>
-                                        <button onclick="clearDocumentSelection()" class="text-sm text-blue-600 hover:text-blue-800 underline">
-                                            Clear Selection
+                                {{-- Info Banner for Bulk Selection --}}
+                                <div id="bulkSelectionInfo" class="mb-4 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border-2 border-blue-300 rounded-lg shadow-sm">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 mt-0.5">
+                                            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-check-square text-white text-lg"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                                <span>📋 Check the checkbox on documents to select them</span>
+                                            </h4>
+                                            <p class="text-sm text-gray-700 mb-2">
+                                                <strong>How to use:</strong> Click the checkbox (☑️) in the top-left corner of each document card to select it for bulk verification.
+                                            </p>
+                                            <div class="bg-white rounded-md p-3 border border-blue-200">
+                                                <p class="text-xs text-gray-600 mb-1">
+                                                    <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                                                    <strong>Tip:</strong> You can select multiple documents at once. After selecting, a button will appear at the top to request verification with Crewdentials for all selected documents.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button onclick="$('#bulkSelectionInfo').slideUp(300); localStorage.setItem('hasClosedBulkSelectionInfo', 'true');" class="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0" title="Don't show this again">
+                                            <i class="fas fa-times text-lg"></i>
                                         </button>
                                     </div>
-                                    <button onclick="requestCrewdentialsVerificationForSelected()" 
-                                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2">
-                                        <i class="fas fa-shield-check"></i>
-                                        Request Verification with Crewdentials
-                                    </button>
+                                </div>
+
+                                {{-- Bulk Actions for Crewdentials Verification --}}
+                                <div id="bulkActionsBar" class="hidden mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg shadow-sm">
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-blue-200">
+                                                <i class="fas fa-check-circle text-blue-600"></i>
+                                                <span class="text-sm font-semibold text-gray-800">
+                                                    <span id="selectedCount" class="text-blue-600">0</span> document(s) selected
+                                                </span>
+                                            </div>
+                                            <button onclick="clearDocumentSelection()" class="text-sm text-blue-600 hover:text-blue-800 underline font-medium flex items-center gap-1">
+                                                <i class="fas fa-times-circle"></i>
+                                                Clear Selection
+                                            </button>
+                                        </div>
+                                        <button onclick="requestCrewdentialsVerificationForSelected()" 
+                                                class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center gap-2 shadow-md hover:shadow-lg">
+                                            <i class="fas fa-shield-check"></i>
+                                            Request Verification with Crewdentials
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-600 mt-3 flex items-center gap-1">
+                                        <i class="fas fa-lightbulb text-yellow-500"></i>
+                                        Selected documents will be sent to Crewdentials for professional verification and certification.
+                                    </p>
                                 </div>
 
                                 {{-- Expired / Expiring Soon --}}
@@ -247,11 +285,17 @@
                                                 <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3 document-item" data-document-id="{{ $doc->id }}">
 
                                                     <!-- Bulk Selection Checkbox (Top Left) -->
-                                                    <label class="absolute top-2 left-2 z-10 cursor-pointer">
+                                                    <label class="absolute top-2 left-2 z-10 cursor-pointer group" 
+                                                           title="Click here to select this document for bulk verification">
                                                         <input type="checkbox" 
-                                                               class="document-checkbox w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+                                                               class="document-checkbox w-5 h-5 text-blue-600 border-2 border-blue-400 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all hover:scale-110 hover:border-blue-600 shadow-sm" 
                                                                value="{{ $doc->id }}"
                                                                onchange="updateBulkActionsBar()">
+                                                        <div class="absolute -top-10 left-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-20 font-medium">
+                                                            <i class="fas fa-check-square mr-1"></i>
+                                                            Click to select for bulk verification
+                                                            <div class="absolute top-full left-3 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                                                        </div>
                                                     </label>
 
                                                     <!-- History Button (Top Right) -->
@@ -464,11 +508,17 @@
                         <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3 document-item" data-document-id="{{ $doc->id }}">
 
                             <!-- Bulk Selection Checkbox (Top Left) -->
-                            <label class="absolute top-2 left-2 z-10 cursor-pointer">
+                            <label class="absolute top-2 left-2 z-10 cursor-pointer group" 
+                                   title="Click here to select this document for bulk verification">
                                 <input type="checkbox" 
-                                       class="document-checkbox w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+                                       class="document-checkbox w-5 h-5 text-blue-600 border-2 border-blue-400 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all hover:scale-110 hover:border-blue-600 shadow-sm" 
                                        value="{{ $doc->id }}"
                                        onchange="updateBulkActionsBar()">
+                                <div class="absolute -top-10 left-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-20 font-medium">
+                                    <i class="fas fa-check-square mr-1"></i>
+                                    Click to select for bulk verification
+                                    <div class="absolute top-full left-3 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                                </div>
                             </label>
 
                             <!-- History Button (Top Right) -->
@@ -4595,6 +4645,16 @@ function clearTemplate() {
   document.addEventListener('DOMContentLoaded', function() {
     showTab('all');
     
+    // Show bulk selection info banner by default (user can close it)
+    // Hide only if user explicitly closed it before
+    const hasClosedBulkInfo = localStorage.getItem('hasClosedBulkSelectionInfo');
+    if (hasClosedBulkInfo === 'true') {
+      $('#bulkSelectionInfo').hide();
+    } else {
+      // Show the banner by default
+      $('#bulkSelectionInfo').show();
+    }
+    
     // Check for Crewdentials account on page load (CASE 1)
     checkCrewdentialsAccount();
   });
@@ -4731,18 +4791,25 @@ function clearTemplate() {
     const checkedBoxes = $('.document-checkbox:checked');
     const count = checkedBoxes.length;
     const bulkBar = $('#bulkActionsBar');
+    const infoBanner = $('#bulkSelectionInfo');
     
     if (count > 0) {
       $('#selectedCount').text(count);
-      bulkBar.removeClass('hidden');
+      bulkBar.removeClass('hidden').addClass('flex');
+      // Hide info banner when documents are selected
+      if (infoBanner.is(':visible')) {
+        infoBanner.slideUp(300);
+      }
     } else {
-      bulkBar.addClass('hidden');
+      bulkBar.addClass('hidden').removeClass('flex');
     }
   }
   
   function clearDocumentSelection() {
     $('.document-checkbox').prop('checked', false);
     updateBulkActionsBar();
+    // Show info banner again when selection is cleared
+    $('#bulkSelectionInfo').slideDown(300);
   }
   
   function requestCrewdentialsVerificationForSelected() {
