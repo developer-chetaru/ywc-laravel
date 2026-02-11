@@ -65,7 +65,7 @@
 
         {{-- Content --}}
         <div
-            class="flex-1 transition-all duration-300 overflow-x-hidden"
+            class="flex-1 transition-all duration-300 overflow-x-hidden ml-72"
             :class="{ 'ml-72': $store.sidebar?.isOpen && window.innerWidth >= 768, 'ml-16': !$store.sidebar?.isOpen && window.innerWidth >= 768 }"
             x-data>
             <div>

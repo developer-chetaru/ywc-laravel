@@ -65,7 +65,7 @@
                              class="w-8 h-8 rounded-full object-cover border cursor-pointer"
                              @profile-photo-updated.window="photoUrl = $event.detail.photo_url">
                         <div x-show="!photoUrl" 
-                             class="w-8 h-8 rounded-full bg-[#EBF4FF] flex items-center justify-center text-xs font-semibold text-[#0043EF] cursor-pointer"
+                             class="absolute top-0 left-0 w-8 h-8 rounded-full bg-[#EBF4FF] flex items-center justify-center text-xs font-semibold text-[#0043EF] cursor-pointer"
                              x-text="initials"
                              @profile-photo-updated.window="photoUrl = $event.detail.photo_url">
                         </div>
