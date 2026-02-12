@@ -103,15 +103,15 @@ class CareerHistoryController extends Controller
             if ($expiry->greaterThan($today)) {
                 if ($totalMonths <= 6) {
                     $doc->remaining_number = $diffMonths ?: 0;
-                    $doc->remaining_type = 'MONTHS';
+                    $doc->remaining_type = 'MTH';
                     $doc->is_expiring_soon = true;
                 } elseif ($diffYears >= 1) {
                     $doc->remaining_number = $diffYears;
-                    $doc->remaining_type = 'YRS';
+                    $doc->remaining_type = 'YR';
                     $doc->is_expiring_soon = false;
                 } else {
                     $doc->remaining_number = $diffMonths ?: 0;
-                    $doc->remaining_type = 'MONTHS';
+                    $doc->remaining_type = 'MTH';
                     $doc->is_expiring_soon = false;
                 }
             } else {

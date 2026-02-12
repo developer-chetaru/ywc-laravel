@@ -11,13 +11,250 @@
 <div class="flex-1 flex flex-col overflow-hidden">
     <div class="flex min-h-screen bg-gray-100">
         <div class="flex-1 transition-all duration-300">
-            <main class="p-3 sm:p-6 flex-1">
+            <main class="p-6 flex-1 bg-[#F5F6FA]">
                 <div class="w-full min-h-full">
-                    <div class="bg-white p-4 sm:p-5 rounded-lg shadow-md">
-                        <h2 class="text-xl border-b border-gray-100 font-medium text-[#0053FF] pb-2" role="heading" aria-level="2">Documents</h2>
+                    
+                    @php
+                        // Define document collections early
+                        $expiredDocs = $documents->filter(fn($doc) => isset($doc->is_expired) && $doc->is_expired)->values();
+                        $priorityDocs = $documents->filter(fn($doc) => $doc->is_expiring_soon && (!isset($doc->is_expired) || !$doc->is_expired))->values();
+                        $normalDocs = $documents->filter(fn($doc) => !$doc->is_expiring_soon && (!isset($doc->is_expired) || !$doc->is_expired))->values();
+                        
+                        // Calculate stats
+                        $totalDocs = $documents->count();
+                        $approvedDocs = $documents->where('status', 'approved')->count();
+                        $pendingDocs = $documents->where('status', 'pending')->count();
+                        $rejectedDocs = $documents->where('status', 'rejected')->count();
+                        $expiredCount = $expiredDocs->count();
+                    @endphp
+                    
+                    <!-- Action Bar -->
+                    <div class="bg-white rounded-xl py-3 px-6 flex flex-col sm:flex-row items-center justify-between border border-gray-300 mb-6 gap-4">
+                        
+                        <!-- Left Buttons -->
+                        <div class="flex items-center gap-3 flex-wrap">
+                            
+                            <!-- Add Document (Primary) -->
+                            <button id="addDocumentCard" data-popup-target="#addDocumentModal"
+                                class="flex items-center bg-[#0053FF] hover:bg-blue-700 text-sm text-white px-4 py-3 rounded-lg transition min-w-[180px] gap-3 border">
+                                <img class="w-6 h-6" src="{{ asset('images/document-logo.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <i class="fas fa-plus w-6 h-6" style="display:none;"></i>
+                                Add Document
+                            </button>
 
-                        <!-- Success Popup -->
-                        <div id="successPopup" class="fixed inset-0 flex items-center justify-center z-50 hidden bg-black bg-opacity-20">
+                            <!-- Share Document -->
+                            <a href="{{ route('shares.documents.create') }}"
+                                class="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition min-w-[180px] gap-3">
+                                <img class="w-6 h-6" src="{{ asset('images/share-doc.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <i class="fas fa-share-alt w-6 h-6" style="display:none;"></i>
+                                Share Document
+                            </a>
+
+                            <!-- Share Profile -->
+                            <button id="shareProfileCard" data-popup-target="#shareProfileModal"
+                                class="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition min-w-[180px] gap-3">
+                                <img class="w-6 h-6" src="{{ asset('images/qr-code.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <i class="fas fa-qrcode w-6 h-6" style="display:none;"></i>
+                                Share Profile
+                            </button>
+
+                        </div>
+
+                        <!-- Right Button -->
+                        <button onclick="openVerificationModal()" id="bulkVerifyBtn" class="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3.5 text-sm rounded-lg transition">
+                            Request Verification
+                        </button>
+                    </div>
+                    
+                    <!-- Crewdentials Import Card (CASE 1) -->
+                    <div id="crewdentialsImportCard" class="hidden mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-5">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-cloud-download-alt text-2xl text-blue-600"></i>
+                                    <h3 class="text-lg font-semibold text-gray-900">Import Documents from Crewdentials</h3>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    We found existing documents on Crewdentials for your email address. Would you like to import them?
+                                </p>
+                                <button onclick="showConsentModal('import')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                                    <i class="fas fa-download mr-2"></i>Import Documents
+                                </button>
+                            </div>
+                            <button onclick="$('#crewdentialsImportCard').addClass('hidden')" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Wrapper: Two Column Layout -->
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+                        
+                        <!-- LEFT PANEL: Expiring Documents -->
+                        <div class="col-span-2 px-5 p-6 border border-gray-300 bg-white rounded-xl">
+                            
+                            <!-- Tabs -->
+                            <div class="flex gap-[55px] border-b border-gray-300 pb-5 mb-6">
+                                <button onclick="showExpiringTab('expiring')" id="expiring-tab" class="relative text-blue-600 font-semibold pb-2 border-b-2 border-blue-600">
+                                    Expiring in 3 Months
+                                </button>
+                                <button onclick="showExpiringTab('expired')" id="expired-tab" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">
+                                    Expired
+                                </button>
+                            </div>
+                            
+                            <!-- Expiring Content -->
+                            <div id="expiring-content" class="expiring-tab-content">
+                                @if($priorityDocs->count() > 0)
+                                <div class="grid grid-cols-2 gap-6">
+                                    @foreach($priorityDocs as $doc)
+                                        @include('career-history.partials.document-card-horizontal', ['doc' => $doc])
+                                    @endforeach
+                                </div>
+                                @else
+                                <div class="text-center py-8 text-gray-500">
+                                    <p>No documents expiring soon</p>
+                                </div>
+                                @endif
+                            </div>
+                            
+                            <!-- Expired Content -->
+                            <div id="expired-content" class="expiring-tab-content hidden">
+                                @if($expiredDocs->count() > 0)
+                                <div class="grid grid-cols-2 gap-6">
+                                    @foreach($expiredDocs as $doc)
+                                        @include('career-history.partials.document-card-horizontal', ['doc' => $doc])
+                                    @endforeach
+                                </div>
+                                @else
+                                <div class="text-center py-8 text-gray-500">
+                                    <p>No expired documents</p>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        <!-- RIGHT PANEL: Stats -->
+                        <div class="p-6 border border-gray-300 bg-white rounded-xl">
+                            <div class="grid grid-cols-6 gap-3">
+                                <!-- Total (50%) -->
+                                <div class="col-span-3 bg-[#E3F2FF] border border-gray-300 rounded-lg p-6 text-center flex flex-col justify-center">
+                                    <p class="text-[#1B1B1B] text-sm">Total Document</p>
+                                    <p class="text-xl text-[#1B1B1B] leading-[20px] mt-5">{{ $totalDocs }}</p>
+                                </div>
+                                
+                                <!-- Approved (50%) -->
+                                <div class="col-span-3 bg-[#EAFDF3] rounded-lg p-6 text-center flex flex-col justify-center">
+                                    <p class="text-[#1B1B1B] text-sm">Approved</p>
+                                    <p class="text-xl text-[#1B1B1B] leading-[20px] mt-5">{{ $approvedDocs }}</p>
+                                </div>
+                                
+                                <!-- Pending (33%) -->
+                                <div class="col-span-2 bg-[#FFF4E5] rounded-lg p-6 text-center flex flex-col justify-center">
+                                    <p class="text-[#1B1B1B] text-sm">Pending</p>
+                                    <p class="text-xl text-[#B26A00] leading-[20px] mt-5">{{ $pendingDocs }}</p>
+                                </div>
+                                
+                                <!-- Rejected (33%) -->
+                                <div class="col-span-2 bg-[#FDEAEA] rounded-lg p-6 text-center flex flex-col justify-center">
+                                    <p class="text-[#1B1B1B] text-sm">Rejected</p>
+                                    <p class="text-xl text-[#C62828] leading-[20px] mt-5">{{ $rejectedDocs }}</p>
+                                </div>
+                                
+                                <!-- Expired (33%) -->
+                                <div class="col-span-2 bg-[#F2F4F7] border border-gray-300 rounded-lg p-6 text-center flex flex-col justify-center">
+                                    <p class="text-[#1B1B1B] text-sm">Expired</p>
+                                    <p class="text-xl text-[#1B1B1B] leading-[20px] mt-5">{{ $expiredCount }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- DOCUMENTS SECTION -->
+                    <div class="px-5 p-6 border border-gray-300 bg-white rounded-xl">
+                        
+                        <!-- Header -->
+                        <div class="flex justify-between items-center border-b border-gray-300 pb-5 mb-6">
+                            
+                            <!-- Tabs -->
+                            <div class="flex gap-[70px] text-sm font-medium">
+                                <button onclick="filterByCategory('all')" id="tab-all" class="relative text-blue-600 font-semibold pb-2 border-b-2 border-blue-600">
+                                    All Documents
+                                </button>
+                                <button onclick="filterByCategory('Passport')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Passport</button>
+                                <button onclick="filterByCategory('Ids and Visa')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">IDs & Visas</button>
+                                <button onclick="filterByCategory('Certificate')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Certificate</button>
+                                <button onclick="filterByCategory('Other')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Other</button>
+                            </div>
+                            
+                            <!-- Status Filter -->
+                            <select id="statusFilter" onchange="filterByStatus(this.value)" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 focus:outline-none">
+                                <option value="">Status</option>
+                                <option value="approved">Approved</option>
+                                <option value="pending">Pending</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                        </div>
+                        
+                        <!-- GRID -->
+                        <div class="grid grid-cols-3 gap-6 gap-y-[10px]">
+                            
+                            @php
+                                // Initialize categories for All Documents
+                                $allDocsCategories = [
+                                    'Passport' => [],
+                                    'Ids and Visa' => [],
+                                    'Certificate' => [],
+                                    'Other' => []
+                                ];
+
+                                foreach ($normalDocs as $doc) {
+                                    $categoryKey = 'Other'; // Default
+                                    
+                                    if ($doc->documentType && $doc->documentType->category) {
+                                        $categoryKey = $doc->documentType->category;
+                                        // Map to simple categories
+                                        if (!in_array($categoryKey, ['Passport', 'Ids and Visa', 'Certificate', 'Other'])) {
+                                            $categoryKey = 'Other';
+                                        }
+                                    } else {
+                                        $type = strtolower($doc->type);
+                                        $categoryKey = match($type) {
+                                            'passport' => 'Passport',
+                                            'idvisa', 'ids_and_visa' => 'Ids and Visa',
+                                            'certificate' => 'Certificate',
+                                            default => 'Other'
+                                        };
+                                    }
+                                    
+                                    if (!isset($allDocsCategories[$categoryKey])) {
+                                        $allDocsCategories[$categoryKey] = [];
+                                    }
+                                    
+                                    $allDocsCategories[$categoryKey][] = $doc;
+                                }
+                                
+                                // Flatten all documents for display
+                                $allDocuments = collect($allDocsCategories)->flatten();
+                            @endphp
+                            
+                            @foreach($allDocuments as $doc)
+                                @include('career-history.partials.document-card-horizontal', ['doc' => $doc])
+                            @endforeach
+                            
+                            @if($allDocuments->isEmpty())
+                            <div class="col-span-3 text-center py-8 text-gray-500">
+                                <p>No documents found</p>
+                            </div>
+                            @endif
+                            
+                        </div>
+                    </div>
+                    
+                    <!-- Modals and Popups (keep these) -->
+                    <!-- Success Popup -->
+                    <div id="successPopup" class="fixed inset-0 flex items-center justify-center z-50 hidden bg-black bg-opacity-20">
                             <div id="successContent" class="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full text-center scale-90 opacity-0 transition-all duration-300">
                                 <img src="{{ asset('images/success.png') }}" alt="Success" class="w-24 h-24 mx-auto mb-4">
                                 <h2 class="text-2xl font-bold text-green-600">Document Saved!</h2>
@@ -76,798 +313,31 @@
                                 <button id="closeSuccessBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg">OK</button>
                             </div>
                         </div>
-
-                        <div class="bg-[#F5F6FA] p-4 sm:p-5 rounded-lg mt-6">
-                            <!-- Crewdentials Import Card (CASE 1) -->
-                            <div id="crewdentialsImportCard" class="hidden mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-5">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <i class="fas fa-cloud-download-alt text-2xl text-blue-600"></i>
-                                            <h3 class="text-lg font-semibold text-gray-900">Import Documents from Crewdentials</h3>
-                                        </div>
-                                        <p class="text-sm text-gray-600 mb-4">
-                                            We found existing documents on Crewdentials for your email address. Would you like to import them?
-                                        </p>
-                                        <button onclick="showConsentModal('import')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
-                                            <i class="fas fa-download mr-2"></i>Import Documents
-                                        </button>
-                                    </div>
-                                    <button onclick="$('#crewdentialsImportCard').addClass('hidden')" class="text-gray-400 hover:text-gray-600">
-                                        <i class="fas fa-times text-xl"></i>
-                                    </button>
+                    
+                    <!-- Crewdentials Import Card (CASE 1) - Keep this for functionality -->
+                    <div id="crewdentialsImportCard" class="hidden mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-5">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-cloud-download-alt text-2xl text-blue-600"></i>
+                                    <h3 class="text-lg font-semibold text-gray-900">Import Documents from Crewdentials</h3>
                                 </div>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    We found existing documents on Crewdentials for your email address. Would you like to import them?
+                                </p>
+                                <button onclick="showConsentModal('import')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                                    <i class="fas fa-download mr-2"></i>Import Documents
+                                </button>
                             </div>
-
-                            <!-- Top cards -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <!-- Add Document Card -->
-                                <div id="addDocumentCard" data-popup-target="#addDocumentModal" class="bg-white rounded-xl p-3 py-8 flex justify-center items-center flex-col cursor-pointer">
-                                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M16.6601 3.36803C12.496 3.19173 9.27886 3.67143 9.27886 3.67143C7.24744 3.81668 3.35443 4.95555 3.35446 11.6067C3.35449 18.2013 3.31139 26.3313 3.35446 29.5723C3.35446 31.5525 4.58049 36.1713 8.82409 36.4188C13.9822 36.7198 23.2732 36.7838 27.5361 36.4188C28.6772 36.3545 32.4764 35.4586 32.9572 31.3251C33.4554 27.043 33.3562 24.067 33.3562 23.3586" stroke="#616161" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M29.9998 3.07715V16.9233" stroke="#0053FE" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M23.0769 10L36.9231 10" stroke="#0053FE" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M11.6346 21.6943H18.3013" stroke="#616161" stroke-width="2.15385" stroke-linecap="round"/>
-                                        <path d="M11.6346 28.3652H24.9679" stroke="#616161" stroke-width="2.15385" stroke-linecap="round"/>
-                                    </svg>
-                                    <h4 class="mt-2">Add Document</h4>
-                                </div>
-
-                                <!-- Share Document Card (optional) -->
-                                <a href="{{ route('shares.documents.create') }}" class="bg-white rounded-xl p-3 py-8 flex justify-center items-center flex-col cursor-pointer hover:shadow-lg transition-shadow">
-                                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M16.6601 3.36803C12.496 3.19173 9.27886 3.67143 9.27886 3.67143C7.24744 3.81668 3.35443 4.95555 3.35446 11.6067C3.35449 18.2013 3.31139 26.3313 3.35446 29.5723C3.35446 31.5525 4.58049 36.1713 8.82409 36.4188C13.9822 36.7198 23.2732 36.7838 27.5361 36.4188C28.6772 36.3545 32.4764 35.4586 32.9572 31.3251C33.4554 27.043 33.3562 24.067 33.3562 23.3586" stroke="#616161" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M36.1356 3.56964C34.1957 1.48046 19.6033 6.59822 19.6154 8.46671C19.629 10.5856 25.3141 11.2374 26.8898 11.6795C27.8374 11.9453 28.0912 12.2179 28.3096 13.2115C29.2992 17.7116 29.796 19.9499 30.9284 19.9999C32.7333 20.0797 38.0289 5.60849 36.1356 3.56964Z" stroke="#0053FE" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M27.6322 11.9758L30.7496 8.8584" stroke="#0053FE" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M11.6346 21.6943H18.3013" stroke="#616161" stroke-width="2.15385" stroke-linecap="round"/>
-                                        <path d="M11.6346 28.3652H24.9679" stroke="#616161" stroke-width="2.15385" stroke-linecap="round"/>
-                                    </svg>
-                                    <h4 class="mt-2">Share Document</h4>
-                                </a>
-                                <div id="shareProfileCard" data-popup-target="#shareProfileModal" class="bg-white rounded-xl p-3 py-8 flex justify-center items-center flex-col cursor-pointer">
-                                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M5 10C5 7.64298 5 6.46447 5.73223 5.73223C6.46447 5 7.64298 5 10 5C12.357 5 13.5355 5 14.2678 5.73223C15 6.46447 15 7.64298 15 10C15 12.357 15 13.5355 14.2678 14.2678C13.5355 15 12.357 15 10 15C7.64298 15 6.46447 15 5.73223 14.2678C5 13.5355 5 12.357 5 10Z" stroke="#616161" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M5 30C5 27.643 5 26.4645 5.73223 25.7322C6.46447 25 7.64298 25 10 25C12.357 25 13.5355 25 14.2678 25.7322C15 26.4645 15 27.643 15 30C15 32.357 15 33.5355 14.2678 34.2678C13.5355 35 12.357 35 10 35C7.64298 35 6.46447 35 5.73223 34.2678C5 33.5355 5 32.357 5 30Z" stroke="#616161" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M5 20H15" stroke="#616161" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M20 5V13.3333" stroke="#616161" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M25 10C25 7.64298 25 6.46447 25.7322 5.73223C26.4645 5 27.643 5 30 5C32.357 5 33.5355 5 34.2678 5.73223C35 6.46447 35 7.64298 35 10C35 12.357 35 13.5355 34.2678 14.2678C33.5355 15 32.357 15 30 15C27.643 15 26.4645 15 25.7322 14.2678C25 13.5355 25 12.357 25 10Z" stroke="#616161" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M35 20H25C22.643 20 21.4645 20 20.7322 20.7322C20 21.4645 20 22.643 20 25M20 29.6153V34.2308M25 25V27.5C25 29.9107 26.3062 30 28.3333 30C29.2538 30 30 30.7462 30 31.6667M26.6667 35H25M30 25C32.357 25 33.5355 25 34.2678 25.7333C35 26.4665 35 27.6468 35 30.0072C35 32.3677 35 33.5478 34.2678 34.2812C33.7333 34.8163 32.9612 34.961 31.6667 35" stroke="#0053FE" stroke-width="2.15385" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-
-                                    <h4 class="mt-2"> Share Profile </h4>
-                                </div>
-                            </div>
-
-                            <div class="flex w-full flex-wrap mt-8">
-                                
-
-                                @php
-                                    $expiredDocs = $documents->filter(fn($doc) => isset($doc->is_expired) && $doc->is_expired)->values();
-                                    $priorityDocs = $documents->filter(fn($doc) => $doc->is_expiring_soon && (!isset($doc->is_expired) || !$doc->is_expired))->values();
-                                    $normalDocs = $documents->filter(fn($doc) => !$doc->is_expiring_soon && (!isset($doc->is_expired) || !$doc->is_expired))->values();
-
-                                    // Initialize categories with all possible document type categories
-                                    $categories = [
-                                        'STCW Certificates' => [],
-                                        'Medical Certificates' => [],
-                                        'Identity & Travel Documents' => [],
-                                        'Professional Qualifications' => [],
-                                        'Employment Records' => [],
-                                        'Insurance & Financial' => [],
-                                        'Additional Documents' => [],
-                                        'Passport' => [],
-                                        'Ids and Visa' => [],
-                                        'Certificate' => [],
-                                        'Other' => []
-                                    ];
-
-                                    foreach ($normalDocs as $doc) {
-                                        $categoryKey = 'Other'; // Default
-                                        
-                                        // Check if document has a document type (new system)
-                                        if ($doc->documentType && $doc->documentType->category) {
-                                            $categoryKey = $doc->documentType->category;
-                                        } else {
-                                            // Fallback to legacy type system
-                                            $type = strtolower($doc->type);
-                                            $categoryKey = match($type) {
-                                                'passport' => 'Passport',
-                                                'idvisa' => 'Ids and Visa',
-                                                'ids_and_visa' => 'Ids and Visa',
-                                                'certificate' => 'Certificate',
-                                                default => 'Other'
-                                            };
-                                        }
-                                        
-                                        // Ensure category exists in array
-                                        if (!isset($categories[$categoryKey])) {
-                                            $categories[$categoryKey] = [];
-                                        }
-                                        
-                                        $categories[$categoryKey][] = $doc;
-                                    }
-                                    
-                                    // Remove empty categories
-                                    $categories = array_filter($categories, fn($docs) => count($docs) > 0);
-                                @endphp
-
-                                {{-- Tabs --}}
-                                <div class="mb-6 border-b border-gray-200">
-                                    <nav class="-mb-px flex space-x-8">
-                                        <button onclick="showTab('all')" id="tab-all" 
-                                            class="tab-button border-[#0053FF] text-[#0053FF] whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                                            All Documents
-                                        </button>
-                                        <button onclick="showTab('expired')" id="tab-expired" 
-                                            class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                                            Expired Documents
-                                            @if($expiredDocs->count() > 0)
-                                            <span class="ml-2 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded-full">{{ $expiredDocs->count() }}</span>
-                                            @endif
-                                        </button>
-                                        <button onclick="showTab('shares')" id="tab-shares" 
-                                            class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                                            <i class="fas fa-link mr-1"></i>Active Share Links
-                                        </button>
-                                    </nav>
-                                </div>
-
-                                {{-- All Documents Tab Content --}}
-                                <div id="tab-content-all" class="tab-content">
-                                
-                                {{-- Info Banner for Bulk Selection --}}
-                                <div id="bulkSelectionInfo" class="mb-4 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border-2 border-blue-300 rounded-lg shadow-sm">
-                                    <div class="flex items-start gap-3">
-                                        <div class="flex-shrink-0 mt-0.5">
-                                            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                                                <i class="fas fa-check-square text-white text-lg"></i>
-                                            </div>
-                                        </div>
-                                        <div class="flex-1">
-                                            <h4 class="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                                <span>📋 Check the checkbox on documents to select them</span>
-                                            </h4>
-                                            <p class="text-sm text-gray-700 mb-2">
-                                                <strong>How to use:</strong> Click the checkbox (☑️) in the top-left corner of each document card to select it for bulk verification.
-                                            </p>
-                                            <div class="bg-white rounded-md p-3 border border-blue-200">
-                                                <p class="text-xs text-gray-600 mb-1">
-                                                    <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
-                                                    <strong>Tip:</strong> You can select multiple documents at once. After selecting, a button will appear at the top to request verification with Crewdentials for all selected documents.
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <button onclick="$('#bulkSelectionInfo').slideUp(300); localStorage.setItem('hasClosedBulkSelectionInfo', 'true');" class="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0" title="Don't show this again">
-                                            <i class="fas fa-times text-lg"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- Bulk Actions for Crewdentials Verification --}}
-                                <div id="bulkActionsBar" class="hidden mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg shadow-sm">
-                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-blue-200">
-                                                <i class="fas fa-check-circle text-blue-600"></i>
-                                                <span class="text-sm font-semibold text-gray-800">
-                                                    <span id="selectedCount" class="text-blue-600">0</span> document(s) selected
-                                                </span>
-                                            </div>
-                                            <button onclick="clearDocumentSelection()" class="text-sm text-blue-600 hover:text-blue-800 underline font-medium flex items-center gap-1">
-                                                <i class="fas fa-times-circle"></i>
-                                                Clear Selection
-                                            </button>
-                                        </div>
-                                        <button onclick="requestCrewdentialsVerificationForSelected()" 
-                                                class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center gap-2 shadow-md hover:shadow-lg">
-                                            <i class="fas fa-shield-check"></i>
-                                            Request Verification with Crewdentials
-                                        </button>
-                                    </div>
-                                    <p class="text-xs text-gray-600 mt-3 flex items-center gap-1">
-                                        <i class="fas fa-lightbulb text-yellow-500"></i>
-                                        Selected documents will be sent to Crewdentials for professional verification and certification.
-                                    </p>
-                                </div>
-
-                                {{-- Expired / Expiring Soon --}}
-                                @if($priorityDocs->count() > 0)
-                              		<hr class="border-t border-gray-400 my-5 w-full">
-                                	<!-- Heading -->
-                                	<h2 class="text-lg font-bold border-gray-300 mb-3">Expiring Within 6 Months</h2>
-                              	
-                                    <div class="w-full mt-5">
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                            @foreach($priorityDocs as $doc)
-                                                @php
-                                                    $isRejected = strtolower(trim($doc->status ?? '')) === 'rejected';
-                                                @endphp
-                                                <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3 document-item" data-document-id="{{ $doc->id }}">
-
-                                                    <!-- Bulk Selection Checkbox (Top Left) -->
-                                                    <label class="absolute top-2 left-2 z-10 cursor-pointer group" 
-                                                           title="Click here to select this document for bulk verification">
-                                                        <input type="checkbox" 
-                                                               class="document-checkbox w-5 h-5 text-blue-600 border-2 border-blue-400 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all hover:scale-110 hover:border-blue-600 shadow-sm" 
-                                                               value="{{ $doc->id }}"
-                                                               onchange="updateBulkActionsBar()">
-                                                        <div class="absolute -top-10 left-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-20 font-medium">
-                                                            <i class="fas fa-check-square mr-1"></i>
-                                                            Click to select for bulk verification
-                                                            <div class="absolute top-full left-3 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                                                        </div>
-                                                    </label>
-
-                                                    <!-- History Button (Top Right) -->
-                                                    <button onclick="openVersionHistoryModal({{ $doc->id }}); event.stopPropagation();" 
-                                                            class="w-[30px] h-[30px] absolute top-2 right-2 z-10 p-0 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors shadow-md"
-                                                            title="View Version History">
-                                                        <i class="fas fa-history text-xs"></i>
-                                                    </button>
-
-                                                    <!-- Document Image -->
-                                                    <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card hover:bg-[#D0E7FF] transition-colors group relative" data-doc='@json($doc)'>
-
-                                                        @if($doc->file_path)
-                                                            @php
-                                                                $filePath = asset('storage/' . $doc->file_path);
-                                                                $extension = strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION));
-                                                            @endphp
-
-                                                            @if(in_array($extension, ['jpg','jpeg','png','gif','bmp','webp','svg']))
-                                                                <img src="{{ $filePath }}" alt="{{ $doc->name }}" class="max-w-full max-h-full object-contain" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                                <div style="display:none; flex-direction:column; align-items:center; color:#999;" class="fallback-icon">
-                                                                    <i class="fas fa-file-image text-4xl mb-1"></i>
-                                                                    <span class="text-xs">Image</span>
-                                                                </div>
-                                                            @elseif($extension === 'pdf')
-                                                                <!-- PDF Icon -->
-                                                                <a class="flex flex-col items-center text-red-600">
-                                                                    <img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-file-pdf text-red-600 text-4xl\'></i>';">
-                                                                </a>
-                                                            @else
-                                                                <span class="text-gray-400 text-sm">Unsupported</span>
-                                                            @endif
-                                                        @else
-                                                            <span class="text-gray-400 text-sm">No File</span>
-                                                        @endif
-
-                                                    </div>
-
-                                                    <!-- Document Details -->
-                                                    <div class="w-full flex flex-col sm:flex-row sm:justify-between items-start sm:pl-3 mb-1 max-[1200px]:!flex-col max-[1200px]:!pl-0 max-[1200px]:gap-5">
-                                                        <div class="flex-1">
-                                                            <h3 class="text-md font-semibold mb-1 text-left">{{ $doc->name }}</h3>
-                                                            <p class="text-sm font-semibold text-gray-800 mb-1">
-                                                                @php
-                                                                    // Priority: document_type->name > document_name > otherDocument->doc_name > type
-                                                                    if ($doc->documentType) {
-                                                                        // New document type system
-                                                                        $displayName = $doc->documentType->name;
-                                                                    } elseif ($doc->document_name) {
-                                                                        // Has document_name field set
-                                                                        $displayName = $doc->document_name;
-                                                                    } elseif ($doc->type === 'certificate') {
-                                                                        $displayName = $doc->certificates->first()?->type->name ?? 'Certificate';
-                                                                    } elseif ($doc->type === 'passport') {
-                                                                        $displayName = 'Passport';
-                                                                    } elseif ($doc->type === 'idvisa') {
-                                                                        $displayName = 'ID / Visa';
-                                                                    } elseif ($doc->type === 'resume') {
-                                                                        $displayName = $doc->otherDocument?->doc_name ?? 'Resume';
-                                                                    } elseif ($doc->type === 'other') {
-                                                                        $displayName = $doc->otherDocument?->doc_name ?? 'Other Document';
-                                                                    } else {
-                                                                        $displayName = ucfirst($doc->type ?? 'Document');
-                                                                    }
-                                                                @endphp
-                                                                {{ $displayName }}
-                                                            </p>
-
-                                                            <!-- Eye icon + Featured -->
-                                                            <div class="flex flex-col space-y-1 text-gray-600 text-[12px]">
-                                                                <div class="flex items-center space-x-2">
-                                                                    <span class="toggle-share cursor-pointer" data-id="{{ $doc->id }}" onclick="toggleShare(this)" 
-                                                                          title="{{ $doc->is_active ? 'Deactivate' : 'Activate' }}">
-                                                                      <img src="{{ $doc->is_active ? asset('images/view-icon.png') : asset('images/view-off-slash.png') }}" class="w-4 h-4">
-                                                                    </span>
-                                                                    <span class="share-text">
-                                                                      {{ $doc->is_active ? 'Featured on your Profile Preview' : 'Not featured on your Profile Preview' }}
-                                                                    </span>
-                                                                </div>
-
-                                                                <!-- Status Display -->
-                                                                @php
-                                                                    $statusColor = 'text-yellow-600'; // default pending
-                                                                    if($doc->status === 'approved') $statusColor = 'text-green-600';
-                                                                    elseif($doc->status === 'rejected') $statusColor = 'text-red-600';
-                                                                @endphp
-                                                                <div class="text-[14px]">
-                                                                    Status: <span class="{{ $statusColor }} font-semibold">{{ ucfirst($doc->status ?? 'pending') }}</span>
-                                                                </div>
-
-                                                                <!-- OCR Status Display -->
-                                                                @if($doc->ocr_status)
-                                                                <div class="text-[12px] mt-1">
-                                                                    <span class="px-2 py-0.5 text-xs font-medium rounded
-                                                                        @if($doc->ocr_status === 'completed') bg-blue-100 text-blue-800
-                                                                        @elseif($doc->ocr_status === 'processing') bg-yellow-100 text-yellow-800
-                                                                        @elseif($doc->ocr_status === 'failed') bg-red-100 text-red-800
-                                                                        @else bg-gray-100 text-gray-800
-                                                                        @endif"
-                                                                        title="@if($doc->ocr_status === 'completed' && $doc->ocr_confidence)OCR Confidence: {{ number_format($doc->ocr_confidence, 1) }}%@elseif($doc->ocr_status === 'failed'){{ $doc->ocr_error ?? 'OCR processing failed' }}@else OCR {{ ucfirst($doc->ocr_status) }}@endif">
-                                                                        <i class="fas fa-eye mr-1"></i>
-                                                                        @if($doc->ocr_status === 'completed' && $doc->ocr_confidence)
-                                                                            OCR {{ number_format($doc->ocr_confidence, 0) }}%
-                                                                        @else
-                                                                            OCR {{ ucfirst($doc->ocr_status) }}
-                                                                        @endif
-                                                                    </span>
-                                                                </div>
-                                                                @endif
-
-                                                                <!-- Verification Level Badge -->
-                                                                @if($doc->verificationLevel)
-                                                                <div class="text-[12px] mt-1">
-                                                                    <span class="px-2 py-0.5 text-xs font-medium rounded
-                                                                        @if($doc->verificationLevel->badge_color === 'gold') bg-yellow-100 text-yellow-800
-                                                                        @elseif($doc->verificationLevel->badge_color === 'purple') bg-purple-100 text-purple-800
-                                                                        @elseif($doc->verificationLevel->badge_color === 'green') bg-green-100 text-green-800
-                                                                        @elseif($doc->verificationLevel->badge_color === 'blue') bg-blue-100 text-blue-800
-                                                                        @else bg-gray-100 text-gray-800
-                                                                        @endif"
-                                                                        title="{{ $doc->verificationLevel->description }}">
-                                                                        <i class="{{ $doc->verificationLevel->badge_icon }} mr-1"></i>
-                                                                        {{ $doc->verificationLevel->name }} (Level {{ $doc->verificationLevel->level }})
-                                                                    </span>
-                                                                </div>
-                                                                @endif
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Remaining Duration Badge -->
-                                                        <div class="flex flex-col items-center space-y-2">
-                                                            @php
-                                                                $badgeClasses = 'bg-[#E3F2FF] text-[#0053FF]';
-                                                                $isCross = false;
-
-                                                                if(strtoupper($doc->remaining_type) === 'EXPIRED') {
-                                                                    $badgeClasses = 'bg-[#FFE3E3] text-[#C02020]';
-                                                                    $isCross = true;
-                                                                } elseif($doc->remaining_type === 'N/A') {
-                                                                    $badgeClasses = 'bg-[#E3F2FF] text-[#0053FF]';
-                                                                } elseif($doc->is_expiring_soon) {
-                                                                    $badgeClasses = 'bg-yellow-200 text-yellow-800';
-                                                                }
-                                                            @endphp
-
-                                                            @if($isCross)
-                                                                <div class="flex items-center justify-center w-[60px] h-[60px] rounded-md {{ $badgeClasses }}">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="#C02020">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                                                    </svg>
-                                                                </div>
-                                                            @else
-                                                                <div class="flex items-center p-2 font-medium w-[60px] justify-center rounded-md text-center {{ $badgeClasses }}">
-                                                                    @if($doc->remaining_number !== null)
-                                                                        <div class="flex flex-col items-center">
-                                                                            <span class="text-xl font-bold">{{ $doc->remaining_number }}</span>
-                                                                            <span class="text-xs">{{ $doc->remaining_type }}</span>
-                                                                        </div>
-                                                                    @else
-                                                                        <div class="flex flex-col items-center">
-                                                                            <span class="text-xs">{{ $doc->remaining_type }}</span>
-                                                                        </div>
-                                                                    @endif
-                                                                </div>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-
-                                                    {{-- Action Buttons for Rejected Documents --}}
-                                                    @if($isRejected)
-                                                    <div class="mt-auto pt-3 border-t border-gray-200 w-full">
-                                                        <button type="button" 
-                                                                onclick="editDocument({{ $doc->id }})"
-                                                                class="w-full px-3 py-2 bg-orange-600 text-white text-xs rounded-md hover:bg-orange-700 transition-colors font-medium shadow-sm">
-                                                            <i class="fas fa-redo mr-1"></i>Re-Submit
-                                                        </button>
-                                                    </div>
-                                                    @endif
-
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @php
-    // Check if there are any normal documents
-    $hasNormalDocs = false;
-    foreach ($categories as $docs) {
-        if (count($docs) > 0) {
-            $hasNormalDocs = true;
-            break;
-        }
-    }
-@endphp
-
-@if($hasNormalDocs)
-<h2 class="text-lg font-bold border-gray-300 mb-3">All Documents</h2>
-
-    {{-- Normal Documents by Type --}}
-    @foreach($categories as $categoryName => $docs)
-        @if(count($docs) > 0)
-            <div class="w-full mt-3 mb-3">
-                <h4 class="text-md font-semibold mb-3">{{ $categoryName }}</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    @foreach($docs as $doc)
-                        @php
-                            $isRejected = strtolower(trim($doc->status ?? '')) === 'rejected';
-                        @endphp
-                        <div class="bg-white rounded-xl p-3 sm:p-4 flex flex-col relative border border-gray-200 gap-3 document-item" data-document-id="{{ $doc->id }}">
-
-                            <!-- Bulk Selection Checkbox (Top Left) -->
-                            <label class="absolute top-2 left-2 z-10 cursor-pointer group" 
-                                   title="Click here to select this document for bulk verification">
-                                <input type="checkbox" 
-                                       class="document-checkbox w-5 h-5 text-blue-600 border-2 border-blue-400 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all hover:scale-110 hover:border-blue-600 shadow-sm" 
-                                       value="{{ $doc->id }}"
-                                       onchange="updateBulkActionsBar()">
-                                <div class="absolute -top-10 left-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-20 font-medium">
-                                    <i class="fas fa-check-square mr-1"></i>
-                                    Click to select for bulk verification
-                                    <div class="absolute top-full left-3 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                                </div>
-                            </label>
-
-                            <!-- History Button (Top Right) -->
-                            <button onclick="openVersionHistoryModal({{ $doc->id }}); event.stopPropagation();" 
-                                    class="w-[30px] h-[30px] absolute top-2 right-2 z-10 p-0 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors shadow-md"
-                                    title="View Version History">
-                                <i class="fas fa-history text-xs"></i>
+                            <button onclick="$('#crewdentialsImportCard').addClass('hidden')" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times text-xl"></i>
                             </button>
-
-                            <!-- Document Image/Thumbnail -->
-                            <div class="flex flex-wrap justify-center w-full sm:w-[80px] h-[90px] sm:h-[90px] items-center p-2 bg-[#E3F2FF] rounded-md cursor-pointer view-document-card hover:bg-[#D0E7FF] transition-colors group relative" data-doc='@json($doc)'>
-                                @if($doc->file_path)
-                                    @php
-                                        // Use thumbnail if available, otherwise use original file
-                                        $thumbnailPath = $doc->thumbnail_path ? asset('storage/' . $doc->thumbnail_path) : null;
-                                        $filePath = asset('storage/' . $doc->file_path);
-                                        $extension = strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION));
-                                    @endphp
-
-                                    @if(in_array($extension, ['jpg','jpeg','png','gif','bmp','webp','svg']))
-                                        @if($thumbnailPath)
-                                            <img src="{{ $thumbnailPath }}" alt="{{ $doc->name ?? 'Document' }}" class="max-w-full max-h-full object-contain rounded shadow-sm group-hover:shadow-md transition-shadow" onerror="this.onerror=null; this.src='{{ $filePath }}'; this.onerror=function(){this.style.display='none'; this.nextElementSibling.style.display='flex';};">
-                                        @else
-                                            <img src="{{ $filePath }}" alt="{{ $doc->name ?? 'Document' }}" class="max-w-full max-h-full object-contain rounded shadow-sm group-hover:shadow-md transition-shadow" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        @endif
-                                        <div style="display:none; flex-direction:column; align-items:center; color:#999;" class="fallback-icon">
-                                            <i class="fas fa-file-image text-4xl mb-1"></i>
-                                            <span class="text-xs">Image</span>
-                                        </div>
-                                        <!-- Hover overlay for images -->
-                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-md transition-all flex items-center justify-center">
-                                            <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg"></i>
-                                        </div>
-                                    @elseif($extension === 'pdf')
-                                        <div class="flex flex-col items-center text-red-600 group-hover:text-red-700 transition-colors">
-                                            <img src="{{ asset('images/pdf.png') }}" alt="PDF" class="h-10 w-10 object-contain group-hover:scale-110 transition-transform" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-file-pdf text-red-600 text-4xl\'></i>';">
-                                            <span class="text-xs mt-1 font-medium">PDF</span>
-                                        </div>
-                                    @else
-                                        <div class="flex flex-col items-center text-gray-500">
-                                            <i class="fas fa-file text-2xl mb-1"></i>
-                                            <span class="text-gray-400 text-xs">File</span>
-                                        </div>
-                                    @endif
-                                @else
-                                    <div class="flex flex-col items-center text-gray-400">
-                                        <i class="fas fa-file-alt text-2xl mb-1"></i>
-                                        <span class="text-xs">No File</span>
-                                    </div>
-                                @endif
-                            </div>
-
-                            <!-- Document Details -->
-                            <div class="w-full flex flex-col sm:flex-row sm:justify-between items-start gap-3">
-                                <div class="flex-1">
-                                    <h3 class="text-md font-semibold mb-1 text-left">{{ $doc->name }}</h3>
-                                    <p class="text-sm font-semibold text-gray-800 mb-1">
-                                        @php
-                                            // Priority: document_type->name > document_name > otherDocument->doc_name > type
-                                            if ($doc->documentType) {
-                                                // New document type system
-                                                $displayName = $doc->documentType->name;
-                                            } elseif ($doc->document_name) {
-                                                // Has document_name field set
-                                                $displayName = $doc->document_name;
-                                            } elseif ($doc->type === 'certificate') {
-                                                $displayName = $doc->certificates->first()?->type->name ?? 'Certificate';
-                                            } elseif ($doc->type === 'passport') {
-                                                $displayName = 'Passport';
-                                            } elseif ($doc->type === 'idvisa') {
-                                                $displayName = 'ID / Visa';
-                                            } elseif ($doc->type === 'resume') {
-                                                $displayName = $doc->otherDocument?->doc_name ?? 'Resume';
-                                            } elseif ($doc->type === 'other') {
-                                                $displayName = $doc->otherDocument?->doc_name ?? 'Other Document';
-                                            } else {
-                                                $displayName = ucfirst($doc->type ?? 'Document');
-                                            }
-                                        @endphp
-                                        {{ $displayName }}
-                                    </p>
-
-                                    <!-- Eye icon + Featured -->
-                                    <div class="flex flex-col space-y-1 text-gray-600 text-[12px]">
-                                        <div class="flex items-center space-x-2">
-                                            <span class="toggle-share cursor-pointer" data-id="{{ $doc->id }}" onclick="toggleShare(this)" 
-                                                  title="{{ $doc->is_active ? 'Deactivate' : 'Activate' }}">
-                                              <img src="{{ $doc->is_active ? asset('images/view-icon.png') : asset('images/view-off-slash.png') }}" class="w-4 h-4">
-                                            </span>
-                                            <span class="share-text">
-                                              {{ $doc->is_active ? 'Featured on your Profile Preview' : 'Not featured on your Profile Preview' }}
-                                            </span>
-                                        </div>
-
-                                        <!-- Status Display -->
-                                        @php
-                                            $statusColor = 'text-yellow-600';
-                                            if($doc->status === 'approved') $statusColor = 'text-green-600';
-                                            elseif($doc->status === 'rejected') $statusColor = 'text-red-600';
-                                        @endphp
-                                        <div class="text-[14px]">
-                                            Status: <span class="{{ $statusColor }} font-semibold">{{ ucfirst($doc->status ?? 'pending') }}</span>
-                                        </div>
-
-                                        <!-- OCR Status Display -->
-                                        @if($doc->ocr_status)
-                                        <div class="text-[12px] mt-1">
-                                            <span class="px-2 py-0.5 text-xs font-medium rounded
-                                                @if($doc->ocr_status === 'completed') bg-blue-100 text-blue-800
-                                                @elseif($doc->ocr_status === 'processing') bg-yellow-100 text-yellow-800
-                                                @elseif($doc->ocr_status === 'failed') bg-red-100 text-red-800
-                                                @else bg-gray-100 text-gray-800
-                                                @endif"
-                                                title="@if($doc->ocr_status === 'completed' && $doc->ocr_confidence)OCR Confidence: {{ number_format($doc->ocr_confidence, 1) }}%@elseif($doc->ocr_status === 'failed'){{ $doc->ocr_error ?? 'OCR processing failed' }}@else OCR {{ ucfirst($doc->ocr_status) }}@endif">
-                                                <i class="fas fa-eye mr-1"></i>
-                                                @if($doc->ocr_status === 'completed' && $doc->ocr_confidence)
-                                                    OCR {{ number_format($doc->ocr_confidence, 0) }}%
-                                                @else
-                                                    OCR {{ ucfirst($doc->ocr_status) }}
-                                                @endif
-                                            </span>
-                                        </div>
-                                        @endif
-
-                                        <!-- Verification Level Badge -->
-                                        @if($doc->verificationLevel)
-                                        <div class="text-[12px] mt-1">
-                                            <span class="px-2 py-0.5 text-xs font-medium rounded
-                                                @if($doc->verificationLevel->badge_color === 'gold') bg-yellow-100 text-yellow-800
-                                                @elseif($doc->verificationLevel->badge_color === 'purple') bg-purple-100 text-purple-800
-                                                @elseif($doc->verificationLevel->badge_color === 'green') bg-green-100 text-green-800
-                                                @elseif($doc->verificationLevel->badge_color === 'blue') bg-blue-100 text-blue-800
-                                                @else bg-gray-100 text-gray-800
-                                                @endif"
-                                                title="{{ $doc->verificationLevel->description }}">
-                                                <i class="{{ $doc->verificationLevel->badge_icon }} mr-1"></i>
-                                                {{ $doc->verificationLevel->name }} (Level {{ $doc->verificationLevel->level }})
-                                            </span>
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                <!-- Remaining Duration Badge -->
-                                <div class="flex flex-col items-center space-y-2">
-                                    @php
-                                        $badgeClasses = 'bg-[#E3F2FF] text-[#0053FF]';
-                                        $isCross = false;
-
-                                        if(strtoupper($doc->remaining_type) === 'EXPIRED') {
-                                            $badgeClasses = 'bg-[#FFE3E3] text-[#C02020]';
-                                            $isCross = true;
-                                        } elseif($doc->remaining_type === 'N/A') {
-                                            $badgeClasses = 'bg-[#E3F2FF] text-[#0053FF]';
-                                        } elseif($doc->is_expiring_soon) {
-                                            $badgeClasses = 'bg-yellow-200 text-yellow-800';
-                                        }
-                                    @endphp
-
-                                    @if($isCross)
-                                        <div class="flex items-center justify-center w-[60px] h-[60px] rounded-md {{ $badgeClasses }}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="#C02020">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                            </svg>
-                                        </div>
-                                    @else
-                                        <div class="flex items-center p-2 font-medium w-[60px] justify-center rounded-md text-center {{ $badgeClasses }}">
-                                            @if($doc->remaining_number !== null)
-                                                <div class="flex flex-col items-center">
-                                                    <span class="text-xl font-bold">{{ $doc->remaining_number }}</span>
-                                                    <span class="text-xs">{{ $doc->remaining_type }}</span>
-                                                </div>
-                                            @else
-                                                <div class="flex flex-col items-center">
-                                                    <span class="text-xs">{{ $doc->remaining_type }}</span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-
-                            {{-- Action Buttons for Rejected Documents and OCR Retry --}}
-                            @if($isRejected || $doc->ocr_status === 'failed')
-                            <div class="mt-auto pt-3 border-t border-gray-200 w-full space-y-2">
-                                @if($isRejected)
-                                <button type="button" 
-                                        onclick="editDocument({{ $doc->id }})"
-                                        class="w-full px-3 py-2 bg-orange-600 text-white text-xs rounded-md hover:bg-orange-700 transition-colors font-medium shadow-sm">
-                                    <i class="fas fa-redo mr-1"></i>Re-Submit
-                                </button>
-                                @endif
-                                @if($doc->ocr_status === 'failed')
-                                <button type="button" 
-                                        onclick="retryOcr({{ $doc->id }})"
-                                        class="w-full px-3 py-2 bg-purple-600 text-white text-xs rounded-md hover:bg-purple-700 transition-colors font-medium shadow-sm">
-                                    <i class="fas fa-sync-alt mr-1"></i>Retry OCR
-                                </button>
-                                @endif
-                            </div>
-                            @endif
-
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
-    @endforeach
-@endif
-
-                            </div>
-
                         </div>
                     </div>
-                </div>
-
-                                {{-- Close All Documents Tab --}}
-                                </div>
-
-                                {{-- Active Share Links Tab Content --}}
-                                <div id="tab-content-shares" class="tab-content hidden">
-                                    <div class="bg-white rounded-xl p-4 sm:p-5 border border-gray-200">
-                                        <div class="flex items-center justify-between mb-4">
-                                            <h3 class="text-lg font-semibold text-gray-900">
-                                                <i class="fas fa-link mr-2 text-[#0053FF]"></i>Active Share Links
-                                            </h3>
-                                            <button onclick="loadActiveShares(1)" class="text-sm text-[#0053FF] hover:text-[#0044DD] flex items-center gap-1">
-                                                <i class="fas fa-sync-alt"></i> Refresh
-                                            </button>
-                                        </div>
-                                        
-                                        <div id="activeSharesList" class="space-y-3">
-                                            <div class="text-center py-8 text-gray-500">
-                                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                                                <p>Loading active shares...</p>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Pagination -->
-                                        <div id="activeSharesPagination" class="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Expired Documents Tab Content --}}
-                                <div id="tab-content-expired" class="tab-content hidden">
-                                    @if($expiredDocs->count() > 0)
-                                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                                        <div class="overflow-x-auto">
-                                            <table class="w-full">
-                                                <thead class="bg-gray-50 border-b border-gray-200">
-                                                    <tr>
-                                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Document</th>
-                                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Type</th>
-                                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Expired Date</th>
-                                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                                                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody class="bg-white divide-y divide-gray-200">
-                                                    @foreach($expiredDocs as $doc)
-                                                    @php
-                                                        $docName = $doc->type === 'passport' ? 'Passport' : ($doc->type === 'idvisa' ? 'ID / Visa' : ($doc->type === 'certificate' ? ($doc->certificates->first()->type->name ?? 'Certificate') : ($doc->type === 'resume' ? 'Resume' : ($doc->otherDocument->doc_name ?? 'Other Document'))));
-                                                        $daysAgo = $doc->expiry_date ? abs(\Carbon\Carbon::parse($doc->expiry_date)->diffInDays(\Carbon\Carbon::now())) : 0;
-                                                    @endphp
-                                                    <tr class="hover:bg-red-50 transition-colors">
-                                                        <td class="px-4 py-3 whitespace-nowrap">
-                                                            <div class="flex items-center gap-3">
-                                                                <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-md flex items-center justify-center cursor-pointer view-document-card" data-doc='@json($doc)'>
-                                                                    @if($doc->file_path)
-                                                                        @php
-                                                                            $filePath = asset('storage/' . $doc->file_path);
-                                                                            $extension = strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION));
-                                                                        @endphp
-                                                                        @if(in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp']))
-                                                                            <img src="{{ $filePath }}" alt="Document" class="w-full h-full object-cover rounded">
-                                                                        @elseif($extension === 'pdf')
-                                                                            <i class="fas fa-file-pdf text-red-600 text-sm"></i>
-                                                                        @else
-                                                                            <i class="fas fa-file text-red-600 text-sm"></i>
-                                                                        @endif
-                                                                    @else
-                                                                        <i class="fas fa-file text-red-600 text-sm"></i>
-                                                                    @endif
-                                                                </div>
-                                                                <div>
-                                                                    <div class="text-sm font-medium text-gray-900">{{ $docName }}</div>
-                                                                    @if($doc->document_number)
-                                                                    <div class="text-xs text-gray-500">#{{ $doc->document_number }}</div>
-                                                                    @endif
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td class="px-4 py-3 whitespace-nowrap">
-                                                            <span class="text-sm text-gray-900">{{ ucfirst($doc->type) }}</span>
-                                                        </td>
-                                                        <td class="px-4 py-3 whitespace-nowrap">
-                                                            @if($doc->expiry_date)
-                                                            <div class="text-sm text-red-600 font-medium">
-                                                                {{ \Carbon\Carbon::parse($doc->expiry_date)->format('M d, Y') }}
-                                                            </div>
-                                                            <div class="text-xs text-gray-500">{{ $daysAgo }} days ago</div>
-                                                            @else
-                                                            <span class="text-sm text-gray-400">N/A</span>
-                                                            @endif
-                                                        </td>
-                                                        <td class="px-4 py-3 whitespace-nowrap">
-                                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                                                                EXPIRED
-                                                            </span>
-                                                        </td>
-                                                        <td class="px-4 py-3 whitespace-nowrap text-center">
-                                                            <div class="flex items-center justify-center gap-2">
-                                                                <button onclick="viewDocument(@json($doc))" 
-                                                                        class="p-2 text-[#0053FF] hover:bg-blue-50 rounded-md transition-colors" 
-                                                                        title="View Details">
-                                                                    <i class="fas fa-eye"></i>
-                                                                </button>
-                                                                <button onclick="editDocument({{ $doc->id }})" 
-                                                                        class="p-2 text-orange-600 hover:bg-orange-50 rounded-md transition-colors" 
-                                                                        title="Re-Upload">
-                                                                    <i class="fas fa-redo"></i>
-                                                                </button>
-                                                                <button onclick="openVersionHistoryModal({{ $doc->id }});" 
-                                                                        class="p-2 text-purple-600 hover:bg-purple-50 rounded-md transition-colors" 
-                                                                        title="History">
-                                                                    <i class="fas fa-history"></i>
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    @else
-                                    <div class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
-                                        <i class="fas fa-check-circle text-3xl text-green-500 mb-3"></i>
-                                        <p class="text-gray-700 font-medium">No expired documents</p>
-                                        <p class="text-sm text-gray-500 mt-1">All your documents are up to date!</p>
-                                    </div>
-                                    @endif
-                                </div>
-            </main>
+                    
+                    <!-- OLD CONTENT REMOVED - Extra tabs and sections not in HTML design -->
         </div>
     </div>
-    <!-- Action delete Buttons -->
-   
 </div>
 
 @elserole('super_admin')
@@ -1405,6 +875,153 @@
     </div>
 </div>
 
+<!-- Verification Documents Selection Modal (Full Page with Sidebar) -->
+<div id="verificationDocumentsModal" class="hidden fixed inset-0 z-50 bg-[#F5F6FA] overflow-y-auto" style="left: 288px; top: 0; right: 0; bottom: 0;">
+    <div class="w-full mx-auto p-6">
+        
+        <!-- Action Bar -->
+        <div class="bg-white rounded-xl py-3 px-6 flex items-center justify-between border border-gray-300 mb-6 gap-3">
+            
+            <!-- Left Button -->
+            <div class="flex items-center gap-3">
+                <button onclick="closeVerificationModal()" class="flex items-center bg-[#BDBDBD] hover:bg-gray-300 text-sm text-[#1B1B1B] px-4 py-3 rounded-lg transition gap-3 border">
+                    <img class="w-3 h-3" src="{{ asset('images/close-icon.svg') }}" alt="" onerror="this.style.display='none';">
+                    <i class="fas fa-times w-3 h-3" style="display:none;"></i>
+                    Cancel
+                </button>
+            </div>
+            
+            <!-- Selected Count -->
+            <div class="select-counter">
+                <span id="modalSelectedCount" class="text-[#1B1B1B] text-lg font-medium">0 Selected</span>
+            </div>
+            
+            <!-- Right Button -->
+            <button onclick="showVerificationConfirmationPopup()" id="submitVerificationBtn" class="bg-[#0053FF] border border-blue-200 text-white hover:bg-blue-500 px-8 py-3.5 text-sm rounded-lg transition opacity-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Send to Verification with Crewdentials
+            </button>
+        </div>
+        
+        <!-- DOCUMENTS SECTION -->
+        <div>
+            <p class="text-center mb-6 text-[#808080] capitalize">Select one or more documents using the checkboxes to request verification with Crewdentials.</p>
+            
+            <div class="col-span-2 px-5 p-6 border border-gray-300 bg-white rounded-xl">
+                
+                <!-- Header -->
+                <div class="flex justify-between items-center border-b border-gray-300 pb-5 mb-6">
+                    
+                    <!-- Tabs -->
+                    <div class="flex gap-[70px] text-sm">
+                        <button onclick="filterModalByCategory('all')" id="modal-tab-all" class="relative text-blue-600 font-semibold pb-2 border-b-2 border-blue-600">
+                            All Documents
+                        </button>
+                        <button onclick="filterModalByCategory('Passport')" id="modal-tab-passport" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Passport</button>
+                        <button onclick="filterModalByCategory('Ids and Visa')" id="modal-tab-ids" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">IDs & Visas</button>
+                        <button onclick="filterModalByCategory('Certificate')" id="modal-tab-certificate" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Certificate</button>
+                        <button onclick="filterModalByCategory('Other')" id="modal-tab-other" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Other</button>
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <select id="modalStatusFilter" onchange="filterModalByStatus(this.value)" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 focus:outline-none">
+                        <option value="">Status</option>
+                        <option value="approved">Approved</option>
+                        <option value="pending">Pending</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
+                
+                <!-- GRID -->
+                <div class="grid grid-cols-3 gap-6 gap-y-[10px]" id="modalDocumentsGrid">
+                    @foreach($documents as $doc)
+                    @php
+                        // Determine category for filtering
+                        $category = 'Other';
+                        if ($doc->documentType && $doc->documentType->category) {
+                            $category = $doc->documentType->category;
+                            if (!in_array($category, ['Passport', 'Ids and Visa', 'Certificate', 'Other'])) {
+                                $category = 'Other';
+                            }
+                        } else {
+                            $type = strtolower($doc->type ?? '');
+                            $category = match($type) {
+                                'passport' => 'Passport',
+                                'idvisa', 'ids_and_visa' => 'Ids and Visa',
+                                'certificate' => 'Certificate',
+                                default => 'Other'
+                            };
+                        }
+                    @endphp
+                    <div class="modal-document-item" 
+                         data-document-id="{{ $doc->id }}" 
+                         data-status="{{ strtolower($doc->status ?? 'pending') }}"
+                         data-category="{{ $category }}">
+                        @include('career-history.partials.document-card-verification', ['doc' => $doc])
+                    </div>
+                    @endforeach
+                    
+                    @if($documents->count() === 0)
+                    <div class="col-span-3 text-center py-8 text-gray-500">
+                        <p>No documents available</p>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Verification Confirmation Popup -->
+<div id="verificationConfirmationPopup" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[60]">
+    <div class="bg-white w-full max-w-lg rounded-xl shadow-xl">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b">
+            <h2 class="text-xl text-[#1B1B1B] font-semibold text-gray-900">
+                Send Document for Verification?
+            </h2>
+            <button onclick="closeVerificationConfirmationPopup()" class="text-gray-400 hover:text-gray-600 text-xl">
+                <img src="{{ asset('images/close-icon.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <i class="fas fa-times" style="display:none;"></i>
+            </button>
+        </div>
+        
+        <!-- Body -->
+        <div class="px-6 py-4 space-y-5">
+            
+            <!-- Selected Documents -->
+            <div>
+                <p class="text-sm text-[#808080] mb-3.5">Selected Documents:</p>
+                
+                <div id="selectedDocumentsList" class="bg-[#F8F9FA] rounded-lg p-4 space-y-3">
+                    <!-- Documents will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Info Box -->
+            <div class="flex items-start gap-3 bg-[#E3F2FF] text-blue-900 p-4 rounded-lg">
+                <img class="w-[20px] h-[20px] mt-[4px]" src="{{ asset('images/alert-circle.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <i class="fas fa-info-circle w-[20px] h-[20px] mt-[4px] text-blue-600" style="display:none;"></i>
+                <p class="text-md text-[#1B1B1B]">
+                    These Documents Will Be Securely Shared With Crewdentials For Verification.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="flex gap-4 px-6 pt-2 pb-6">
+            <button onclick="closeVerificationConfirmationPopup()" class="px-6 py-2 rounded-lg border border-gray-300 text-[#1B1B1B] hover:bg-gray-50 transition text-sm">
+                Cancel
+            </button>
+            
+            <button onclick="confirmAndSendVerification()" class="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition text-sm">
+                Confirm & Send
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Crewdentials Consent Modal -->
 <div id="crewdentialsConsentModal" class="popup hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl w-[600px] max-w-[90vw] max-h-[90vh] overflow-y-auto p-6 relative">
@@ -1522,6 +1139,20 @@
 @endsection
 
 <style>
+    /* Custom checkbox styling for verification modal */
+    input[type="checkbox"].verification-doc-checkbox:checked + div {
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+    }
+    input[type="checkbox"].verification-doc-checkbox:checked + div img,
+    input[type="checkbox"].verification-doc-checkbox:checked + div i {
+        opacity: 1 !important;
+    }
+    input[type="checkbox"].verification-doc-checkbox + div img,
+    input[type="checkbox"].verification-doc-checkbox + div i {
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
 /* Loader animation */
 .loader {
     border-top-color: #3498db;
@@ -4884,41 +4515,127 @@ function clearTemplate() {
     });
   });
 
-  // Tab switching function
+  // Category Filter Function - EXACT match to HTML design
+  function filterByCategory(category) {
+    // Update tab button states
+    const allTabs = document.querySelectorAll('#tab-all, button[onclick*="filterByCategory"]');
+    allTabs.forEach(btn => {
+      btn.classList.remove('text-blue-600', 'font-semibold', 'border-blue-600');
+      btn.classList.add('text-[#1B1B1B]', 'border-transparent');
+    });
+    
+    // Activate selected tab
+    if (category === 'all' || category === '') {
+      const allBtn = document.getElementById('tab-all');
+      if (allBtn) {
+        allBtn.classList.remove('text-[#1B1B1B]', 'border-transparent');
+        allBtn.classList.add('text-blue-600', 'font-semibold', 'border-blue-600');
+      }
+    } else {
+      const categoryBtn = document.querySelector(`button[onclick="filterByCategory('${category}')"]`);
+      if (categoryBtn) {
+        categoryBtn.classList.remove('text-[#1B1B1B]', 'border-transparent');
+        categoryBtn.classList.add('text-blue-600', 'font-semibold', 'border-blue-600');
+      }
+    }
+    
+    // Filter documents by category - use data attributes for accurate filtering
+    const cards = document.querySelectorAll('.document-item');
+    cards.forEach(card => {
+      const cardCategory = card.getAttribute('data-category') || '';
+      const docName = card.getAttribute('data-document-name') || '';
+      let shouldShow = false;
+      
+      if (category === 'all' || category === '') {
+        shouldShow = true;
+      } else if (category === 'Passport') {
+        shouldShow = cardCategory === 'Passport' || 
+                     docName.includes('passport') ||
+                     cardCategory.toLowerCase().includes('passport');
+      } else if (category === 'Ids and Visa' || category === 'IDs & Visas') {
+        shouldShow = cardCategory === 'Ids and Visa' || 
+                     cardCategory === 'Identity & Travel Documents' ||
+                     docName.includes('id') || 
+                     docName.includes('visa') ||
+                     docName.includes('identity');
+      } else if (category === 'Certificate') {
+        shouldShow = cardCategory === 'Certificate' ||
+                     cardCategory === 'STCW Certificates' ||
+                     cardCategory === 'Medical Certificates' ||
+                     cardCategory === 'Professional Qualifications' ||
+                     docName.includes('certificate') ||
+                     docName.includes('stcw') ||
+                     docName.includes('qualification');
+      } else if (category === 'Other') {
+        shouldShow = cardCategory === 'Other' ||
+                     (!docName.includes('passport') && 
+                      !docName.includes('id') && 
+                      !docName.includes('visa') && 
+                      !docName.includes('certificate') &&
+                      !docName.includes('stcw') &&
+                      cardCategory !== 'Passport' &&
+                      cardCategory !== 'Ids and Visa' &&
+                      cardCategory !== 'Certificate');
+      }
+      
+      card.style.display = shouldShow ? 'flex' : 'none';
+    });
+  }
+  
+  // Status Filter Function
+  function filterByStatus(status) {
+    const cards = document.querySelectorAll('.document-item');
+    cards.forEach(card => {
+      const cardStatus = card.getAttribute('data-status') || '';
+      if (!status || status === '' || cardStatus.toLowerCase() === status.toLowerCase()) {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+  
+  // Tab switching function (for compatibility)
   function showTab(tabName) {
-    // Hide all tab contents
-    document.querySelectorAll('.tab-content').forEach(content => {
-      content.classList.add('hidden');
-    });
-    
-    // Remove active state from all tabs
-    document.querySelectorAll('.tab-button').forEach(button => {
-      button.classList.remove('border-[#0053FF]', 'text-[#0053FF]');
-      button.classList.add('border-transparent', 'text-gray-500');
-    });
-    
-    // Show selected tab content
-    const content = document.getElementById('tab-content-' + tabName);
-    if (content) {
-      content.classList.remove('hidden');
+    if (tabName === 'all') {
+      filterByCategory('all');
     }
+    // Handle other tabs if needed
+  }
+  
+  // Show expiring/expired tab content
+  function showExpiringTab(tab) {
+    const expiringTab = document.getElementById('expiring-tab');
+    const expiredTab = document.getElementById('expired-tab');
+    const expiringContent = document.getElementById('expiring-content');
+    const expiredContent = document.getElementById('expired-content');
     
-    // Add active state to selected tab
-    const button = document.getElementById('tab-' + tabName);
-    if (button) {
-      button.classList.remove('border-transparent', 'text-gray-500');
-      button.classList.add('border-[#0053FF]', 'text-[#0053FF]');
-    }
-    
-    // Load active shares when shares tab is selected
-    if (tabName === 'shares' && typeof loadActiveShares === 'function') {
-      loadActiveShares();
+    if (tab === 'expired') {
+      // Show expired tab
+      expiredTab.classList.add('text-blue-600', 'font-semibold', 'border-blue-600');
+      expiredTab.classList.remove('text-[#1B1B1B]', 'border-transparent');
+      expiredContent.classList.remove('hidden');
+      
+      // Hide expiring tab
+      expiringTab.classList.remove('text-blue-600', 'font-semibold', 'border-blue-600');
+      expiringTab.classList.add('text-[#1B1B1B]', 'border-transparent');
+      expiringContent.classList.add('hidden');
+    } else {
+      // Show expiring tab (default)
+      expiringTab.classList.add('text-blue-600', 'font-semibold', 'border-blue-600');
+      expiringTab.classList.remove('text-[#1B1B1B]', 'border-transparent');
+      expiringContent.classList.remove('hidden');
+      
+      // Hide expired tab
+      expiredTab.classList.remove('text-blue-600', 'font-semibold', 'border-blue-600');
+      expiredTab.classList.add('text-[#1B1B1B]', 'border-transparent');
+      expiredContent.classList.add('hidden');
     }
   }
 
   // Initialize: Show 'all' tab by default
   document.addEventListener('DOMContentLoaded', function() {
-    showTab('all');
+    filterByCategory('all');
     
     // Show bulk selection info banner by default (user can close it)
     // Hide only if user explicitly closed it before
@@ -5067,7 +4784,9 @@ function clearTemplate() {
     const count = checkedBoxes.length;
     const bulkBar = $('#bulkActionsBar');
     const infoBanner = $('#bulkSelectionInfo');
+    const bulkVerifyBtn = $('#bulkVerifyBtn');
     
+    // Request Verification button is always visible (matches HTML design)
     if (count > 0) {
       $('#selectedCount').text(count);
       bulkBar.removeClass('hidden').addClass('flex');
@@ -5087,13 +4806,253 @@ function clearTemplate() {
     $('#bulkSelectionInfo').slideDown(300);
   }
   
+  // Open verification modal (full page with sidebar)
+  function openVerificationModal() {
+    const modal = $('#verificationDocumentsModal');
+    modal.removeClass('hidden');
+    
+    // Adjust position to account for sidebar
+    updateModalPosition();
+    
+    // Reset filters
+    setTimeout(() => {
+      filterModalByCategory('all');
+      const statusFilter = document.getElementById('modalStatusFilter');
+      if (statusFilter) statusFilter.value = '';
+      // Uncheck all checkboxes
+      $('.verification-doc-checkbox').prop('checked', false);
+      // Update submit button state
+      updateVerificationSubmitButton();
+    }, 100);
+  }
+  
+  // Update modal position based on sidebar state
+  function updateModalPosition() {
+    const modal = $('#verificationDocumentsModal');
+    if (modal.hasClass('hidden')) return;
+    
+    // Check sidebar state
+    let sidebarOpen = false;
+    if (window.Alpine && Alpine.store && Alpine.store('sidebar')) {
+      sidebarOpen = Alpine.store('sidebar').isOpen;
+    } else if (window.$store && window.$store.sidebar) {
+      sidebarOpen = window.$store.sidebar.isOpen;
+    } else {
+      // Default: sidebar is open on desktop
+      sidebarOpen = window.innerWidth >= 768;
+    }
+    
+    if (window.innerWidth >= 768) {
+      modal.css('left', sidebarOpen ? '288px' : '64px'); // ml-72 = 288px, ml-16 = 64px
+    } else {
+      modal.css('left', '0');
+    }
+  }
+  
+  // Close verification modal
+  function closeVerificationModal() {
+    $('#verificationDocumentsModal').addClass('hidden');
+    // Uncheck all checkboxes in modal
+    $('.verification-doc-checkbox').prop('checked', false);
+    // Reset filters
+    const statusFilter = document.getElementById('modalStatusFilter');
+    if (statusFilter) statusFilter.value = '';
+    filterModalByCategory('all');
+    updateVerificationSubmitButton();
+  }
+  
+  // Listen for sidebar toggle to adjust modal position
+  $(document).ready(function() {
+    // Watch for sidebar state changes
+    setInterval(function() {
+      updateModalPosition();
+    }, 500);
+    
+    // Also listen to window resize
+    $(window).on('resize', function() {
+      updateModalPosition();
+    });
+  });
+  
+  // Update submit button state and selected count based on selected documents
+  function updateVerificationSubmitButton() {
+    updateModalSelectedCount();
+  }
+  
+  // Update modal selected count
+  function updateModalSelectedCount() {
+    const selectedCount = $('.verification-doc-checkbox:checked').length;
+    const submitBtn = $('#submitVerificationBtn');
+    const countDisplay = $('#modalSelectedCount');
+    
+    if (countDisplay.length) {
+      countDisplay.text(`${selectedCount} Selected`);
+    }
+    
+    if (submitBtn.length) {
+      if (selectedCount > 0) {
+        submitBtn.prop('disabled', false).removeClass('opacity-50');
+      } else {
+        submitBtn.prop('disabled', true).addClass('opacity-50');
+      }
+    }
+  }
+  
+  // Modal filtering functions
+  function filterModalByCategory(category) {
+    const allTabs = document.querySelectorAll('#modal-tab-all, #modal-tab-passport, #modal-tab-ids, #modal-tab-certificate, #modal-tab-other');
+    allTabs.forEach(tab => {
+      if (tab) {
+        tab.classList.remove('text-blue-600', 'font-semibold', 'border-blue-600');
+        tab.classList.add('text-[#1B1B1B]', 'border-transparent');
+      }
+    });
+    
+    const activeTab = category === 'all' ? document.getElementById('modal-tab-all') : 
+                     category === 'Passport' ? document.getElementById('modal-tab-passport') :
+                     category === 'Ids and Visa' ? document.getElementById('modal-tab-ids') :
+                     category === 'Certificate' ? document.getElementById('modal-tab-certificate') :
+                     document.getElementById('modal-tab-other');
+    
+    if (activeTab) {
+      activeTab.classList.add('text-blue-600', 'font-semibold', 'border-blue-600');
+      activeTab.classList.remove('text-[#1B1B1B]', 'border-transparent');
+    }
+    
+    const items = document.querySelectorAll('#modalDocumentsGrid .modal-document-item');
+    items.forEach(item => {
+      const itemCategory = item.getAttribute('data-category') || '';
+      if (category === 'all' || itemCategory === category) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+    
+    // Apply status filter if active
+    const statusFilter = document.getElementById('modalStatusFilter');
+    if (statusFilter && statusFilter.value) {
+      filterModalByStatus(statusFilter.value);
+    }
+  }
+  
+  function filterModalByStatus(status) {
+    const items = document.querySelectorAll('#modalDocumentsGrid .modal-document-item');
+    items.forEach(item => {
+      const itemStatus = item.getAttribute('data-status') || '';
+      const itemCategory = item.getAttribute('data-category') || '';
+      
+      // Get active category
+      const activeTab = document.querySelector('#modal-tab-all.border-blue-600, #modal-tab-passport.border-blue-600, #modal-tab-ids.border-blue-600, #modal-tab-certificate.border-blue-600, #modal-tab-other.border-blue-600');
+      const activeCategory = activeTab ? (activeTab.id === 'modal-tab-all' ? 'all' :
+                                          activeTab.id === 'modal-tab-passport' ? 'Passport' :
+                                          activeTab.id === 'modal-tab-ids' ? 'Ids and Visa' :
+                                          activeTab.id === 'modal-tab-certificate' ? 'Certificate' : 'Other') : 'all';
+      
+      // Check category match
+      const categoryMatch = activeCategory === 'all' || itemCategory === activeCategory;
+      
+      // Check status match
+      const statusMatch = !status || status === '' || itemStatus.toLowerCase() === status.toLowerCase();
+      
+      if (categoryMatch && statusMatch) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+  
+  // Show verification confirmation popup
+  function showVerificationConfirmationPopup() {
+    const selectedIds = $('.verification-doc-checkbox:checked').map(function() {
+      return parseInt($(this).val());
+    }).get();
+    
+    if (selectedIds.length === 0) {
+      alert('Please select at least one document to verify.');
+      return;
+    }
+    
+    // Get selected document names
+    const selectedDocs = [];
+    $('.verification-doc-checkbox:checked').each(function() {
+      const docName = $(this).data('doc-name') || 'Document';
+      selectedDocs.push(docName);
+    });
+    
+    // Populate selected documents list
+    const listContainer = $('#selectedDocumentsList');
+    listContainer.empty();
+    
+    selectedDocs.forEach(function(docName) {
+      listContainer.append(`
+        <div class="flex items-start gap-3">
+          <span class="w-2 h-2 bg-blue-600 rounded-full mt-2"></span>
+          <p class="text-[#1B1B1B] text-md">${docName}</p>
+        </div>
+      `);
+    });
+    
+    // Store selected IDs for confirmation
+    window.pendingVerificationDocIds = selectedIds;
+    
+    // Show popup
+    $('#verificationConfirmationPopup').removeClass('hidden');
+  }
+  
+  // Close verification confirmation popup
+  function closeVerificationConfirmationPopup() {
+    $('#verificationConfirmationPopup').addClass('hidden');
+    window.pendingVerificationDocIds = null;
+  }
+  
+  // Confirm and send verification
+  function confirmAndSendVerification() {
+    const selectedIds = window.pendingVerificationDocIds;
+    
+    if (!selectedIds || selectedIds.length === 0) {
+      alert('No documents selected.');
+      return;
+    }
+    
+    // Close both popups
+    closeVerificationConfirmationPopup();
+    closeVerificationModal();
+    
+    // Proceed with verification
+    requestCrewdentialsVerification(selectedIds);
+  }
+  
+  // Submit verification from modal (old function - kept for compatibility)
+  function submitVerificationFromModal() {
+    showVerificationConfirmationPopup();
+  }
+  
+  // Listen to checkbox changes in modal
+  $(document).on('change', '.verification-doc-checkbox', function() {
+    updateModalSelectedCount();
+    // Trigger peer-checked class update
+    const checkbox = $(this);
+    const peerDiv = checkbox.next('div');
+    if (checkbox.is(':checked')) {
+      peerDiv.addClass('peer-checked:bg-blue-600 peer-checked:border-blue-600');
+      peerDiv.find('img, i').addClass('opacity-100').removeClass('opacity-0');
+    } else {
+      peerDiv.removeClass('peer-checked:bg-blue-600 peer-checked:border-blue-600');
+      peerDiv.find('img, i').addClass('opacity-0').removeClass('opacity-100');
+    }
+  });
+  
+  // Old function for backward compatibility (if called from page checkboxes)
   function requestCrewdentialsVerificationForSelected() {
     const selectedIds = $('.document-checkbox:checked').map(function() {
       return parseInt($(this).val());
     }).get();
     
     if (selectedIds.length === 0) {
-      alert('Please select at least one document to verify.');
+      // Open modal if no documents selected on page
+      openVerificationModal();
       return;
     }
     
