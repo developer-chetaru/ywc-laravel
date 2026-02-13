@@ -833,24 +833,103 @@ class CareerHistoryApiController extends Controller
             $extension = strtolower($file->getClientOriginalExtension());
 
             if ($extension === 'pdf') {
-                $imagick = new Imagick();
-                $imagick->setResolution(300, 300);
-                $imagick->readImage($fullPath);
+                // Try Imagick first if available
+                if (extension_loaded('imagick') && class_exists('Imagick')) {
+                    $imagick = new Imagick();
+                    $imagick->setResolution(300, 300);
+                    $imagick->readImage($fullPath);
 
-                foreach ($imagick as $i => $page) {
-                    $page->setImageFormat('png');
-                    $tmpImage = storage_path("app/temp/page_{$i}.png");
-                    $page->writeImage($tmpImage);
+                    foreach ($imagick as $i => $page) {
+                        $page->setImageFormat('png');
+                        $tmpImage = storage_path("app/temp/page_{$i}.png");
+                        
+                        if (!is_dir(storage_path('app/temp'))) {
+                            mkdir(storage_path('app/temp'), 0755, true);
+                        }
+                        
+                        $page->writeImage($tmpImage);
 
-                    $ocr = $this->createTesseractOCR($tmpImage);
-                    $ocr->lang('eng')->psm(3)->oem(1);
-                    $text .= $ocr->run() . "\n";
+                        $ocr = $this->createTesseractOCR($tmpImage);
+                        $ocr->lang('eng')->psm(3)->oem(1);
+                        $text .= $ocr->run() . "\n";
 
-                    unlink($tmpImage);
+                        unlink($tmpImage);
+                    }
+
+                    $imagick->clear();
+                    $imagick->destroy();
+                } else {
+                    // Fallback: Use Ghostscript to convert PDF pages to images, then OCR
+                    $gsPath = trim(shell_exec('which gs 2>/dev/null'));
+                    
+                    if ($gsPath && is_executable($gsPath)) {
+                        if (!is_dir(storage_path('app/temp'))) {
+                            mkdir(storage_path('app/temp'), 0755, true);
+                        }
+                        
+                        $outputPattern = storage_path("app/temp/pdf_page_%d.png");
+                        $gsCommand = escapeshellarg($gsPath) . ' -dNOPAUSE -dBATCH -sDEVICE=png16m -r300 -dFirstPage=1 -dLastPage=100 -sOutputFile=' . escapeshellarg($outputPattern) . ' ' . escapeshellarg($fullPath) . ' 2>&1';
+                        
+                        exec($gsCommand, $gsOutput, $gsReturnCode);
+                        
+                        if ($gsReturnCode === 0) {
+                            $pageNum = 1;
+                            while (true) {
+                                $tmpImage = storage_path("app/temp/pdf_page_{$pageNum}.png");
+                                
+                                if (!file_exists($tmpImage)) {
+                                    break;
+                                }
+                                
+                                try {
+                                    $ocr = $this->createTesseractOCR($tmpImage);
+                                    $ocr->lang('eng')->psm(3)->oem(1);
+                                    $text .= $ocr->run() . "\n";
+                                } catch (\Exception $e) {
+                                    \Log::warning("TesseractOCR failed for PDF page {$pageNum}: " . $e->getMessage());
+                                }
+                                
+                                unlink($tmpImage);
+                                $pageNum++;
+                                
+                                if ($pageNum > 100) break;
+                            }
+                        } else {
+                            // Try pdftotext as last resort
+                            $pdftotextPath = trim(shell_exec('which pdftotext 2>/dev/null'));
+                            
+                            if ($pdftotextPath && is_executable($pdftotextPath)) {
+                                $tmpTextFile = storage_path("app/temp/pdf_text_" . time() . ".txt");
+                                $pdftotextCommand = escapeshellarg($pdftotextPath) . ' -layout ' . escapeshellarg($fullPath) . ' ' . escapeshellarg($tmpTextFile) . ' 2>&1';
+                                exec($pdftotextCommand, $pdftotextOutput, $pdftotextReturnCode);
+                                
+                                if ($pdftotextReturnCode === 0 && file_exists($tmpTextFile)) {
+                                    $text = file_get_contents($tmpTextFile);
+                                    unlink($tmpTextFile);
+                                }
+                            }
+                        }
+                    } else {
+                        // Last resort: Try pdftotext
+                        $pdftotextPath = trim(shell_exec('which pdftotext 2>/dev/null'));
+                        
+                        if ($pdftotextPath && is_executable($pdftotextPath)) {
+                            $tmpTextFile = storage_path("app/temp/pdf_text_" . time() . ".txt");
+                            
+                            if (!is_dir(storage_path('app/temp'))) {
+                                mkdir(storage_path('app/temp'), 0755, true);
+                            }
+                            
+                            $pdftotextCommand = escapeshellarg($pdftotextPath) . ' -layout ' . escapeshellarg($fullPath) . ' ' . escapeshellarg($tmpTextFile) . ' 2>&1';
+                            exec($pdftotextCommand, $pdftotextOutput, $pdftotextReturnCode);
+                            
+                            if ($pdftotextReturnCode === 0 && file_exists($tmpTextFile)) {
+                                $text = file_get_contents($tmpTextFile);
+                                unlink($tmpTextFile);
+                            }
+                        }
+                    }
                 }
-
-                $imagick->clear();
-                $imagick->destroy();
             } else {
                 $ocr = $this->createTesseractOCR($fullPath);
                 $ocr->lang('eng')->psm(3)->oem(1);

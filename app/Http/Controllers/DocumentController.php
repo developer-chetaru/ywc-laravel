@@ -113,23 +113,44 @@ class DocumentController extends Controller
     }
   
     public function destroy($id)
-      {
-          $document = Document::find($id);
+    {
+        $document = Document::find($id);
 
-          if (!$document) {
-              return response()->json(['success' => false, 'message' => 'Document not found.']);
-          }
+        if (!$document) {
+            return response()->json(['success' => false, 'message' => 'Document not found.']);
+        }
 
-          if ($document->file_path && Storage::exists('public/' . $document->file_path)) {
-              Storage::delete('public/' . $document->file_path);
-          }
+        // Check authorization - user can only delete their own documents
+        if ($document->user_id !== Auth::id()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. You can only delete your own documents.'], 403);
+        }
 
-          // Delete connected data if needed
-          // Example: $document->related()->delete();
+        // Delete file if exists
+        if ($document->file_path) {
+            try {
+                if (Storage::disk('public')->exists($document->file_path)) {
+                    Storage::disk('public')->delete($document->file_path);
+                }
+                // Also delete thumbnail if exists
+                if ($document->thumbnail_path && Storage::disk('public')->exists($document->thumbnail_path)) {
+                    Storage::disk('public')->delete($document->thumbnail_path);
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to delete document file: ' . $e->getMessage());
+            }
+        }
 
-          // Delete the document record
-          $document->delete();
+        // Delete related data
+        $document->passportDetail?->delete();
+        $document->idvisaDetail?->delete();
+        $document->certificates()->delete();
+        $document->otherDocument?->delete();
+        $document->statusChanges()->delete();
+        $document->versions()->delete();
 
-          return response()->json(['success' => true]);
-      }
+        // Delete the document record
+        $document->delete();
+
+        return response()->json(['success' => true, 'message' => 'Document deleted successfully.']);
+    }
 }

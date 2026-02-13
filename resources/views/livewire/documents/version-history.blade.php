@@ -13,10 +13,7 @@
 
     @if($document)
     <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">
-                Version History: {{ $document->document_name ?? 'Document' }}
-            </h3>
+        <div class="flex items-center justify-end mb-4">
             <div class="flex items-center gap-3">
                 <span class="text-sm text-gray-600">
                     Current Version: <strong>v{{ $document->version }}</strong>

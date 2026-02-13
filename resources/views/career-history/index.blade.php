@@ -204,6 +204,7 @@
                             
                             @php
                                 // Initialize categories for All Documents
+                                // Use ALL documents, not just normalDocs (to include expiring and expired)
                                 $allDocsCategories = [
                                     'Passport' => [],
                                     'Ids and Visa' => [],
@@ -211,7 +212,7 @@
                                     'Other' => []
                                 ];
 
-                                foreach ($normalDocs as $doc) {
+                                foreach ($documents as $doc) {
                                     $categoryKey = 'Other'; // Default
                                     
                                     if ($doc->documentType && $doc->documentType->category) {
@@ -221,7 +222,7 @@
                                             $categoryKey = 'Other';
                                         }
                                     } else {
-                                        $type = strtolower($doc->type);
+                                        $type = strtolower($doc->type ?? '');
                                         $categoryKey = match($type) {
                                             'passport' => 'Passport',
                                             'idvisa', 'ids_and_visa' => 'Ids and Visa',
@@ -419,6 +420,7 @@
                                     @endforeach
                                 </optgroup>
                             @endforeach
+                            <option value="other">Other</option>
                         </select>
 
                         <!-- Notification for unmatched document -->
@@ -1233,6 +1235,18 @@
   }
 
   // Re-Submit Document Function - Opens edit modal (must be globally accessible)
+  // Download document function (global scope)
+  window.downloadDocument = function(docId) {
+      if (!docId) {
+          alert("Document ID is required");
+          return;
+      }
+      
+      // Use the secure download route
+      const downloadUrl = "/documents/" + docId + "/download";
+      window.open(downloadUrl, '_blank');
+  }
+
   function editDocument(docId) {
       // Close view modal if open
       const viewModal = $("#viewDocumentModal");
@@ -1247,12 +1261,17 @@
               "X-Requested-With": "XMLHttpRequest"
           },
           success: function(doc) {
+              console.log('Document data received for edit:', doc);
+              
               if (doc && (doc.id || doc.document_id)) {
                   // Open the modal
                   $("#addDocumentModal").removeClass("hidden").addClass("flex");
                   
-                  // Change modal title
-                  $("#addDocumentModal h2").text("Re-Submit Document");
+                  // Change modal title based on document status
+                  // Show "Re-Submit Document" only if document is rejected, otherwise "Edit Document"
+                  const docStatus = doc.status || 'pending';
+                  const modalTitle = docStatus === 'rejected' ? 'Re-Submit Document' : 'Edit Document';
+                  $("#addDocumentModal h2").text(modalTitle);
                   
                   // Set form to edit mode
                   const form = $("#documentForm");
@@ -1262,24 +1281,36 @@
                   form.find('input[name="_method"]').remove();
                   form.append('<input type="hidden" name="_method" value="PUT">');
                   
-                  // Populate form fields
-                  $("#docType").val(doc.type || '').trigger('change');
-                  $("#docName").val(doc.name || '');
+                  // Populate form fields - First set document type to trigger dynamic fields
+                  // For new document types, use document_type_slug, otherwise use legacy type
+                  const docType = doc.document_type_slug || doc.type || '';
+                  console.log('Setting document type to:', docType);
+                  $("#docType").val(docType).trigger('change');
                   
-                  // Populate document-specific fields
+                  // Populate document-specific fields after fields are rendered
+                  // Increased timeout to ensure dynamic fields are fully rendered
                   setTimeout(function() {
                       // Support both snake_case and camelCase from API
                       const passportDetail = doc.passportDetail || doc.passport_detail;
                       const idvisaDetail = doc.idvisaDetail || doc.idvisa_detail;
+                      const otherDocument = doc.otherDocument || doc.other_document;
                       
-                      if (doc.type === 'passport' && passportDetail) {
+                      // Common fields from main document table
+                      const documentName = doc.document_name || doc.name || '';
+                      const documentNumber = doc.document_number || '';
+                      const dob = doc.dob || '';
+                      const issueDate = doc.issue_date || '';
+                      const expiryDate = doc.expiry_date || '';
+                      
+                      // Use docType instead of doc.type for proper handling of new document types
+                      if (docType === 'passport' && passportDetail) {
                           // Use correct field IDs that match the dynamic form
                           const passportNumber = passportDetail.passport_number || '';
                           const nationality = passportDetail.nationality || '';
                           const countryCode = passportDetail.country_code || '';
-                          const dob = passportDetail.dob || '';
-                          const issueDate = passportDetail.issue_date || '';
-                          const expiryDate = passportDetail.expiry_date || '';
+                          const passportDob = passportDetail.dob || dob;
+                          const passportIssueDate = passportDetail.issue_date || issueDate;
+                          const passportExpiryDate = passportDetail.expiry_date || expiryDate;
                           
                           // Set passport-specific fields
                           $("input[name='passport_number']").val(passportNumber);
@@ -1287,38 +1318,96 @@
                           $("input[name='country_code']").val(countryCode);
                           
                           // Set date fields (common IDs)
-                          $("input[name='dob']").val(dob);
-                          $("input[name='issue_date']").val(issueDate);
-                          $("input[name='expiry_date']").val(expiryDate);
+                          $("input[name='dob']").val(passportDob);
+                          $("input[name='issue_date']").val(passportIssueDate);
+                          $("input[name='expiry_date']").val(passportExpiryDate);
                           
-                          console.log("Populated passport fields:", {passportNumber, nationality, countryCode, dob, issueDate, expiryDate});
-                      } else if (doc.type === 'idvisa' && idvisaDetail) {
-                          const documentName = idvisaDetail.document_name || '';
-                          const documentNumber = idvisaDetail.document_number || '';
-                          const dob = idvisaDetail.dob || '';
-                          const issueDate = idvisaDetail.issue_date || '';
-                          const expiryDate = idvisaDetail.expiry_date || '';
+                          console.log("Populated passport fields:", {passportNumber, nationality, countryCode, dob: passportDob, issueDate: passportIssueDate, expiryDate: passportExpiryDate});
+                      } else if (docType === 'idvisa' && idvisaDetail) {
+                          const idvisaDocumentName = idvisaDetail.document_name || documentName;
+                          const idvisaDocumentNumber = idvisaDetail.document_number || documentNumber;
+                          const idvisaDob = idvisaDetail.dob || dob;
+                          const idvisaIssueDate = idvisaDetail.issue_date || issueDate;
+                          const idvisaExpiryDate = idvisaDetail.expiry_date || expiryDate;
                           const issueCountry = idvisaDetail.issue_country || '';
                           const countryCode = idvisaDetail.country_code || '';
                           
-                          $("select[name='document_name']").val(documentName);
-                          $("input[name='document_number']").val(documentNumber);
-                          $("input[name='dob']").val(dob);
-                          $("input[name='issue_date']").val(issueDate);
-                          $("input[name='expiry_date']").val(expiryDate);
+                          $("select[name='document_name']").val(idvisaDocumentName);
+                          $("input[name='document_number']").val(idvisaDocumentNumber);
+                          $("input[name='dob']").val(idvisaDob);
+                          $("input[name='issue_date']").val(idvisaIssueDate);
+                          $("input[name='expiry_date']").val(idvisaExpiryDate);
                           $("input[name='issue_country']").val(issueCountry);
                           $("input[name='country_code']").val(countryCode);
                           
-                          console.log("Populated idvisa fields:", {documentName, documentNumber, dob, issueDate, expiryDate});
-                      } else if (doc.type === 'certificate' && doc.certificates && doc.certificates.length > 0) {
+                          console.log("Populated idvisa fields:", {documentName: idvisaDocumentName, documentNumber: idvisaDocumentNumber, dob: idvisaDob, issueDate: idvisaIssueDate, expiryDate: idvisaExpiryDate});
+                      } else if (docType === 'certificate' && doc.certificates && doc.certificates.length > 0) {
                           const cert = doc.certificates[0];
-                          $("#certificateType").val(cert.type_id || '');
-                          $("#certificateNumber").val(cert.certificate_number || '');
-                          $("#certificateIssueDate").val(cert.issue_date || '');
-                          $("#certificateExpiryDate").val(cert.expiry_date || '');
-                          $("#certificateIssuer").val(cert.issuer_id || '');
+                          const certDob = cert.dob || dob;
+                          const certIssueDate = cert.issue_date || issueDate;
+                          const certExpiryDate = cert.expiry_date || expiryDate;
+                          
+                          $("select[name='certificateRows[0][type_id]']").val(cert.type_id || '');
+                          $("input[name='certificateRows[0][issue]']").val(certIssueDate);
+                          $("input[name='certificateRows[0][expiry]']").val(certExpiryDate);
+                          $("input[name='certificate_number']").val(cert.certificate_number || documentNumber);
+                          $("input[name='certificate_issuer_id']").val(cert.issuer_id || '');
+                          $("input[name='dob']").val(certDob);
+                          
+                          console.log("Populated certificate fields:", {typeId: cert.type_id, certificateNumber: cert.certificate_number, dob: certDob, issueDate: certIssueDate, expiryDate: certExpiryDate});
+                      } else if (docType === 'other' || docType === 'resume') {
+                          // For other/resume documents (legacy types)
+                          const otherDocName = (otherDocument && otherDocument.doc_name) ? otherDocument.doc_name : documentName;
+                          const otherDocNumber = (otherDocument && otherDocument.doc_number) ? otherDocument.doc_number : documentNumber;
+                          const otherDob = (otherDocument && otherDocument.dob) ? otherDocument.dob : dob;
+                          const otherIssueDate = (otherDocument && otherDocument.issue_date) ? otherDocument.issue_date : issueDate;
+                          const otherExpiryDate = (otherDocument && otherDocument.expiry_date) ? otherDocument.expiry_date : expiryDate;
+                          
+                          $("input[name='doc_name']").val(otherDocName);
+                          $("input[name='doc_number']").val(otherDocNumber);
+                          $("input[name='dob']").val(otherDob);
+                          $("input[name='issue_date']").val(otherIssueDate);
+                          $("input[name='expiry_date']").val(otherExpiryDate);
+                          
+                          console.log("Populated other/resume fields:", {docName: otherDocName, docNumber: otherDocNumber, dob: otherDob, issueDate: otherIssueDate, expiryDate: otherExpiryDate});
+                      } else {
+                          // For new document types (not legacy types)
+                          // These fields are stored in the main Document table, not in child tables
+                          // Use direct document fields first, then fallback to common fields
+                          const newDocNumber = doc.document_number || '';
+                          const newDocDob = doc.dob || '';
+                          const newDocIssueDate = doc.issue_date || '';
+                          const newDocExpiryDate = doc.expiry_date || '';
+                          const newDocIssuingAuthority = doc.issuing_authority || '';
+                          const newDocIssuingCountry = doc.issuing_country || '';
+                          
+                          console.log("Raw document data for new type:", {
+                              doc_document_number: doc.document_number,
+                              doc_issuing_authority: doc.issuing_authority,
+                              doc_issuing_country: doc.issuing_country,
+                              doc_issue_date: doc.issue_date,
+                              doc_expiry_date: doc.expiry_date,
+                              doc_dob: doc.dob
+                          });
+                          
+                          // Always set values, even if empty (to clear previous values)
+                          $("input[name='document_number']").val(newDocNumber);
+                          $("input[name='dob']").val(newDocDob);
+                          $("input[name='issue_date']").val(newDocIssueDate);
+                          $("input[name='expiry_date']").val(newDocExpiryDate);
+                          $("input[name='issuing_authority']").val(newDocIssuingAuthority);
+                          $("input[name='issuing_country']").val(newDocIssuingCountry);
+                          
+                          console.log("Populated new document type fields:", {
+                              documentNumber: newDocNumber, 
+                              dob: newDocDob, 
+                              issueDate: newDocIssueDate, 
+                              expiryDate: newDocExpiryDate, 
+                              issuing_authority: newDocIssuingAuthority, 
+                              issuing_country: newDocIssuingCountry
+                          });
                       }
-                  }, 500);
+                  }, 800); // Increased timeout to ensure fields are rendered
                   
                   // Show replace button
                   $("#replaceBtn").removeClass("hidden");
@@ -2174,12 +2263,19 @@ function renderDynamicFields(type, callback) {
     if (!fields && selectedTypeInfo) {
         fields = `<div class="space-y-4">`;
         
-        // Document Number (if required)
+        // Document Number (always render, but mark as required if needed)
         if (selectedTypeInfo.requires_document_number) {
             fields += `
                 <div>
                     <label class="block font-medium">Document Number <span class="text-red-500">*</span></label>
                     <input type="text" name="document_number" class="w-full border p-2 rounded-md" placeholder="Enter document number" required>
+                </div>
+            `;
+        } else {
+            fields += `
+                <div>
+                    <label class="block font-medium">Document Number (Optional)</label>
+                    <input type="text" name="document_number" class="w-full border p-2 rounded-md" placeholder="Enter document number">
                 </div>
             `;
         }
@@ -2217,7 +2313,7 @@ function renderDynamicFields(type, callback) {
             `;
         }
         
-        // Issuing Authority (if required)
+        // Issuing Authority (always render, but mark as required if needed)
         if (selectedTypeInfo.requires_issuing_authority) {
             fields += `
                 <div>
@@ -2225,9 +2321,16 @@ function renderDynamicFields(type, callback) {
                     <input type="text" name="issuing_authority" class="w-full border p-2 rounded-md" placeholder="Enter issuing authority" required>
                 </div>
             `;
+        } else {
+            fields += `
+                <div>
+                    <label class="block font-medium">Issuing Authority (Optional)</label>
+                    <input type="text" name="issuing_authority" class="w-full border p-2 rounded-md" placeholder="Enter issuing authority">
+                </div>
+            `;
         }
         
-        // Issuing Country (common field)
+        // Issuing Country (common field - always render)
         fields += `
             <div>
                 <label class="block font-medium">Issuing Country</label>
@@ -2665,13 +2768,14 @@ $("#docType").on("change", function () {
 });
 
 
-document.querySelectorAll('.toggle-share').forEach(span => {
-    span.addEventListener('click', function() {
+document.querySelectorAll('.toggle-share').forEach(button => {
+    button.addEventListener('click', function() {
         let docId = this.dataset.id;
         let img = this.querySelector('img');
-        let shareText = this.nextElementSibling; // Get the sibling span for text
+        let buttonElement = this;
         let currentSrc = img.src.split('/').pop();
-        let isActive = (currentSrc === 'view-icon.png') ? 0 : 1;
+        // Check if currently active (eye.svg means active, view-off-slash.png means inactive)
+        let isActive = (currentSrc === 'eye.svg') ? 0 : 1;
 
         $.ajax({
             url: "{{ route('documents.toggleShare') }}",
@@ -2683,14 +2787,15 @@ document.querySelectorAll('.toggle-share').forEach(span => {
             },
             success: function(response) {
                 if(response.success) {
-                    // Update icon and text dynamically without page reload
+                    // Update icon dynamically without page reload
+                    // When isActive is 1 (making it active), show eye.svg
+                    // When isActive is 0 (making it inactive), show view-off-slash.png
                     img.src = isActive
-                        ? "{{ asset('images/view-icon.png') }}"
+                        ? "{{ asset('images/eye.svg') }}"
                         : "{{ asset('images/view-off-slash.png') }}";
-
-                    shareText.textContent = isActive
-                        ? "Featured on your Profile Preview"
-                        : "Not featured on your Profile Preview";
+                    
+                    // Update title attribute
+                    $(buttonElement).attr('title', isActive ? 'Hide from profile' : 'Show on profile');
                 } else {
                     alert("Failed to update document!");
                 }
@@ -3065,6 +3170,12 @@ document.querySelectorAll('.toggle-share').forEach(span => {
 
         let formData = new FormData(this);
         
+        // Debug: Log form data
+        console.log('Form submission - Document Type:', $("#docType").val());
+        for (let pair of formData.entries()) {
+            console.log('Form Data:', pair[0] + ': ' + pair[1]);
+        }
+        
         // Only append file if a file is actually selected
         const fileInput = $("#docFile")[0];
         if (fileInput && fileInput.files && fileInput.files[0]) {
@@ -3102,7 +3213,11 @@ document.querySelectorAll('.toggle-share').forEach(span => {
             data: formData,
             processData: false,
             contentType: false,
-            success: function () {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function (response) {
+                console.log('Document saved successfully:', response);
                 // Reset form
                 const form = $("#documentForm");
                 form[0].reset();
@@ -4178,24 +4293,31 @@ function clearTemplate() {
         return;
       }
       
+      // Close any existing version history modal first to prevent duplicates
+      closeVersionHistoryModal();
+      
       // Close current modal if open
       $("#viewDocumentModal").addClass("hidden").removeClass("flex");
       
       // Open version history modal with higher z-index
       setTimeout(() => {
-        let historyModal = document.getElementById('versionHistoryModal');
-        if (!historyModal) {
-          historyModal = document.createElement('div');
-          historyModal.id = 'versionHistoryModal';
-          historyModal.className = 'fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50';
-          historyModal.style.zIndex = '60';
-          document.body.appendChild(historyModal);
-          historyModal.addEventListener('click', function(e) {
-            if (e.target === historyModal) {
-              closeVersionHistoryModal();
-            }
-          });
+        // Check if modal already exists, if so remove it first
+        let existingModal = document.getElementById('versionHistoryModal');
+        if (existingModal) {
+          existingModal.remove();
         }
+        
+        let historyModal = document.createElement('div');
+        historyModal.id = 'versionHistoryModal';
+        historyModal.className = 'fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50';
+        historyModal.style.zIndex = '60';
+        document.body.appendChild(historyModal);
+        
+        historyModal.addEventListener('click', function(e) {
+          if (e.target === historyModal) {
+            closeVersionHistoryModal();
+          }
+        });
         
         // Show loading state
         historyModal.innerHTML = `
@@ -4247,12 +4369,12 @@ function clearTemplate() {
     };
   }
 
-  // Close version history modal function
-  function closeVersionHistoryModal() {
+  // Close version history modal function (global scope)
+  window.closeVersionHistoryModal = function() {
     const modal = document.getElementById('versionHistoryModal');
     if (modal) {
       modal.style.display = 'none';
-      modal.innerHTML = '';
+      modal.remove();
     }
   }
 
@@ -4886,7 +5008,12 @@ function clearTemplate() {
   
   // Update modal selected count
   function updateModalSelectedCount() {
-    const selectedCount = $('.verification-doc-checkbox:checked').length;
+    // Only count pending documents
+    const selectedCount = $('.verification-doc-checkbox:checked').filter(function() {
+      const status = $(this).data('status') || $(this).closest('.modal-document-item').data('status') || '';
+      return status.toLowerCase() === 'pending';
+    }).length;
+    
     const submitBtn = $('#submitVerificationBtn');
     const countDisplay = $('#modalSelectedCount');
     
@@ -4970,20 +5097,27 @@ function clearTemplate() {
   
   // Show verification confirmation popup
   function showVerificationConfirmationPopup() {
-    const selectedIds = $('.verification-doc-checkbox:checked').map(function() {
+    // Only get pending documents
+    const selectedIds = $('.verification-doc-checkbox:checked').filter(function() {
+      const status = $(this).data('status') || $(this).closest('.modal-document-item').data('status') || '';
+      return status.toLowerCase() === 'pending';
+    }).map(function() {
       return parseInt($(this).val());
     }).get();
     
     if (selectedIds.length === 0) {
-      alert('Please select at least one document to verify.');
+      alert('Please select at least one pending document to verify. Only pending documents can be sent for verification.');
       return;
     }
     
-    // Get selected document names
+    // Get selected document names (only pending)
     const selectedDocs = [];
     $('.verification-doc-checkbox:checked').each(function() {
-      const docName = $(this).data('doc-name') || 'Document';
-      selectedDocs.push(docName);
+      const status = $(this).data('status') || $(this).closest('.modal-document-item').data('status') || '';
+      if (status.toLowerCase() === 'pending') {
+        const docName = $(this).data('doc-name') || 'Document';
+        selectedDocs.push(docName);
+      }
     });
     
     // Populate selected documents list
@@ -5036,9 +5170,18 @@ function clearTemplate() {
   
   // Listen to checkbox changes in modal
   $(document).on('change', '.verification-doc-checkbox', function() {
+    const checkbox = $(this);
+    const status = checkbox.data('status') || checkbox.closest('.modal-document-item').data('status') || '';
+    
+    // Only allow checking pending documents
+    if (checkbox.is(':checked') && status.toLowerCase() !== 'pending') {
+      checkbox.prop('checked', false);
+      alert('Only pending documents can be selected for verification.');
+      return;
+    }
+    
     updateModalSelectedCount();
     // Trigger peer-checked class update
-    const checkbox = $(this);
     const peerDiv = checkbox.next('div');
     if (checkbox.is(':checked')) {
       peerDiv.addClass('peer-checked:bg-blue-600 peer-checked:border-blue-600');
@@ -5048,6 +5191,44 @@ function clearTemplate() {
       peerDiv.find('img, i').addClass('opacity-0').removeClass('opacity-100');
     }
   });
+  
+  // Appeal document function
+  function appealDocument(docId) {
+    if (!confirm('Do you want to appeal this document rejection? You will be able to provide additional information or evidence.')) {
+      return;
+    }
+    
+    // Open edit modal to allow user to update and resubmit
+    editDocument(docId);
+  }
+  
+  // Delete document function
+  function deleteDocument(docId) {
+    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
+      return;
+    }
+    
+    $.ajax({
+      url: `/documents/${docId}`,
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      },
+      success: function(response) {
+        if (response.success) {
+          alert('Document deleted successfully.');
+          location.reload();
+        } else {
+          alert('Failed to delete document: ' + (response.message || 'Unknown error'));
+        }
+      },
+      error: function(xhr) {
+        const errorMsg = xhr.responseJSON?.message || 'Failed to delete document';
+        alert('Error: ' + errorMsg);
+      }
+    });
+  }
   
   // Old function for backward compatibility (if called from page checkboxes)
   function requestCrewdentialsVerificationForSelected() {

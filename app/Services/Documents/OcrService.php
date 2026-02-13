@@ -613,51 +613,143 @@ class OcrService
                 ];
             }
 
-            // Check if Imagick is available for PDF conversion
-            if (!extension_loaded('imagick') || !class_exists('Imagick')) {
-                return [
-                    'success' => false,
-                    'text' => '',
-                    'confidence' => 0,
-                    'message' => 'Imagick extension not available for PDF processing. Please install php-imagick.'
-                ];
-            }
-
             $text = '';
-            $imagick = new \Imagick();
-            $imagick->setResolution(300, 300);
-            $imagick->readImage($fullPath);
             
-            // Process each page
-            foreach ($imagick as $i => $page) {
-                $page->setImageFormat('png');
-                $tmpImage = storage_path("app/temp/page_{$i}_" . time() . ".png");
+            // Try Imagick first if available
+            if (extension_loaded('imagick') && class_exists('Imagick')) {
+                $imagick = new \Imagick();
+                $imagick->setResolution(300, 300);
+                $imagick->readImage($fullPath);
                 
-                // Ensure temp directory exists
-                if (!is_dir(storage_path('app/temp'))) {
-                    mkdir(storage_path('app/temp'), 0755, true);
+                // Process each page
+                foreach ($imagick as $i => $page) {
+                    $page->setImageFormat('png');
+                    $tmpImage = storage_path("app/temp/page_{$i}_" . time() . ".png");
+                    
+                    // Ensure temp directory exists
+                    if (!is_dir(storage_path('app/temp'))) {
+                        mkdir(storage_path('app/temp'), 0755, true);
+                    }
+                    
+                    $page->writeImage($tmpImage);
+                    
+                    // OCR per page using TesseractOCR
+                    try {
+                        $ocr = $this->createTesseractOCR($tmpImage);
+                        $ocr->lang('eng')->psm(3)->oem(1);
+                        $pageText = $ocr->run();
+                        $text .= $pageText . "\n";
+                    } catch (\Exception $e) {
+                        Log::warning("TesseractOCR failed for PDF page {$i}: " . $e->getMessage());
+                    }
+                    
+                    // Clean up temp file
+                    if (file_exists($tmpImage)) {
+                        unlink($tmpImage);
+                    }
                 }
                 
-                $page->writeImage($tmpImage);
+                $imagick->clear();
+                $imagick->destroy();
+            } else {
+                // Fallback: Use Ghostscript to convert PDF pages to images, then OCR
+                $gsPath = trim(shell_exec('which gs 2>/dev/null'));
                 
-                // OCR per page using TesseractOCR
-                try {
-                    $ocr = $this->createTesseractOCR($tmpImage);
-                    $ocr->lang('eng')->psm(3)->oem(1);
-                    $pageText = $ocr->run();
-                    $text .= $pageText . "\n";
-                } catch (\Exception $e) {
-                    Log::warning("TesseractOCR failed for PDF page {$i}: " . $e->getMessage());
-                }
-                
-                // Clean up temp file
-                if (file_exists($tmpImage)) {
-                    unlink($tmpImage);
+                if ($gsPath && is_executable($gsPath)) {
+                    // Ensure temp directory exists
+                    if (!is_dir(storage_path('app/temp'))) {
+                        mkdir(storage_path('app/temp'), 0755, true);
+                    }
+                    
+                    // Use Ghostscript to convert PDF pages to PNG images
+                    $outputPattern = storage_path("app/temp/pdf_page_%d.png");
+                    $gsCommand = escapeshellarg($gsPath) . ' -dNOPAUSE -dBATCH -sDEVICE=png16m -r300 -dFirstPage=1 -dLastPage=100 -sOutputFile=' . escapeshellarg($outputPattern) . ' ' . escapeshellarg($fullPath) . ' 2>&1';
+                    
+                    exec($gsCommand, $gsOutput, $gsReturnCode);
+                    
+                    if ($gsReturnCode === 0) {
+                        // Process each generated page image
+                        $pageNum = 1;
+                        while (true) {
+                            $tmpImage = storage_path("app/temp/pdf_page_{$pageNum}.png");
+                            
+                            if (!file_exists($tmpImage)) {
+                                break; // No more pages
+                            }
+                            
+                            try {
+                                $ocr = $this->createTesseractOCR($tmpImage);
+                                $ocr->lang('eng')->psm(3)->oem(1);
+                                $pageText = $ocr->run();
+                                $text .= $pageText . "\n";
+                            } catch (\Exception $e) {
+                                Log::warning("TesseractOCR failed for PDF page {$pageNum}: " . $e->getMessage());
+                            }
+                            
+                            // Clean up temp file
+                            if (file_exists($tmpImage)) {
+                                unlink($tmpImage);
+                            }
+                            
+                            $pageNum++;
+                            
+                            // Safety limit: max 100 pages
+                            if ($pageNum > 100) {
+                                break;
+                            }
+                        }
+                    } else {
+                        Log::warning("Ghostscript conversion failed: " . implode("\n", $gsOutput));
+                        // Try pdftotext as last resort
+                        $pdftotextPath = trim(shell_exec('which pdftotext 2>/dev/null'));
+                        
+                        if ($pdftotextPath && is_executable($pdftotextPath)) {
+                            $tmpTextFile = storage_path("app/temp/pdf_text_" . time() . ".txt");
+                            
+                            $pdftotextCommand = escapeshellarg($pdftotextPath) . ' -layout ' . escapeshellarg($fullPath) . ' ' . escapeshellarg($tmpTextFile) . ' 2>&1';
+                            exec($pdftotextCommand, $pdftotextOutput, $pdftotextReturnCode);
+                            
+                            if ($pdftotextReturnCode === 0 && file_exists($tmpTextFile)) {
+                                $text = file_get_contents($tmpTextFile);
+                                unlink($tmpTextFile);
+                            }
+                        }
+                    }
+                } else {
+                    // Last resort: Try pdftotext for text extraction
+                    $pdftotextPath = trim(shell_exec('which pdftotext 2>/dev/null'));
+                    
+                    if ($pdftotextPath && is_executable($pdftotextPath)) {
+                        $tmpTextFile = storage_path("app/temp/pdf_text_" . time() . ".txt");
+                        
+                        if (!is_dir(storage_path('app/temp'))) {
+                            mkdir(storage_path('app/temp'), 0755, true);
+                        }
+                        
+                        $pdftotextCommand = escapeshellarg($pdftotextPath) . ' -layout ' . escapeshellarg($fullPath) . ' ' . escapeshellarg($tmpTextFile) . ' 2>&1';
+                        exec($pdftotextCommand, $pdftotextOutput, $pdftotextReturnCode);
+                        
+                        if ($pdftotextReturnCode === 0 && file_exists($tmpTextFile)) {
+                            $text = file_get_contents($tmpTextFile);
+                            unlink($tmpTextFile);
+                        } else {
+                            return [
+                                'success' => false,
+                                'text' => '',
+                                'confidence' => 0,
+                                'message' => 'PDF processing failed. Please ensure Imagick, Ghostscript, or pdftotext is available.'
+                            ];
+                        }
+                    } else {
+                        return [
+                            'success' => false,
+                            'text' => '',
+                            'confidence' => 0,
+                            'message' => 'Imagick extension not available and no fallback tools (Ghostscript/pdftotext) found. Please install php-imagick or ensure Ghostscript/pdftotext is available.'
+                        ];
+                    }
                 }
             }
-            
-            $imagick->clear();
-            $imagick->destroy();
             
             if (empty(trim($text))) {
                 return [

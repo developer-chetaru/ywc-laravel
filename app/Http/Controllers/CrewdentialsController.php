@@ -199,12 +199,28 @@ class CrewdentialsController extends Controller
             ], 403);
         }
 
-        // Verify user owns all documents
+        // Verify user owns all documents AND they are pending
         $documents = Document::whereIn('id', $request->document_ids)
             ->where('user_id', $user->id)
+            ->where('status', 'pending')
             ->get();
 
         if ($documents->count() !== count($request->document_ids)) {
+            // Check if some documents are not pending
+            $nonPending = Document::whereIn('id', $request->document_ids)
+                ->where('user_id', $user->id)
+                ->where('status', '!=', 'pending')
+                ->pluck('id')
+                ->toArray();
+            
+            if (!empty($nonPending)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only pending documents can be sent for verification. Some selected documents are not pending.',
+                    'non_pending_ids' => $nonPending,
+                ], 422);
+            }
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Some documents not found or not owned by you',

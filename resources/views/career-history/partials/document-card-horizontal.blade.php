@@ -106,42 +106,37 @@
             @endif
         </div>
         
-        <!-- Featured Text -->
-        @if($doc->is_active)
-        <div class="text-[#1B1B1B] text-sm mt-3">
-            Featured on your Profile Preview
-        </div>
-        @endif
-        
         <!-- Icons -->
         <div class="flex gap-2 mt-4">
-            <!-- Reset/History -->
+            <!-- Reset/History - Only show if versions exist -->
+            @if(($doc->version_count ?? 0) > 0)
             <button onclick="openVersionHistoryModal({{ $doc->id }}); event.stopPropagation();" 
-                    class="w-[30px] h-[30px] flex items-center justify-center" title="View Version History">
-                <img class="w-full h-full border border-transparent rounded-[8px] hover:border-[#000000]" src="{{ asset('images/reset.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    class="w-[30px] h-[30px] flex items-center justify-center p-0 overflow-hidden" title="View Version History">
+                <img class="w-[30px] h-[30px] border border-transparent rounded-[8px] hover:border-[#000000] object-contain" src="{{ asset('images/reset.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                 <i class="fas fa-history text-gray-600" style="display:none;"></i>
             </button>
+            @endif
             
             <!-- Eye/View -->
-            <button type="button" onclick="toggleShare(this);" 
-                    class="toggle-share w-[30px] h-[30px] flex items-center justify-center cursor-pointer" 
+            <button onclick="toggleShare(this); event.stopPropagation();" 
+                    class="toggle-share w-[30px] h-[30px] flex items-center justify-center p-0 overflow-hidden" 
                     data-id="{{ $doc->id }}"
                     title="{{ $doc->is_active ? 'Hide from profile' : 'Show on profile' }}">
-                <img class="w-full h-full border border-transparent rounded-[8px] hover:border-[#000000]" src="{{ $doc->is_active ? asset('images/eye.svg') : asset('images/view-off-slash.png') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <img class="w-[30px] h-[30px] border border-transparent rounded-[8px] hover:border-[#000000] object-contain" src="{{ $doc->is_active ? asset('images/eye.svg') : asset('images/view-off-slash.png') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                 <i class="fas {{ $doc->is_active ? 'fa-eye' : 'fa-eye-slash' }} text-gray-600" style="display:none;"></i>
             </button>
             
             <!-- Download -->
             <button onclick="downloadDocument({{ $doc->id }}); event.stopPropagation();" 
-                    class="w-[30px] h-[30px] flex items-center justify-center" title="Download">
-                <img class="w-full h-full border border-transparent rounded-[8px] hover:border-[#000000]" src="{{ asset('images/download.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    class="w-[30px] h-[30px] flex items-center justify-center p-0 overflow-hidden" title="Download">
+                <img class="w-[30px] h-[30px] border border-transparent rounded-[8px] hover:border-[#000000] object-contain" src="{{ asset('images/download.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                 <i class="fas fa-download text-gray-600" style="display:none;"></i>
             </button>
             
             <!-- Edit -->
             <button onclick="editDocument({{ $doc->id }}); event.stopPropagation();" 
-                    class="w-[30px] h-[30px] flex items-center justify-center" title="Edit">
-                <img class="w-full h-full border border-transparent rounded-[8px] hover:border-[#000000]" src="{{ asset('images/edit.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    class="w-[30px] h-[30px] flex items-center justify-center p-0 overflow-hidden" title="Edit">
+                <img class="w-[30px] h-[30px] border border-transparent rounded-[8px] hover:border-[#000000] object-contain" src="{{ asset('images/edit.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                 <i class="fas fa-edit text-gray-600" style="display:none;"></i>
             </button>
         </div>

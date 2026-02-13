@@ -119,6 +119,7 @@
                                                                     @endforeach
                                                                 </optgroup>
                                                             @endforeach
+                                                            <option value="other">Other</option>
                                                         </select>
                                                     </div>
 

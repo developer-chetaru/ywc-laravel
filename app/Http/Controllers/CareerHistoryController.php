@@ -84,6 +84,20 @@ class CareerHistoryController extends Controller
                 $q->latest()->limit(1); // Get latest status change for notes
             },
         ])->where('user_id', Auth::id())->get();
+        
+        // Load version counts for all documents to avoid N+1 queries
+        if ($documents->isNotEmpty()) {
+            $documentIds = $documents->pluck('id');
+            $versionCounts = \App\Models\DocumentVersion::whereIn('document_id', $documentIds)
+                ->selectRaw('document_id, COUNT(*) as count')
+                ->groupBy('document_id')
+                ->pluck('count', 'document_id');
+            
+            // Add version count to each document
+            $documents->each(function($doc) use ($versionCounts) {
+                $doc->version_count = $versionCounts[$doc->id] ?? 0;
+            });
+        }
 
         $documents->transform(function ($doc) {
             if (!$doc->expiry_date) {
@@ -292,6 +306,7 @@ class CareerHistoryController extends Controller
             'certificates.type',
             'certificates.issuer',
             'otherDocument',
+            'documentType', // Include document type relationship
         ])
         ->where('id', $id)
         ->where('user_id', Auth::id())
@@ -301,10 +316,41 @@ class CareerHistoryController extends Controller
             return response()->json(['error' => 'Document not found'], 404);
         }
 
-        $docData = $document->toArray();
+        // Get document data - explicitly get all fields to ensure they're included
+        $docData = [
+            'id' => $document->id,
+            'user_id' => $document->user_id,
+            'type' => $document->type, // Will be overridden below for new types
+            'document_type_id' => $document->document_type_id,
+            'document_name' => $document->document_name,
+            'document_number' => $document->document_number,
+            'issuing_authority' => $document->issuing_authority,
+            'issuing_country' => $document->issuing_country,
+            'issue_date' => $document->issue_date ? $document->issue_date->format('Y-m-d') : null,
+            'expiry_date' => $document->expiry_date ? $document->expiry_date->format('Y-m-d') : null,
+            'dob' => $document->dob ? $document->dob->format('Y-m-d') : null,
+            'status' => $document->status ?? 'pending',
+            'file_path' => $document->file_path,
+            'file_type' => $document->file_type,
+            'file_size' => $document->file_size,
+            'is_active' => $document->is_active,
+            'ocr_status' => $document->ocr_status,
+            'created_at' => $document->created_at ? $document->created_at->toDateTimeString() : null,
+            'updated_at' => $document->updated_at ? $document->updated_at->toDateTimeString() : null,
+        ];
 
         // Preserve document id
         $docData['document_id'] = $document->id;
+
+        // For new document types, use document_type slug instead of legacy type
+        // This ensures the correct document type is selected in the dropdown
+        if ($document->documentType) {
+            $docData['type'] = $document->documentType->slug;
+            $docData['document_type_slug'] = $document->documentType->slug;
+        } else {
+            // Fallback to legacy type if no documentType relationship
+            $docData['type'] = $document->type;
+        }
 
         // Merge related data without overwriting keys like 'id'
         if ($document->passportDetail) {
@@ -342,67 +388,156 @@ class CareerHistoryController extends Controller
         $oldType = $document->type;
 
         $base = [
-            'type' => 'required|in:passport,idvisa,certificate,resume,other',
+            'type' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    // Check if it's a legacy type
+                    $legacyTypes = ['passport', 'idvisa', 'certificate', 'resume', 'other'];
+                    if (in_array($value, $legacyTypes)) {
+                        return;
+                    }
+                    
+                    // Check if it's a valid document type slug
+                    $exists = DocumentType::where('slug', $value)
+                        ->where('is_active', true)
+                        ->exists();
+                    
+                    if (!$exists) {
+                        $fail('The selected type is invalid.');
+                    }
+                },
+            ],
             'file' => 'nullable|file|max:5120',
             'dob'  => 'nullable|date|before_or_equal:today',
         ];
 
         $rules = $base;
-
-        switch ($request->input('type')) {
-            case 'passport':
-                $rules = array_merge($base, [
-                    'passport_number' => 'required|string|min:6|max:9',
-                    'nationality'     => 'required|string|max:50',
-                    'country_code'    => 'required|string|min:2|max:3',
-                    'issue_date'      => 'required|date|before_or_equal:today',
-                    'expiry_date'     => 'required|date|after:issue_date',
-                    'dob'             => 'required|date|before_or_equal:today',
-                ]);
-                break;
-            case 'idvisa':
-                $rules = array_merge($base, [
-                    'document_name'   => 'required|string',
-                    'document_number' => 'required|string|max:50',
-                    'issue_country'   => 'nullable|string|max:100',
-                    'place_of_issue'  => 'nullable|string|max:100',
-                    'issue_date'      => 'required|date|before_or_equal:today',
-                    'dob'             => 'required|date|before_or_equal:today',
-                ]);
-                if (in_array($request->document_name, ['Schengen visa','B1/B2 visa','Frontier work permit','C1/D visa'])) {
-                    $rules['expiry_date']  = 'required|date|after:issue_date';
-                    $rules['country_code'] = 'required|string|min:2|max:3';
+        $typeInput = $request->input('type');
+        
+        // Check if it's a new document type (not a legacy type)
+        $isNewDocumentType = !in_array($typeInput, ['passport', 'idvisa', 'certificate', 'resume', 'other']);
+        $documentType = null;
+        
+        if ($isNewDocumentType) {
+            // Get document type from database to check its requirements
+            $documentType = DocumentType::where('slug', $typeInput)->where('is_active', true)->first();
+            
+            if ($documentType) {
+                // Build validation rules based on document type requirements
+                $newTypeRules = [];
+                
+                if ($documentType->requires_document_number) {
+                    $newTypeRules['document_number'] = 'required|string|max:255';
+                } else {
+                    $newTypeRules['document_number'] = 'nullable|string|max:255';
                 }
-                break;
-            case 'certificate':
-                $rules = array_merge($base, [
-                    'certificateRows'           => 'required|array|min:1',
-                    'certificateRows.*.type_id' => 'required|integer|exists:certificate_types,id',
-                    'certificateRows.*.issue'   => 'nullable|date|before_or_equal:today',
-                    'certificateRows.*.expiry'  => 'nullable|date|after_or_equal:certificateRows.*.issue',
-                    'dob'                       => 'required|date|before_or_equal:today',
-                ]);
-                break;
-            case 'resume':
-                $rules = array_merge($base, [
-                    'doc_name'   => 'nullable|string|max:100',
-                    'issue_date' => 'nullable|date',
-                    'expiry_date'=> 'nullable|date|after_or_equal:issue_date',
-                    'dob'        => 'nullable|date|before_or_equal:today',
-                ]);
-                break;
-            case 'other':
+                
+                if ($documentType->requires_expiry_date) {
+                    $newTypeRules['expiry_date'] = 'required|date|after_or_equal:issue_date';
+                } else {
+                    $newTypeRules['expiry_date'] = 'nullable|date|after_or_equal:issue_date';
+                }
+                
+                if ($documentType->requires_issuing_authority) {
+                    $newTypeRules['issuing_authority'] = 'required|string|max:255';
+                } else {
+                    $newTypeRules['issuing_authority'] = 'nullable|string|max:255';
+                }
+                
+                // Common fields
+                $newTypeRules['issue_date'] = 'nullable|date|before_or_equal:today';
+                $newTypeRules['issuing_country'] = 'nullable|string|max:255';
+                $newTypeRules['dob'] = 'nullable|date|before_or_equal:today';
+                
+                $rules = array_merge($base, $newTypeRules);
+            } else {
+                // If document type not found, treat as 'other'
                 $rules = array_merge($base, [
                     'doc_name'   => 'required|string|max:100',
-                    'doc_number' => 'required|string|max:100',
+                    'doc_number' => 'nullable|string|max:100',
                     'issue_date' => 'nullable|date',
                     'expiry_date'=> 'nullable|date|after_or_equal:issue_date',
-                    'dob'        => 'required|date|before_or_equal:today',
+                  	'dob'        => 'nullable|date|before_or_equal:today',
                 ]);
-                break;
+            }
+        } else {
+            // Legacy types
+            switch ($typeInput) {
+                case 'passport':
+                    $rules = array_merge($base, [
+                        'passport_number' => 'required|string|min:6|max:9',
+                        'nationality'     => 'required|string|max:50',
+                        'country_code'    => 'required|string|min:2|max:3',
+                        'issue_date'      => 'required|date|before_or_equal:today',
+                        'expiry_date'     => 'required|date|after:issue_date',
+                        'dob'             => 'required|date|before_or_equal:today',
+                    ]);
+                    break;
+                case 'idvisa':
+                    $rules = array_merge($base, [
+                        'document_name'   => 'required|string',
+                        'document_number' => 'required|string|max:50',
+                        'issue_country'   => 'nullable|string|max:100',
+                        'place_of_issue'  => 'nullable|string|max:100',
+                        'issue_date'      => 'required|date|before_or_equal:today',
+                        'dob'             => 'required|date|before_or_equal:today',
+                    ]);
+                    if (in_array($request->document_name, ['Schengen visa','B1/B2 visa','Frontier work permit','C1/D visa'])) {
+                        $rules['expiry_date']  = 'required|date|after:issue_date';
+                        $rules['country_code'] = 'required|string|min:2|max:3';
+                    }
+                    break;
+                case 'certificate':
+                    $rules = array_merge($base, [
+                        'certificateRows'           => 'required|array|min:1',
+                        'certificateRows.*.type_id' => 'required|integer|exists:certificate_types,id',
+                        'certificateRows.*.issue'   => 'nullable|date|before_or_equal:today',
+                        'certificateRows.*.expiry'  => 'nullable|date|after_or_equal:certificateRows.*.issue',
+                        'dob'                       => 'required|date|before_or_equal:today',
+                    ]);
+                    break;
+                case 'resume':
+                    $rules = array_merge($base, [
+                        'doc_name'   => 'nullable|string|max:100',
+                        'issue_date' => 'nullable|date',
+                        'expiry_date'=> 'nullable|date|after_or_equal:issue_date',
+                        'dob'        => 'nullable|date|before_or_equal:today',
+                    ]);
+                    break;
+                case 'other':
+                    $rules = array_merge($base, [
+                        'doc_name'   => 'required|string|max:100',
+                        'doc_number' => 'nullable|string|max:100',
+                        'issue_date' => 'nullable|date',
+                        'expiry_date'=> 'nullable|date|after_or_equal:issue_date',
+                        'dob'        => 'nullable|date|before_or_equal:today',
+                    ]);
+                    break;
+            }
         }
 
-        $validated = $request->validate($rules);
+        try {
+            $validated = $request->validate($rules);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed in update:', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            throw $e;
+        }
+        
+        // Get document type for new document types
+        if ($isNewDocumentType && !$documentType) {
+            $documentType = DocumentType::where('slug', $validated['type'])->where('is_active', true)->first();
+        }
+        
+        // Log for debugging
+        \Log::info('Update document:', [
+            'document_id' => $id,
+            'isNewDocumentType' => $isNewDocumentType,
+            'documentType' => $documentType ? $documentType->slug : 'null',
+            'validated' => $validated
+        ]);
 
         // Always create version before updating to track all changes
         try {
@@ -420,7 +555,8 @@ class CareerHistoryController extends Controller
             // Check for metadata changes
             $metadataChanged = false;
             $metadataFields = ['passport_number', 'nationality', 'country_code', 'issue_date', 
-                              'expiry_date', 'dob', 'document_name', 'document_number'];
+                              'expiry_date', 'dob', 'document_name', 'document_number', 
+                              'issuing_authority', 'issuing_country'];
             foreach ($metadataFields as $field) {
                 if ($request->has($field)) {
                     $metadataChanged = true;
@@ -442,12 +578,24 @@ class CareerHistoryController extends Controller
         }
 
         // Delete old details if type changed
-        if ($oldType !== $validated['type']) {
-            switch ($oldType) {
+        // Get old document type slug for comparison
+        $oldDocumentType = $document->documentType;
+        $oldTypeSlug = $oldDocumentType ? $oldDocumentType->slug : $oldType;
+        
+        if ($oldTypeSlug !== $validated['type']) {
+            // Delete old child records based on old type
+            $oldLegacyType = in_array($oldTypeSlug, ['passport', 'idvisa', 'certificate', 'resume', 'other']) 
+                ? $oldTypeSlug 
+                : 'other';
+            
+            switch ($oldLegacyType) {
                 case 'passport': $document->passportDetail?->delete(); break;
                 case 'idvisa': $document->idvisaDetail?->delete(); break;
                 case 'certificate': $document->certificates()->delete(); break;
-                case 'other': $document->otherDocument?->delete(); break;
+                case 'other': 
+                case 'resume': 
+                    $document->otherDocument?->delete(); 
+                    break;
             }
         }
 
@@ -467,18 +615,42 @@ class CareerHistoryController extends Controller
         }
 
         // Map 'resume' to 'other' for legacy enum compatibility
-        $legacyType = $validated['type'];
+        $legacyType = in_array($validated['type'], ['passport', 'idvisa', 'certificate', 'resume', 'other']) 
+            ? $validated['type'] 
+            : 'other';
         if ($legacyType === 'resume') {
             $legacyType = 'other';
         }
 
-        $document->update([
+        // Helper function to convert empty strings to null
+        $toNull = function($value) {
+            return ($value === '' || $value === null) ? null : $value;
+        };
+        
+        $updateData = [
             'type' => $legacyType,
-            'issue_date' => $validated['issue_date'] ?? null,
-            'expiry_date' => $validated['expiry_date'] ?? null,
-            'dob' => $validated['dob'] ?? null,
+            'issue_date' => $toNull($validated['issue_date'] ?? null),
+            'expiry_date' => $toNull($validated['expiry_date'] ?? null),
+            'dob' => $toNull($validated['dob'] ?? null),
             'status' => 'pending',
-        ]);
+        ];
+        
+        // For new document types, update document_type_id and related fields
+        if ($isNewDocumentType) {
+            if ($documentType) {
+                $updateData['document_type_id'] = $documentType->id;
+                $updateData['document_name'] = $documentType->name;
+            }
+            // Always update these fields for new document types, even if documentType is null
+            // Get from validated first, then fallback to request input to ensure we capture all data
+            $updateData['document_number'] = $toNull($validated['document_number'] ?? $request->input('document_number', null));
+            $updateData['issuing_authority'] = $toNull($validated['issuing_authority'] ?? $request->input('issuing_authority', null));
+            $updateData['issuing_country'] = $toNull($validated['issuing_country'] ?? $request->input('issuing_country', null));
+        }
+
+        \Log::info('Updating document with data:', $updateData);
+        $document->update($updateData);
+        \Log::info('Document updated successfully. Document after update:', $document->fresh()->toArray());
 
         // Generate thumbnail if file was uploaded
         if ($request->hasFile('file') && $document->id) {
@@ -491,7 +663,12 @@ class CareerHistoryController extends Controller
             }
         }
 
-        switch ($validated['type']) {
+        // For new document types (not legacy), treat as 'other'
+        $typeForSwitch = in_array($validated['type'], ['passport', 'idvisa', 'certificate', 'resume', 'other']) 
+            ? $validated['type'] 
+            : 'other';
+        
+        switch ($typeForSwitch) {
             case 'resume':
                 // Resume is treated as 'other' in database
                 $other = $document->otherDocument ?? new OtherDocument(['document_id' => $document->id]);
@@ -545,11 +722,22 @@ class CareerHistoryController extends Controller
 
             case 'other':
                 $other = $document->otherDocument ?? new OtherDocument(['document_id' => $document->id]);
-                $other->doc_name = $validated['doc_name'];
-                $other->doc_number = $validated['doc_number'] ?? null;
+                
+                // For new document types, use document_name from DocumentType, otherwise use validated doc_name
+                $docName = $isNewDocumentType && $documentType
+                    ? $documentType->name
+                    : ($validated['doc_name'] ?? 'Document');
+                
+                // For new document types, document_number is already saved in Document table
+                $docNumber = $isNewDocumentType 
+                    ? null // Already saved in Document table
+                    : ($validated['doc_number'] ?? null);
+                
+                $other->doc_name = $docName;
+                $other->doc_number = $docNumber;
                 $other->issue_date = $validated['issue_date'] ?? null;
                 $other->expiry_date = $validated['expiry_date'] ?? null;
-                $other->dob = $validated['dob'];
+                $other->dob = $validated['dob'] ?? null;
                 $other->save();
                 break;
         }
@@ -803,52 +991,140 @@ class CareerHistoryController extends Controller
                 Log::info('Using Tesseract at path: ' . $tesseractPath);
 
                 if ($extension === 'pdf') {
-                    // Check if Imagick is available
-                    if (!extension_loaded('imagick') || !class_exists('Imagick')) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Imagick extension is required for PDF processing. Please install: sudo apt-get install php-imagick'
-                        ], 500);
-                    }
+                    // Try Imagick first if available
+                    if (extension_loaded('imagick') && class_exists('Imagick')) {
+                        // Convert PDF pages to images using Imagick
+                        $imagick = new Imagick();
+                        $imagick->setResolution(300, 300);
+                        $imagick->readImage($fullPath);
 
-                    // Convert PDF pages to images
-                    $imagick = new Imagick();
-                    $imagick->setResolution(300, 300);
-                    $imagick->readImage($fullPath);
+                        foreach ($imagick as $i => $page) {
+                            $page->setImageFormat('png');
+                            $tmpImage = storage_path("app/temp/page_{$i}.png");
+                            
+                            // Ensure temp directory exists
+                            if (!is_dir(storage_path('app/temp'))) {
+                                mkdir(storage_path('app/temp'), 0755, true);
+                            }
+                            
+                            $page->writeImage($tmpImage);
 
-                    foreach ($imagick as $i => $page) {
-                        $page->setImageFormat('png');
-                        $tmpImage = storage_path("app/temp/page_{$i}.png");
+                            // OCR per page
+                            try {
+                                $ocr = $this->createTesseractOCR($tmpImage);
+                                $ocr->lang('eng')->psm(3)->oem(1);
+                                $text .= $ocr->run() . "\n";
+                            } catch (\Error $e) {
+                                // Catch fatal errors (like undefined function)
+                                Log::error("TesseractOCR fatal error for PDF page {$i}: " . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+                                // Continue with next page instead of failing completely
+                            } catch (\Exception $e) {
+                                Log::warning("TesseractOCR failed for PDF page {$i}: " . $e->getMessage());
+                                // Continue with next page instead of failing completely
+                            }
+
+                            // Delete temp page
+                            if (file_exists($tmpImage)) {
+                                unlink($tmpImage);
+                            }
+                        }
+
+                        $imagick->clear();
+                        $imagick->destroy();
+                    } else {
+                        // Fallback: Use Ghostscript to convert PDF pages to images, then OCR
+                        // Check if Ghostscript (gs) is available
+                        $gsPath = trim(shell_exec('which gs 2>/dev/null'));
                         
-                        // Ensure temp directory exists
-                        if (!is_dir(storage_path('app/temp'))) {
-                            mkdir(storage_path('app/temp'), 0755, true);
-                        }
-                        
-                        $page->writeImage($tmpImage);
-
-                        // OCR per page
-                        try {
-                            $ocr = $this->createTesseractOCR($tmpImage);
-                            $ocr->lang('eng')->psm(3)->oem(1);
-                            $text .= $ocr->run() . "\n";
-                        } catch (\Error $e) {
-                            // Catch fatal errors (like undefined function)
-                            Log::error("TesseractOCR fatal error for PDF page {$i}: " . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
-                            // Continue with next page instead of failing completely
-                        } catch (\Exception $e) {
-                            Log::warning("TesseractOCR failed for PDF page {$i}: " . $e->getMessage());
-                            // Continue with next page instead of failing completely
-                        }
-
-                        // Delete temp page
-                        if (file_exists($tmpImage)) {
-                            unlink($tmpImage);
+                        if ($gsPath && is_executable($gsPath)) {
+                            // Ensure temp directory exists
+                            if (!is_dir(storage_path('app/temp'))) {
+                                mkdir(storage_path('app/temp'), 0755, true);
+                            }
+                            
+                            // Use Ghostscript to convert PDF pages to PNG images
+                            $outputPattern = storage_path("app/temp/pdf_page_%d.png");
+                            $gsCommand = escapeshellarg($gsPath) . ' -dNOPAUSE -dBATCH -sDEVICE=png16m -r300 -dFirstPage=1 -dLastPage=100 -sOutputFile=' . escapeshellarg($outputPattern) . ' ' . escapeshellarg($fullPath) . ' 2>&1';
+                            
+                            exec($gsCommand, $gsOutput, $gsReturnCode);
+                            
+                            if ($gsReturnCode === 0) {
+                                // Process each generated page image
+                                $pageNum = 1;
+                                while (true) {
+                                    $tmpImage = storage_path("app/temp/pdf_page_{$pageNum}.png");
+                                    
+                                    if (!file_exists($tmpImage)) {
+                                        break; // No more pages
+                                    }
+                                    
+                                    try {
+                                        $ocr = $this->createTesseractOCR($tmpImage);
+                                        $ocr->lang('eng')->psm(3)->oem(1);
+                                        $text .= $ocr->run() . "\n";
+                                    } catch (\Error $e) {
+                                        Log::error("TesseractOCR fatal error for PDF page {$pageNum}: " . $e->getMessage());
+                                    } catch (\Exception $e) {
+                                        Log::warning("TesseractOCR failed for PDF page {$pageNum}: " . $e->getMessage());
+                                    }
+                                    
+                                    // Clean up temp file
+                                    if (file_exists($tmpImage)) {
+                                        unlink($tmpImage);
+                                    }
+                                    
+                                    $pageNum++;
+                                    
+                                    // Safety limit: max 100 pages
+                                    if ($pageNum > 100) {
+                                        break;
+                                    }
+                                }
+                            } else {
+                                Log::warning("Ghostscript conversion failed: " . implode("\n", $gsOutput));
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => 'PDF processing failed. Ghostscript conversion error.'
+                                ], 500);
+                            }
+                        } else {
+                            // Last resort: Try pdftotext for text extraction (no OCR needed for text-based PDFs)
+                            $pdftotextPath = trim(shell_exec('which pdftotext 2>/dev/null'));
+                            
+                            if ($pdftotextPath && is_executable($pdftotextPath)) {
+                                $tmpTextFile = storage_path("app/temp/pdf_text_" . time() . ".txt");
+                                
+                                if (!is_dir(storage_path('app/temp'))) {
+                                    mkdir(storage_path('app/temp'), 0755, true);
+                                }
+                                
+                                $pdftotextCommand = escapeshellarg($pdftotextPath) . ' -layout ' . escapeshellarg($fullPath) . ' ' . escapeshellarg($tmpTextFile) . ' 2>&1';
+                                exec($pdftotextCommand, $pdftotextOutput, $pdftotextReturnCode);
+                                
+                                if ($pdftotextReturnCode === 0 && file_exists($tmpTextFile)) {
+                                    $text = file_get_contents($tmpTextFile);
+                                    unlink($tmpTextFile);
+                                    
+                                    if (empty(trim($text))) {
+                                        return response()->json([
+                                            'success' => false,
+                                            'message' => 'PDF appears to be image-based. OCR processing requires Imagick or Ghostscript. Please contact your administrator to install php-imagick or ensure Ghostscript is available.'
+                                        ], 500);
+                                    }
+                                } else {
+                                    return response()->json([
+                                        'success' => false,
+                                        'message' => 'PDF processing failed. Please ensure pdftotext, Ghostscript, or Imagick is available on the server.'
+                                    ], 500);
+                                }
+                            } else {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => 'PDF processing requires Imagick, Ghostscript, or pdftotext. None are available. Please contact your administrator.'
+                                ], 500);
+                            }
                         }
                     }
-
-                    $imagick->clear();
-                    $imagick->destroy();
                 } else {
                     // Normal image OCR with TesseractOCR
                     try {
@@ -1023,9 +1299,57 @@ class CareerHistoryController extends Controller
         ];
 
         $rules = $base;
-
-        // Step 2: Conditional validation rules
-        switch ($request->input('type')) {
+        $typeInput = $request->input('type');
+        
+        // Step 2: Check if it's a new document type (not a legacy type)
+        $isNewDocumentType = !in_array($typeInput, ['passport', 'idvisa', 'certificate', 'resume', 'other']);
+        $documentType = null;
+        
+        if ($isNewDocumentType) {
+            // Get document type from database to check its requirements
+            $documentType = DocumentType::where('slug', $typeInput)->where('is_active', true)->first();
+            
+            if ($documentType) {
+                // Build validation rules based on document type requirements
+                $newTypeRules = [];
+                
+                if ($documentType->requires_document_number) {
+                    $newTypeRules['document_number'] = 'required|string|max:255';
+                } else {
+                    $newTypeRules['document_number'] = 'nullable|string|max:255';
+                }
+                
+                if ($documentType->requires_expiry_date) {
+                    $newTypeRules['expiry_date'] = 'required|date|after_or_equal:issue_date';
+                } else {
+                    $newTypeRules['expiry_date'] = 'nullable|date|after_or_equal:issue_date';
+                }
+                
+                if ($documentType->requires_issuing_authority) {
+                    $newTypeRules['issuing_authority'] = 'required|string|max:255';
+                } else {
+                    $newTypeRules['issuing_authority'] = 'nullable|string|max:255';
+                }
+                
+                // Common fields
+                $newTypeRules['issue_date'] = 'nullable|date|before_or_equal:today';
+                $newTypeRules['issuing_country'] = 'nullable|string|max:255';
+                $newTypeRules['dob'] = 'nullable|date|before_or_equal:today';
+                
+                $rules = array_merge($base, $newTypeRules);
+            } else {
+                // If document type not found, treat as 'other'
+                $rules = array_merge($base, [
+                    'doc_name'   => 'required|string|max:100',
+                    'doc_number' => 'nullable|string|max:100',
+                    'issue_date' => 'nullable|date',
+                    'expiry_date'=> 'nullable|date|after_or_equal:issue_date',
+                  	'dob'        => 'nullable|date|before_or_equal:today',
+                ]);
+            }
+        } else {
+            // Step 3: Conditional validation rules for legacy types
+            switch ($typeInput) {
             case 'passport':
                 $rules = array_merge($base, [
                     'passport_number' => ['required','string','min:6','max:9'],
@@ -1100,19 +1424,24 @@ class CareerHistoryController extends Controller
                   	'dob'        => 'required|date|before_or_equal:today',
                 ]);
                 break;
+            }
         }
 
-        // Step 3: Validate request
+        // Step 4: Validate request
         $validated = $request->validate($rules);
+        
+        // Get document type for new document types if not already retrieved
+        if ($isNewDocumentType && !$documentType) {
+            $documentType = DocumentType::where('slug', $validated['type'])->where('is_active', true)->first();
+        }
 
-        // Step 4: File storage (if uploaded)
+        // Step 5: File storage (if uploaded)
         $storedPath = null;
         if ($request->hasFile('file')) {
             $storedPath = $request->file('file')->store('documents', 'public');
         }
 
-        // Step 5: Check if type is a new document type slug or legacy type
-        $documentType = DocumentType::where('slug', $validated['type'])->where('is_active', true)->first();
+        // Step 6: Determine legacy type
         $legacyType = in_array($validated['type'], ['passport', 'idvisa', 'certificate', 'resume', 'other']) 
             ? $validated['type'] 
             : 'other'; // Default to 'other' for new document types
@@ -1122,11 +1451,13 @@ class CareerHistoryController extends Controller
             $legacyType = 'other';
         }
 
-        // Step 6: Check if type is a new document type slug
-        $documentType = DocumentType::where('slug', $validated['type'])->where('is_active', true)->first();
-
-        // Step 7: Save main Document
-        $document = Document::create([
+        // Step 7: Prepare document data
+        // Helper function to convert empty strings to null
+        $toNull = function($value) {
+            return ($value === '' || $value === null) ? null : $value;
+        };
+        
+        $documentData = [
             'user_id'         => auth()->id(),
             'type'            => $legacyType, // Keep legacy type for backward compatibility
             'document_type_id'=> $documentType ? $documentType->id : null, // New document type reference
@@ -1134,11 +1465,23 @@ class CareerHistoryController extends Controller
             'file_path'       => $storedPath,
             'file_type'       => $request->file ? $request->file->getClientOriginalExtension() : null,
             'file_size'       => $request->file ? (int) ceil($request->file->getSize() / 1024) : null,
-            'issue_date'      => $validated['issue_date'] ?? null,
-            'expiry_date'     => $validated['expiry_date'] ?? null,
-          	'dob'             => $validated['dob'] ?? null,
+            'issue_date'      => $toNull($validated['issue_date'] ?? null),
+            'expiry_date'     => $toNull($validated['expiry_date'] ?? null),
+          	'dob'             => $toNull($validated['dob'] ?? null),
             'ocr_status'      => 'pending', // OCR will be processed in background
-        ]);
+        ];
+        
+        // For new document types, ALWAYS save document_number, issuing_authority, and issuing_country
+        // These fields are stored directly in the documents table
+        if ($isNewDocumentType) {
+            // Always save these fields, even if null (to ensure data consistency)
+            $documentData['document_number'] = $toNull($validated['document_number'] ?? $request->input('document_number', null));
+            $documentData['issuing_authority'] = $toNull($validated['issuing_authority'] ?? $request->input('issuing_authority', null));
+            $documentData['issuing_country'] = $toNull($validated['issuing_country'] ?? $request->input('issuing_country', null));
+        }
+
+        // Step 8: Save main Document
+        $document = Document::create($documentData);
 
         // Queue OCR processing if file was uploaded
         if ($storedPath) {
@@ -1156,7 +1499,7 @@ class CareerHistoryController extends Controller
             }
         }
 
-        // Step 8: Save child details depending on type
+        // Step 9: Save child details depending on type
         // For new document types (not legacy), treat as 'other'
         $typeForSwitch = in_array($validated['type'], ['passport', 'idvisa', 'certificate', 'resume', 'other']) 
             ? $validated['type'] 
@@ -1233,6 +1576,15 @@ class CareerHistoryController extends Controller
                 break;
         }
 
+        // Return JSON response for AJAX requests, otherwise redirect
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Document saved successfully!',
+                'document_id' => $document->id
+            ]);
+        }
+        
         return redirect()->back()->with('success', 'Document saved successfully!');
     }
   
