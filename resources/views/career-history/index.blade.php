@@ -10,7 +10,7 @@
 @role($nonAdminRoles)
 <div class="flex-1 flex flex-col overflow-hidden">
     <div class="flex min-h-screen bg-gray-100">
-        <div class="flex-1 transition-all duration-300">
+        <div class="flex-1 transition-all duration-300 overflow-hidden">
             <main class="p-6 flex-1 bg-[#F5F6FA]">
                 <div class="w-full min-h-full">
                     
@@ -29,41 +29,41 @@
                     @endphp
                     
                     <!-- Action Bar -->
-                    <div class="bg-white rounded-xl py-3 px-6 flex flex-col sm:flex-row items-center justify-between border border-gray-300 mb-6 gap-4">
+                    <div class="bg-white rounded-xl py-3 px-6 flex flex-col sm:flex-row items-center justify-between border border-gray-300 mb-6 gap-4 max-[767px]:px-3">
                         
                         <!-- Left Buttons -->
-                        <div class="flex items-center gap-3 flex-wrap">
+                        <div class="flex items-center gap-3 flex-wrap w-full max-[1090px]:grid max-[1090px]:grid-cols-2 max-[767px]:grid-cols-1">
                             
                             <!-- Add Document (Primary) -->
                             <button id="addDocumentCard" data-popup-target="#addDocumentModal"
-                                class="flex items-center bg-[#0053FF] hover:bg-blue-700 text-sm text-white px-4 py-3 rounded-lg transition min-w-[180px] gap-3 border">
-                                <img class="w-6 h-6" src="{{ asset('images/document-logo.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                                <i class="fas fa-plus w-6 h-6" style="display:none;"></i>
+                                class="flex items-center bg-[#0053FF] hover:bg-blue-700 text-sm text-white px-4 py-3 rounded-lg transition min-w-[180px] gap-3 border max-[1280px]:gap-2 max-[1280px]:min-w-[160px] max-[1090px]:justify-center">
+                                <img class="w-6 h-6 max-[1280px]:w-5 max-[1280px]:h-5" src="{{ asset('images/document-logo.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <i class="fas fa-plus w-6 h-6 max-[1280px]:w-5 max-[1280px]:h-5" style="display:none;"></i>
                                 Add Document
                             </button>
 
                             <!-- Share Document -->
                             <a href="{{ route('shares.documents.create') }}"
-                                class="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition min-w-[180px] gap-3">
-                                <img class="w-6 h-6" src="{{ asset('images/share-doc.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                                <i class="fas fa-share-alt w-6 h-6" style="display:none;"></i>
+                                class="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition min-w-[180px] gap-3 text-sm max-[1280px]:gap-2 max-[1280px]:min-w-[160px] max-[1090px]:justify-center">
+                                <img class="w-6 h-6 max-[1280px]:w-5 max-[1280px]:h-5" src="{{ asset('images/share-doc.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <i class="fas fa-share-alt w-6 h-6 max-[1280px]:w-5 max-[1280px]:h-5" style="display:none;"></i>
                                 Share Document
                             </a>
 
                             <!-- Share Profile -->
                             <button id="shareProfileCard" data-popup-target="#shareProfileModal"
-                                class="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition min-w-[180px] gap-3">
-                                <img class="w-6 h-6" src="{{ asset('images/qr-code.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                                <i class="fas fa-qrcode w-6 h-6" style="display:none;"></i>
+                                class="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition min-w-[180px] gap-3 text-sm max-[1280px]:gap-2 max-[1280px]:min-w-[160px] max-[1090px]:justify-center">
+                                <img class="w-6 h-6 max-[1280px]:w-5 max-[1280px]:h-5" src="{{ asset('images/qr-code.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <i class="fas fa-qrcode w-6 h-6 max-[1280px]:w-5 max-[1280px]:h-5" style="display:none;"></i>
                                 Share Profile
                             </button>
-
-                        </div>
-
-                        <!-- Right Button -->
-                        <button onclick="openVerificationModal()" id="bulkVerifyBtn" class="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3.5 text-sm rounded-lg transition">
+<!-- Right Button -->
+                        <button onclick="openVerificationModal()" id="bulkVerifyBtn" class="ml-auto bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3.5 text-sm rounded-lg transition max-[1280px]:py-3 max-[1280px]:px-5 max-[1090px]:ml-0">
                             Request Verification
                         </button>
+                        </div>
+
+                        
                     </div>
                     
                     <!-- Crewdentials Import Card (CASE 1) -->
@@ -94,7 +94,7 @@
                         <div class="col-span-2 px-5 p-6 border border-gray-300 bg-white rounded-xl">
                             
                             <!-- Tabs -->
-                            <div class="flex gap-[55px] border-b border-gray-300 pb-5 mb-6">
+                            <div class="flex gap-[55px] border-b border-gray-300 pb-5 mb-6 max-[1280px]:gap-[30px]">
                                 <button onclick="showExpiringTab('expiring')" id="expiring-tab" class="relative text-blue-600 font-semibold pb-2 border-b-2 border-blue-600">
                                     Expiring in 3 Months
                                 </button>
@@ -106,7 +106,7 @@
                             <!-- Expiring Content -->
                             <div id="expiring-content" class="expiring-tab-content">
                                 @if($priorityDocs->count() > 0)
-                                <div class="grid grid-cols-2 gap-6">
+                                <div class="grid grid-cols-2 gap-6 max-[1200px]:gap-3 max-[992px]:grid-cols-1">
                                     @foreach($priorityDocs as $doc)
                                         @include('career-history.partials.document-card-horizontal', ['doc' => $doc])
                                     @endforeach
@@ -121,7 +121,7 @@
                             <!-- Expired Content -->
                             <div id="expired-content" class="expiring-tab-content hidden">
                                 @if($expiredDocs->count() > 0)
-                                <div class="grid grid-cols-2 gap-6">
+                                <div class="grid grid-cols-2 gap-6 max-[1200px]:gap-3 max-[992px]:grid-cols-1">
                                     @foreach($expiredDocs as $doc)
                                         @include('career-history.partials.document-card-horizontal', ['doc' => $doc])
                                     @endforeach
@@ -135,34 +135,34 @@
                         </div>
                         
                         <!-- RIGHT PANEL: Stats -->
-                        <div class="p-6 border border-gray-300 bg-white rounded-xl">
+                        <div class="p-6 border border-gray-300 bg-white rounded-xl max-[1280px]:col-span-2">
                             <div class="grid grid-cols-6 gap-3">
                                 <!-- Total (50%) -->
-                                <div class="col-span-3 bg-[#E3F2FF] border border-gray-300 rounded-lg p-6 text-center flex flex-col justify-center">
+                                <div class="col-span-3 bg-[#E3F2FF] border border-gray-300 rounded-lg p-6 text-center flex flex-col justify-center px-2">
                                     <p class="text-[#1B1B1B] text-sm">Total Document</p>
                                     <p class="text-xl text-[#1B1B1B] leading-[20px] mt-5">{{ $totalDocs }}</p>
                                 </div>
                                 
                                 <!-- Approved (50%) -->
-                                <div class="col-span-3 bg-[#EAFDF3] rounded-lg p-6 text-center flex flex-col justify-center">
+                                <div class="col-span-3 bg-[#EAFDF3] rounded-lg p-6 text-center flex flex-col justify-center px-2">
                                     <p class="text-[#1B1B1B] text-sm">Approved</p>
                                     <p class="text-xl text-[#1B1B1B] leading-[20px] mt-5">{{ $approvedDocs }}</p>
                                 </div>
                                 
                                 <!-- Pending (33%) -->
-                                <div class="col-span-2 bg-[#FFF4E5] rounded-lg p-6 text-center flex flex-col justify-center">
+                                <div class="col-span-2 bg-[#FFF4E5] rounded-lg p-6 text-center flex flex-col justify-center px-2">
                                     <p class="text-[#1B1B1B] text-sm">Pending</p>
                                     <p class="text-xl text-[#B26A00] leading-[20px] mt-5">{{ $pendingDocs }}</p>
                                 </div>
                                 
                                 <!-- Rejected (33%) -->
-                                <div class="col-span-2 bg-[#FDEAEA] rounded-lg p-6 text-center flex flex-col justify-center">
+                                <div class="col-span-2 bg-[#FDEAEA] rounded-lg p-6 text-center flex flex-col justify-center px-2">
                                     <p class="text-[#1B1B1B] text-sm">Rejected</p>
                                     <p class="text-xl text-[#C62828] leading-[20px] mt-5">{{ $rejectedDocs }}</p>
                                 </div>
                                 
                                 <!-- Expired (33%) -->
-                                <div class="col-span-2 bg-[#F2F4F7] border border-gray-300 rounded-lg p-6 text-center flex flex-col justify-center">
+                                <div class="col-span-2 bg-[#F2F4F7] border border-gray-300 rounded-lg p-6 text-center flex flex-col justify-center px-2">
                                     <p class="text-[#1B1B1B] text-sm">Expired</p>
                                     <p class="text-xl text-[#1B1B1B] leading-[20px] mt-5">{{ $expiredCount }}</p>
                                 </div>
@@ -174,21 +174,23 @@
                     <div class="px-5 p-6 border border-gray-300 bg-white rounded-xl">
                         
                         <!-- Header -->
-                        <div class="flex justify-between items-center border-b border-gray-300 pb-5 mb-6">
+                        <div class="flex justify-between items-center border-b border-gray-300 pb-5 mb-6 gap-3 max-[1200px]:flex-col-reverse max-[1200px]:items-start">
                             
                             <!-- Tabs -->
-                            <div class="flex gap-[70px] text-sm font-medium">
-                                <button onclick="filterByCategory('all')" id="tab-all" class="relative text-blue-600 font-semibold pb-2 border-b-2 border-blue-600">
-                                    All Documents
-                                </button>
-                                <button onclick="filterByCategory('Passport')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Passport</button>
-                                <button onclick="filterByCategory('Ids and Visa')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">IDs & Visas</button>
-                                <button onclick="filterByCategory('Certificate')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Certificate</button>
-                                <button onclick="filterByCategory('Other')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Other</button>
+                            <div class="max-[992px]:overflow-x-scroll flex w-full">
+                                <div class="flex gap-[70px] max-[1280px]:gap-[40px] max-[1200px]:justify-between max-[1200px]:w-full max-[1200px] :gap-[20px] max-[992px]:w-max max-[992px]:min-w-[500px] max-[992px]:justify-start">
+                                    <button onclick="filterByCategory('all')" id="tab-all" class="relative text-blue-600 font-semibold pb-2 border-b-2 border-blue-600 whitespace-nowrap">
+                                        All Documents
+                                    </button>
+                                    <button onclick="filterByCategory('Passport')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600 whitespace-nowrap">Passport</button>
+                                    <button onclick="filterByCategory('Ids and Visa')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600 whitespace-nowrap">IDs & Visas</button>
+                                    <button onclick="filterByCategory('Certificate')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600 whitespace-nowrap">Certificate</button>
+                                    <button onclick="filterByCategory('Other')" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600 whitespace-nowrap">Other</button>
                             </div>
                             
+                            </div>
                             <!-- Status Filter -->
-                            <select id="statusFilter" onchange="filterByStatus(this.value)" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 focus:outline-none">
+                            <select id="statusFilter" onchange="filterByStatus(this.value)" class="bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm text-[#616161] focus:outline-none min-w-[180px] cursor-pointer">
                                 <option value="">Status</option>
                                 <option value="approved">Approved</option>
                                 <option value="pending">Pending</option>
@@ -198,7 +200,7 @@
                         </div>
                         
                         <!-- GRID -->
-                        <div class="grid grid-cols-3 gap-6 gap-y-[10px]">
+                        <div class="grid grid-cols-3 gap-6 gap-y-[10px] max-[1200px]:grid-cols-2 max-[1200px]:gap-3 max-[992px]:grid-cols-1">
                             
                             @php
                                 // Initialize categories for All Documents
@@ -880,11 +882,11 @@
     <div class="w-full mx-auto p-6">
         
         <!-- Action Bar -->
-        <div class="bg-white rounded-xl py-3 px-6 flex items-center justify-between border border-gray-300 mb-6 gap-3">
+        <div class="bg-white rounded-xl py-3 px-6 flex items-center justify-between border border-gray-300 mb-6 gap-3 flex-wrap">
             
             <!-- Left Button -->
             <div class="flex items-center gap-3">
-                <button onclick="closeVerificationModal()" class="flex items-center bg-[#BDBDBD] hover:bg-gray-300 text-sm text-[#1B1B1B] px-4 py-3 rounded-lg transition gap-3 border">
+                <button onclick="closeVerificationModal()" class="flex items-center bg-[#BDBDBD] hover:bg-gray-300 text-sm text-[#1B1B1B] px-4 py-3 rounded-lg transition gap-3 border max-[767px]:text-xs">
                     <img class="w-3 h-3" src="{{ asset('images/close-icon.svg') }}" alt="" onerror="this.style.display='none';">
                     <i class="fas fa-times w-3 h-3" style="display:none;"></i>
                     Cancel
@@ -897,7 +899,7 @@
             </div>
             
             <!-- Right Button -->
-            <button onclick="showVerificationConfirmationPopup()" id="submitVerificationBtn" class="bg-[#0053FF] border border-blue-200 text-white hover:bg-blue-500 px-8 py-3.5 text-sm rounded-lg transition opacity-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button onclick="showVerificationConfirmationPopup()" id="submitVerificationBtn" class="bg-[#0053FF] border border-blue-200 text-white hover:bg-blue-500 px-8 py-3.5 text-sm rounded-lg transition opacity-50 disabled:opacity-50 disabled:cursor-not-allowed max-[767px]:w-full max-[767px]:text-xs">
                 Send to Verification with Crewdentials
             </button>
         </div>
@@ -909,21 +911,24 @@
             <div class="col-span-2 px-5 p-6 border border-gray-300 bg-white rounded-xl">
                 
                 <!-- Header -->
-                <div class="flex justify-between items-center border-b border-gray-300 pb-5 mb-6">
+                <div class="flex justify-between items-center border-b border-gray-300 pb-5 mb-6 gap-3 max-[1200px]:flex-col-reverse max-[1200px]:items-start">
                     
                     <!-- Tabs -->
-                    <div class="flex gap-[70px] text-sm">
-                        <button onclick="filterModalByCategory('all')" id="modal-tab-all" class="relative text-blue-600 font-semibold pb-2 border-b-2 border-blue-600">
+                    <div class="max-[992px]:overflow-x-scroll flex w-full">
+                        <div class="flex gap-[70px] max-[1280px]:gap-[40px] max-[1200px]:justify-between max-[1200px]:w-full max-[1200px]:gap-[20px]
+                max-[992px]:w-max max-[992px]:min-w-[500px] max-[992px]:justify-start">
+                        <button onclick="filterModalByCategory('all')" id="modal-tab-all" class="relative text-blue-600 font-semibold pb-2 border-b-2 border-blue-600 whitespace-nowrap">
                             All Documents
                         </button>
-                        <button onclick="filterModalByCategory('Passport')" id="modal-tab-passport" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Passport</button>
-                        <button onclick="filterModalByCategory('Ids and Visa')" id="modal-tab-ids" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">IDs & Visas</button>
-                        <button onclick="filterModalByCategory('Certificate')" id="modal-tab-certificate" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Certificate</button>
-                        <button onclick="filterModalByCategory('Other')" id="modal-tab-other" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600">Other</button>
+                        <button onclick="filterModalByCategory('Passport')" id="modal-tab-passport" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600 whitespace-nowrap">Passport</button>
+                        <button onclick="filterModalByCategory('Ids and Visa')" id="modal-tab-ids" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600 whitespace-nowrap">IDs & Visas</button>
+                        <button onclick="filterModalByCategory('Certificate')" id="modal-tab-certificate" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600 whitespace-nowrap">Certificate</button>
+                        <button onclick="filterModalByCategory('Other')" id="modal-tab-other" class="text-[#1B1B1B] border-b-2 border-transparent pb-2 hover:border-blue-600 hover:text-blue-600 whitespace-nowrap">Other</button>
+                    </div>
                     </div>
                     
                     <!-- Status Filter -->
-                    <select id="modalStatusFilter" onchange="filterModalByStatus(this.value)" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 focus:outline-none">
+                    <select id="modalStatusFilter" onchange="filterModalByStatus(this.value)" class="bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm text-[#616161] focus:outline-none min-w-[180px] cursor-pointer">
                         <option value="">Status</option>
                         <option value="approved">Approved</option>
                         <option value="pending">Pending</option>
@@ -933,7 +938,7 @@
                 </div>
                 
                 <!-- GRID -->
-                <div class="grid grid-cols-3 gap-6 gap-y-[10px]" id="modalDocumentsGrid">
+                <div class="grid grid-cols-3 gap-6 gap-y-[10px] grid grid-cols-3 gap-6 gap-y-[10px] max-[1200px]:grid-cols-2 max-[1200px]:gap-3 max-[992px]:grid-cols-1" id="modalDocumentsGrid">
                     @foreach($documents as $doc)
                     @php
                         // Determine category for filtering
@@ -1010,12 +1015,12 @@
         </div>
         
         <!-- Footer -->
-        <div class="flex gap-4 px-6 pt-2 pb-6">
-            <button onclick="closeVerificationConfirmationPopup()" class="px-6 py-2 rounded-lg border border-gray-300 text-[#1B1B1B] hover:bg-gray-50 transition text-sm">
+        <div class="flex gap-4 px-6 pt-2 pb-6 max-[767px]:flex-wrap">
+            <button onclick="closeVerificationConfirmationPopup()" class="px-6 py-3.5 min-w-[150px] rounded-lg border border-gray-300 text-[#1B1B1B] hover:bg-gray-50 transition text-sm max-[767px]:min-w-unset max-[767px]:text-xs max-[767px]:py-3 max-[767px]:flex-1">
                 Cancel
             </button>
             
-            <button onclick="confirmAndSendVerification()" class="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition text-sm">
+            <button onclick="confirmAndSendVerification()" class="px-6 py-3.5 min-w-[150px] rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition text-sm max-[767px]:min-w-unset max-[767px]:text-xs max-[767px]:py-3 max-[767px]:flex-1">
                 Confirm & Send
             </button>
         </div>

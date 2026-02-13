@@ -51,7 +51,7 @@
     }
 @endphp
 
-<div class="bg-white border border-gray-200 rounded-xl p-6 flex justify-between items-start gap-6">
+<div class="bg-white border border-gray-200 rounded-xl p-6 flex justify-between items-start gap-6 h-full">
     
     <div class="w-full">
         <!-- Custom Checkbox -->
@@ -63,7 +63,7 @@
                    onchange="updateModalSelectedCount()">
             
             <div class="group w-[19px] h-[19px] rounded border border-gray-300 flex items-center justify-center transition-all duration-200 peer-checked:bg-blue-600 peer-checked:border-blue-600">
-                <img src="{{ asset('images/tick-mark-w.svg') }}" alt="tick" class="w-[8px] h-[6px] opacity-0 peer-checked:opacity-100 transition-opacity duration-200 select-none" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <img src="{{ asset('images/tick-mark-w.svg') }}" alt="tick" class="w-[10px] h-[10px] opacity-0 peer-checked:opacity-100 transition-opacity duration-200 select-none" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                 <i class="fas fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100 transition-opacity duration-200" style="display:none;"></i>
             </div>
         </label>
@@ -90,7 +90,7 @@
             <!-- Reset/History -->
             <button onclick="openVersionHistoryModal({{ $doc->id }}); event.stopPropagation();" 
                     class="w-[30px] h-[30px] flex items-center justify-center" title="View Version History">
-                <img class="w-full h-full" src="{{ asset('images/reset.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <img class="w-full h-full border border-transparent rounded-[8px] hover:border-[#000000]" src="{{ asset('images/reset.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                 <i class="fas fa-history text-gray-600" style="display:none;"></i>
             </button>
             
@@ -99,21 +99,21 @@
                     class="toggle-share w-[30px] h-[30px] flex items-center justify-center cursor-pointer" 
                     data-id="{{ $doc->id }}"
                     title="{{ $doc->is_active ? 'Hide from profile' : 'Show on profile' }}">
-                <img class="w-full h-full" src="{{ $doc->is_active ? asset('images/eye.svg') : asset('images/view-off-slash.png') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <img class="w-full h-full border border-transparent rounded-[8px] hover:border-[#000000]" src="{{ $doc->is_active ? asset('images/eye.svg') : asset('images/view-off-slash.png') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                 <i class="fas {{ $doc->is_active ? 'fa-eye' : 'fa-eye-slash' }} text-gray-600" style="display:none;"></i>
             </button>
             
             <!-- Download -->
             <button onclick="downloadDocument({{ $doc->id }}); event.stopPropagation();" 
                     class="w-[30px] h-[30px] flex items-center justify-center" title="Download">
-                <img class="w-full h-full" src="{{ asset('images/download.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <img class="w-full h-full border border-transparent rounded-[8px] hover:border-[#000000]" src="{{ asset('images/download.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                 <i class="fas fa-download text-gray-600" style="display:none;"></i>
             </button>
             
             <!-- Edit -->
             <button onclick="editDocument({{ $doc->id }}); event.stopPropagation();" 
                     class="w-[30px] h-[30px] flex items-center justify-center" title="Edit">
-                <img class="w-full h-full" src="{{ asset('images/edit.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <img class="w-full h-full border border-transparent rounded-[8px] hover:border-[#000000]" src="{{ asset('images/edit.svg') }}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                 <i class="fas fa-edit text-gray-600" style="display:none;"></i>
             </button>
         </div>
@@ -121,7 +121,7 @@
     
     <!-- Right Badge - EXACT match to HTML -->
     @if($expiryBadge)
-    <span class="bg-[#E3F2FF] text-blue-600 text-[12px] font-medium px-2.5 py-1 rounded-md whitespace-nowrap mt-[33px]">
+    <span class="bg-[#E3F2FF] text-blue-600 text-[12px] font-medium px-2.5 py-1 rounded-md whitespace-nowrap mt-[26px]">
         {{ $expiryBadge }}
     </span>
     @endif
