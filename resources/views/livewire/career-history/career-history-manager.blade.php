@@ -1,181 +1,161 @@
 <div>
-    <main class="flex-1 flex flex-col bg-gray-100 p-4 sm:p-6">
+    <main class="flex-1 flex flex-col bg-[#F5F6FA] p-6">
         <div class="flex-1 overflow-hidden">
-            <div class="p-4 bg-[#F5F6FA]">
-                <div class="rounded-lg bg-white p-4 sm:p-6">
-                    {{-- Header --}}
-                    <div class="mb-6">
-                        <div class="flex items-center justify-between mb-4  max-[1200px]:flex-col max-[1200px]:items-start max-[1200px]:gap-4">
-                            <div class="flex-1">
-                                <h1 class="text-2xl font-bold text-gray-900">Career History</h1>
-                                @if($isSuperAdmin)
-                                <div class="mt-2 flex items-center gap-3">
-                                    @if($viewingUser && $viewingUser->id !== auth()->id())
-                                    <p class="text-sm text-gray-600">
-                                        Viewing: <span class="font-semibold">{{ $viewingUser->first_name }} {{ $viewingUser->last_name }}</span> ({{ $viewingUser->email }})
-                                    </p>
-                                    @else
-                                    <p class="text-sm text-gray-600">Your career history</p>
-                                    @endif
-                                    <button wire:click="$set('showUserSelector', true)" 
-                                        class="text-sm text-[#0053FF] hover:text-[#0044DD] underline">
-                                        <i class="fas fa-search mr-1"></i>View Another User
-                                    </button>
-                                    @if($viewingUser && $viewingUser->id !== auth()->id())
-                                    <button wire:click="viewMyCareer" 
-                                        class="text-sm text-gray-600 hover:text-gray-900 underline">
-                                        <i class="fas fa-user mr-1"></i>View My Career
-                                    </button>
-                                    @endif
-                                </div>
+            {{-- Header with Action Buttons --}}
+            <div class="bg-white rounded-xl py-3 px-6 flex flex-col sm:flex-row items-center justify-between border border-gray-300 mb-6 gap-4 max-[767px]:px-3">
+                {{-- Left Buttons --}}
+                <div class="flex items-center gap-3 flex-wrap w-full max-[1090px]:grid max-[1090px]:grid-cols-2 max-[767px]:grid-cols-1">
+                    @if($canEdit)
+                    {{-- Add Career Entry (Primary) --}}
+                    <button wire:click="openModal" 
+                        class="flex items-center bg-[#0053FF] hover:bg-blue-700 text-sm text-white px-4 py-3 rounded-lg transition min-w-[180px] gap-3 border max-[1280px]:gap-2 max-[1280px]:min-w-[160px] max-[1090px]:justify-center">
+                        <i class="fas fa-plus w-6 h-6 max-[1280px]:w-5 max-[1280px]:h-5"></i>
+                        Add Career Entry
+                    </button>
+                    @endif
+
+                    {{-- View Report --}}
+                    @if($isSuperAdmin && $viewingUser && $viewingUser->id !== Auth::id())
+                    <a href="{{ route('career-history.sea-service-report.user', ['userId' => $viewingUser->id]) }}" 
+                        target="_blank"
+                        class="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition min-w-[180px] gap-3 text-sm max-[1280px]:gap-2 max-[1280px]:min-w-[160px] max-[1090px]:justify-center">
+                        <i class="fas fa-eye w-6 h-6 max-[1280px]:w-5 max-[1280px]:h-5"></i>
+                        View Report
+                    </a>
+                    @else
+                    <a href="{{ route('career-history.sea-service-report') }}" 
+                        target="_blank"
+                        class="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition min-w-[180px] gap-3 text-sm max-[1280px]:gap-2 max-[1280px]:min-w-[160px] max-[1090px]:justify-center">
+                        <i class="fas fa-eye w-6 h-6 max-[1280px]:w-5 max-[1280px]:h-5"></i>
+                        View Report
+                    </a>
+                    @endif
+
+                    {{-- Download PDF --}}
+                    @if($isSuperAdmin && $viewingUser && $viewingUser->id !== Auth::id())
+                    <a href="{{ route('career-history.sea-service-report.user.download', ['userId' => $viewingUser->id]) }}" 
+                        class="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition min-w-[180px] gap-3 text-sm max-[1280px]:gap-2 max-[1280px]:min-w-[160px] max-[1090px]:justify-center">
+                        <i class="fas fa-download w-6 h-6 max-[1280px]:w-5 max-[1280px]:h-5"></i>
+                        Download PDF
+                    </a>
+                    @else
+                    <a href="{{ route('career-history.sea-service-report.download') }}" 
+                        class="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition min-w-[180px] gap-3 text-sm max-[1280px]:gap-2 max-[1280px]:min-w-[160px] max-[1090px]:justify-center">
+                        <i class="fas fa-download w-6 h-6 max-[1280px]:w-5 max-[1280px]:h-5"></i>
+                        Download PDF
+                    </a>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Super Admin User Selector --}}
+            @if($isSuperAdmin && $showUserSelector)
+            <div class="mb-4 bg-white rounded-lg p-4 border border-gray-200">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-semibold text-gray-900">Search Users</h3>
+                    <button wire:click="$set('showUserSelector', false)" 
+                        class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <input 
+                    type="text" 
+                    wire:model.live.debounce.300ms="search" 
+                    placeholder="Search by name or email..."
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053FF] focus:border-transparent mb-3"
+                >
+                @if($users->count() > 0)
+                <div class="max-h-60 overflow-y-auto border border-gray-200 rounded-lg bg-white">
+                    <div class="divide-y divide-gray-200">
+                        @foreach($users as $userItem)
+                        <div class="p-3 hover:bg-gray-50 cursor-pointer {{ $viewingUserId == $userItem->id ? 'bg-blue-50' : '' }}"
+                            wire:click="selectUser({{ $userItem->id }})">
+                            <div class="flex items-center gap-3">
+                                @if($userItem->profile_photo_path)
+                                <img src="{{ asset('storage/'.$userItem->profile_photo_path) }}" 
+                                    class="w-10 h-10 rounded-full object-cover" alt="">
                                 @else
-                                <p class="text-sm text-gray-600 mt-1">Manage your career history and sea service records</p>
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium text-sm">
+                                    {{ strtoupper(substr($userItem->first_name, 0, 1) . substr($userItem->last_name, 0, 1)) }}
+                                </div>
                                 @endif
-                            </div>
-                            <div class="flex gap-2 max-[992px]:flex-col max-[992px]:w-full">
-                                @if($canEdit)
-                                <button wire:click="openModal" 
-                                    class="bg-[#0053FF] text-white px-4 py-2 rounded-md hover:bg-[#0044DD] transition-colors font-medium text-center">
-                                    <i class="fas fa-plus mr-2"></i>Add Career Entry
-                                </button>
-                                @endif
-                                @if($isSuperAdmin && $viewingUser && $viewingUser->id !== Auth::id())
-                                <a href="{{ route('career-history.sea-service-report.user', ['userId' => $viewingUser->id]) }}" 
-                                    target="_blank"
-                                    class="text-center bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium">
-                                    <i class="fas fa-file-pdf mr-2"></i>View Report
-                                </a>
-                                <a href="{{ route('career-history.sea-service-report.user.download', ['userId' => $viewingUser->id]) }}" 
-                                    class="text-center bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors font-medium">
-                                    <i class="fas fa-download mr-2"></i>Download PDF
-                                </a>
-                                @else
-                                <a href="{{ route('career-history.sea-service-report') }}" 
-                                    target="_blank"
-                                    class="text-center bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium">
-                                    <i class="fas fa-file-pdf mr-2"></i>View Report
-                                </a>
-                                <a href="{{ route('career-history.sea-service-report.download') }}" 
-                                    class="text-center bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors font-medium">
-                                    <i class="fas fa-download mr-2"></i>Download PDF
-                                </a>
+                                <div class="flex-1">
+                                    <div class="font-medium text-gray-900">{{ $userItem->first_name }} {{ $userItem->last_name }}</div>
+                                    <div class="text-xs text-gray-600 truncate">{{ $userItem->email }}</div>
+                                </div>
+                                @if($viewingUserId == $userItem->id)
+                                <i class="fas fa-check text-[#0053FF]"></i>
                                 @endif
                             </div>
                         </div>
+                        @endforeach
+                    </div>
+                </div>
+                @elseif($search)
+                <p class="text-sm text-gray-500 text-center py-4">No users found</p>
+                @else
+                <p class="text-sm text-gray-500 text-center py-4">Start typing to search users...</p>
+                @endif
+            </div>
+            @endif
 
-                        {{-- Super Admin User Selector --}}
-                        @if($isSuperAdmin && $showUserSelector)
-                        <div class="mb-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <div class="flex items-center justify-between mb-3">
-                                <h3 class="text-sm font-semibold text-gray-900">Search Users</h3>
-                                <button wire:click="$set('showUserSelector', false)" 
-                                    class="text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <input 
-                                type="text" 
-                                wire:model.live.debounce.300ms="search" 
-                                placeholder="Search by name or email..."
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053FF] focus:border-transparent mb-3"
-                            >
-                            @if($users->count() > 0)
-                            <div class="max-h-60 overflow-y-auto border border-gray-200 rounded-lg bg-white">
-                                <div class="divide-y divide-gray-200">
-                                    @foreach($users as $userItem)
-                                    <div class="p-3 hover:bg-gray-50 cursor-pointer {{ $viewingUserId == $userItem->id ? 'bg-blue-50' : '' }}"
-                                        wire:click="selectUser({{ $userItem->id }})">
-                                        <div class="flex items-center gap-3">
-                                            @if($userItem->profile_photo_path)
-                                            <img src="{{ asset('storage/'.$userItem->profile_photo_path) }}" 
-                                                class="w-10 h-10 rounded-full object-cover" alt="">
-                                            @else
-                                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium text-sm">
-                                                {{ strtoupper(substr($userItem->first_name, 0, 1) . substr($userItem->last_name, 0, 1)) }}
-                                            </div>
-                                            @endif
-                                            <div class="flex-1">
-                                                <div class="font-medium text-gray-900">{{ $userItem->first_name }} {{ $userItem->last_name }}</div>
-                                                <div class="text-xs text-gray-600 truncate">{{ $userItem->email }}</div>
-                                            </div>
-                                            @if($viewingUserId == $userItem->id)
-                                            <i class="fas fa-check text-[#0053FF]"></i>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                            @elseif($search)
-                            <p class="text-sm text-gray-500 text-center py-4">No users found</p>
-                            @else
-                            <p class="text-sm text-gray-500 text-center py-4">Start typing to search users...</p>
-                            @endif
+            {{-- Summary Cards --}}
+            <div class="mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {{-- Card 1: Total Sea Service --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                        <div>
+                            <p class="text-sm text-[#808080]">Total Sea Service</p>
+                            <h3 class="text-2xl font-medium text-[#1B1B1B] mt-2">
+                                {{ $totalSeaService }}
+                            </h3>
                         </div>
-                        @endif
-
-                        {{-- Summary Cards --}}
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 max-[992px]:!grid-cols-1">
-                            <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm text-gray-600">Total Sea Service</p>
-                                        <p class="text-2xl font-bold text-gray-900 max-[767px]:text-lg">{{ $totalSeaService }}</p>
-                                    </div>
-                                    <i class="fas fa-clock text-3xl text-blue-500"></i>
-                                </div>
-                            </div>
-
-                            <div class="bg-green-50 rounded-lg p-4 border border-green-100">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm text-gray-600">Total Entries</p>
-                                        <p class="text-2xl font-bold text-gray-900 max-[767px]:text-lg">{{ $summary['total_entries'] }}</p>
-                                    </div>
-                                    <i class="fas fa-briefcase text-3xl text-green-500"></i>
-                                </div>
-                            </div>
-
-                            <div class="bg-purple-50 rounded-lg p-4 border border-purple-100">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm text-gray-600">Current Positions</p>
-                                        <p class="text-2xl font-bold text-gray-900 max-[767px]:text-lg">{{ $summary['current_positions'] }}</p>
-                                    </div>
-                                    <i class="fas fa-ship text-3xl text-purple-500"></i>
-                                </div>
-                            </div>
+                        <div class="flex items-center justify-center h-[70px] w-[70px]">
+                            <i class="fas fa-clock text-5xl text-blue-500"></i>
                         </div>
-
-                        @if($summary['current_yacht'])
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="flex items-start gap-3 flex-1">
-                                    <i class="fas fa-info-circle text-yellow-600 mt-0.5"></i>
-                                    <div class="flex-1">
-                                        <p class="text-sm font-semibold text-gray-900">Current Yacht (Legacy Data)</p>
-                                        <p class="text-sm text-gray-600">
-                                            <strong>{{ $summary['current_yacht'] }}</strong>
-                                            @if($summary['current_yacht_start_date'])
-                                            <span class="text-gray-500">- Started: {{ \Carbon\Carbon::parse($summary['current_yacht_start_date'])->format('M Y') }}</span>
-                                            @endif
-                                        </p>
-                                        <p class="text-xs text-gray-500 mt-1">
-                                            This is from your profile. Add it as a career entry to track it properly.
-                                        </p>
-                                    </div>
-                                </div>
-                                <button wire:click="addCurrentYachtAsEntry" 
-                                        class="px-4 py-2 bg-[#0053FF] text-white text-sm font-medium rounded-md hover:bg-[#0044DD] transition-colors whitespace-nowrap flex items-center gap-2">
-                                    <i class="fas fa-plus-circle"></i>
-                                    Add as Career Entry
-                                </button>
-                            </div>
-                        </div>
-                        @endif
                     </div>
 
-                    @if (session()->has('message'))
+                    {{-- Card 2: Total Entries --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                        <div>
+                            <p class="text-sm text-[#808080]">Total Entries</p>
+                            <h3 class="text-2xl font-medium text-[#1B1B1B] mt-2">
+                                {{ $summary['total_entries'] }}
+                            </h3>
+                        </div>
+                        <div class="flex items-center justify-center h-[70px] w-[70px]">
+                            <i class="fas fa-briefcase text-5xl text-green-500"></i>
+                        </div>
+                    </div>
+
+                    {{-- Card 3: Current Positions --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm text-[#808080]">Current Positions</p>
+                            <h3 class="text-2xl font-medium text-[#1B1B1B] mt-2 truncate">
+                                @if($summary['current_positions'] > 0)
+                                    @php
+                                        $currentEntry = $entries->filter(fn($e) => $e->isCurrentPosition())->first();
+                                        $positionTitle = $currentEntry ? ($currentEntry->position_title ?? 'N/A') : 'N/A';
+                                        echo strlen($positionTitle) > 30 ? substr($positionTitle, 0, 30) . '...' : $positionTitle;
+                                    @endphp
+                                @else
+                                    None
+                                @endif
+                            </h3>
+                        </div>
+                        <div class="flex items-center justify-center h-[70px] w-[70px]">
+                            <i class="fas fa-ship text-5xl text-purple-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Career History Section --}}
+            <div class="bg-white rounded-xl p-6">
+                <h3 class="text-2xl font-semibold text-[#1B1B1B] mb-6">Career History</h3>
+
+                @if (session()->has('message'))
                     <div x-data="{ show: true }" 
                          x-show="show"
                          x-init="setTimeout(() => show = false, 5000)"
@@ -229,116 +209,161 @@
                     </div>
                     @endif
 
-                    {{-- Timeline View --}}
-                    @if($entries->count() > 0)
-                    <div class="space-y-6">
-                        @foreach($entries as $entry)
-                        <div class="border-l-4 border-[#0053FF] pl-6 pb-6 relative">
-                            {{-- Timeline dot --}}
-                            <div class="absolute -left-2 top-0 w-4 h-4 bg-[#0053FF] rounded-full border-2 border-white"></div>
-                            
-                            <div class="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <h3 class="text-xl font-bold text-gray-900">{{ $entry->vessel_name }}</h3>
-                                            @if($entry->isCurrentPosition())
-                                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded">Current</span>
-                                            @endif
-                                        </div>
-                                        
-                                        <p class="text-lg text-gray-700 mb-2">{{ $entry->position_title }}</p>
-                                        
-                                        <div class="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
-                                            <span><i class="fas fa-calendar mr-1"></i>
-                                                {{ $entry->start_date->format('M Y') }} - 
-                                                {{ $entry->end_date ? $entry->end_date->format('M Y') : 'Present' }}
-                                            </span>
-                                            <span><i class="fas fa-clock mr-1"></i>{{ $entry->getFormattedDuration() }}</span>
-                                            @if($entry->vessel_type)
-                                            <span><i class="fas fa-ship mr-1"></i>{{ ucfirst(str_replace('_', ' ', $entry->vessel_type)) }}</span>
-                                            @endif
-                                            @if($entry->department)
-                                            <span><i class="fas fa-briefcase mr-1"></i>{{ ucfirst($entry->department) }}</span>
-                                            @endif
-                                        </div>
+                {{-- Career History Entries --}}
+                @if($entries->count() > 0)
+                <div>
+                    @foreach($entries as $entry)
+                    <div class="bg-[#FFFFFF] border border-gray-200 rounded-xl p-8 relative {{ !$loop->last ? 'mb-6' : '' }}">
+                        {{-- Top Right Action Buttons --}}
+                        <div class="absolute top-6 right-6 flex gap-3">
+                            <button wire:click="$dispatch('openCareerEntryDetails', { entryId: {{ $entry->id }}, viewingUserId: {{ $viewingUserId ?? 'null' }} })" 
+                                class="w-[40px] h-[40px] flex items-center justify-center transition border border-transparent rounded-[10px] hover:border-[#000000]"
+                                title="View Details">
+                                <i class="fas fa-eye text-gray-600"></i>
+                            </button>
 
-                                        @if($entry->key_duties || $entry->notable_achievements)
-                                        <div class="mt-3 space-y-2">
-                                            @if($entry->key_duties)
-                                            <div>
-                                                <p class="text-sm font-semibold text-gray-700">Key Duties:</p>
-                                                <p class="text-sm text-gray-600">{{ $entry->key_duties }}</p>
-                                            </div>
-                                            @endif
-                                            @if($entry->notable_achievements)
-                                            <div>
-                                                <p class="text-sm font-semibold text-gray-700">Achievements:</p>
-                                                <p class="text-sm text-gray-600">{{ $entry->notable_achievements }}</p>
-                                            </div>
-                                            @endif
-                                        </div>
-                                        @endif
-                                    </div>
+                            @if($canEdit)
+                            <button wire:click="openModal({{ $entry->id }})" 
+                                class="w-[40px] h-[40px] flex items-center justify-center transition border border-transparent rounded-[10px] hover:border-[#000000]"
+                                title="Edit">
+                                <i class="fas fa-edit text-gray-600"></i>
+                            </button>
 
-                                    <div class="flex gap-2">
-                                        <button wire:click="$dispatch('openCareerEntryDetails', { entryId: {{ $entry->id }}, viewingUserId: {{ $viewingUserId ?? 'null' }} })" 
-                                            class="text-[#0053FF] hover:text-[#0044DD] p-2" 
-                                            title="View Details">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        @if($canEdit)
-                                        <button wire:click="openModal({{ $entry->id }})" 
-                                            class="text-blue-600 hover:text-blue-800 p-2"
-                                            title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button wire:click="delete({{ $entry->id }})" 
-                                            wire:confirm="Are you sure you want to delete this career entry?"
-                                            class="text-red-600 hover:text-red-800 p-2"
-                                            title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                    @else
-                    <div class="text-center py-12 bg-gray-50 rounded-lg">
-                        <i class="fas fa-briefcase text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600 mb-4">
-                            @if($isSuperAdmin && $viewingUser && $viewingUser->id !== auth()->id())
-                            This user has no career history entries yet.
-                            @else
-                            No career history entries yet.
+                            <button wire:click="delete({{ $entry->id }})" 
+                                wire:confirm="Are you sure you want to delete this career entry?"
+                                class="w-[40px] h-[40px] flex items-center justify-center transition border border-transparent rounded-[10px] hover:border-[#000000]"
+                                title="Delete">
+                                <i class="fas fa-trash text-gray-600"></i>
+                            </button>
                             @endif
+                        </div>
+
+                        {{-- Title Row --}}
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-xl font-semibold text-[#1B1B1B]">
+                                {{ $entry->vessel_name }}
+                            </h2>
+                            @if($entry->isCurrentPosition())
+                            <span class="text-xs px-2.5 py-1 bg-[#E3F2FF] text-blue-600 rounded-md">
+                                Current
+                            </span>
+                            @endif
+                        </div>
+
+                        {{-- Position --}}
+                        <p class="text-[#616161] mt-3 leading-[16px]">
+                            {{ $entry->position_title ?? 'N/A' }}
                         </p>
-                        @if($canEdit)
-                        <button wire:click="openModal" 
-                            class="bg-[#0053FF] text-white px-6 py-2 rounded-md hover:bg-[#0044DD] transition-colors">
-                            Add Your First Career Entry
-                        </button>
+
+                        {{-- Date & Duration --}}
+                        <div class="flex items-center gap-3 text-sm text-gray-500 mt-3">
+                            <span>{{ $entry->start_date->format('M Y') }} – {{ $entry->end_date ? $entry->end_date->format('M Y') : 'Present' }}</span>
+                            <span class="text-[#D0D0D0]">•</span>
+                            <span class="text-blue-600">
+                                {{ $entry->getFormattedDuration() }}
+                            </span>
+                        </div>
+
+                        {{-- Tags --}}
+                        <div class="flex gap-3 mt-4">
+                            @if($entry->vessel_type)
+                            <span class="flex items-center gap-[10px] text-sm bg-[#EFEFEF] text-[#000000] px-2.5 py-2 rounded-[6px]">
+                                <i class="fas fa-ship h-[20px] w-[20px] flex items-center justify-center"></i>
+                                {{ ucfirst(str_replace('_', ' ', $entry->vessel_type)) }}
+                            </span>
+                            @endif
+                            @if($entry->department)
+                            <span class="flex items-center gap-[10px] text-sm bg-[#EFEFEF] text-[#000000] px-2.5 py-2 rounded-[6px]">
+                                <i class="fas fa-briefcase h-[20px] w-[20px] flex items-center justify-center"></i>
+                                {{ ucfirst($entry->department) }}
+                            </span>
+                            @endif
+                        </div>
+
+                        {{-- Key Duties & Achievements with Left Border --}}
+                        @if($entry->key_duties || $entry->notable_achievements)
+                        <div class="border-l-2 border-gray-300 pl-4 mt-4 space-y-6">
+                            @if($entry->key_duties)
+                            <div>
+                                <p class="text-[#000000]">Key Duties:</p>
+                                <p class="text-[#616161] mt-1">
+                                    {{ $entry->key_duties }}
+                                </p>
+                            </div>
+                            @endif
+
+                            @if($entry->notable_achievements)
+                            <div>
+                                <p class="font-medium text-gray-800">Achievements:</p>
+                                <p class="text-gray-600 mt-1">
+                                    {{ $entry->notable_achievements }}
+                                </p>
+                            </div>
+                            @endif
+                        </div>
                         @endif
                     </div>
+                    @endforeach
+                </div>
+                @else
+                <div class="text-center py-12 bg-gray-50 rounded-lg">
+                    <i class="fas fa-briefcase text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600 mb-4">
+                        @if($isSuperAdmin && $viewingUser && $viewingUser->id !== auth()->id())
+                        This user has no career history entries yet.
+                        @else
+                        No career history entries yet.
+                        @endif
+                    </p>
+                    @if($canEdit)
+                    <button wire:click="openModal" 
+                        class="bg-[#0053FF] text-white px-6 py-2 rounded-md hover:bg-[#0044DD] transition-colors">
+                        Add Your First Career Entry
+                    </button>
                     @endif
                 </div>
+                @endif
             </div>
         </div>
     </main>
 
     <div>
         {{-- Add/Edit Modal --}}
-        @if($showModal)
-    <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" 
-         wire:click.self="closeModal"
-         x-data="careerEntryForm()"
-         x-init="init()"
-         @keydown.escape.window="closeModal()">
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" 
-             @click.stop>
+        <div x-data="{ show: @entangle('showModal').live }" 
+             x-show="show" 
+             x-cloak
+             class="fixed inset-0 z-50 overflow-y-auto" 
+             @keydown.escape.window="show = false; @this.call('closeModal')"
+             aria-labelledby="modal-title" 
+             role="dialog" 
+             aria-modal="true"
+             style="display: none !important;">
+        
+        {{-- Backdrop with blur --}}
+        <div x-show="show"
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100" 
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm" 
+             aria-hidden="true"
+             @click="show = false; @this.call('closeModal')"></div>
+        
+        {{-- Modal Container --}}
+        <div class="flex min-h-full items-center justify-center p-4">
+        <div x-show="show"
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative transform" 
+             @click.stop
+             x-data="careerEntryForm()"
+             x-init="init()">
             <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
                 <div class="flex items-center gap-3">
                     <h2 class="text-xl font-bold text-gray-900">
@@ -349,7 +374,7 @@
                     </span>
                 </div>
                 <button wire:click="closeModal" 
-                        @click="closeModal()"
+                        @click="show = false; @this.call('closeModal')"
                         class="text-gray-400 hover:text-gray-600 transition-colors">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -840,7 +865,7 @@
                 <div class="flex justify-between items-center pt-4 border-t bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
                     <button type="button" 
                             wire:click="closeModal" 
-                            @click="closeModal()"
+                            @click="show = false; closeModal()"
                             class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
                         <i class="fas fa-times mr-2"></i>Cancel
                     </button>
@@ -865,8 +890,8 @@
                 </div>
             </form>
         </div>
+        </div>
     </div>
-    @endif
 
         {{-- Career Entry Details Modal --}}
         @livewire('career-history.career-history-entry-details-modal')
@@ -921,6 +946,11 @@
                     } else {
                         @this.call('closeModal');
                     }
+                },
+                
+                // Get parent modal show state
+                getModalShow() {
+                    return @entangle('showModal').live;
                 },
                 
                 updateCharCount(field, value, max) {

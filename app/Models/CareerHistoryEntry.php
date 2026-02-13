@@ -101,15 +101,20 @@ class CareerHistoryEntry extends Model
     public function getFormattedDuration(): string
     {
         $endDate = $this->end_date ?? Carbon::today();
-        $years = $this->start_date->diffInYears($endDate);
-        $months = $this->start_date->diffInMonths($endDate) % 12;
+        
+        // Calculate total months first
+        $totalMonths = $this->start_date->diffInMonths($endDate);
+        
+        // Calculate years and remaining months (ensure integers)
+        $years = floor($totalMonths / 12);
+        $months = $totalMonths % 12;
 
         $parts = [];
         if ($years > 0) {
-            $parts[] = $years . ' ' . ($years === 1 ? 'year' : 'years');
+            $parts[] = (int)$years . ' ' . ($years === 1 ? 'year' : 'years');
         }
         if ($months > 0) {
-            $parts[] = $months . ' ' . ($months === 1 ? 'month' : 'months');
+            $parts[] = (int)$months . ' ' . ($months === 1 ? 'month' : 'months');
         }
 
         return $parts ? implode(' ', $parts) : 'Less than 1 month';
